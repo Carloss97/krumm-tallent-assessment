@@ -1,4 +1,4 @@
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useTelemetry } from '../TelemetryContext';
 import { GAME_FLOW } from '../utils/gameFlow';
@@ -18,16 +18,24 @@ const GameLayout = ({ gameId, children }) => {
     setIsActive(true);
   }, [gameConfig.telemetryId, startTracking]);
 
+  // Automatically start subsequent games after showing instructions briefly
+  useEffect(() => {
+    if (gameId > 1 && showInstructions) {
+      const timer = setTimeout(() => {
+        handleStart();
+      }, 2000); // Show instructions for 2 seconds, then auto-start
+      return () => clearTimeout(timer);
+    }
+  }, [gameId, showInstructions, handleStart]);
+
   const handleEndGame = useCallback((score, errors, details) => {
     if (!isActive) return;
     setIsActive(false);
     stopTracking(gameConfig.telemetryId, score, errors, details);
 
-    setTimeout(() => {
-      navigate(gameConfig.nextPath, { replace: true });
-      window.scrollTo(0, 0);
-    }, 1500);
-  }, [isActive, gameConfig.telemetryId, gameConfig.nextPath, navigate, stopTracking]);
+    // Navigate to the next game
+    window.location.href = gameConfig.nextPath;
+  }, [isActive, gameConfig.telemetryId, gameConfig.nextPath, stopTracking]);
 
   if (!gameConfig) {
     return <div>Error: Game configuration not found for ID {gameId}</div>;
@@ -45,6 +53,7 @@ const GameLayout = ({ gameId, children }) => {
         description={gameConfig.instruction.description}
         timeLimit={timeLimit === 'None' || timeLimit === 'Timed' ? timeLimit : `${timeLimit}s`}
         onStart={handleStart}
+        autoStart={gameId > 1}
       />
     );
   }

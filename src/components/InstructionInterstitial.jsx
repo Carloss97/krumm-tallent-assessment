@@ -1,7 +1,7 @@
 import React from 'react';
 import { motion } from 'framer-motion';
 
-const InstructionInterstitial = ({ title, description, timeLimit, type, onStart }) => {
+const InstructionInterstitial = ({ title, description, timeLimit, type, onStart, autoStart = false }) => {
   return (
     <div style={{ width:'100%', height:'100%', display:'flex', justifyContent:'center', alignItems:'center' }}>
       <motion.div
@@ -28,9 +28,15 @@ const InstructionInterstitial = ({ title, description, timeLimit, type, onStart 
             <div style={{ fontSize:'1.05rem', fontWeight:'700', color:'#1e1b4b' }}>Max Focus</div>
           </div>
         </div>
-        <button className="btn" style={{ width:'100%', fontSize:'1.05rem' }} onClick={onStart}>
-          Begin Module
-        </button>
+        {autoStart ? (
+          <div style={{ width:'100%', fontSize:'1.05rem', color:'#6b7280' }}>
+            Auto-starting...
+          </div>
+        ) : (
+          <button className="btn" style={{ width:'100%', fontSize:'1.05rem' }} onClick={onStart}>
+            Begin Module
+          </button>
+        )}
       </motion.div>
     </div>
   );

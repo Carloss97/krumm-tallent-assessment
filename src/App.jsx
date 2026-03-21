@@ -35,7 +35,7 @@ function AppContent() {
             <Route path="/" element={<Intro />} />
             {GAME_FLOW.map(game => (
               <Route
-                key={game.id}
+                key={game.path}
                 path={game.path}
                 element={
                   <GameLayout gameId={game.id}>
