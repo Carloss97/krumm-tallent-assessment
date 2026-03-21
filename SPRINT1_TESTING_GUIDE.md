@@ -103,6 +103,15 @@ Once testing validates Sprint 1 objectives:
 3. Implement user/session management
 4. Launch pilot testing with companies
 
+## 🛠️ Sprint 3 (Started)
+
+- Backend API Node + Express + SQLite creado
+- Proxy Vite /api configurado a http://localhost:4000
+- Endpoint POST /api/session functionality added
+- Report component now guarda sesión automáticamente usando backend
+- `npm run dev:server` y `npm run dev` funcionan
+- `npm run dev:full` preparado con concurrently
+
 ---
 
 ## 💾 Dev Environment Info

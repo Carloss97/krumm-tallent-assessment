@@ -1,8 +1,7 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { useNavigate } from 'react-router-dom';
 import { useTelemetry } from '../TelemetryContext';
-import InstructionInterstitial from '../components/InstructionInterstitial';
+import { useGameTimer } from '../hooks/useGameTimer';
 
 const COLORS = [
   { name: 'Red', value: '#ef4444' },
@@ -15,51 +14,38 @@ const COLORS = [
   { name: 'Cyan', value: '#06b6d4' }
 ];
 
-const Game1 = () => {
-  const navigate = useNavigate();
-  const { isDemo, startTracking, stopTracking, recordError } = useTelemetry();
+const ColorWordGame = ({ isActive, onEndGame, isDemo, timeLimit }) => {
+  const { recordError } = useTelemetry();
   
-  const [isActive, setIsActive] = useState(false);
-  const [showInstructions, setShowInstructions] = useState(true);
-  
-  const GAME_TIME = isDemo ? 10 : 30;
   const MAX_ROUNDS = isDemo ? 3 : 15;
 
   const [round, setRound] = useState(0);
   const [wordText, setWordText] = useState('');
   const [wordColor, setWordColor] = useState('');
   const [options, setOptions] = useState([]);
-  const [score, setScore] = useState(0);
-  const [timeLeft, setTimeLeft] = useState(GAME_TIME);
-  const timeLeftRef = useRef(GAME_TIME);
   
-  // Use Refs for synchronous state tracking to completely eliminate double-click/React batching bugs
-  const hasEndedRef = useRef(false);
-  const roundRef = useRef(0);
   const scoreRef = useRef(0);
+  const hasEndedRef = useRef(false);
+
+  const endGame = useCallback(() => {
+    if (hasEndedRef.current) return;
+    hasEndedRef.current = true;
+    onEndGame(scoreRef.current);
+  }, [onEndGame]);
+
+  const timeLeft = useGameTimer({ isActive, timeLimit, onEnd: endGame });
 
   useEffect(() => {
     if (isActive) {
-      startTracking();
+      scoreRef.current = 0;
+      hasEndedRef.current = false;
       generateRound(0);
-      timeLeftRef.current = GAME_TIME;
-      setTimeLeft(GAME_TIME);
-      
-      // Timer
-      const timer = setInterval(() => {
-        timeLeftRef.current -= 1;
-        setTimeLeft(timeLeftRef.current);
-        if (timeLeftRef.current <= 0) {
-          endGame(scoreRef.current);
-        }
-      }, 1000);
-      return () => clearInterval(timer);
     }
-  }, [isActive, startTracking, GAME_TIME]);
+  }, [isActive]);
 
-  const generateRound = (currentRound = roundRef.current) => {
+  const generateRound = (currentRound) => {
     if (currentRound >= MAX_ROUNDS || hasEndedRef.current) {
-      endGame(scoreRef.current);
+      endGame();
       return;
     }
     
@@ -90,42 +76,27 @@ const Game1 = () => {
     
     if (colorVal === wordColor) {
       scoreRef.current += 1;
-      setScore(scoreRef.current);
     } else {
       recordError();
     }
 
-    roundRef.current += 1;
-    setRound(roundRef.current);
-    generateRound(roundRef.current);
+    const nextRound = round + 1;
+    setRound(nextRound);
+    generateRound(nextRound);
   };
-
-  const endGame = (finalScore) => {
-    if (hasEndedRef.current) return;
-    hasEndedRef.current = true;
-    setIsActive(false);
-    
-    stopTracking('game1', finalScore);
-
-    setTimeout(() => {
-      navigate('/game/2', { replace: true });
-      window.scrollTo(0, 0); 
-    }, 1500);
-  };
-
-  if (showInstructions) {
-    return (
-      <InstructionInterstitial 
-        type="Cognitive Flexibility"
-        title="Interference Matrix"
-        description="Identify the COLOR of the ink, ignoring the word itself. The neural load will increase as the semantic meaning contradicts the visual perception. Maintain precision under time pressure."
-        timeLimit={`${GAME_TIME}s`}
-        onStart={() => {
-          setShowInstructions(false);
-          setIsActive(true);
-        }}
-      />
-    );
+  
+  if (!isActive) {
+      return (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            className="glass-panel"
+            style={{ padding: '40px', textAlign: 'center', border: '1px solid #10b981' }}
+          >
+            <div style={{ color: '#10b981', fontSize: '2rem', marginBottom: '16px' }}>[ STAGE COMPLETE ]</div>
+            <p style={{ color: '#64748b', textTransform: 'uppercase', letterSpacing: '2px' }}>Awaiting Next Sequence...</p>
+          </motion.div>
+      )
   }
 
   return (
@@ -138,7 +109,6 @@ const Game1 = () => {
       </div>
 
       <AnimatePresence mode="wait">
-        {isActive ? (
           <motion.div 
             key={round}
             initial={{ opacity: 0, filter: 'blur(10px)' }}
@@ -222,20 +192,9 @@ const Game1 = () => {
               ))}
             </div>
           </motion.div>
-        ) : (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            className="glass-panel"
-            style={{ padding: '40px', textAlign: 'center', border: '1px solid #10b981' }}
-          >
-            <div style={{ color: '#10b981', fontSize: '2rem', marginBottom: '16px' }}>[ STAGE COMPLETE ]</div>
-            <p style={{ color: '#64748b', textTransform: 'uppercase', letterSpacing: '2px' }}>Awaiting Next Sequence...</p>
-          </motion.div>
-        )}
       </AnimatePresence>
     </div>
   );
 };
 
-export default Game1;
+export default ColorWordGame;

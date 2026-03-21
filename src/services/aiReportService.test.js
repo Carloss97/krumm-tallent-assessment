@@ -1,8 +1,33 @@
+import { vi } from 'vitest';
 import { generateAIReport, generateHeuristicReport } from './aiReportService';
 
-/**
- * Mock test data - simulates a complete assessment session
- */
+// Mock the Google Generative AI to avoid real API calls
+vi.mock('@google/generative-ai', () => {
+  const mockGenerateContent = vi.fn().mockResolvedValue({
+    response: {
+      text: () => JSON.stringify({
+        summary: 'Mock AI summary',
+        strengths: ['Mock strength'],
+        areasToMonitor: ['Mock area'],
+        careerRecommendations: [{ role: 'Mock Role', fit: 'Good fit' }],
+        confidenceScore: 80,
+        recommendation: 'HIGHLY RECOMMEND'
+      })
+    }
+  });
+
+  class MockGoogleGenerativeAI {
+    getGenerativeModel() {
+      return {
+        generateContent: mockGenerateContent
+      };
+    }
+  }
+
+  return {
+    GoogleGenerativeAI: MockGoogleGenerativeAI
+  };
+});
 const mockSessionData = {
   game1: {
     score: 12,
@@ -46,94 +71,54 @@ const mockSessionData = {
   },
 };
 
-/**
- * Test the AI report generation
- */
-export async function testAIReportGeneration() {
-  console.log('🧪 Testing AI Report Generation...\n');
+describe('AI Report Service', () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
 
-  try {
-    console.log('📋 Mock Session Data:', mockSessionData);
-    console.log('\n⏳ Calling generateAIReport...');
+  describe('generateAIReport', () => {
+    it('should return valid AI report when API succeeds', async () => {
+      const result = await generateAIReport(mockSessionData);
+      expect(result).toHaveProperty('summary');
+      expect(result).toHaveProperty('strengths');
+      expect(result).toHaveProperty('recommendation');
+      expect(result.source).toBe('gemini');
+    });
+  });
 
-    const aiReport = await generateAIReport(mockSessionData, 'recruitment');
+  describe('generateHeuristicReport', () => {
+    it('should generate a heuristic report with correct structure', () => {
+      const result = generateHeuristicReport(mockSessionData);
 
-    if (aiReport) {
-      console.log('\n✅ AI Report Generated Successfully!\n');
-      console.log('Summary:', aiReport.summary);
-      console.log('Strengths:', aiReport.strengths);
-      console.log('Areas to Monitor:', aiReport.areasToMonitor);
-      console.log('Recommendation:', aiReport.recommendation);
-      console.log('Confidence:', aiReport.confidenceScore);
-      console.log('Source:', aiReport.source);
-      return aiReport;
-    } else {
-      console.log('\n⚠️ AI Report returned null - testing fallback...');
-      const heuristicReport = generateHeuristicReport(mockSessionData, 'recruitment');
-      console.log('\n✅ Heuristic Report Generated Successfully!\n');
-      console.log('Summary:', heuristicReport.summary);
-      console.log('Recommendation:', heuristicReport.recommendation);
-      console.log('Source:', heuristicReport.source);
-      return heuristicReport;
-    }
-  } catch (error) {
-    console.error('❌ Error testing AI report:', error);
-    return null;
-  }
-}
+      expect(result).toHaveProperty('summary');
+      expect(result).toHaveProperty('strengths');
+      expect(result).toHaveProperty('areasToMonitor');
+      expect(result).toHaveProperty('careerRecommendations');
+      expect(result).toHaveProperty('confidenceScore');
+      expect(result).toHaveProperty('recommendation');
+      expect(result.source).toBe('heuristic');
+      expect(result).toHaveProperty('generatedAt');
+    });
 
-/**
- * Test multiple scenarios with different performance levels
- */
-export async function testMultipleScenarios() {
-  console.log('\n🎯 Testing Multiple Scenarios...\n');
+    it('should recommend "HIGHLY RECOMMEND" for strong performance', () => {
+      const strongData = {
+        game1: { score: 15, errors: 0 },
+        game2: { score: 20, errors: 1 },
+        game3: { score: 5, errors: 0 },
+        game4: { score: 300, errors: 0 },
+        game5: { score: 3000, errors: 0, avgReactionTime: 250, falseStarts: 0 },
+        game6: { score: 500, errors: 0, gridScore: 500, quizScore: 3 },
+        game7: { score: 95, errors: 0, efficiency: 95 }
+      };
 
-  const scenarios = [
-    {
-      name: 'High Performer',
-      data: { ...mockSessionData, game1: { score: 15, errors: 0, duration: 45000 } },
-    },
-    {
-      name: 'Average Performer',
-      data: { ...mockSessionData, game1: { score: 8, errors: 4, duration: 45000 } },
-    },
-    {
-      name: 'Low Performer',
-      data: { ...mockSessionData, game1: { score: 3, errors: 8, duration: 45000 } },
-    },
-  ];
+      const result = generateHeuristicReport(strongData);
+      expect(result.recommendation).toBe('HIGHLY RECOMMEND');
+    });
 
-  for (const scenario of scenarios) {
-    console.log(`\n📌 Scenario: ${scenario.name}`);
-    try {
-      const report = await generateAIReport(scenario.data, 'recruitment');
-      if (report) {
-        console.log(`   ✅ Recommendation: ${report.recommendation}`);
-        console.log(`   📊 Confidence: ${report.confidenceScore}%`);
-      }
-    } catch (error) {
-      console.error(`   ❌ Error:`, error.message);
-    }
-  }
-}
-
-/**
- * Validate report structure
- */
-export function validateReportStructure(report) {
-  console.log('\n🔍 Validating Report Structure...\n');
-
-  const requiredFields = ['summary', 'strengths', 'areasToMonitor', 'recommendation', 'confidenceScore', 'source'];
-  const missingFields = requiredFields.filter(field => !report[field]);
-
-  if (missingFields.length === 0) {
-    console.log('✅ All required fields present');
-    return true;
-  } else {
-    console.log(`❌ Missing fields: ${missingFields.join(', ')}`);
-    return false;
-  }
-}
-
-// Export for use in tests
-export { mockSessionData };
+    it('should include appropriate strengths based on performance', () => {
+      const result = generateHeuristicReport(mockSessionData);
+      expect(result.strengths.length).toBeGreaterThan(0);
+      expect(result.strengths).toContain('Strong cognitive flexibility');
+    });
+  });
+});

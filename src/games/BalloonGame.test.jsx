@@ -18,24 +18,20 @@ describe('BalloonGame Telemetry Integration', () => {
   });
 
   it('starts telemetry when game begins', async () => {
-    // We need to bypass instructions
+    // Mock the telemetry context
+    const mockStartTracking = vi.fn();
+    const mockStopTracking = vi.fn();
+
+    // We need to render with isActive=true to bypass instructions
     render(
       <TelemetryProvider>
         <BrowserRouter>
-          <BalloonGame />
+          <BalloonGame isActive={true} onEndGame={vi.fn()} />
         </BrowserRouter>
       </TelemetryProvider>
     );
 
-    const btn = screen.getByText(/Begin Module/i);
-    
-    act(() => {
-      fireEvent.click(btn);
-    });
-
-    // The game should be active now. startTracking is called in useEffect when isActive is true.
-    // Since we can't easily spy on the context value directly without a wrapper, 
-    // we'll assume the internal state updated if we see the game UI.
+    // The game should be active and show the game UI
     expect(screen.getByText(/TRIAL:/i)).toBeDefined();
   });
 });

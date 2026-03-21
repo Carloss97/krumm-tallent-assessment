@@ -1,57 +1,64 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { useNavigate } from 'react-router-dom';
-import { useTelemetry } from '../TelemetryContext';
-import InstructionInterstitial from '../components/InstructionInterstitial';
 import { playBalloonPump, playBalloonPop } from '../utils/audio';
 
-const BalloonGame = () => {
-  const navigate = useNavigate();
-  const { startTracking, stopTracking, isDemo } = useTelemetry();
+const BalloonGame = ({ isActive, onEndGame, isDemo }) => {
   const MAX_ROUNDS = isDemo ? 3 : 10;
 
-  const [showInstructions, setShowInstructions] = useState(true);
-  const [isActive, setIsActive] = useState(false);
-  
   const [round, setRound] = useState(1);
   const [currentBalloonSize, setCurrentBalloonSize] = useState(1);
   const [currentRoundPoints, setCurrentRoundPoints] = useState(0);
   const [totalPoints, setTotalPoints] = useState(0);
-  const totalPointsRef = useRef(0);
   const [explosionPoint, setExplosionPoint] = useState(0);
   const [gameState, setGameState] = useState('playing'); // playing, exploded, banked
   const [pops, setPops] = useState(0);
+
+  const totalPointsRef = useRef(0);
   const popsRef = useRef(0);
   const hasEndedRef = useRef(false);
-  
-  useEffect(() => {
-    if (isActive) {
-      startTracking();
+
+  const advanceRound = useCallback(() => {
+    if (hasEndedRef.current) return;
+    
+    if (round >= MAX_ROUNDS) {
+      hasEndedRef.current = true;
+      onEndGame(totalPointsRef.current, popsRef.current);
+    } else {
+      const next = round + 1;
+      setRound(next);
       initRound();
     }
-  }, [isActive, startTracking]);
+  }, [round, MAX_ROUNDS, onEndGame]);
 
-  const initRound = (currentRound) => {
+  const initRound = useCallback(() => {
     setCurrentBalloonSize(1);
     setCurrentRoundPoints(0);
     setGameState('playing');
-    // Minimum 4 pumps safe, maximum 11 before deterministic pop
     const threshold = Math.floor(Math.random() * 8) + 4; // [4..11]
     setExplosionPoint(threshold);
-  };
+  }, []);
+
+  useEffect(() => {
+    if (isActive) {
+      hasEndedRef.current = false;
+      totalPointsRef.current = 0;
+      popsRef.current = 0;
+      setRound(1);
+      setTotalPoints(0);
+      setPops(0);
+      initRound();
+    }
+  }, [isActive, initRound]);
 
   const handlePump = () => {
     if (gameState !== 'playing' || hasEndedRef.current) return;
     
     const newSize = currentBalloonSize + 1;
     
-    // Increased risk: deterministic pop at threshold plus mild early-pop chance
-    // Prevent pop on first pump by requiring current ball size >1 for accidental early pop.
     const earlyPopChance = currentBalloonSize > 1 ? Math.min(0.15, currentBalloonSize * 0.02) : 0;
     const isEarlyPop = Math.random() < earlyPopChance;
 
     if (newSize >= explosionPoint || isEarlyPop) {
-      // Pop!
       playBalloonPop();
       setGameState('exploded');
       popsRef.current += 1;
@@ -67,46 +74,26 @@ const BalloonGame = () => {
   const handleBank = () => {
     if (gameState !== 'playing' || currentBalloonSize === 1 || hasEndedRef.current) return;
     
-    // Success, keep points
     totalPointsRef.current += currentRoundPoints;
     setTotalPoints(totalPointsRef.current);
     setGameState('banked');
     setTimeout(() => advanceRound(), 1500);
   };
 
-  const advanceRound = () => {
-    if (hasEndedRef.current) return;
-    
-    if (round >= MAX_ROUNDS) {
-      hasEndedRef.current = true;
-      setIsActive(false);
-      
-      stopTracking('game4', totalPointsRef.current, popsRef.current);
-
-      setTimeout(() => {
-        navigate('/game/5', { replace: true });
-        window.scrollTo(0, 0);
-      }, 500);
-    } else {
-      const next = round + 1;
-      setRound(next);
-      initRound(next);
-    }
-  };
-
-  if (showInstructions) {
+  if (!isActive) {
     return (
-      <InstructionInterstitial 
-        type="Risk Strategy"
-        title="The Balloon Test"
-        description="Pump the balloon to earn points. You can bank your points at any time. However, if the balloon pops before you bank, you lose all points for that round. Find the balance between risk and reward."
-        timeLimit="None"
-        onStart={() => setShowInstructions(false) || setIsActive(true)}
-      />
+      <motion.div
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        className="glass-panel"
+        style={{ padding: '40px', textAlign: 'center', border: '1px solid #10b981' }}
+      >
+        <div style={{ color: '#10b981', fontSize: '2rem', marginBottom: '16px' }}>[ STAGE COMPLETE ]</div>
+        <p style={{ color: '#64748b', textTransform: 'uppercase', letterSpacing: '2px' }}>Awaiting Next Sequence...</p>
+      </motion.div>
     );
   }
 
-  // Calculate visual size multiplier with a safety cap
   const maxScale = 2.8;
   const rawScale = 1 + (currentBalloonSize * 0.12);
   const visualScale = Math.min(rawScale, maxScale);

@@ -3,6 +3,7 @@ import { motion } from 'framer-motion';
 import { useSearchParams } from 'react-router-dom';
 import { useTelemetry } from './TelemetryContext';
 import { generateAIReport, generateHeuristicReport } from './services/aiReportService';
+import { saveSessionToBackend } from './services/backendService';
 import { generateDummyReportData } from './utils/dummyDataGenerator';
 
 const Report = () => {
@@ -12,6 +13,8 @@ const Report = () => {
   const [aiReport, setAiReport] = useState(null);
   const [useAI, setUseAI] = useState(true); // Toggle between AI and heuristic
   const [useDummyData, setUseDummyData] = useState(false);
+  const [sessionSavedId, setSessionSavedId] = useState(null);
+  const [backendError, setBackendError] = useState(null);
 
   // Check URL parameters for dummy mode
   useEffect(() => {
@@ -33,10 +36,8 @@ const Report = () => {
           const report = await generateAIReport(reportData, 'recruitment');
           if (report) {
             setAiReport(report);
-            // Finish analyzing after AI report is ready (min 8s)
             setTimeout(() => setIsAnalyzing(false), 8000);
           } else {
-            // Fallback to heuristic if AI fails
             const heuristicReport = generateHeuristicReport(reportData, 'recruitment');
             setAiReport(heuristicReport);
             setTimeout(() => setIsAnalyzing(false), 3500);
@@ -47,15 +48,25 @@ const Report = () => {
           setAiReport(heuristicReport);
           setTimeout(() => setIsAnalyzing(false), 3500);
         }
+
+        if (!sessionSavedId) {
+          try {
+            const saveRes = await saveSessionToBackend(reportData);
+            setSessionSavedId(saveRes.sessionId);
+            setBackendError(null);
+          } catch (error) {
+            setBackendError('No se pudo guardar la sesión en backend');
+            console.error('Backend save failure', error);
+          }
+        }
       };
       generateReport();
     } else if (!useAI) {
-      // Use heuristic only
       const heuristicReport = generateHeuristicReport(reportData, 'recruitment');
       setAiReport(heuristicReport);
       setTimeout(() => setIsAnalyzing(false), 3500);
     }
-  }, [sessionData, useAI, useDummyData, hasRealData]);
+  }, [sessionData, useAI, useDummyData, hasRealData, reportData, sessionSavedId]);
 
   if (!hasRealData && !useDummyData) {
     return (
@@ -243,6 +254,11 @@ const Report = () => {
         </div>
 
         <div style={{ textAlign: 'center', marginTop: '40px' }}>
+          <div style={{ marginBottom: '12px', color: '#475569' }}>
+            {backendError && <span style={{ color: '#dc2626' }}>⚠ {backendError}</span>}
+            {!backendError && sessionSavedId && <span style={{ color: '#16a34a' }}>✅ Session saved with ID {sessionSavedId}</span>}
+            {!backendError && !sessionSavedId && <span style={{ color: '#0ea5e9' }}>Guardando sesión en backend...</span>}
+          </div>
           <button className="btn" style={{ padding: '16px 40px', fontSize: '1.2rem' }} onClick={() => window.location.href = '/'}>
             Assess Another Candidate
           </button>
