@@ -20,11 +20,8 @@ export async function generateAIReport(sessionData, mode = 'recruitment') {
     const viteModel = (typeof window !== 'undefined' && import.meta && import.meta.env && import.meta.env.VITE_GEMINI_MODEL)
       ? import.meta.env.VITE_GEMINI_MODEL
       : null;
-    const nodeModel = (typeof process !== 'undefined' && process.env && process.env.VITE_GEMINI_MODEL)
-      ? process.env.VITE_GEMINI_MODEL
-      : null;
 
-    const preferredModel = viteModel || nodeModel || 'gemini-1.5-flash';
+    const preferredModel = viteModel || 'gemini-1.5-flash';
     const fallbackModels = ['gemini-1.5-flash', 'gemini-2.0-flash', 'gemini-2.5-flash-lite', 'gemini-flash-latest'];
     const modelCandidates = Array.from(new Set([preferredModel, ...fallbackModels]));
 
@@ -56,7 +53,7 @@ export async function generateAIReport(sessionData, mode = 'recruitment') {
     }
 
     // Parse and structure the response
-    const aiReport = parseAIResponse(responseText, gameAnalysis);
+    const aiReport = parseAIResponse(responseText);
     
     return aiReport;
   } catch (error) {
@@ -213,10 +210,9 @@ Ensure the response is valid JSON only, no markdown or extra text.`;
 /**
  * Parse Gemini response and structure as report
  * @param {string} responseText - Raw Gemini API response
- * @param {Object} gameAnalysis - Game metrics for fallback
  * @returns {Object} Structured AI report
  */
-function parseAIResponse(responseText, gameAnalysis) {
+function parseAIResponse(responseText) {
   try {
     // Extract JSON from response (in case Gemini adds any extra text)
     const jsonMatch = responseText.match(/\{[\s\S]*\}/);
@@ -248,7 +244,7 @@ function parseAIResponse(responseText, gameAnalysis) {
  * @param {string} mode - 'recruitment' or 'reassignment'
  * @returns {Object} Heuristic report
  */
-export function generateHeuristicReport(sessionData, mode = 'recruitment') {
+export function generateHeuristicReport(sessionData) {
   const gameAnalysis = prepareGameAnalysis(sessionData);
   
   // Calculate strengths

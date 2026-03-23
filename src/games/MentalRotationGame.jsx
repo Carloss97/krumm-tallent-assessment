@@ -48,6 +48,17 @@ const MentalRotationGame = ({ isActive, onEndGame, isDemo, timeLimit }) => {
     return rotated;
   };
 
+  const handleTimeout = useCallback(() => {
+    setTotalAnswers(prev => prev + 1);
+    recordError();
+    setFeedback('timeout');
+    setGameState('responding');
+    setTimeout(() => {
+      if (currentTrial >= MAX_TRIALS) endGame();
+      else setCurrentTrial(prev => prev + 1);
+    }, 1500);
+  }, [currentTrial, endGame, MAX_TRIALS, recordError]);
+
   const startTrial = useCallback(() => {
     const shapeIndex = Math.floor(Math.random() * shapes.length);
     const baseShape = shapes[shapeIndex];
@@ -71,11 +82,12 @@ const MentalRotationGame = ({ isActive, onEndGame, isDemo, timeLimit }) => {
     setFeedback(null);
     trialStartTimeRef.current = performance.now();
     timeoutRef.current = setTimeout(() => handleTimeout(), RESPONSE_TIME);
-  }, []);
+  }, [RESPONSE_TIME, handleTimeout]);
 
   useEffect(() => {
     if (isActive) {
       hasEndedRef.current = false;
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setCurrentTrial(1);
       setScore(0);
       setCorrectAnswers(0);
@@ -88,6 +100,7 @@ const MentalRotationGame = ({ isActive, onEndGame, isDemo, timeLimit }) => {
   
   useEffect(() => {
     if (isActive && currentTrial > 1) {
+        // eslint-disable-next-line react-hooks/set-state-in-effect
         startTrial();
     }
   }, [currentTrial, isActive, startTrial]);
@@ -107,17 +120,6 @@ const MentalRotationGame = ({ isActive, onEndGame, isDemo, timeLimit }) => {
       recordError();
       setFeedback('incorrect');
     }
-    setGameState('responding');
-    setTimeout(() => {
-      if (currentTrial >= MAX_TRIALS) endGame();
-      else setCurrentTrial(prev => prev + 1);
-    }, 1500);
-  };
-
-  const handleTimeout = () => {
-    setTotalAnswers(prev => prev + 1);
-    recordError();
-    setFeedback('timeout');
     setGameState('responding');
     setTimeout(() => {
       if (currentTrial >= MAX_TRIALS) endGame();
@@ -149,7 +151,7 @@ const MentalRotationGame = ({ isActive, onEndGame, isDemo, timeLimit }) => {
       
       <div style={{ marginBottom: '30px', textAlign: 'center' }}>
         <div style={{ fontSize: '1.1rem', color: '#6b7280', marginBottom: '10px' }}>Are these shapes the same or different?</div>
-        <div style={{ fontSize: '0.9rem', color: '#9ca3af' }}>Accuracy: {accuracy}% • Correct: {correctAnswers} / {totalAnswers}</div>
+        <div style={{ fontSize: '0.9rem', color: '#9ca3af' }}>Accuracy: {accuracy}% â€¢ Correct: {correctAnswers} / {totalAnswers}</div>
       </div>
       
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '60px', marginBottom: '40px' }}>

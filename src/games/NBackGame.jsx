@@ -21,6 +21,7 @@ const NBackGame = ({ isActive, onEndGame, isDemo, timeLimit }) => {
   const timeoutRef = useRef(null);
   const isActiveRef = useRef(false);
   const hasEndedRef = useRef(false);
+  const gameStateRef = useRef('waiting');
 
   const MAX_ROUNDS = isDemo ? 3 : 5;
   const STIMULUS_DURATION = 500;
@@ -34,6 +35,11 @@ const NBackGame = ({ isActive, onEndGame, isDemo, timeLimit }) => {
   }, [onEndGame, score, totalErrors, totalCorrect, reactionTimes, nBack]);
   
   const timeLeft = useGameTimer({ isActive, timeLimit, onEnd: endGame });
+
+  const setGameStateSafe = useCallback((newState) => {
+    gameStateRef.current = newState;
+    setGameState(newState);
+  }, []);
 
   const advanceRound = useCallback(() => {
     if (round >= MAX_ROUNDS) {
@@ -61,32 +67,51 @@ const NBackGame = ({ isActive, onEndGame, isDemo, timeLimit }) => {
     }
     setSequence(newSequence);
     setCurrentIndex(0);
-    setGameState('waiting');
-  }, [round, nBack]);
+    setGameStateSafe('waiting');
+  }, [round, nBack, setGameStateSafe]);
+
+  const handleNoResponse = useCallback(() => {
+    if (gameStateRef.current !== 'responding') return;
+    const isActualMatch = currentIndex >= nBack && sequence[currentIndex] === sequence[currentIndex - nBack];
+    if (isActualMatch) { setTotalErrors(prev => prev + 1); recordError(); }
+    setGameStateSafe('waiting');
+  }, [currentIndex, nBack, recordError, sequence, setGameStateSafe]);
 
   const playRound = useCallback(async () => {
     for (let i = 0; i < sequence.length; i++) {
       if (!isActiveRef.current) return;
       setCurrentIndex(i);
       setCurrentStimulus(sequence[i]);
-      setGameState('showing');
+      setGameStateSafe('showing');
       stimulusStartTimeRef.current = performance.now();
-      await new Promise(resolve => { timeoutRef.current = setTimeout(() => { setGameState('responding'); resolve(); }, STIMULUS_DURATION); });
-      await new Promise(resolve => { timeoutRef.current = setTimeout(() => { if (gameState === 'responding') { handleNoResponse(); } resolve(); }, RESPONSE_WINDOW - STIMULUS_DURATION); });
+      await new Promise(resolve => {
+        timeoutRef.current = setTimeout(() => {
+          setGameStateSafe('responding');
+          resolve();
+        }, STIMULUS_DURATION);
+      });
+      await new Promise(resolve => {
+        timeoutRef.current = setTimeout(() => {
+          handleNoResponse();
+          resolve();
+        }, RESPONSE_WINDOW - STIMULUS_DURATION);
+      });
     }
     advanceRound();
-  }, [sequence, gameState]);
+  }, [sequence, STIMULUS_DURATION, RESPONSE_WINDOW, handleNoResponse, advanceRound, setGameStateSafe]);
 
   useEffect(() => {
     if (isActive) {
       isActiveRef.current = true;
       hasEndedRef.current = false;
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setRound(1);
       setNBack(2);
       setScore(0);
       setTotalCorrect(0);
       setTotalErrors(0);
       setReactionTimes([]);
+      gameStateRef.current = 'waiting';
     } else {
       isActiveRef.current = false;
       clearTimeout(timeoutRef.current);
@@ -94,11 +119,15 @@ const NBackGame = ({ isActive, onEndGame, isDemo, timeLimit }) => {
   }, [isActive]);
 
   useEffect(() => {
-      if(isActive) generateRound();
+      if(isActive) {
+        // eslint-disable-next-line react-hooks/set-state-in-effect
+        generateRound();
+      }
   }, [isActive, round, generateRound])
 
   useEffect(() => {
     if (isActive && sequence.length > 0) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       playRound();
     }
   }, [isActive, sequence, playRound]);
@@ -110,13 +139,7 @@ const NBackGame = ({ isActive, onEndGame, isDemo, timeLimit }) => {
     const isActualMatch = currentIndex >= nBack && sequence[currentIndex] === sequence[currentIndex - nBack];
     if (isMatch === isActualMatch) { setTotalCorrect(prev => prev + 1); setScore(prev => prev + 10); } 
     else { setTotalErrors(prev => prev + 1); recordError(); }
-    setGameState('waiting');
-  };
-
-  const handleNoResponse = () => {
-    const isActualMatch = currentIndex >= nBack && sequence[currentIndex] === sequence[currentIndex - nBack];
-    if (isActualMatch) { setTotalErrors(prev => prev + 1); recordError(); }
-    setGameState('waiting');
+    setGameStateSafe('waiting');
   };
 
   if (!isActive) {
@@ -136,8 +159,8 @@ const NBackGame = ({ isActive, onEndGame, isDemo, timeLimit }) => {
       <div style={{ position: 'absolute', top: '30px', right: '40px', fontSize: '1.5rem', color: '#374151', zIndex: 50, background: 'rgba(255,255,255,0.82)', backdropFilter:'blur(8px)', padding: '8px 18px', borderRadius: '8px', border: '1px solid rgba(99,102,241,0.2)', fontWeight:'600' }}>SCORE: <span style={{ color: '#059669', fontWeight: 'bold' }}>{score}</span></div>
       {isDemo && <div style={{ position: 'absolute', top: '80px', right: '40px', fontSize: '1.2rem', color: '#374151', zIndex: 50, background: 'rgba(255,255,255,0.82)', backdropFilter:'blur(8px)', padding: '6px 12px', borderRadius: '6px', border: '1px solid rgba(99,102,241,0.2)', fontWeight:'600' }}>T-<span style={{ color: timeLeft < 10 ? '#dc2626' : '#059669', fontWeight: 'bold' }}>{timeLeft}s</span></div>}
       <div style={{ marginBottom: '40px', textAlign: 'center' }}>
-        <div style={{ fontSize: '1.1rem', color: '#6b7280', marginBottom: '10px' }}>{nBack}-Back Task • Accuracy: {accuracy}%</div>
-        <div style={{ fontSize: '0.9rem', color: '#9ca3af' }}>Correct: {totalCorrect} • Errors: {totalErrors}</div>
+        <div style={{ fontSize: '1.1rem', color: '#6b7280', marginBottom: '10px' }}>{nBack}-Back Task | Accuracy: {accuracy}%</div>
+        <div style={{ fontSize: '0.9rem', color: '#9ca3af' }}>Correct: {totalCorrect} | Errors: {totalErrors}</div>
       </div>
       <AnimatePresence mode="wait">
         <motion.div key={gameState} initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 1.1 }} style={{ width: '200px', height: '200px', borderRadius: '12px', backgroundColor: gameState === 'showing' ? '#3b82f6' : '#f3f4f6', border: '3px solid #e5e7eb', display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: '40px', boxShadow: gameState === 'showing' ? '0 0 30px rgba(59, 130, 246, 0.5)' : '0 4px 20px rgba(0,0,0,0.1)' }}>

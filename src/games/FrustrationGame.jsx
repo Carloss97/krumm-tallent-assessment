@@ -8,6 +8,7 @@ const FrustrationGame = ({ isActive, onEndGame, timeLimit }) => {
   
   const [targetPos, setTargetPos] = useState({ x: 50, y: 50 }); // percentage
   const [inZone, setInZone] = useState(false);
+  const [trackingTimeMs, setTrackingTimeMs] = useState(0);
   const trackingTimeRef = useRef(0);
   const hasEndedRef = useRef(false);
 
@@ -23,6 +24,8 @@ const FrustrationGame = ({ isActive, onEndGame, timeLimit }) => {
     if (isActive) {
       hasEndedRef.current = false;
       trackingTimeRef.current = 0;
+      // eslint-disable-next-line react-hooks/set-state-in-effect
+      setTrackingTimeMs(0);
       // Move the ring: random
       const moveInterval = setInterval(() => {
         setTargetPos({
@@ -43,6 +46,7 @@ const FrustrationGame = ({ isActive, onEndGame, timeLimit }) => {
     if (isActive && inZone) {
       trackTimer = setInterval(() => {
         trackingTimeRef.current += 100;
+        setTrackingTimeMs(trackingTimeRef.current);
       }, 100);
     }
     return () => clearInterval(trackTimer);
@@ -81,7 +85,7 @@ const FrustrationGame = ({ isActive, onEndGame, timeLimit }) => {
   return (
     <div style={{ width: '100vw', height: '100vh', position: 'relative', overflow: 'hidden', backgroundColor: 'transparent', fontFamily: '"Courier New", Courier, monospace' }}>
       <div style={{ position: 'absolute', top: '30px', left: '40px', fontSize: '1.5rem', color: '#374151', zIndex: 50, background: 'rgba(255,255,255,0.82)', backdropFilter:'blur(8px)', padding: '8px 18px', borderRadius: '8px', border: '1px solid rgba(99,102,241,0.2)', fontWeight:'600' }}>
-        SYNC: <span style={{color: '#4f46e5', fontWeight: 'bold'}}>{(trackingTimeRef.current / 1000).toFixed(1)}s</span>
+        SYNC: <span style={{color: '#4f46e5', fontWeight: 'bold'}}>{(trackingTimeMs / 1000).toFixed(1)}s</span>
       </div>
       <div style={{ position: 'absolute', top: '30px', right: '40px', fontSize: '1.5rem', color: '#374151', zIndex: 50, background: 'rgba(255,255,255,0.82)', backdropFilter:'blur(8px)', padding: '8px 18px', borderRadius: '8px', border: '1px solid rgba(99,102,241,0.2)', fontWeight:'600' }}>
         T-<span style={{ color: timeLeft < 10 ? '#dc2626' : '#059669', fontWeight: 'bold' }}>{timeLeft}s</span>

@@ -35,15 +35,7 @@ const ColorWordGame = ({ isActive, onEndGame, isDemo, timeLimit }) => {
 
   const timeLeft = useGameTimer({ isActive, timeLimit, onEnd: endGame });
 
-  useEffect(() => {
-    if (isActive) {
-      scoreRef.current = 0;
-      hasEndedRef.current = false;
-      generateRound(0);
-    }
-  }, [isActive]);
-
-  const generateRound = (currentRound) => {
+  const generateRound = useCallback((currentRound) => {
     if (currentRound >= MAX_ROUNDS || hasEndedRef.current) {
       endGame();
       return;
@@ -69,7 +61,16 @@ const ColorWordGame = ({ isActive, onEndGame, isDemo, timeLimit }) => {
     
     const shuffledOpts = Array.from(opts).sort(() => Math.random() - 0.5);
     setOptions(shuffledOpts);
-  };
+  }, [MAX_ROUNDS, endGame]);
+
+  useEffect(() => {
+    if (isActive) {
+      scoreRef.current = 0;
+      hasEndedRef.current = false;
+      // eslint-disable-next-line react-hooks/set-state-in-effect
+      generateRound(0);
+    }
+  }, [isActive, generateRound]);
 
   const handleChoice = (colorVal) => {
     if (hasEndedRef.current || !isActive) return;

@@ -44,8 +44,8 @@ const TowerOfLondonGame = ({ isActive, onEndGame, isDemo, timeLimit }) => {
     setMoves(0);
     setOptimalMoves(currentProblem.optimal);
     setSelectedTower(null);
-    problemStartTime.current = performance.now();
-  }, [problems]);
+    problemStartTime.current = Date.now();
+  }, []);
 
   useEffect(() => {
     if (isActive) {
@@ -85,7 +85,8 @@ const TowerOfLondonGame = ({ isActive, onEndGame, isDemo, timeLimit }) => {
     setSelectedTower(null);
 
     if (JSON.stringify(newTowers) === JSON.stringify(targetTowers)) {
-      const timeTaken = performance.now() - problemStartTime.current;
+      // eslint-disable-next-line react-hooks/purity
+      const timeTaken = Date.now() - problemStartTime.current;
       setProblemTimes(prev => [...prev, timeTaken]);
 
       const efficiency = Math.max(0, 100 - Math.abs(moves + 1 - optimalMoves) * 20);
@@ -139,7 +140,7 @@ const TowerOfLondonGame = ({ isActive, onEndGame, isDemo, timeLimit }) => {
       <div style={{ position: 'absolute', top: '30px', right: '40px', fontSize: '1.5rem', color: '#374151', zIndex: 50, background: 'rgba(255,255,255,0.82)', backdropFilter:'blur(8px)', padding: '8px 18px', borderRadius: '8px', border: '1px solid rgba(99,102,241,0.2)', fontWeight:'600' }}>SCORE: <span style={{ color: '#059669', fontWeight: 'bold' }}>{score}</span></div>
       {isDemo && <div style={{ position: 'absolute', top: '80px', right: '40px', fontSize: '1.2rem', color: '#374151', zIndex: 50, background: 'rgba(255,255,255,0.82)', backdropFilter:'blur(8px)', padding: '6px 12px', borderRadius: '6px', border: '1px solid rgba(99,102,241,0.2)', fontWeight:'600' }}>T-<span style={{ color: timeLeft < 30 ? '#dc2626' : '#059669', fontWeight: 'bold' }}>{timeLeft}s</span></div>}
       <div style={{ marginBottom: '20px', textAlign: 'center' }}>
-        <div style={{ fontSize: '1.1rem', color: '#6b7280', marginBottom: '5px' }}>Moves: {moves} • Optimal: {optimalMoves} • Efficiency: {efficiency}%</div>
+        <div style={{ fontSize: '1.1rem', color: '#6b7280', marginBottom: '5px' }}>Moves: {moves} â€¢ Optimal: {optimalMoves} â€¢ Efficiency: {efficiency}%</div>
         <div style={{ fontSize: '0.9rem', color: '#9ca3af' }}>Click towers to select and move disks</div>
       </div>
       <div style={{ marginBottom: '30px', textAlign: 'center' }}>

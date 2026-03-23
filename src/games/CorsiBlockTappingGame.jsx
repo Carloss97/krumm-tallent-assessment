@@ -21,7 +21,7 @@ const CorsiBlockTappingGame = ({ isActive, onEndGame, isDemo, timeLimit }) => {
   const sequenceTimeoutRef = useRef(null);
   const recallTimeoutRef = useRef(null);
 
-  const MAX_LEVEL = isDemo ? 5 : 9;
+  const MAX_LEVEL = isDemo ? 4 : 9;
   const TRIALS_PER_LEVEL = 2;
   const BLOCK_SIZE = 80;
   const GRID_SIZE = 3;
@@ -34,60 +34,6 @@ const CorsiBlockTappingGame = ({ isActive, onEndGame, isDemo, timeLimit }) => {
   }, [onEndGame, score, totalTrials, correctTrials, maxSequenceLength, level]);
 
   const timeLeft = useGameTimer({ isActive, timeLimit, onEnd: endGame });
-
-  const startLevel = useCallback(() => {
-    const generateSequence = (length) => {
-        const availableBlocks = Array.from({ length: GRID_SIZE * GRID_SIZE }, (_, i) => i);
-        const newSequence = [];
-        for (let i = 0; i < length; i++) {
-          const randomIndex = Math.floor(Math.random() * availableBlocks.length);
-          newSequence.push(availableBlocks.splice(randomIndex, 1)[0]);
-        }
-        return newSequence;
-    };
-
-    const newSequence = generateSequence(level);
-    setSequence(newSequence);
-    setUserSequence([]);
-    setGameState('showing');
-
-    setBlocks(prev => prev.map(block => ({ ...block, highlighted: false, selected: false })));
-
-    const showSequence = async () => {
-        for (let i = 0; i < newSequence.length; i++) {
-            await new Promise(resolve => { sequenceTimeoutRef.current = setTimeout(() => { setBlocks(prev => prev.map(b => b.id === newSequence[i] ? { ...b, highlighted: true } : { ...b, highlighted: false })); resolve(); }, 100); });
-            await new Promise(resolve => { sequenceTimeoutRef.current = setTimeout(() => { setBlocks(prev => prev.map(b => ({ ...b, highlighted: false }))); resolve(); }, 800); });
-        }
-        setTimeout(() => { setGameState('recalling'); recallTimeoutRef.current = setTimeout(() => checkSequence(), 10000); }, 1000);
-    };
-    showSequence();
-  }, [level]);
-
-  useEffect(() => {
-    if (isActive) {
-      hasEndedRef.current = false;
-      const newBlocks = [];
-      for (let i = 0; i < GRID_SIZE * GRID_SIZE; i++) {
-        newBlocks.push({ id: i, x: (i % GRID_SIZE) * (BLOCK_SIZE + 10) + 50, y: Math.floor(i / GRID_SIZE) * (BLOCK_SIZE + 10) + 50, highlighted: false, selected: false });
-      }
-      setBlocks(newBlocks);
-
-      setLevel(3);
-      setTrial(1);
-      setScore(0);
-      setCorrectTrials(0);
-      setTotalTrials(0);
-      setMaxSequenceLength(0);
-      startLevel();
-    }
-    return () => { clearTimeout(sequenceTimeoutRef.current); clearTimeout(recallTimeoutRef.current); };
-  }, [isActive, startLevel]);
-  
-  useEffect(() => {
-    if(isActive && (trial > 1 || level > 3)) {
-        startLevel();
-    }
-  }, [trial, level, isActive, startLevel])
 
   const checkSequence = useCallback((finalSequence = userSequence) => {
     const isCorrect = finalSequence.length === sequence.length && finalSequence.every((blockId, index) => blockId === sequence[index]);
@@ -115,6 +61,60 @@ const CorsiBlockTappingGame = ({ isActive, onEndGame, isDemo, timeLimit }) => {
     }
   }, [userSequence, sequence, trial, level, MAX_LEVEL, endGame, recordError]);
 
+  const startLevel = useCallback(() => {
+    const generateSequence = (length) => {
+        const availableBlocks = Array.from({ length: GRID_SIZE * GRID_SIZE }, (_, i) => i);
+        const newSequence = [];
+        for (let i = 0; i < length; i++) {
+          const randomIndex = Math.floor(Math.random() * availableBlocks.length);
+          newSequence.push(availableBlocks.splice(randomIndex, 1)[0]);
+        }
+        return newSequence;
+    };
+
+    const newSequence = generateSequence(level);
+    setSequence(newSequence);
+    setUserSequence([]);
+    setGameState('showing');
+
+    setBlocks(prev => prev.map(block => ({ ...block, highlighted: false, selected: false })));
+
+    const showSequence = async () => {
+        for (let i = 0; i < newSequence.length; i++) {
+            await new Promise(resolve => { sequenceTimeoutRef.current = setTimeout(() => { setBlocks(prev => prev.map(b => b.id === newSequence[i] ? { ...b, highlighted: true } : { ...b, highlighted: false })); resolve(); }, 100); });
+            await new Promise(resolve => { sequenceTimeoutRef.current = setTimeout(() => { setBlocks(prev => prev.map(b => ({ ...b, highlighted: false }))); resolve(); }, 800); });
+        }
+        setTimeout(() => { setGameState('recalling'); recallTimeoutRef.current = setTimeout(() => checkSequence(), 10000); }, 1000);
+    };
+    showSequence();
+  }, [level, checkSequence]);
+
+  useEffect(() => {
+    if (isActive) {
+      hasEndedRef.current = false;
+      const newBlocks = [];
+      for (let i = 0; i < GRID_SIZE * GRID_SIZE; i++) {
+        newBlocks.push({ id: i, x: (i % GRID_SIZE) * (BLOCK_SIZE + 10) + 50, y: Math.floor(i / GRID_SIZE) * (BLOCK_SIZE + 10) + 50, highlighted: false, selected: false });
+      }
+      setBlocks(newBlocks);
+
+      setLevel(3);
+      setTrial(1);
+      setScore(0);
+      setCorrectTrials(0);
+      setTotalTrials(0);
+      setMaxSequenceLength(0);
+      startLevel();
+    }
+    return () => { clearTimeout(sequenceTimeoutRef.current); clearTimeout(recallTimeoutRef.current); };
+  }, [isActive, startLevel]);
+  
+  useEffect(() => {
+    if(isActive && (trial > 1 || level > 3)) {
+        startLevel();
+    }
+  }, [trial, level, isActive, startLevel])
+
   const handleBlockClick = (blockId) => {
     if (gameState !== 'recalling') return;
     const newUserSequence = [...userSequence, blockId];
@@ -134,7 +134,7 @@ const CorsiBlockTappingGame = ({ isActive, onEndGame, isDemo, timeLimit }) => {
 
   return (
     <div className="flex-center" style={{ width: '100%', height: '100vh', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', fontFamily: '"Courier New", Courier, monospace' }}>
-      <div style={{ position: 'absolute', top: '30px', left: '40px', fontSize: '1.5rem', color: '#374151', zIndex: 50, background: 'rgba(255,255,255,0.82)', backdropFilter:'blur(8px)', padding: '8px 18px', borderRadius: '8px', border: '1px solid rgba(99,102,241,0.2)', fontWeight:'600' }}>LEVEL: <span style={{color: '#4f46e5', fontWeight: 'bold'}}>{level}</span> • TRIAL: {trial}</div>
+      <div style={{ position: 'absolute', top: '30px', left: '40px', fontSize: '1.5rem', color: '#374151', zIndex: 50, background: 'rgba(255,255,255,0.82)', backdropFilter:'blur(8px)', padding: '8px 18px', borderRadius: '8px', border: '1px solid rgba(99,102,241,0.2)', fontWeight:'600' }}>LEVEL: <span style={{color: '#4f46e5', fontWeight: 'bold'}}>{level}</span> â€¢ TRIAL: {trial}</div>
       <div style={{ position: 'absolute', top: '30px', right: '40px', fontSize: '1.5rem', color: '#374151', zIndex: 50, background: 'rgba(255,255,255,0.82)', backdropFilter:'blur(8px)', padding: '8px 18px', borderRadius: '8px', border: '1px solid rgba(99,102,241,0.2)', fontWeight:'600' }}>SCORE: <span style={{ color: '#059669', fontWeight: 'bold' }}>{score}</span></div>
       {isDemo && <div style={{ position: 'absolute', top: '80px', right: '40px', fontSize: '1.2rem', color: '#374151', zIndex: 50, background: 'rgba(255,255,255,0.82)', backdropFilter:'blur(8px)', padding: '6px 12px', borderRadius: '6px', border: '1px solid rgba(99,102,241,0.2)', fontWeight:'600' }}>T-<span style={{ color: timeLeft < 15 ? '#dc2626' : '#059669', fontWeight: 'bold' }}>{timeLeft}s</span></div>}
       
@@ -144,7 +144,7 @@ const CorsiBlockTappingGame = ({ isActive, onEndGame, isDemo, timeLimit }) => {
           {gameState === 'recalling' && 'Click the blocks in order'}
           {gameState === 'feedback' && (userSequence.length === sequence.length && userSequence.every((id, i) => id === sequence[i]) ? 'Correct!' : 'Incorrect')}
         </div>
-        <div style={{ fontSize: '0.9rem', color: '#9ca3af' }}>Accuracy: {accuracy}% • Max Length: {maxSequenceLength}</div>
+        <div style={{ fontSize: '0.9rem', color: '#9ca3af' }}>Accuracy: {accuracy}% â€¢ Max Length: {maxSequenceLength}</div>
         <div style={{ fontSize: '0.9rem', color: '#9ca3af' }}>Progress: {userSequence.length} / {sequence.length}</div>
       </div>
       

@@ -1,6 +1,6 @@
-import React, { useState, useEffect } from 'react';
-import { motion } from 'framer-motion';
+import React, { useState, useEffect, useRef } from 'react';
 import { useSearchParams } from 'react-router-dom';
+import { motion } from 'framer-motion';
 import { useTelemetry } from './TelemetryContext';
 import { generateAIReport, generateHeuristicReport } from './services/aiReportService';
 import { saveSessionToBackend } from './services/backendService';
@@ -9,64 +9,76 @@ import { generateDummyReportData } from './utils/dummyDataGenerator';
 const Report = () => {
   const { sessionData } = useTelemetry();
   const [searchParams] = useSearchParams();
+  
+  // Initialize dummy mode from URL params
+  const initialDummyMode = searchParams.get('dummy') === 'true';
+  
   const [isAnalyzing, setIsAnalyzing] = useState(true);
   const [aiReport, setAiReport] = useState(null);
   const [useAI, setUseAI] = useState(true); // Toggle between AI and heuristic
-  const [useDummyData, setUseDummyData] = useState(false);
+  const [useDummyData, setUseDummyData] = useState(initialDummyMode);
   const [sessionSavedId, setSessionSavedId] = useState(null);
   const [backendError, setBackendError] = useState(null);
-
-  // Check URL parameters for dummy mode
-  useEffect(() => {
-    const dummyParam = searchParams.get('dummy');
-    if (dummyParam === 'true') {
-      setUseDummyData(true);
-    }
-  }, [searchParams]);
+  const reportGeneratedRef = useRef(false);
+  const isTestEnv = typeof import.meta !== 'undefined' && import.meta.env?.MODE === 'test';
+  const aiAnalysisDelayMs = isTestEnv ? 10 : 8000;
+  const heuristicAnalysisDelayMs = isTestEnv ? 10 : 3500;
 
   // Check if we have sufficient data or should use dummy data
   const hasRealData = sessionData.game1 && Object.keys(sessionData).length >= 7; // At least some games completed
   const reportData = useDummyData || !hasRealData ? generateDummyReportData() : Object.values(sessionData);
 
+  // Reset generation state when switching AI/demo modes to avoid stale report output.
+  useEffect(() => {
+    reportGeneratedRef.current = false;
+    setIsAnalyzing(true);
+    setAiReport(null);
+    setBackendError(null);
+    if (useDummyData) {
+      setSessionSavedId(null);
+    }
+  }, [useDummyData, useAI]);
+
   // Generate AI report when data is ready
   useEffect(() => {
-    if (hasRealData || useDummyData) {
+    if ((hasRealData || useDummyData) && !reportGeneratedRef.current) {
+      reportGeneratedRef.current = true;
       const generateReport = async () => {
         try {
-          const report = await generateAIReport(reportData, 'recruitment');
-          if (report) {
-            setAiReport(report);
-            setTimeout(() => setIsAnalyzing(false), 8000);
-          } else {
-            const heuristicReport = generateHeuristicReport(reportData, 'recruitment');
-            setAiReport(heuristicReport);
-            setTimeout(() => setIsAnalyzing(false), 3500);
+          if (useAI) {
+            const report = await generateAIReport(reportData, 'recruitment');
+            if (report) {
+              setAiReport(report);
+              setTimeout(() => setIsAnalyzing(false), aiAnalysisDelayMs);
+              return;
+            }
           }
+          // Fallback to heuristic if AI fails or is disabled
+          const heuristicReport = generateHeuristicReport(reportData, 'recruitment');
+          setAiReport(heuristicReport);
+          setTimeout(() => setIsAnalyzing(false), heuristicAnalysisDelayMs);
         } catch (error) {
           console.error('Error generating AI report:', error);
           const heuristicReport = generateHeuristicReport(reportData, 'recruitment');
           setAiReport(heuristicReport);
-          setTimeout(() => setIsAnalyzing(false), 3500);
+          setTimeout(() => setIsAnalyzing(false), heuristicAnalysisDelayMs);
         }
 
-        if (!sessionSavedId) {
+        // Save session to backend
+        if (!useDummyData && hasRealData && !sessionSavedId) {
           try {
             const saveRes = await saveSessionToBackend(reportData);
             setSessionSavedId(saveRes.sessionId);
             setBackendError(null);
           } catch (error) {
-            setBackendError('No se pudo guardar la sesión en backend');
+            setBackendError('No se pudo guardar la sesion en backend');
             console.error('Backend save failure', error);
           }
         }
       };
       generateReport();
-    } else if (!useAI) {
-      const heuristicReport = generateHeuristicReport(reportData, 'recruitment');
-      setAiReport(heuristicReport);
-      setTimeout(() => setIsAnalyzing(false), 3500);
     }
-  }, [sessionData, useAI, useDummyData, hasRealData, reportData, sessionSavedId]);
+  }, [hasRealData, useDummyData, useAI, reportData, sessionSavedId, aiAnalysisDelayMs, heuristicAnalysisDelayMs]);
 
   if (!hasRealData && !useDummyData) {
     return (
@@ -122,7 +134,7 @@ const Report = () => {
         </h1>
         <p style={{ textAlign: 'center', color: '#374151', marginBottom: '40px' }}>
           {report.source === 'gemini' ? 'Generated by Google Gemini AI' : 'Heuristic-Based Analysis'}
-          {useDummyData && <span style={{ color: '#7c3aed', fontStyle: 'italic' }}> • Demo Data</span>}
+          {useDummyData && <span style={{ color: '#7c3aed', fontStyle: 'italic' }}> | Demo Data</span>}
         </p>
 
         {/* Recommendation Panel */}
@@ -162,12 +174,12 @@ const Report = () => {
           {/* Strengths */}
           <div className="glass-panel-light" style={{ padding: '24px' }}>
             <h3 style={{ marginBottom: '16px', color: '#10b981', fontWeight: '700', fontSize: '1.15rem' }}>
-              ✓ Key Strengths
+              Key Strengths
             </h3>
             <ul style={{ color: '#374151', lineHeight: '1.8', listStyle: 'none', padding: 0 }}>
               {report.strengths && report.strengths.map((strength, idx) => (
                 <li key={idx} style={{ marginBottom: '8px', paddingLeft: '24px', position: 'relative' }}>
-                  <span style={{ position: 'absolute', left: 0, color: '#10b981' }}>•</span>
+                  <span style={{ position: 'absolute', left: 0, color: '#10b981' }}>*</span>
                   {strength}
                 </li>
               ))}
@@ -177,12 +189,12 @@ const Report = () => {
           {/* Areas to Monitor */}
           <div className="glass-panel-light" style={{ padding: '24px' }}>
             <h3 style={{ marginBottom: '16px', color: '#f59e0b', fontWeight: '700', fontSize: '1.15rem' }}>
-              ⚠ Areas to Monitor
+              Areas to Monitor
             </h3>
             <ul style={{ color: '#374151', lineHeight: '1.8', listStyle: 'none', padding: 0 }}>
               {report.areasToMonitor && report.areasToMonitor.map((area, idx) => (
                 <li key={idx} style={{ marginBottom: '8px', paddingLeft: '24px', position: 'relative' }}>
-                  <span style={{ position: 'absolute', left: 0, color: '#f59e0b' }}>•</span>
+                  <span style={{ position: 'absolute', left: 0, color: '#f59e0b' }}>*</span>
                   {area}
                 </li>
               ))}
@@ -233,7 +245,7 @@ const Report = () => {
               }}
               onClick={() => setUseAI(!useAI)}
             >
-              {useAI ? '🤖 AI Mode' : '⚙️ Heuristic Mode'}
+              {useAI ? 'AI Mode' : 'Heuristic Mode'}
             </button>
             {hasRealData && (
               <button
@@ -247,7 +259,7 @@ const Report = () => {
                 }}
                 onClick={() => setUseDummyData(!useDummyData)}
               >
-                {useDummyData ? '📊 Demo Data' : '📈 Real Data'}
+                {useDummyData ? 'Demo Data' : 'Real Data'}
               </button>
             )}
           </div>
@@ -255,9 +267,10 @@ const Report = () => {
 
         <div style={{ textAlign: 'center', marginTop: '40px' }}>
           <div style={{ marginBottom: '12px', color: '#475569' }}>
-            {backendError && <span style={{ color: '#dc2626' }}>⚠ {backendError}</span>}
-            {!backendError && sessionSavedId && <span style={{ color: '#16a34a' }}>✅ Session saved with ID {sessionSavedId}</span>}
-            {!backendError && !sessionSavedId && <span style={{ color: '#0ea5e9' }}>Guardando sesión en backend...</span>}
+            {!useDummyData && backendError && <span style={{ color: '#dc2626' }}>[WARN] {backendError}</span>}
+            {!useDummyData && !backendError && sessionSavedId && <span style={{ color: '#16a34a' }}>[OK] Session saved with ID {sessionSavedId}</span>}
+            {!useDummyData && !backendError && !sessionSavedId && <span style={{ color: '#0ea5e9' }}>Saving session to backend...</span>}
+            {useDummyData && <span style={{ color: '#7c3aed' }}>[INFO] Demo mode: backend save disabled</span>}
           </div>
           <button className="btn" style={{ padding: '16px 40px', fontSize: '1.2rem' }} onClick={() => window.location.href = '/'}>
             Assess Another Candidate

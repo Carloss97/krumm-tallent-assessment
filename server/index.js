@@ -1,3 +1,5 @@
+/* global process */
+
 import express from 'express';
 import cors from 'cors';
 import { saveSession, getSession, getAllSessions } from './db.js';

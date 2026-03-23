@@ -1,11 +1,9 @@
-import React, { useState, useCallback, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import React, { useState, useCallback } from 'react';
 import { useTelemetry } from '../TelemetryContext';
 import { GAME_FLOW } from '../utils/gameFlow';
 import InstructionInterstitial from './InstructionInterstitial';
 
 const GameLayout = ({ gameId, children }) => {
-  const navigate = useNavigate();
   const { isDemo, startTracking, stopTracking } = useTelemetry();
   const [showInstructions, setShowInstructions] = useState(true);
   const [isActive, setIsActive] = useState(false);
@@ -18,17 +16,7 @@ const GameLayout = ({ gameId, children }) => {
     setIsActive(true);
   }, [gameConfig.telemetryId, startTracking]);
 
-  // Automatically start subsequent games after showing instructions briefly
-  useEffect(() => {
-    if (gameId > 1 && showInstructions) {
-      const timer = setTimeout(() => {
-        handleStart();
-      }, 2000); // Show instructions for 2 seconds, then auto-start
-      return () => clearTimeout(timer);
-    }
-  }, [gameId, showInstructions, handleStart]);
-
-  const handleEndGame = useCallback((score, errors, details) => {
+  const handleEndGame = useCallback((score, errors, details = null) => {
     if (!isActive) return;
     setIsActive(false);
     stopTracking(gameConfig.telemetryId, score, errors, details);
@@ -53,7 +41,6 @@ const GameLayout = ({ gameId, children }) => {
         description={gameConfig.instruction.description}
         timeLimit={timeLimit === 'None' || timeLimit === 'Timed' ? timeLimit : `${timeLimit}s`}
         onStart={handleStart}
-        autoStart={gameId > 1}
       />
     );
   }

@@ -1,9 +1,7 @@
-import { useState, Suspense, lazy } from 'react';
-import { BrowserRouter as Router, Routes, Route, useNavigate } from 'react-router-dom';
-import { motion } from 'framer-motion';
-import { TelemetryProvider, useTelemetry } from './TelemetryContext';
+import React, { lazy, Suspense } from 'react';
+import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+import { TelemetryProvider } from './TelemetryContext';
 import GlobalProgressBar from './components/GlobalProgressBar';
-import LiveTelemetryChart from './components/LiveTelemetryChart';
 import GameLayout from './components/GameLayout';
 import { GAME_FLOW } from './utils/gameFlow';
 import './App.css';
@@ -27,7 +25,6 @@ function AppContent() {
       }} />
 
       <GlobalProgressBar />
-      <LiveTelemetryChart />
 
       <div style={{ flex: 1, position: 'relative', overflowY: 'auto', overflowX: 'hidden' }}>
         <Suspense fallback={<div className="loading-spinner">Loading...</div>}>

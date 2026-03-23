@@ -1,4 +1,4 @@
-na#!/usr/bin/env node
+#!/usr/bin/env node
 
 /**
  * Quick test script for AI Report Service

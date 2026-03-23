@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useGameTimer } from '../hooks/useGameTimer';
 
-const VigilanceGame = ({ isActive, onEndGame, isDemo, timeLimit }) => {
+const VigilanceGame = ({ isActive, onEndGame, isDemo }) => {
   const [round, setRound] = useState(1);
   const [gameState, setGameState] = useState('waiting');
   const [reactionTime, setReactionTime] = useState(null);
@@ -17,7 +17,7 @@ const VigilanceGame = ({ isActive, onEndGame, isDemo, timeLimit }) => {
   const audioCtxRef = useRef(null);
   const hasEndedRef = useRef(false);
   
-  const MAX_ROUNDS = 10;
+  const MAX_ROUNDS = isDemo ? 6 : 10;
 
   const endGame = useCallback(() => {
     if (hasEndedRef.current) return;
@@ -105,6 +105,7 @@ const VigilanceGame = ({ isActive, onEndGame, isDemo, timeLimit }) => {
   useEffect(() => {
     if (isActive) {
       hasEndedRef.current = false;
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setRound(1);
       totalReactionTimeRef.current = 0;
       falseStartsRef.current = 0;
@@ -115,6 +116,7 @@ const VigilanceGame = ({ isActive, onEndGame, isDemo, timeLimit }) => {
 
   useEffect(() => {
     if (isActive && round > 1 && round <= MAX_ROUNDS) {
+        // eslint-disable-next-line react-hooks/set-state-in-effect
         initRound();
     }
   }, [round, isActive, initRound]);

@@ -1,16 +1,14 @@
 import React from 'react';
-import { motion } from 'framer-motion';
 
-const InstructionInterstitial = ({ title, description, timeLimit, type, onStart, autoStart = false }) => {
+const InstructionInterstitial = ({ title, description, timeLimit, type, onStart }) => {
   return (
     <div style={{ width:'100%', height:'100%', display:'flex', justifyContent:'center', alignItems:'center' }}>
-      <motion.div
-        initial={{ opacity:0, scale:0.95, y:10 }}
-        animate={{ opacity:1, scale:1, y:0 }}
-        exit={{ opacity:0, scale:1.05, y:-10 }}
-        transition={{ duration:0.35, ease:'easeOut' }}
-        className="glass-panel-light"
-        style={{ padding:'44px', maxWidth:'580px', width:'100%', textAlign:'center' }}
+      <div
+        style={{ 
+          padding:'44px', maxWidth:'580px', width:'100%', textAlign:'center',
+          opacity: 1, transform: 'scale(1) translateY(0)',
+          className: 'glass-panel-light'
+        }}
       >
         <div style={{ color:'#7c3aed', fontSize:'0.8rem', textTransform:'uppercase', letterSpacing:'2px', marginBottom:'14px', fontWeight:'600' }}>
           {type} Module
@@ -28,16 +26,10 @@ const InstructionInterstitial = ({ title, description, timeLimit, type, onStart,
             <div style={{ fontSize:'1.05rem', fontWeight:'700', color:'#1e1b4b' }}>Max Focus</div>
           </div>
         </div>
-        {autoStart ? (
-          <div style={{ width:'100%', fontSize:'1.05rem', color:'#6b7280' }}>
-            Auto-starting...
-          </div>
-        ) : (
-          <button className="btn" style={{ width:'100%', fontSize:'1.05rem' }} onClick={onStart}>
-            Begin Module
-          </button>
-        )}
-      </motion.div>
+        <button className="btn" style={{ width:'100%', fontSize:'1.05rem' }} onClick={onStart}>
+          Listo, comenzar juego
+        </button>
+      </div>
     </div>
   );
 };

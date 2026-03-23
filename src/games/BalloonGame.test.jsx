@@ -1,4 +1,4 @@
-import { render, screen, fireEvent, act } from '@testing-library/react';
+import { render, screen } from '@testing-library/react';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import React from 'react';
 import { TelemetryProvider } from '../TelemetryContext';
@@ -18,10 +18,6 @@ describe('BalloonGame Telemetry Integration', () => {
   });
 
   it('starts telemetry when game begins', async () => {
-    // Mock the telemetry context
-    const mockStartTracking = vi.fn();
-    const mockStopTracking = vi.fn();
-
     // We need to render with isActive=true to bypass instructions
     render(
       <TelemetryProvider>

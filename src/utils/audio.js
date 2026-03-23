@@ -19,7 +19,7 @@ const playTone = (freq, type, duration, vol=0.1, freqSlide=null) => {
     gain.connect(audioCtx.destination);
     osc.start();
     osc.stop(audioCtx.currentTime + duration);
-  } catch (e) {
+  } catch {
     // ignore audio errors if user hasn't interacted with document
   }
 };
@@ -54,5 +54,7 @@ export const playBalloonPop = () => {
     filter.connect(gain);
     gain.connect(audioCtx.destination);
     noise.start();
-  } catch(e){}
+  } catch {
+    // Ignore audio errors caused by autoplay/browser restrictions.
+  }
 };

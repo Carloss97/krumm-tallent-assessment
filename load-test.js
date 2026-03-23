@@ -7,6 +7,9 @@
  * to test performance under load.
  */
 
+/* global require, process, module */
+ 
+
 const { chromium } = require('playwright');
 
 const CONFIG = {
@@ -192,7 +195,7 @@ async function checkServer() {
     }
     console.log('✅ Server is running');
     return true;
-  } catch (error) {
+  } catch {
     console.error('❌ Server is not running. Please start the development server first:');
     console.error('   npm run dev');
     return false;

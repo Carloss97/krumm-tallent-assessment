@@ -281,7 +281,7 @@ const GridOptimizerGame = ({ isActive, onEndGame, isDemo }) => {
 
         let content = null;
         if (isWall) content = <div style={{ width:'100%', height:'100%' }} />;
-        else if (station) content = <span style={{ fontSize:'0.95rem' }}>⚡</span>;
+        else if (station) content = <span style={{ fontSize:'0.95rem' }}>âš¡</span>;
         else if (isDrop) content = <motion.div animate={{ scale:[0.7,1,0.7] }} transition={{ duration:1.2, repeat:Infinity }} style={{ width:'38%', height:'38%', borderRadius:'50%', background:`${inventory.color}55`, border:`2px solid ${inventory.color}` }} />;
 
         if (target) {
@@ -325,17 +325,17 @@ const GridOptimizerGame = ({ isActive, onEndGame, isDemo }) => {
     <div style={{ width:'100%', minHeight:'100vh', display:'flex', flexDirection:'column', alignItems:'center', justifyContent:'center', padding:'16px', gap:'10px' }}>
       {gameState === 'playing' && (
         <motion.div initial={{ opacity:0 }} animate={{ opacity:1 }} className="glass-panel" style={{ padding:'16px', display:'flex', flexDirection:'column', alignItems:'center', gap:'8px' }}>
-          {fuelEmpty && <motion.div initial={{ opacity:0 }} animate={{ opacity:1 }} style={{ padding:'6px 20px', background:'#dc2626', color:'white', borderRadius:'8px', fontWeight:'700', fontSize:'0.9rem' }}>⚡ ENERGY DEPLETED — GAME OVER</motion.div>}
+          {fuelEmpty && <motion.div initial={{ opacity:0 }} animate={{ opacity:1 }} style={{ padding:'6px 20px', background:'#dc2626', color:'white', borderRadius:'8px', fontWeight:'700', fontSize:'0.9rem' }}>âš¡ ENERGY DEPLETED â€” GAME OVER</motion.div>}
           <div style={{ display:'flex', justifyContent:'space-between', width:'100%', color:'#1e1b4b', textTransform:'uppercase', letterSpacing:'1px', fontSize:'0.78rem', fontWeight:'600', gap:'14px' }}>
             <span>STAGE {round+1}/{effectiveMaxRounds}</span>
-            <span style={{ color: levelTimeLeft<10?'#dc2626':'#059669' }}>⏱ {levelTimeLeft}s</span>
-            {lvlData.energyDrain>0 && <span style={{ color: energy<30?'#dc2626':'#374151' }}>⚡ {energy}%</span>}
-            <span style={{ color:satColor }}>😊 {avgSat}%</span>
-            <span style={{ color:'#4f46e5' }}>⬡ {score}pts</span>
+            <span style={{ color: levelTimeLeft<10?'#dc2626':'#059669' }}>â± {levelTimeLeft}s</span>
+            {lvlData.energyDrain>0 && <span style={{ color: energy<30?'#dc2626':'#374151' }}>âš¡ {energy}%</span>}
+            <span style={{ color:satColor }}>ðŸ˜Š {avgSat}%</span>
+            <span style={{ color:'#4f46e5' }}>â¬¡ {score}pts</span>
           </div>
           <div style={{ display:'flex', gap:'15px', fontSize:'0.68rem', color:'#64748b', flexWrap:'wrap', justifyContent:'center' }}>
             <span><span style={{display:'inline-block',width:'8px',height:'8px',background:'#ef4444',borderRadius:'2px',marginRight:'4px'}}/><span style={{display:'inline-block',width:'8px',height:'8px',background:'#3b82f6',borderRadius:'2px',marginRight:'4px'}}/><span style={{display:'inline-block',width:'8px',height:'8px',background:'#10b981',borderRadius:'2px',marginRight:'4px'}}/> Targets</span>
-            {lvlData.stations.length>0 && <span>⚡ Energy Station</span>}
+            {lvlData.stations.length>0 && <span>âš¡ Energy Station</span>}
             <span>% = Target Satisfaction</span>
           </div>
           <div style={{ padding:'6px', border:'1px solid rgba(99,102,241,0.2)', borderRadius:'10px', background:'rgba(220,225,255,0.5)' }}>
@@ -343,12 +343,12 @@ const GridOptimizerGame = ({ isActive, onEndGame, isDemo }) => {
           </div>
           <div style={{ display:'flex', alignItems:'center', gap:'10px', padding:'6px 14px', background:'rgba(99,102,241,0.07)', borderRadius:'8px', border:'1px solid rgba(99,102,241,0.18)', fontSize:'0.78rem' }}>
             <span style={{ color:'#64748b', textTransform:'uppercase', fontSize:'0.68rem' }}>Carrying:</span>
-            {inventory ? <><div style={{ width:'11px', height:'11px', background:inventory.color, borderRadius:'2px' }}/><span style={{ color:'#1e1b4b' }}>Deliver to <strong>pulsing zone</strong> — sat: <span style={{color:satColor}}>{sats[inventory.id]??100}%</span></span></> : <span style={{ color:'#94a3b8', fontStyle:'italic' }}>Empty — pick up a passenger</span>}
+            {inventory ? <><div style={{ width:'11px', height:'11px', background:inventory.color, borderRadius:'2px' }}/><span style={{ color:'#1e1b4b' }}>Deliver to <strong>pulsing zone</strong> â€” sat: <span style={{color:satColor}}>{sats[inventory.id]??100}%</span></span></> : <span style={{ color:'#94a3b8', fontStyle:'italic' }}>Empty â€” pick up a passenger</span>}
           </div>
           <div style={{ display:'flex', flexDirection:'column', alignItems:'center', gap:'4px' }}>
-            <div><ArrowBtn dir="up" label="▲" /></div>
+            <div><ArrowBtn dir="up" label="â–²" /></div>
             <div style={{ display:'flex', gap:'4px' }}>
-              <ArrowBtn dir="left" label="◀" /><ArrowBtn dir="down" label="▼" /><ArrowBtn dir="right" label="▶" />
+              <ArrowBtn dir="left" label="â—€" /><ArrowBtn dir="down" label="â–¼" /><ArrowBtn dir="right" label="â–¶" />
             </div>
           </div>
         </motion.div>

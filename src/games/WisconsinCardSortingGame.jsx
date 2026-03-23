@@ -50,7 +50,7 @@ const WisconsinCardSortingGame = ({ isActive, onEndGame, isDemo, timeLimit }) =>
       if (prev.length === 0) { endGame(); return []; }
       const newDeck = [...prev];
       setCurrentCard(newDeck.shift());
-      cardStartTimeRef.current = performance.now();
+      cardStartTimeRef.current = Date.now();
       setFeedback(null);
       return newDeck;
     });
@@ -101,7 +101,8 @@ const WisconsinCardSortingGame = ({ isActive, onEndGame, isDemo, timeLimit }) =>
   const handleCardClick = (stimulusIndex) => {
     if (!currentCard || feedback) return;
 
-    reactionTimes.current.push(performance.now() - cardStartTimeRef.current);
+    // eslint-disable-next-line react-hooks/purity
+    reactionTimes.current.push(Date.now() - cardStartTimeRef.current);
     const stimulusCard = stimulusCards[stimulusIndex];
     const isCorrect = (() => {
         switch (currentRule) {
@@ -166,7 +167,7 @@ const WisconsinCardSortingGame = ({ isActive, onEndGame, isDemo, timeLimit }) =>
       
       <div style={{ marginBottom: '20px', textAlign: 'center' }}>
         <div style={{ fontSize: '1.1rem', color: '#6b7280', marginBottom: '5px' }}>Sorting by: <span style={{ fontWeight: 'bold', color: '#4f46e5' }}>{currentRule.toUpperCase()}</span></div>
-        <div style={{ fontSize: '0.9rem', color: '#9ca3af' }}>Accuracy: {accuracy}% • Correct: {totalCorrect} • Errors: {totalErrors}</div>
+        <div style={{ fontSize: '0.9rem', color: '#9ca3af' }}>Accuracy: {accuracy}% â€¢ Correct: {totalCorrect} â€¢ Errors: {totalErrors}</div>
         <div style={{ fontSize: '0.8rem', color: '#9ca3af' }}>Streak: {correctStreak} / {CARDS_PER_CATEGORY}</div>
       </div>
       

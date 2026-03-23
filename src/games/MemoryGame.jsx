@@ -32,21 +32,7 @@ const MemoryGame = ({ isActive, onEndGame, isDemo, timeLimit }) => {
     setGameState(newState);
   }, []);
 
-  const generateSequence = useCallback((currentRound) => {
-    const size = currentRound >= 3 ? 4 : 3;
-    const length = currentRound + 2;
-    let newSeq = [];
-    for (let i = 0; i < length; i++) {
-      newSeq.push(Math.floor(Math.random() * (size * size)));
-    }
-    setSequence(newSeq);
-    setPlayerStep(0);
-    setActiveSquare(null);
-    updateGameState('showing');
-    playSequence(newSeq, currentRound);
-  }, [updateGameState]);
-
-  const playSequence = async (seq, currentRound) => {
+  const playSequence = useCallback(async (seq, currentRound) => {
     await new Promise(r => setTimeout(r, 1000));
     
     for (let i = 0; i < seq.length; i++) {
@@ -59,13 +45,28 @@ const MemoryGame = ({ isActive, onEndGame, isDemo, timeLimit }) => {
       await new Promise(r => setTimeout(r, showTime / 2));
     }
     updateGameState('playing');
-  };
+  }, [updateGameState]);
+
+  const generateSequence = useCallback((currentRound) => {
+    const size = currentRound >= 3 ? 4 : 3;
+    const length = currentRound + 2;
+    let newSeq = [];
+    for (let i = 0; i < length; i++) {
+      newSeq.push(Math.floor(Math.random() * (size * size)));
+    }
+    setSequence(newSeq);
+    setPlayerStep(0);
+    setActiveSquare(null);
+    updateGameState('showing');
+    playSequence(newSeq, currentRound);
+  }, [playSequence, updateGameState]);
 
   useEffect(() => {
     if (isActive) {
       isActiveRef.current = true;
       hasEndedRef.current = false;
       scoreRef.current = 0;
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setRound(1)
       generateSequence(1);
     } else {

@@ -1,16 +1,21 @@
-// Mock useTelemetry to return test data
-vi.doMock('./TelemetryContext', () => {
-  const mockUseTelemetry = vi.fn();
-  return {
-    TelemetryProvider: ({ children }) => <div>{children}</div>,
-    useTelemetry: mockUseTelemetry
-  };
-});
+import { render, screen, waitFor } from '@testing-library/react';
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
+import React from 'react';
+import Report from './Report';
+import { BrowserRouter } from 'react-router-dom';
 
-// Mock the AI service to return null immediately (fallback to heuristic)
+const { mockUseTelemetry } = vi.hoisted(() => ({
+  mockUseTelemetry: vi.fn(),
+}));
+
+vi.mock('./TelemetryContext', () => ({
+  TelemetryProvider: ({ children }) => <div>{children}</div>,
+  useTelemetry: mockUseTelemetry,
+}));
+
 vi.mock('./services/aiReportService', () => ({
   generateAIReport: vi.fn(() => Promise.resolve(null)),
-  generateHeuristicReport: vi.fn((data) => ({
+  generateHeuristicReport: vi.fn(() => ({
     summary: 'Test heuristic summary for cognitive assessment',
     strengths: ['Strong cognitive flexibility', 'Good working memory'],
     areasToMonitor: ['Stress resilience under pressure', 'Risk assessment in high-stakes scenarios'],
@@ -21,27 +26,22 @@ vi.mock('./services/aiReportService', () => ({
     confidenceScore: 75,
     recommendation: 'HIGHLY RECOMMEND',
     source: 'heuristic',
-    generatedAt: new Date().toISOString()
-  }))
+    generatedAt: new Date().toISOString(),
+  })),
 }));
 
-// Mock the backend service
 vi.mock('./services/backendService', () => ({
-  saveSessionToBackend: vi.fn(() => Promise.resolve({ sessionId: 123 }))
+  saveSessionToBackend: vi.fn(() => Promise.resolve({ sessionId: 123 })),
 }));
 
-import { render, screen, act, waitFor } from '@testing-library/react';
-import { describe, it, expect, vi, beforeEach } from 'vitest';
-import React from 'react';
-import { TelemetryProvider, useTelemetry } from './TelemetryContext';
-import Report from './Report';
-import { BrowserRouter } from 'react-router-dom';
-
-// Temporarily disabled due to mocking issues - Report component works correctly in practice
-describe.skip('Report Component', () => {
+describe('Report Component', () => {
   beforeEach(() => {
-    vi.useFakeTimers();
+    vi.useRealTimers();
     mockUseTelemetry.mockClear();
+  });
+
+  afterEach(() => {
+    vi.useRealTimers();
   });
 
   it('renders "No Assessment Data Found" when sessionData.game1 is missing', () => {
@@ -80,9 +80,9 @@ describe.skip('Report Component', () => {
     // Wait for the analyzing state to finish and report to appear
     await waitFor(() => {
       expect(screen.getByText(/Candidate Evaluation Matrix/i)).toBeDefined();
-    }, { timeout: 10000 });
+    }, { timeout: 4000 });
 
-    expect(screen.getByText(/Cognitive Flexibility/i)).toBeDefined();
+    expect(screen.getByText('Strong cognitive flexibility')).toBeDefined();
   }, 15000);
 
   it('calculates correct metrics based on session data', async () => {
@@ -107,7 +107,7 @@ describe.skip('Report Component', () => {
     // Wait for the report to load
     await waitFor(() => {
       expect(screen.getByText(/Candidate Evaluation Matrix/i)).toBeDefined();
-    }, { timeout: 10000 });
+    }, { timeout: 4000 });
 
     // Check for "HIGHLY RECOMMEND" since all metrics are high
     expect(screen.getByText('HIGHLY RECOMMEND')).toBeDefined();

@@ -54,7 +54,7 @@ export const GAME_FLOW = [
         title: "Neural Array Protocol",
         description: "Observe the sequence of nodes activating in the matrix. Once the sequence ends, reproduce the exact pattern. The complexity scales with each successful cycle.",
     },
-    timeLimit: { full: 40, demo: 40 },
+    timeLimit: { full: 40, demo: 20 },
   },
   {
     id: 4,
@@ -106,7 +106,7 @@ export const GAME_FLOW = [
         title: "Laser Routing Puzzle",
         description: "A ship emits a laser in a fixed direction. Drag movable pieces to redirect the beam to all antennas. Click a piece to select it, then click an empty cell to move it. Portals preserve the beam direction. Use the fewest moves possible.",
     },
-    timeLimit: { full: 180, demo: 180 },
+    timeLimit: { full: 180, demo: 75 },
   },
   {
     id: 8,
@@ -119,7 +119,7 @@ export const GAME_FLOW = [
         title: "N-Back Task",
         description: "Watch the sequence of letters. Press MATCH when you see a letter that matches the one shown {n}-positions back. Press NO MATCH for non-matches. Stay focused and respond quickly.",
     },
-    timeLimit: { full: 60, demo: 60 },
+    timeLimit: { full: 60, demo: 35 },
   },
   {
     id: 9,
@@ -132,7 +132,7 @@ export const GAME_FLOW = [
         title: "Tower of London",
         description: "Move the disks from the starting position to match the target configuration. You can only move one disk at a time, and you cannot place a larger disk on top of a smaller one. Use the minimum number of moves possible.",
     },
-    timeLimit: { full: 120, demo: 120 },
+    timeLimit: { full: 120, demo: 60 },
   },
   {
     id: 10,
@@ -145,7 +145,7 @@ export const GAME_FLOW = [
         title: "Wisconsin Card Sorting Test",
         description: "Match the card shown above with one of the four cards below based on a rule (color, shape, or number). The rule changes without warning after you get 10 correct in a row. Adapt quickly to the new sorting rule.",
     },
-    timeLimit: { full: 90, demo: 90 },
+    timeLimit: { full: 90, demo: 45 },
   },
   {
     id: 11,
@@ -158,7 +158,7 @@ export const GAME_FLOW = [
         title: "Go/No-Go Task",
         description: "Press the SPACEBAR as quickly as possible when you see 'GO', but do NOT press anything when you see 'NO-GO'. This tests your ability to inhibit automatic responses.",
     },
-    timeLimit: { full: 60, demo: 60 },
+    timeLimit: { full: 60, demo: 35 },
   },
   {
     id: 12,
@@ -171,7 +171,7 @@ export const GAME_FLOW = [
         title: "Trail Making Test",
         description: "Part A: Connect the numbers in order from 1 to 25. Part B: Connect alternating numbers and letters (1-A-2-B-etc.). Click each circle in the correct sequence as quickly as possible.",
     },
-    timeLimit: { full: 120, demo: 120 },
+    timeLimit: { full: 120, demo: 60 },
   },
   {
     id: 13,
@@ -184,7 +184,7 @@ export const GAME_FLOW = [
         title: "Corsi Block Tapping",
         description: "Watch the sequence of blocks that light up. Then click the blocks in the same order. Start with shorter sequences and work your way up to longer ones.",
     },
-    timeLimit: { full: 90, demo: 90 },
+    timeLimit: { full: 90, demo: 45 },
   },
   {
     id: 14,
@@ -197,6 +197,6 @@ export const GAME_FLOW = [
         title: "Mental Rotation",
         description: "Look at the two shapes. Decide if the shape on the right is the same as the shape on the left, just rotated, or if they are different shapes. Click SAME or DIFFERENT as quickly and accurately as possible.",
     },
-    timeLimit: { full: 60, demo: 60 },
+    timeLimit: { full: 60, demo: 35 },
   },
 ];

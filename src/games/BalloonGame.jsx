@@ -11,11 +11,18 @@ const BalloonGame = ({ isActive, onEndGame, isDemo }) => {
   const [totalPoints, setTotalPoints] = useState(0);
   const [explosionPoint, setExplosionPoint] = useState(0);
   const [gameState, setGameState] = useState('playing'); // playing, exploded, banked
-  const [pops, setPops] = useState(0);
 
   const totalPointsRef = useRef(0);
   const popsRef = useRef(0);
   const hasEndedRef = useRef(false);
+
+  const initRound = useCallback(() => {
+    setCurrentBalloonSize(1);
+    setCurrentRoundPoints(0);
+    setGameState('playing');
+    const threshold = Math.floor(Math.random() * 8) + 4; // [4..11]
+    setExplosionPoint(threshold);
+  }, []);
 
   const advanceRound = useCallback(() => {
     if (hasEndedRef.current) return;
@@ -28,24 +35,16 @@ const BalloonGame = ({ isActive, onEndGame, isDemo }) => {
       setRound(next);
       initRound();
     }
-  }, [round, MAX_ROUNDS, onEndGame]);
-
-  const initRound = useCallback(() => {
-    setCurrentBalloonSize(1);
-    setCurrentRoundPoints(0);
-    setGameState('playing');
-    const threshold = Math.floor(Math.random() * 8) + 4; // [4..11]
-    setExplosionPoint(threshold);
-  }, []);
+  }, [round, MAX_ROUNDS, onEndGame, initRound]);
 
   useEffect(() => {
     if (isActive) {
       hasEndedRef.current = false;
       totalPointsRef.current = 0;
       popsRef.current = 0;
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setRound(1);
       setTotalPoints(0);
-      setPops(0);
       initRound();
     }
   }, [isActive, initRound]);
@@ -62,7 +61,6 @@ const BalloonGame = ({ isActive, onEndGame, isDemo }) => {
       playBalloonPop();
       setGameState('exploded');
       popsRef.current += 1;
-      setPops(popsRef.current);
       setTimeout(() => advanceRound(), 1500);
     } else {
       playBalloonPump();

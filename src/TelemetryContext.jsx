@@ -7,11 +7,7 @@ export const useTelemetry = () => useContext(TelemetryContext);
 
 export const TelemetryProvider = ({ children }) => {
   const [isDemo, setIsDemo] = useState(false);
-  const [sessionData, setSessionData] = useState({
-    game1: null,
-    game2: null,
-    game3: null,
-  });
+  const [sessionData, setSessionData] = useState({});
 
   const activeTrackingRef = useRef(false);
   const currentDataRef = useRef({
@@ -33,7 +29,7 @@ export const TelemetryProvider = ({ children }) => {
     };
   }, []);
 
-  const stopTracking = useCallback((gameId, finalScore = 0, finalErrors = null) => {
+  const stopTracking = useCallback((gameId, finalScore = 0, finalErrors = null, details = null) => {
     activeTrackingRef.current = false;
     const duration = Date.now() - currentDataRef.current.startTime;
     
@@ -43,7 +39,8 @@ export const TelemetryProvider = ({ children }) => {
         ...currentDataRef.current,
         duration,
         score: finalScore,
-        errors: finalErrors !== null ? finalErrors : currentDataRef.current.errors
+        errors: finalErrors !== null ? finalErrors : currentDataRef.current.errors,
+        details
       }
     }));
   }, []);

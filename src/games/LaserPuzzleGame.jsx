@@ -1,11 +1,11 @@
-import React, { useState, useEffect, useMemo, useCallback } from 'react';
+import React, { useState, useEffect, useRef, useMemo, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useTelemetry } from '../TelemetryContext';
 import { useGameTimer } from '../hooks/useGameTimer';
 
 const CELL = 46;
 
-const SHIP_ARROW = { right:'→', left:'←', up:'↑', down:'↓' };
+const SHIP_ARROW = { right:'>', left:'<', up:'^', down:'v' };
 const DEFLECT_NE = { right:'up', left:'down', up:'right', down:'left' }; 
 const DEFLECT_NW = { right:'down', left:'up', up:'left', down:'right' };
 const BIFURCATE = { right:['up','down'], left:['up','down'], up:['left','right'], down:['left','right'] };
@@ -207,6 +207,7 @@ const LaserPuzzleGame = ({ isActive, onEndGame, isDemo, timeLimit }) => {
         hasEndedRef.current = false;
         quizScore.current = 0;
         const levels = isDemo ? [generateLevel(0)] : [generateLevel(0), generateLevel(1), generateLevel(2)];
+        // eslint-disable-next-line react-hooks/set-state-in-effect
         setProcLevels(levels);
         setLevelIdx(0);
         setGrid(buildGrid(levels[0]));
@@ -264,6 +265,7 @@ const LaserPuzzleGame = ({ isActive, onEndGame, isDemo, timeLimit }) => {
     if (gamePhase !== 'playing') return;
     const antennaKeys = Object.keys(grid).filter(k => grid[k].type === 'antenna');
     if (antennaKeys.length > 0 && antennaKeys.every(k => litAntennas.has(k))) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setGamePhase('levelComplete');
       setTimeout(advanceLevel, 1400);
     }
@@ -282,9 +284,9 @@ const LaserPuzzleGame = ({ isActive, onEndGame, isDemo, timeLimit }) => {
     else if (type === 'rock') { bg = '#475569'; border = '1px solid #334155'; content = <div style={{ width:'72%', height:'72%', background:'#334155', borderRadius:'3px' }} />; }
     else if (type === 'reflector_ne') { bg = isSel ? '#bbf7d0' : 'rgba(34,197,94,0.14)'; border = isSel ? '2px solid #22c55e' : '1px solid rgba(34,197,94,0.4)'; cursor = 'pointer'; content = <span style={{ color:'#15803d', fontSize:'1.6rem', fontWeight:'900', lineHeight:1, transform:'rotate(0deg)' }}>/</span>; }
     else if (type === 'reflector_nw') { bg = isSel ? '#a7f3d0' : 'rgba(20,184,166,0.14)'; border = isSel ? '2px solid #14b8a6' : '1px solid rgba(20,184,166,0.4)'; cursor = 'pointer'; content = <span style={{ color:'#0d9488', fontSize:'1.6rem', fontWeight:'900', lineHeight:1 }}>\</span>; }
-    else if (type === 'bifurcator') { bg = isSel ? '#fed7aa' : 'rgba(249,115,22,0.13)'; border = isSel ? '2px solid #f97316' : '1px solid rgba(249,115,22,0.40)'; cursor = 'pointer'; content = <span style={{ color:'#ea580c', fontSize:'1.15rem', fontWeight:'900' }}>⊕</span>; }
-    else if (type === 'portal_blue') { bg = isSel ? '#c7d2fe' : 'rgba(99,102,241,0.1)'; border = isSel ? '2px solid #6366f1' : '1px dashed rgba(99,102,241,0.6)'; cursor = 'pointer'; content = <span style={{ color:'#4f46e5', fontSize:'1.2rem', fontWeight:'900' }}>⚇</span>; }
-    else if (type === 'antenna') { bg = isLit ? 'rgba(16,185,129,0.25)' : 'rgba(217,70,239,0.13)'; border = isLit ? '2px solid #10b981' : '1px solid rgba(217,70,239,0.5)'; content = <span style={{ fontSize:'1rem' }}>{isLit ? '✓' : '◉'}</span>; }
+    else if (type === 'bifurcator') { bg = isSel ? '#fed7aa' : 'rgba(249,115,22,0.13)'; border = isSel ? '2px solid #f97316' : '1px solid rgba(249,115,22,0.40)'; cursor = 'pointer'; content = <span style={{ color:'#ea580c', fontSize:'1.15rem', fontWeight:'900' }}>+</span>; }
+    else if (type === 'portal_blue') { bg = isSel ? '#c7d2fe' : 'rgba(99,102,241,0.1)'; border = isSel ? '2px solid #6366f1' : '1px dashed rgba(99,102,241,0.6)'; cursor = 'pointer'; content = <span style={{ color:'#4f46e5', fontSize:'1.2rem', fontWeight:'900' }}>P</span>; }
+    else if (type === 'antenna') { bg = isLit ? 'rgba(16,185,129,0.25)' : 'rgba(217,70,239,0.13)'; border = isLit ? '2px solid #10b981' : '1px solid rgba(217,70,239,0.5)'; content = <span style={{ fontSize:'1rem' }}>{isLit ? 'OK' : 'O'}</span>; }
 
     if (cell?.movable && !isSel) cursor = 'pointer';
 
@@ -318,17 +320,17 @@ const LaserPuzzleGame = ({ isActive, onEndGame, isDemo, timeLimit }) => {
           <motion.div key={`level-${levelIdx}`} initial={{ opacity:0, y:10 }} animate={{ opacity:1, y:0 }} exit={{ opacity:0 }} className="glass-panel" style={{ padding:'16px', display:'flex', flexDirection:'column', alignItems:'center', gap:'10px' }}>
             <div style={{ display:'flex', justifyContent:'space-between', width:'100%', fontSize:'0.8rem', fontWeight:'600', color:'#1e1b4b', textTransform:'uppercase', letterSpacing:'1px', gap:'16px' }}>
               <span>{level.name} <span style={{ color:'#7c3aed' }}>({levelIdx+1}/{procLevels?.length||3})</span></span>
-              <span style={{ color:satColor }}>⏱ {timeLeft}s</span>
+              <span style={{ color:satColor }}>T {timeLeft}s</span>
               <span>Moves: <span style={{ color:'#4f46e5' }}>{moves}</span> / par {level.par}</span>
               <span>Antennas: <span style={{ color: litCount === allAntennas.length ? '#059669' : '#374151' }}>{litCount}/{allAntennas.length}</span></span>
             </div>
             <div style={{ display:'flex', gap:'14px', fontSize:'0.68rem', color:'#64748b', flexWrap:'wrap', justifyContent:'center' }}>
-              <span><span style={{color:'#4f46e5',fontWeight:'900'}}>→</span> Emitter</span>
+              <span><span style={{color:'#4f46e5',fontWeight:'900'}}>{'>'}</span> Emitter</span>
               <span><span style={{color:'#15803d',fontWeight:'900'}}>/</span> Reflector</span>
-              <span><span style={{color:'#ea580c',fontWeight:'900'}}>⊕</span> Bifurcator</span>
-              <span><span style={{color:'#4f46e5',fontWeight:'900'}}>⚇</span> Portal</span>
-              <span><span style={{color:'#475569',fontWeight:'700'}}>■</span> Rock</span>
-              <span><span style={{color:'#7c3aed'}}>◉</span> Antenna</span>
+              <span><span style={{color:'#ea580c',fontWeight:'900'}}>+</span> Bifurcator</span>
+              <span><span style={{color:'#4f46e5',fontWeight:'900'}}>P</span> Portal</span>
+              <span><span style={{color:'#475569',fontWeight:'700'}}>#</span> Rock</span>
+              <span><span style={{color:'#7c3aed'}}>O</span> Antenna</span>
             </div>
             <div style={{ border:'1px solid rgba(99,102,241,0.2)', borderRadius:'8px', background:'rgba(220,225,255,0.45)', padding:'4px', overflow:'auto' }}>
               <div style={{ display:'grid', gridTemplateColumns:`repeat(${level.cols}, ${CELL}px)`, gap:'2px' }}>
@@ -336,10 +338,10 @@ const LaserPuzzleGame = ({ isActive, onEndGame, isDemo, timeLimit }) => {
               </div>
             </div>
             <div style={{ display:'flex', gap:'12px', alignItems:'center', width:'100%', justifyContent:'space-between' }}>
-              <span style={{ fontSize:'0.75rem', color:'#64748b', fontStyle:'italic' }}>💡 {level.hint}</span>
-              <button onClick={handleReset} style={{ background:'rgba(99,102,241,0.1)', border:'1px solid rgba(99,102,241,0.3)', color:'#4f46e5', borderRadius:'8px', padding:'6px 14px', cursor:'pointer', fontSize:'0.8rem', fontWeight:'600', whiteSpace:'nowrap' }}>↺ Reset Level</button>
+              <span style={{ fontSize:'0.75rem', color:'#64748b', fontStyle:'italic' }}>Hint: {level.hint}</span>
+              <button onClick={handleReset} style={{ background:'rgba(99,102,241,0.1)', border:'1px solid rgba(99,102,241,0.3)', color:'#4f46e5', borderRadius:'8px', padding:'6px 14px', cursor:'pointer', fontSize:'0.8rem', fontWeight:'600', whiteSpace:'nowrap' }}>Reset Level</button>
             </div>
-            {gamePhase === 'levelComplete' && <motion.div initial={{ opacity:0 }} animate={{ opacity:1 }} style={{ padding:'10px 24px', background:'rgba(16,185,129,0.15)', border:'2px solid #10b981', borderRadius:'10px', color:'#059669', fontWeight:'800', fontSize:'0.95rem', textTransform:'uppercase', letterSpacing:'2px' }}>✓ Level Complete!</motion.div>}
+            {gamePhase === 'levelComplete' && <motion.div initial={{ opacity:0 }} animate={{ opacity:1 }} style={{ padding:'10px 24px', background:'rgba(16,185,129,0.15)', border:'2px solid #10b981', borderRadius:'10px', color:'#059669', fontWeight:'800', fontSize:'0.95rem', textTransform:'uppercase', letterSpacing:'2px' }}>âœ“ Level Complete!</motion.div>}
           </motion.div>
         )}
         {gamePhase === 'quiz' && (
