@@ -204,6 +204,7 @@ async function main() {
   console.log('🔍 Checking server status...');
 
   if (!(await checkServer())) {
+    // eslint-disable-next-line no-undef
     process.exit(1);
   }
 
@@ -211,6 +212,7 @@ async function main() {
   await tester.runLoadTest();
 }
 
+// eslint-disable-next-line no-undef
 if (import.meta.url === `file://${process.argv[1]}`) {
   main().catch(console.error);
 }

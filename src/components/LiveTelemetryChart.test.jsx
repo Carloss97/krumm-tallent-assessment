@@ -1,4 +1,4 @@
-import { render, act, screen } from '@testing-library/react';
+import { render, screen } from '@testing-library/react';
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import React from 'react';
 import { TelemetryProvider, useTelemetry } from '../TelemetryContext';
