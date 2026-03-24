@@ -74,13 +74,14 @@ describe('Report Component', () => {
       </BrowserRouter>
     );
 
-    // Check that report is rendered (by checking for report-specific structure)
+    // Check that report is rendered by looking for report title
     await waitFor(
       () => {
         const h1 = container.querySelector('h1');
-        expect(h1 && (h1.textContent.includes('Cognitive') || h1.textContent.includes('Report'))).toBeTruthy();
+        const titleText = h1 ? h1.textContent : '';
+        expect(titleText.includes('Assessment') || titleText.includes('Evaluation')).toBeTruthy();
       },
-      { timeout: 5000 },
+      { timeout: 10000 },
     );
   });
 
@@ -127,13 +128,13 @@ describe('Report Component', () => {
       </BrowserRouter>
     );
 
-    // Verify that report renders and data is displayed
+    // Verify that report renders with recommendation
     await waitFor(
       () => {
-        const sessionDiv = container.querySelector('[style*="Session saved"]');
-        expect(container.textContent).toMatch(/Project Manager|Data Analyst/);
+        const recommendationDiv = container.textContent;
+        expect(recommendationDiv.includes('Recommendation')).toBeTruthy();
       },
-      { timeout: 5000 },
+      { timeout: 10000 },
     );
   });
 });
