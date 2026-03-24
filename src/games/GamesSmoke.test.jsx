@@ -3,12 +3,16 @@ import { render, cleanup } from '@testing-library/react';
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import { TelemetryProvider } from '../TelemetryContext';
 
-// Mock audio utilities - must be before any game imports
+// Mock audio utilities and game timer - must be before any game imports
 vi.mock('../utils/audio', () => ({
   playBalloonPump: vi.fn(),
   playBalloonPop: vi.fn(),
   playMemoryFlash: vi.fn(),
   playMemoryClick: vi.fn(),
+}));
+
+vi.mock('../hooks/useGameTimer', () => ({
+  useGameTimer: () => 60,
 }));
 
 import BalloonGame from './BalloonGame';
