@@ -1,5 +1,5 @@
-import { render, screen } from '@testing-library/react';
-import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { render, screen, cleanup } from '@testing-library/react';
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import React from 'react';
 import { TelemetryProvider } from '../TelemetryContext';
 import BalloonGame from './BalloonGame';
@@ -17,7 +17,13 @@ describe('BalloonGame Telemetry Integration', () => {
     vi.useFakeTimers();
   });
 
-  it('starts telemetry when game begins', async () => {
+  afterEach(() => {
+    cleanup();
+    vi.useRealTimers();
+    vi.clearAllTimers();
+  });
+
+  it('starts telemetry when game begins', () => {
     // We need to render with isActive=true to bypass instructions
     render(
       <TelemetryProvider>

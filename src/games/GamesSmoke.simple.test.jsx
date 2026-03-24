@@ -37,7 +37,7 @@ const GAMES = [
   ['MentalRotationGame', MentalRotationGame],
 ];
 
-describe('Games smoke coverage', () => {
+describe('Games smoke - simple render tests', () => {
   beforeEach(() => {
     class MockAudioContext {
       constructor() {
