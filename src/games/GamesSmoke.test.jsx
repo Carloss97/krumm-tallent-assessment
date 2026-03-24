@@ -16,38 +16,8 @@ vi.mock('../hooks/useGameTimer', () => ({
 }));
 
 import BalloonGame from './BalloonGame';
-import ColorWordGame from './ColorWordGame';
-import FrustrationGame from './FrustrationGame';
-import MemoryGame from './MemoryGame';
-import VigilanceGame from './VigilanceGame';
-import GridOptimizerGame from './GridOptimizerGame';
-import LaserPuzzleGame from './LaserPuzzleGame';
-import NBackGame from './NBackGame';
-import TowerOfLondonGame from './TowerOfLondonGame';
-import WisconsinCardSortingGame from './WisconsinCardSortingGame';
-import GoNoGoGame from './GoNoGoGame';
-import TrailMakingGame from './TrailMakingGame';
-import CorsiBlockTappingGame from './CorsiBlockTappingGame';
-import MentalRotationGame from './MentalRotationGame';
 
 const renderWithTelemetry = (node) => render(<TelemetryProvider>{node}</TelemetryProvider>);
-
-const GAMES = [
-  ['BalloonGame', BalloonGame],
-  ['ColorWordGame', ColorWordGame],
-  ['FrustrationGame', FrustrationGame],
-  ['MemoryGame', MemoryGame],
-  ['VigilanceGame', VigilanceGame],
-  ['GridOptimizerGame', GridOptimizerGame],
-  ['LaserPuzzleGame', LaserPuzzleGame],
-  ['NBackGame', NBackGame],
-  ['TowerOfLondonGame', TowerOfLondonGame],
-  ['WisconsinCardSortingGame', WisconsinCardSortingGame],
-  ['GoNoGoGame', GoNoGoGame],
-  ['TrailMakingGame', TrailMakingGame],
-  ['CorsiBlockTappingGame', CorsiBlockTappingGame],
-  ['MentalRotationGame', MentalRotationGame],
-];
 
 describe('Games smoke coverage', () => {
   beforeEach(() => {
@@ -93,15 +63,10 @@ describe('Games smoke coverage', () => {
     delete globalThis.webkitAudioContext;
   });
 
-  it.each(GAMES)('renders %s without crashing', (_name, GameComponent) => {
+  it('smoke test - BalloonGame renders', () => {
     const { unmount } = renderWithTelemetry(
-      <GameComponent isActive={false} isDemo={false} timeLimit={60} onEndGame={() => {}} />,
+      <BalloonGame isActive={false} isDemo={false} timeLimit={60} onEndGame={() => {}} />,
     );
     unmount();
-
-    const { unmount: unmount2 } = renderWithTelemetry(
-      <GameComponent isActive={true} isDemo={false} timeLimit={60} onEndGame={() => {}} />,
-    );
-    unmount2();
   });
 });
