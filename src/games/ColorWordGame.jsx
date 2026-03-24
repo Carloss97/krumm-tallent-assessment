@@ -15,7 +15,7 @@ const COLORS = [
 ];
 
 const ColorWordGame = ({ isActive, onEndGame, isDemo, timeLimit }) => {
-  const { recordError } = useTelemetry();
+  const { recordError, startTracking, stopTracking } = useTelemetry();
   
   const MAX_ROUNDS = isDemo ? 3 : 15;
 
@@ -30,8 +30,9 @@ const ColorWordGame = ({ isActive, onEndGame, isDemo, timeLimit }) => {
   const endGame = useCallback(() => {
     if (hasEndedRef.current) return;
     hasEndedRef.current = true;
+    stopTracking('game1', scoreRef.current, 0, { rounds: scoreRef.current });
     onEndGame(scoreRef.current);
-  }, [onEndGame]);
+  }, [onEndGame, stopTracking]);
 
   const timeLeft = useGameTimer({ isActive, timeLimit, onEnd: endGame });
 
@@ -67,10 +68,11 @@ const ColorWordGame = ({ isActive, onEndGame, isDemo, timeLimit }) => {
     if (isActive) {
       scoreRef.current = 0;
       hasEndedRef.current = false;
+      startTracking();
       // eslint-disable-next-line react-hooks/set-state-in-effect
       generateRound(0);
     }
-  }, [isActive, generateRound]);
+  }, [isActive, generateRound, startTracking]);
 
   const handleChoice = (colorVal) => {
     if (hasEndedRef.current || !isActive) return;

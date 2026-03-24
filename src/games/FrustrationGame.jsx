@@ -4,7 +4,7 @@ import { useTelemetry } from '../TelemetryContext';
 import { useGameTimer } from '../hooks/useGameTimer';
 
 const FrustrationGame = ({ isActive, onEndGame, timeLimit }) => {
-  const { recordError } = useTelemetry();
+  const { recordError, startTracking, stopTracking } = useTelemetry();
   
   const [targetPos, setTargetPos] = useState({ x: 50, y: 50 }); // percentage
   const [inZone, setInZone] = useState(false);
@@ -15,14 +15,17 @@ const FrustrationGame = ({ isActive, onEndGame, timeLimit }) => {
   const endGame = useCallback(() => {
     if (hasEndedRef.current) return;
     hasEndedRef.current = true;
-    onEndGame(Math.floor(trackingTimeRef.current / 1000));
-  }, [onEndGame]);
+    const score = Math.floor(trackingTimeRef.current / 1000);
+    stopTracking('game2', score, 0, { syncTime: score });
+    onEndGame(score);
+  }, [onEndGame, stopTracking]);
 
   const timeLeft = useGameTimer({ isActive, timeLimit, onEnd: endGame });
 
   useEffect(() => {
     if (isActive) {
       hasEndedRef.current = false;
+      startTracking();
       trackingTimeRef.current = 0;
       // eslint-disable-next-line react-hooks/set-state-in-effect
       setTrackingTimeMs(0);
@@ -38,7 +41,7 @@ const FrustrationGame = ({ isActive, onEndGame, timeLimit }) => {
         clearInterval(moveInterval);
       };
     }
-  }, [isActive]);
+  }, [isActive, startTracking]);
 
   useEffect(() => {
     // Score based on time in zone

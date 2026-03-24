@@ -5,7 +5,7 @@ import { useGameTimer } from '../hooks/useGameTimer';
 import { playMemoryFlash, playMemoryClick } from '../utils/audio';
 
 const MemoryGame = ({ isActive, onEndGame, isDemo, timeLimit }) => {
-  const { recordError } = useTelemetry();
+  const { recordError, startTracking, stopTracking } = useTelemetry();
   const MAX_ROUNDS = isDemo ? 2 : 5;
 
   const [round, setRound] = useState(1);
@@ -22,8 +22,9 @@ const MemoryGame = ({ isActive, onEndGame, isDemo, timeLimit }) => {
   const endGame = useCallback(() => {
     if (hasEndedRef.current) return;
     hasEndedRef.current = true;
+    stopTracking('game3', scoreRef.current, 0, { rounds: scoreRef.current });
     onEndGame(scoreRef.current);
-  }, [onEndGame]);
+  }, [onEndGame, stopTracking]);
 
   const timeLeft = useGameTimer({ isActive, timeLimit, onEnd: endGame });
 
@@ -66,13 +67,14 @@ const MemoryGame = ({ isActive, onEndGame, isDemo, timeLimit }) => {
       isActiveRef.current = true;
       hasEndedRef.current = false;
       scoreRef.current = 0;
+      startTracking();
       // eslint-disable-next-line react-hooks/set-state-in-effect
       setRound(1)
       generateSequence(1);
     } else {
       isActiveRef.current = false;
     }
-  }, [isActive, generateSequence]);
+  }, [isActive, generateSequence, startTracking]);
 
   const handleSquareClick = (index) => {
     if (gameStateRef.current !== 'playing') return;

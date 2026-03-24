@@ -4,7 +4,7 @@ import { useTelemetry } from '../TelemetryContext';
 import { useGameTimer } from '../hooks/useGameTimer';
 
 const GoNoGoGame = ({ isActive, onEndGame, isDemo, timeLimit }) => {
-  const { recordError } = useTelemetry();
+  const { recordError, startTracking, stopTracking } = useTelemetry();
 
   const [currentStimulus, setCurrentStimulus] = useState(null);
   const [gameState, setGameState] = useState('waiting');
@@ -32,8 +32,9 @@ const GoNoGoGame = ({ isActive, onEndGame, isDemo, timeLimit }) => {
     const goAccuracy = totalGoTrials > 0 ? Math.round((correctGo / totalGoTrials) * 100) : 0;
     const noGoAccuracy = totalNoGoTrials > 0 ? Math.round((correctNoGo / totalNoGoTrials) * 100) : 0;
     const avgReactionTime = reactionTimes.current.length > 0 ? Math.round(reactionTimes.current.reduce((a, b) => a + b, 0) / reactionTimes.current.length) : 0;
+    stopTracking('game11', score, commissionErrors + omissionErrors, { goAccuracy, noGoAccuracy, commissionErrors, omissionErrors, avgReactionTime, totalTrials: MAX_TRIALS });
     onEndGame(score, commissionErrors + omissionErrors, { goAccuracy, noGoAccuracy, commissionErrors, omissionErrors, avgReactionTime, totalTrials: MAX_TRIALS });
-  }, [onEndGame, score, commissionErrors, omissionErrors, correctGo, correctNoGo, MAX_TRIALS, GO_PROBABILITY]);
+  }, [onEndGame, score, commissionErrors, omissionErrors, correctGo, correctNoGo, MAX_TRIALS, GO_PROBABILITY, stopTracking]);
 
   const timeLeft = useGameTimer({ isActive, timeLimit, onEnd: endGame });
 
@@ -68,6 +69,7 @@ const GoNoGoGame = ({ isActive, onEndGame, isDemo, timeLimit }) => {
   useEffect(() => {
     if (isActive) {
       hasEndedRef.current = false;
+      startTracking();
       // eslint-disable-next-line react-hooks/set-state-in-effect
       setTrial(1);
       setScore(0);
@@ -79,7 +81,7 @@ const GoNoGoGame = ({ isActive, onEndGame, isDemo, timeLimit }) => {
       startTrial();
     }
     return () => clearTimeout(responseTimeoutRef.current);
-  }, [isActive, startTrial]);
+  }, [isActive, startTrial, startTracking]);
 
   useEffect(() => {
     if(isActive && trial > 1) {

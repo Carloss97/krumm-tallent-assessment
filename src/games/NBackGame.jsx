@@ -4,7 +4,7 @@ import { useTelemetry } from '../TelemetryContext';
 import { useGameTimer } from '../hooks/useGameTimer';
 
 const NBackGame = ({ isActive, onEndGame, isDemo, timeLimit }) => {
-  const { recordError } = useTelemetry();
+  const { recordError, startTracking, stopTracking } = useTelemetry();
 
   const [round, setRound] = useState(1);
   const [nBack, setNBack] = useState(2);
@@ -31,8 +31,9 @@ const NBackGame = ({ isActive, onEndGame, isDemo, timeLimit }) => {
     if (hasEndedRef.current) return;
     hasEndedRef.current = true;
     const avgReactionTime = reactionTimes.length > 0 ? Math.round(reactionTimes.reduce((a, b) => a + b, 0) / reactionTimes.length) : 0;
+    stopTracking('game8', score, totalErrors, { totalCorrect, totalErrors, avgReactionTime, nBackLevel: nBack });
     onEndGame(score, totalErrors, { totalCorrect, totalErrors, avgReactionTime, nBackLevel: nBack });
-  }, [onEndGame, score, totalErrors, totalCorrect, reactionTimes, nBack]);
+  }, [onEndGame, score, totalErrors, totalCorrect, reactionTimes, nBack, stopTracking]);
   
   const timeLeft = useGameTimer({ isActive, timeLimit, onEnd: endGame });
 
@@ -104,6 +105,7 @@ const NBackGame = ({ isActive, onEndGame, isDemo, timeLimit }) => {
     if (isActive) {
       isActiveRef.current = true;
       hasEndedRef.current = false;
+      startTracking();
       // eslint-disable-next-line react-hooks/set-state-in-effect
       setRound(1);
       setNBack(2);
@@ -116,7 +118,7 @@ const NBackGame = ({ isActive, onEndGame, isDemo, timeLimit }) => {
       isActiveRef.current = false;
       clearTimeout(timeoutRef.current);
     }
-  }, [isActive]);
+  }, [isActive, startTracking]);
 
   useEffect(() => {
       if(isActive) {

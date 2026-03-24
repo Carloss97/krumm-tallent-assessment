@@ -163,7 +163,7 @@ const buildGrid = (level) => {
 };
 
 const LaserPuzzleGame = ({ isActive, onEndGame, isDemo, timeLimit }) => {
-  const { recordError } = useTelemetry();
+  const { recordError, startTracking, stopTracking } = useTelemetry();
   const [procLevels, setProcLevels] = useState(null);
   const [levelIdx, setLevelIdx] = useState(0);
   const [grid, setGrid] = useState({});
@@ -181,8 +181,9 @@ const LaserPuzzleGame = ({ isActive, onEndGame, isDemo, timeLimit }) => {
     const parTotal = procLevels ? procLevels.reduce((s, l) => s + l.par, 0) : 6;
     const efficiency = Math.min(100, Math.round((parTotal / Math.max(1, tm)) * 100));
     setGamePhase('done');
+    stopTracking('game7', efficiency, quizScore.current, { efficiency, quizScore: quizScore.current, totalMoves: tm });
     onEndGame(efficiency, quizScore.current);
-  }, [procLevels, onEndGame]);
+  }, [procLevels, onEndGame, stopTracking]);
 
   const advanceLevel = useCallback(() => {
     setSelected(null);
@@ -205,6 +206,7 @@ const LaserPuzzleGame = ({ isActive, onEndGame, isDemo, timeLimit }) => {
   useEffect(() => {
     if (isActive) {
         hasEndedRef.current = false;
+        startTracking();
         quizScore.current = 0;
         const levels = isDemo ? [generateLevel(0)] : [generateLevel(0), generateLevel(1), generateLevel(2)];
         // eslint-disable-next-line react-hooks/set-state-in-effect
@@ -216,7 +218,7 @@ const LaserPuzzleGame = ({ isActive, onEndGame, isDemo, timeLimit }) => {
         setGamePhase('playing');
         setQuizStep(0);
     }
-  }, [isActive, isDemo]);
+  }, [isActive, isDemo, startTracking]);
   
   const handleCellClick = useCallback((x, y) => {
     if (gamePhase !== 'playing') return;

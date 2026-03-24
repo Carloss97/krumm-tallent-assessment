@@ -4,7 +4,7 @@ import { useTelemetry } from '../TelemetryContext';
 import { useGameTimer } from '../hooks/useGameTimer';
 
 const CorsiBlockTappingGame = ({ isActive, onEndGame, isDemo, timeLimit }) => {
-  const { recordError } = useTelemetry();
+  const { recordError, startTracking, stopTracking } = useTelemetry();
 
   const [blocks, setBlocks] = useState([]);
   const [sequence, setSequence] = useState([]);
@@ -30,8 +30,9 @@ const CorsiBlockTappingGame = ({ isActive, onEndGame, isDemo, timeLimit }) => {
     if (hasEndedRef.current) return;
     hasEndedRef.current = true;
     const accuracy = totalTrials > 0 ? Math.round((correctTrials / totalTrials) * 100) : 0;
+    stopTracking('game13', score, totalTrials - correctTrials, { maxSequenceLength, finalLevel: level, accuracy, totalCorrect: correctTrials, totalTrials });
     onEndGame(score, totalTrials - correctTrials, { maxSequenceLength, finalLevel: level, accuracy, totalCorrect: correctTrials, totalTrials });
-  }, [onEndGame, score, totalTrials, correctTrials, maxSequenceLength, level]);
+  }, [onEndGame, score, totalTrials, correctTrials, maxSequenceLength, level, stopTracking]);
 
   const timeLeft = useGameTimer({ isActive, timeLimit, onEnd: endGame });
 
@@ -92,6 +93,7 @@ const CorsiBlockTappingGame = ({ isActive, onEndGame, isDemo, timeLimit }) => {
   useEffect(() => {
     if (isActive) {
       hasEndedRef.current = false;
+      startTracking();
       const newBlocks = [];
       for (let i = 0; i < GRID_SIZE * GRID_SIZE; i++) {
         newBlocks.push({ id: i, x: (i % GRID_SIZE) * (BLOCK_SIZE + 10) + 50, y: Math.floor(i / GRID_SIZE) * (BLOCK_SIZE + 10) + 50, highlighted: false, selected: false });
@@ -107,7 +109,7 @@ const CorsiBlockTappingGame = ({ isActive, onEndGame, isDemo, timeLimit }) => {
       startLevel();
     }
     return () => { clearTimeout(sequenceTimeoutRef.current); clearTimeout(recallTimeoutRef.current); };
-  }, [isActive, startLevel]);
+  }, [isActive, startLevel, startTracking]);
   
   useEffect(() => {
     if(isActive && (trial > 1 || level > 3)) {

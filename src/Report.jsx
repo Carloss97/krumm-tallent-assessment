@@ -31,6 +31,7 @@ const Report = () => {
   // Reset generation state when switching AI/demo modes to avoid stale report output.
   useEffect(() => {
     reportGeneratedRef.current = false;
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setIsAnalyzing(true);
     setAiReport(null);
     setBackendError(null);
@@ -54,12 +55,12 @@ const Report = () => {
             }
           }
           // Fallback to heuristic if AI fails or is disabled
-          const heuristicReport = generateHeuristicReport(reportData, 'recruitment');
+          const heuristicReport = generateHeuristicReport(reportData);
           setAiReport(heuristicReport);
           setTimeout(() => setIsAnalyzing(false), heuristicAnalysisDelayMs);
         } catch (error) {
           console.error('Error generating AI report:', error);
-          const heuristicReport = generateHeuristicReport(reportData, 'recruitment');
+          const heuristicReport = generateHeuristicReport(reportData);
           setAiReport(heuristicReport);
           setTimeout(() => setIsAnalyzing(false), heuristicAnalysisDelayMs);
         }

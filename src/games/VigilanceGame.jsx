@@ -1,8 +1,10 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { useTelemetry } from '../TelemetryContext';
 import { useGameTimer } from '../hooks/useGameTimer';
 
 const VigilanceGame = ({ isActive, onEndGame, isDemo }) => {
+  const { startTracking, stopTracking } = useTelemetry();
   const [round, setRound] = useState(1);
   const [gameState, setGameState] = useState('waiting');
   const [reactionTime, setReactionTime] = useState(null);
@@ -23,8 +25,9 @@ const VigilanceGame = ({ isActive, onEndGame, isDemo }) => {
     if (hasEndedRef.current) return;
     hasEndedRef.current = true;
     const avgReactionTime = round > 1 ? totalReactionTimeRef.current / (round - 1 - falseStartsRef.current) : 0;
+    stopTracking('game5', Math.round(avgReactionTime), falseStartsRef.current, { avgReactionTime: Math.round(avgReactionTime), falseStarts: falseStartsRef.current });
     onEndGame(avgReactionTime, falseStartsRef.current);
-  }, [onEndGame, round]);
+  }, [onEndGame, round, stopTracking]);
 
   const timeLeft = useGameTimer({ isActive, timeLimit: isDemo ? 15 : 0, onEnd: endGame });
 
@@ -105,6 +108,7 @@ const VigilanceGame = ({ isActive, onEndGame, isDemo }) => {
   useEffect(() => {
     if (isActive) {
       hasEndedRef.current = false;
+      startTracking();
       // eslint-disable-next-line react-hooks/set-state-in-effect
       setRound(1);
       totalReactionTimeRef.current = 0;
@@ -112,14 +116,14 @@ const VigilanceGame = ({ isActive, onEndGame, isDemo }) => {
       initRound();
     }
     return () => clearTimeout(timeoutRef.current);
-  }, [isActive, initRound]);
+  }, [isActive, initRound, startTracking]);
 
   useEffect(() => {
     if (isActive && round > 1 && round <= MAX_ROUNDS) {
         // eslint-disable-next-line react-hooks/set-state-in-effect
         initRound();
     }
-  }, [round, isActive, initRound]);
+  }, [round, isActive, initRound, MAX_ROUNDS]);
 
 
   const handleScreenClick = () => {

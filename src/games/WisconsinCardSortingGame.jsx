@@ -8,7 +8,7 @@ const shapes = ['circle', 'triangle', 'square', 'star'];
 const numbers = [1, 2, 3, 4];
 
 const WisconsinCardSortingGame = ({ isActive, onEndGame, isDemo, timeLimit }) => {
-  const { recordError } = useTelemetry();
+  const { recordError, startTracking, stopTracking } = useTelemetry();
   
   const [cards, setCards] = useState([]);
   const [stimulusCards, setStimulusCards] = useState([]);
@@ -34,8 +34,9 @@ const WisconsinCardSortingGame = ({ isActive, onEndGame, isDemo, timeLimit }) =>
     if (hasEndedRef.current) return;
     hasEndedRef.current = true;
     const avgReactionTime = reactionTimes.current.length > 0 ? Math.round(reactionTimes.current.reduce((a, b) => a + b, 0) / reactionTimes.current.length) : 0;
+    stopTracking('game10', score, totalErrors, { categoriesCompleted: ruleChanges, totalCorrect, totalErrors, perseverativeErrors, avgReactionTime });
     onEndGame(score, totalErrors, { categoriesCompleted: ruleChanges, totalCorrect, totalErrors, perseverativeErrors, avgReactionTime });
-  }, [onEndGame, score, totalErrors, ruleChanges, totalCorrect, perseverativeErrors]);
+  }, [onEndGame, score, totalErrors, ruleChanges, totalCorrect, perseverativeErrors, stopTracking]);
 
   const timeLeft = useGameTimer({ isActive, timeLimit, onEnd: endGame });
 
@@ -68,6 +69,7 @@ const WisconsinCardSortingGame = ({ isActive, onEndGame, isDemo, timeLimit }) =>
   useEffect(() => {
     if (isActive) {
       hasEndedRef.current = false;
+      startTracking();
       reactionTimes.current = [];
       setCurrentRule('color');
       setRuleChanges(0);
@@ -78,7 +80,7 @@ const WisconsinCardSortingGame = ({ isActive, onEndGame, isDemo, timeLimit }) =>
       setPerseverativeErrors(0);
       initializeGame();
     }
-  }, [isActive, initializeGame]);
+  }, [isActive, initializeGame, startTracking]);
   
   useEffect(() => {
     if(isActive && cards.length > 0 && !currentCard) {

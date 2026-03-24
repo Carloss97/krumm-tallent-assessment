@@ -1,5 +1,5 @@
 import { render, screen, fireEvent, act } from '@testing-library/react';
-import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import React, { useEffect } from 'react';
 import { TelemetryProvider, useTelemetry } from './TelemetryContext';
 
@@ -23,7 +23,11 @@ const TestComponent = ({ action }) => {
 
 describe('TelemetryContext', () => {
   beforeEach(() => {
-    vi.useFakeTimers();
+    vi.useFakeTimers({ shouldAdvanceTime: true });
+  });
+
+  afterEach(() => {
+    vi.useRealTimers();
   });
 
   it('starts tracking and resets data', () => {

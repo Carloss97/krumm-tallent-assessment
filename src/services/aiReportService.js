@@ -241,7 +241,6 @@ function parseAIResponse(responseText) {
 /**
  * Generate fallback heuristic-based report (for when LLM fails)
  * @param {Object} sessionData - Game session data
- * @param {string} mode - 'recruitment' or 'reassignment'
  * @returns {Object} Heuristic report
  */
 export function generateHeuristicReport(sessionData) {

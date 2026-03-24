@@ -7,10 +7,7 @@
  * to test performance under load.
  */
 
-/* global require, process, module */
- 
-
-const { chromium } = require('playwright');
+import { chromium } from 'playwright';
 
 const CONFIG = {
   baseUrl: 'http://localhost:5173', // Vite dev server
@@ -214,8 +211,8 @@ async function main() {
   await tester.runLoadTest();
 }
 
-if (require.main === module) {
+if (import.meta.url === `file://${process.argv[1]}`) {
   main().catch(console.error);
 }
 
-module.exports = { LoadTester };
+export { LoadTester };

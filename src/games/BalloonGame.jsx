@@ -1,9 +1,11 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { playBalloonPump, playBalloonPop } from '../utils/audio';
+import { useTelemetry } from '../TelemetryContext';
 
 const BalloonGame = ({ isActive, onEndGame, isDemo }) => {
   const MAX_ROUNDS = isDemo ? 3 : 10;
+  const { startTracking, stopTracking } = useTelemetry();
 
   const [round, setRound] = useState(1);
   const [currentBalloonSize, setCurrentBalloonSize] = useState(1);
@@ -29,25 +31,27 @@ const BalloonGame = ({ isActive, onEndGame, isDemo }) => {
     
     if (round >= MAX_ROUNDS) {
       hasEndedRef.current = true;
+      stopTracking('game4', totalPointsRef.current, popsRef.current, { pops: popsRef.current });
       onEndGame(totalPointsRef.current, popsRef.current);
     } else {
       const next = round + 1;
       setRound(next);
       initRound();
     }
-  }, [round, MAX_ROUNDS, onEndGame, initRound]);
+  }, [round, MAX_ROUNDS, onEndGame, initRound, stopTracking]);
 
   useEffect(() => {
     if (isActive) {
       hasEndedRef.current = false;
       totalPointsRef.current = 0;
       popsRef.current = 0;
+      startTracking();
       // eslint-disable-next-line react-hooks/set-state-in-effect
       setRound(1);
       setTotalPoints(0);
       initRound();
     }
-  }, [isActive, initRound]);
+  }, [isActive, initRound, startTracking]);
 
   const handlePump = () => {
     if (gameState !== 'playing' || hasEndedRef.current) return;

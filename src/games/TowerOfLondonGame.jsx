@@ -12,7 +12,7 @@ const problems = [
 ];
 
 const TowerOfLondonGame = ({ isActive, onEndGame, isDemo, timeLimit }) => {
-  const { recordError } = useTelemetry();
+  const { recordError, startTracking, stopTracking } = useTelemetry();
 
   const [problem, setProblem] = useState(1);
   const [towers, setTowers] = useState([[], [], []]);
@@ -32,8 +32,9 @@ const TowerOfLondonGame = ({ isActive, onEndGame, isDemo, timeLimit }) => {
     if (hasEndedRef.current) return;
     hasEndedRef.current = true;
     const avgTime = problemTimes.length > 0 ? Math.round(problemTimes.reduce((a, b) => a + b, 0) / problemTimes.length) : 0;
+    stopTracking('game9', score, 0, { problemsCompleted: problem -1, totalMoves: moves, avgTimePerProblem: avgTime, efficiency: score });
     onEndGame(score, 0, { problemsCompleted: problem -1, totalMoves: moves, avgTimePerProblem: avgTime, efficiency: score });
-  }, [onEndGame, score, problem, moves, problemTimes]);
+  }, [onEndGame, score, problem, moves, problemTimes, stopTracking]);
 
   const timeLeft = useGameTimer({ isActive, timeLimit, onEnd: endGame });
 
@@ -50,12 +51,13 @@ const TowerOfLondonGame = ({ isActive, onEndGame, isDemo, timeLimit }) => {
   useEffect(() => {
     if (isActive) {
       hasEndedRef.current = false;
+      startTracking();
       setProblem(1);
       setScore(0);
       setProblemTimes([]);
       loadProblem(1);
     }
-  }, [isActive, loadProblem]);
+  }, [isActive, loadProblem, startTracking]);
 
   useEffect(() => {
     if(isActive && problem > 1) {

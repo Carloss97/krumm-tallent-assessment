@@ -4,7 +4,7 @@ import { useTelemetry } from '../TelemetryContext';
 import { useGameTimer } from '../hooks/useGameTimer';
 
 const TrailMakingGame = ({ isActive, onEndGame, isDemo, timeLimit }) => {
-  const { recordError } = useTelemetry();
+  const { recordError, startTracking, stopTracking } = useTelemetry();
 
   const [part, setPart] = useState('A');
   const [nodes, setNodes] = useState([]);
@@ -24,8 +24,9 @@ const TrailMakingGame = ({ isActive, onEndGame, isDemo, timeLimit }) => {
     hasEndedRef.current = true;
     const totalTime = partTimes.current.reduce((a, b) => a + b, 0);
     const avgTime = partTimes.current.length > 0 ? Math.round(totalTime / partTimes.current.length) : 0;
+    stopTracking('game12', score, errors, { partATime: partTimes.current[0] || 0, partBTime: partTimes.current[1] || 0, totalTime: Math.round(totalTime), avgTime, totalErrors: errors });
     onEndGame(score, errors, { partATime: partTimes.current[0] || 0, partBTime: partTimes.current[1] || 0, totalTime: Math.round(totalTime), avgTime, totalErrors: errors });
-  }, [onEndGame, score, errors]);
+  }, [onEndGame, score, errors, stopTracking]);
 
   const timeLeft = useGameTimer({ isActive, timeLimit, onEnd: endGame });
 
@@ -68,6 +69,7 @@ const TrailMakingGame = ({ isActive, onEndGame, isDemo, timeLimit }) => {
   useEffect(() => {
     if (isActive) {
       hasEndedRef.current = false;
+      startTracking();
       // eslint-disable-next-line react-hooks/set-state-in-effect
       setPart('A');
       setScore(0);
@@ -76,7 +78,7 @@ const TrailMakingGame = ({ isActive, onEndGame, isDemo, timeLimit }) => {
       // Defer initialization until canvas is ready
       setTimeout(() => initializePart(), 0);
     }
-  }, [isActive, initializePart]);
+  }, [isActive, initializePart, startTracking]);
 
   useEffect(() => {
       if(isActive && part === 'B') {

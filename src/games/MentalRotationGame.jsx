@@ -12,7 +12,7 @@ const shapes = [
 ];
 
 const MentalRotationGame = ({ isActive, onEndGame, isDemo, timeLimit }) => {
-  const { recordError } = useTelemetry();
+  const { recordError, startTracking, stopTracking } = useTelemetry();
 
   const [currentTrial, setCurrentTrial] = useState(1);
   const [stimuli, setStimuli] = useState({ left: null, right: null, isSame: true });
@@ -35,8 +35,9 @@ const MentalRotationGame = ({ isActive, onEndGame, isDemo, timeLimit }) => {
     hasEndedRef.current = true;
     const accuracy = totalAnswers > 0 ? Math.round((correctAnswers / totalAnswers) * 100) : 0;
     const avgReactionTime = reactionTimes.current.length > 0 ? Math.round(reactionTimes.current.reduce((a, b) => a + b, 0) / reactionTimes.current.length) : 0;
+    stopTracking('game14', score, totalAnswers - correctAnswers, { accuracy, totalCorrect: correctAnswers, totalTrials: totalAnswers, avgReactionTime });
     onEndGame(score, totalAnswers - correctAnswers, { accuracy, totalCorrect: correctAnswers, totalTrials: totalAnswers, avgReactionTime });
-  }, [onEndGame, score, totalAnswers, correctAnswers]);
+  }, [onEndGame, score, totalAnswers, correctAnswers, stopTracking]);
 
   const timeLeft = useGameTimer({ isActive, timeLimit, onEnd: endGame });
 
@@ -87,6 +88,7 @@ const MentalRotationGame = ({ isActive, onEndGame, isDemo, timeLimit }) => {
   useEffect(() => {
     if (isActive) {
       hasEndedRef.current = false;
+      startTracking();
       // eslint-disable-next-line react-hooks/set-state-in-effect
       setCurrentTrial(1);
       setScore(0);
@@ -96,7 +98,7 @@ const MentalRotationGame = ({ isActive, onEndGame, isDemo, timeLimit }) => {
       startTrial();
     }
     return () => clearTimeout(timeoutRef.current);
-  }, [isActive, startTrial]);
+  }, [isActive, startTrial, startTracking]);
   
   useEffect(() => {
     if (isActive && currentTrial > 1) {

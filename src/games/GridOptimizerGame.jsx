@@ -26,7 +26,7 @@ const QUIZ = [
 ];
 
 const GridOptimizerGame = ({ isActive, onEndGame, isDemo }) => {
-  const { recordError } = useTelemetry();
+  const { recordError, startTracking, stopTracking } = useTelemetry();
 
   const effectiveMaxRounds = isDemo ? 1 : MAX_ROUNDS;
   const spawnerTimerRef = useRef(null);
@@ -54,8 +54,9 @@ const GridOptimizerGame = ({ isActive, onEndGame, isDemo }) => {
     if (hasEndedRef.current) return;
     hasEndedRef.current = true;
     setGameState('done');
+    stopTracking('game6', stateRef.current.score, quizScoreRef.current, { score: stateRef.current.score, quizScore: quizScoreRef.current });
     onEndGame(stateRef.current.score, quizScoreRef.current);
-  }, [onEndGame]);
+  }, [onEndGame, stopTracking]);
 
   const transitionToQuiz = useCallback(() => {
     if (hasEndedRef.current) return;
@@ -93,6 +94,7 @@ const GridOptimizerGame = ({ isActive, onEndGame, isDemo }) => {
   useEffect(() => { 
     if (isActive) { 
       hasEndedRef.current = false;
+      startTracking();
       quizScoreRef.current = 0;
       stateRef.current = { player:{x:0,y:0}, inventory:null, targets:[], energy:100, round:0, score:0 };
       setGameState('playing');
@@ -100,7 +102,7 @@ const GridOptimizerGame = ({ isActive, onEndGame, isDemo }) => {
       setScore(0);
       loadLevel(0);
     } 
-  }, [isActive, loadLevel]);
+  }, [isActive, loadLevel, startTracking]);
 
   // Level countdown & Satisfaction timer
   useEffect(() => {
