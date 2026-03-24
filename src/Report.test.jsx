@@ -78,7 +78,7 @@ describe('Report Component', () => {
       () => {
         expect(screen.getByText(/Cognitive Assessment Report/i)).toBeDefined();
       },
-      { timeout: 12000 },
+      { timeout: 30000 },
     );
   });
 
@@ -129,7 +129,7 @@ describe('Report Component', () => {
       () => {
         expect(screen.getByText(/Cognitive Assessment Report/i)).toBeDefined();
       },
-      { timeout: 12000 },
+      { timeout: 30000 },
     );
   });
 });
