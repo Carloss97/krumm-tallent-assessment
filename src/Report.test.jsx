@@ -59,6 +59,11 @@ describe('Report Component', () => {
     const mockSessionData = {
       game1: { score: 100, errors: 5, duration: 60000 },
       game2: { score: 95, errors: 3, duration: 65000 },
+      game3: { score: 88, errors: 2, duration: 55000 },
+      game4: { score: 92, errors: 1, duration: 58000 },
+      game5: { score: 90, errors: 4, duration: 62000 },
+      game6: { score: 87, errors: 6, duration: 61000 },
+      game7: { score: 93, errors: 0, duration: 59000 },
     };
 
     mockUseTelemetry.mockReturnValue({ sessionData: mockSessionData });
@@ -101,6 +106,12 @@ describe('Report Component', () => {
   it('saves session to backend when report is generated', async () => {
     const mockSessionData = {
       game1: { score: 100, errors: 5, duration: 60000, details: {} },
+      game2: { score: 95, errors: 3, duration: 65000, details: {} },
+      game3: { score: 88, errors: 2, duration: 55000, details: {} },
+      game4: { score: 92, errors: 1, duration: 58000, details: {} },
+      game5: { score: 90, errors: 4, duration: 62000, details: {} },
+      game6: { score: 87, errors: 6, duration: 61000, details: {} },
+      game7: { score: 93, errors: 0, duration: 59000, details: {} },
     };
 
     mockUseTelemetry.mockReturnValue({
