@@ -93,19 +93,15 @@ describe('Games smoke coverage', () => {
     delete globalThis.webkitAudioContext;
   });
 
-  it.each(GAMES)('renders %s in inactive state without crashing', (_name, GameComponent) => {
-    const onEndGame = () => {};
+  it.each(GAMES)('renders %s without crashing', (_name, GameComponent) => {
     const { unmount } = renderWithTelemetry(
-      <GameComponent isActive={false} isDemo={false} timeLimit={60} onEndGame={onEndGame} />,
+      <GameComponent isActive={false} isDemo={false} timeLimit={60} onEndGame={() => {}} />,
     );
     unmount();
-  });
 
-  it.each(GAMES)('renders %s in active state without crashing', (_name, GameComponent) => {
-    const onEndGame = () => {};
-    const { unmount } = renderWithTelemetry(
-      <GameComponent isActive={true} isDemo={false} timeLimit={60} onEndGame={onEndGame} />,
+    const { unmount: unmount2 } = renderWithTelemetry(
+      <GameComponent isActive={true} isDemo={false} timeLimit={60} onEndGame={() => {}} />,
     );
-    unmount();
+    unmount2();
   });
 });
