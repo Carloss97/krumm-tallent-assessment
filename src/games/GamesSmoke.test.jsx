@@ -51,8 +51,6 @@ const GAMES = [
 
 describe('Games smoke coverage', () => {
   beforeEach(() => {
-    vi.useFakeTimers({ shouldAdvanceTime: true });
-    
     class MockAudioContext {
       constructor() {
         this.state = 'running';
@@ -91,8 +89,6 @@ describe('Games smoke coverage', () => {
 
   afterEach(() => {
     cleanup();
-    vi.clearAllTimers();
-    vi.useRealTimers();
     delete globalThis.AudioContext;
     delete globalThis.webkitAudioContext;
   });
@@ -110,7 +106,6 @@ describe('Games smoke coverage', () => {
     const { unmount } = renderWithTelemetry(
       <GameComponent isActive={true} isDemo={false} timeLimit={60} onEndGame={onEndGame} />,
     );
-    // Just render and unmount - no timer manipulation
     unmount();
   });
 });
