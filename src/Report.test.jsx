@@ -75,7 +75,7 @@ describe('Report Component', () => {
       },
       { timeout: 4000 },
     );
-  }, { timeout: 15000 });
+  });
 
   it('uses dummy data when useDummyData prop is true', async () => {
     mockUseTelemetry.mockReturnValue({ sessionData: {} });
@@ -96,7 +96,7 @@ describe('Report Component', () => {
       },
       { timeout: 4000 },
     );
-  }, { timeout: 15000 });
+  });
 
   it('saves session to backend when report is generated', async () => {
     const mockSessionData = {
@@ -120,5 +120,5 @@ describe('Report Component', () => {
       },
       { timeout: 4000 },
     );
-  }, { timeout: 15000 });
+  });
 });

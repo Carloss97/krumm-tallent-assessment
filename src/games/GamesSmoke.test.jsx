@@ -103,7 +103,7 @@ describe('Games smoke coverage', () => {
       <GameComponent isActive={false} isDemo={false} timeLimit={60} onEndGame={onEndGame} />,
     );
     unmount();
-  }, { timeout: 10000 });
+  });
 
   it.each(GAMES)('renders %s in active state without crashing', (_name, GameComponent) => {
     const onEndGame = () => {};
@@ -112,5 +112,5 @@ describe('Games smoke coverage', () => {
     );
     // Just render and unmount - no timer manipulation
     unmount();
-  }, { timeout: 10000 });
+  });
 });
