@@ -1,7 +1,15 @@
 import React from 'react';
 import { render, cleanup } from '@testing-library/react';
-import { describe, it, expect, beforeEach, afterEach } from 'vitest';
+import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import { TelemetryProvider } from '../TelemetryContext';
+
+// Mock audio utilities - must be before any game imports
+vi.mock('../utils/audio', () => ({
+  playBalloonPump: vi.fn(),
+  playBalloonPop: vi.fn(),
+  playMemoryFlash: vi.fn(),
+  playMemoryClick: vi.fn(),
+}));
 
 import BalloonGame from './BalloonGame';
 import ColorWordGame from './ColorWordGame';
