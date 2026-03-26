@@ -20,32 +20,36 @@ const assessmentTracks = [
     icon: '🧠',
     title: 'Memoria de Trabajo',
     description: 'OSPAN y N-Back',
-    detail: 'Evalúa tu capacidad para procesar y mantener información simultáneamente',
-    color: '#667eea'
+    detail: 'Explora tu capacidad para procesar y mantener información simultáneamente',
+    color: '#667eea',
+    colorRgb: '102, 126, 234'
   },
   {
     id: 2,
     icon: '🛑',
     title: 'Control Inhibitorio',
     description: 'Go/No-Go y Stop-Signal',
-    detail: 'Mide tu precisión bajo presión e impulsos de control',
-    color: '#764ba2'
+    detail: 'Descubre tu precisión bajo presión y tu manera de gestionar impulsos',
+    color: '#764ba2',
+    colorRgb: '118, 75, 162'
   },
   {
     id: 3,
     icon: '🔄',
     title: 'Flexibilidad Cognitiva',
     description: 'Task Switching y Wisconsin',
-    detail: 'Observa tu adaptación a cambios y manejo de excepciones',
-    color: '#f093fb'
+    detail: 'Revela cómo navegas entre cambios de contexto y situaciones inesperadas',
+    color: '#f093fb',
+    colorRgb: '240, 147, 251'
   },
   {
     id: 4,
     icon: '👁️',
     title: 'Atención Sostenida',
     description: 'CPT y Vigilância',
-    detail: 'Detecta tu consistencia, lapsos y resistencia a la fatiga',
-    color: '#4facfe'
+    detail: 'Conoce tu energía atencional, consistencia y resistencia a la fatiga',
+    color: '#4facfe',
+    colorRgb: '79, 172, 254'
   },
 ];
 
@@ -190,8 +194,8 @@ const LandingPage = () => {
             <span>KRUMM</span>
           </div>
           <div className="nav-actions">
-            <button className="nav-btn-secondary" onClick={() => navigate('/recruiter/login')}>
-              Portal recruiter
+            <button className="nav-btn-portal" onClick={() => navigate('/recruiter/login')}>
+              🔑 Portal recruiter
             </button>
           </div>
         </div>
@@ -199,6 +203,12 @@ const LandingPage = () => {
 
       {/* Hero Section */}
       <section className="hero">
+        <div className="hero-orbs" aria-hidden="true">
+          <span className="hero-orb hero-orb--1" />
+          <span className="hero-orb hero-orb--2" />
+          <span className="hero-orb hero-orb--3" />
+          <span className="hero-orb hero-orb--4" />
+        </div>
         <div className="hero-container">
           <motion.div
             className="hero-content"
@@ -216,11 +226,11 @@ const LandingPage = () => {
             </p>
 
             <div className="hero-cta">
-              <button className="btn-primary" onClick={() => setShowForm(true)}>
-                Ingresar al test
+              <button className="btn-primary btn-hero-cta" onClick={() => setShowForm(true)}>
+                Ingresar al test <span className="btn-arrow">→</span>
               </button>
-              <button className="btn-secondary" onClick={handleStartDemo}>
-                Ver demostración
+              <button className="btn-secondary btn-hero-cta" onClick={handleStartDemo}>
+                ✨ Ver demostración
               </button>
             </div>
 
@@ -416,29 +426,25 @@ const LandingPage = () => {
             transition={{ duration: 0.6 }}
             viewport={{ once: true }}
           >
-            <h2>Construcciones que medimos</h2>
-            <p>Cada prueba evalúa un aspecto crítico del cognición</p>
+            <h2>Tu perfil cognitivo único</h2>
+            <p>Cada dimensión revela una faceta de tu manera de pensar</p>
           </motion.div>
 
           <div className="tracks-grid">
             {assessmentTracks.map((track, idx) => (
               <motion.div
                 key={track.id}
-                className="track-card"
-                style={{ '--track-color': track.color }}
-                initial={{ opacity: 0, scale: 0.95 }}
+                className="bubble-track-card"
+                style={{ '--track-color': track.color, '--track-color-rgb': track.colorRgb }}
+                initial={{ opacity: 0, scale: 0.92 }}
                 whileInView={{ opacity: 1, scale: 1 }}
                 transition={{ duration: 0.5, delay: idx * 0.12 }}
                 viewport={{ once: true }}
               >
-                <div className="track-header">
-                  <span className="track-icon">{track.icon}</span>
-                  <div>
-                    <h3>{track.title}</h3>
-                    <p className="track-subtitle">{track.description}</p>
-                  </div>
-                </div>
-                <p className="track-detail">{track.detail}</p>
+                <div className="bubble-icon-badge">{track.icon}</div>
+                <h3 className="bubble-title">{track.title}</h3>
+                <p className="bubble-subtitle">{track.description}</p>
+                <p className="bubble-detail">{track.detail}</p>
               </motion.div>
             ))}
           </div>
