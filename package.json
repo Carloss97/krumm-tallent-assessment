@@ -13,7 +13,15 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "test:coverage": "vitest run --coverage",
+    "test:e2e": "node e2e/run-e2e.mjs",
+    "test:e2e:install": "npx playwright install chromium",
+    "ci:verify": "npm run test && npm run build && npm run test:e2e",
+    "calibrate:scoring": "node scripts/calibrateScoring.mjs",
+    "quality:alerts": "node scripts/qualityAlerts.mjs",
+    "quality:check": "npm run calibrate:scoring && npm run quality:alerts",
     "load-test": "node load-test.js",
+    "load-test:backend": "node scripts/loadTestBackend.mjs",
+    "phase:close": "npm run quality:check && npm run load-test:backend && npm run test && npm run build",
     "list-models": "node tmp-list-models.mjs"
   },
   "dependencies": {

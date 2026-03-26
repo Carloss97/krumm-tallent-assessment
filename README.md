@@ -106,9 +106,28 @@ npm run dev:full
 
 # In another terminal, run load tests
 npm run load-test
+npm run load-test:backend
 ```
 
 The load test simulates multiple concurrent users completing assessments and provides performance metrics.
+The backend load test sends concurrent health traffic and reports p50/p95/p99 latency plus throughput.
+
+### Predictive Quality Governance
+```bash
+# Calibrate scoring weights and thresholds
+npm run calibrate:scoring
+
+# Evaluate KPI alerts against configured targets
+npm run quality:alerts
+
+# End-to-end quality check
+npm run quality:check
+```
+
+Artifacts are generated in `data/calibration/`:
+- `latest-calibration.json`
+- `latest-kpis.json`
+- `quality-alerts.md`
 
 ## 📊 Performance Optimizations
 

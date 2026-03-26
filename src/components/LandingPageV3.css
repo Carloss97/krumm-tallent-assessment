@@ -1,0 +1,559 @@
+.landing-v3 {
+  min-height: 100%;
+  background:
+    radial-gradient(circle at 84% 10%, rgba(233, 197, 255, 0.24), transparent 37%),
+    radial-gradient(circle at 10% 86%, rgba(162, 221, 255, 0.22), transparent 40%),
+    linear-gradient(158deg, #f8fbff 0%, #edf6ff 48%, #e8f1ff 100%);
+  color: #13223a;
+}
+
+.lv3-recruiter-btn {
+  border: 1px solid rgba(84, 104, 240, 0.3);
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.96), rgba(237, 244, 255, 0.95));
+  color: #2f3f5d;
+  border-radius: 999px;
+  padding: 0.6rem 1.2rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.lv3-recruiter-btn:hover {
+  background: linear-gradient(135deg, #eef4ff, #e3efff);
+  color: #1f3362;
+  box-shadow: 0 8px 18px rgba(95, 115, 235, 0.2);
+}
+
+.lv3-hero {
+  padding: 1rem 1.2rem 3rem;
+}
+
+.lv3-hero-grid {
+  max-width: 1240px;
+  margin: 0 auto;
+  display: grid;
+  grid-template-columns: 1.15fr 0.85fr;
+  gap: 1.2rem;
+  align-items: stretch;
+}
+
+.lv3-copy {
+  background: linear-gradient(138deg, rgba(82, 109, 226, 0.93), rgba(142, 94, 201, 0.82) 58%, rgba(81, 173, 205, 0.78));
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  border-radius: 28px;
+  color: #f5f8ff;
+  padding: clamp(1.55rem, 2.35vw, 2.3rem);
+  box-shadow: 0 18px 36px rgba(49, 67, 140, 0.24);
+}
+
+.lv3-pill {
+  display: inline-block;
+  border: 1px solid rgba(255, 255, 255, 0.33);
+  border-radius: 999px;
+  background: linear-gradient(120deg, rgba(255, 255, 255, 0.2), rgba(238, 219, 255, 0.22));
+  padding: 0.4rem 0.85rem;
+  font-size: 0.82rem;
+  margin-bottom: 0.8rem;
+}
+
+.lv3-copy h1 {
+  font-size: clamp(2rem, 3.6vw, 3.2rem);
+  line-height: 1.08;
+  margin-bottom: 0.85rem;
+}
+
+.lv3-copy h1 span {
+  background: linear-gradient(120deg, #ffd29d 0%, #f7b0ff 55%, #9cd8ff 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.lv3-copy p {
+  color: rgba(241, 245, 255, 0.94);
+  font-size: 1rem;
+  line-height: 1.52;
+}
+
+.lv3-cta-row {
+  margin-top: 1rem;
+  display: flex;
+  gap: 0.85rem;
+  flex-wrap: wrap;
+}
+
+.lv3-primary,
+.lv3-ghost {
+  border-radius: 12px;
+  padding: 0.78rem 1.2rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.lv3-primary {
+  border: 1px solid transparent;
+  background: linear-gradient(135deg, #ffffff, #edf5ff);
+  color: #3147b5;
+}
+
+.lv3-primary:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 10px 18px rgba(13, 33, 84, 0.22);
+}
+
+.lv3-ghost {
+  border: 1px solid rgba(255, 255, 255, 0.44);
+  background: rgba(255, 255, 255, 0.14);
+  color: #f6f9ff;
+}
+
+.lv3-ghost:hover {
+  background: rgba(255, 255, 255, 0.2);
+}
+
+.lv3-ghost.lv3-dark {
+  color: #223451;
+  border-color: rgba(34, 52, 81, 0.24);
+  background: rgba(255, 255, 255, 0.86);
+}
+
+.lv3-stats {
+  margin-top: 0;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0.9rem;
+}
+
+.lv3-stats article {
+  border: 1px solid rgba(86, 111, 218, 0.2);
+  border-radius: 14px;
+  padding: 0.75rem 0.82rem;
+  background: linear-gradient(145deg, rgba(255, 255, 255, 0.9), rgba(239, 245, 255, 0.9));
+  box-shadow: 0 8px 16px rgba(70, 92, 180, 0.1);
+}
+
+.lv3-stats strong {
+  display: block;
+  font-size: 1.15rem;
+  color: #27407a;
+}
+
+.lv3-stats span {
+  font-size: 0.8rem;
+  color: #49608c;
+}
+
+.lv3-action-dock {
+  max-width: 1240px;
+  margin: 1rem auto 0;
+  display: grid;
+  gap: 0.92rem;
+}
+
+.lv3-action-buttons {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.85rem;
+}
+
+.lv3-action-buttons .lv3-primary,
+.lv3-action-buttons .lv3-ghost,
+.lv3-action-buttons .lv3-recruiter-btn {
+  min-height: 54px;
+}
+
+.lv3-action-btn {
+  padding: 0.95rem 1.45rem;
+  font-size: 0.98rem;
+  letter-spacing: 0.01em;
+  border-radius: 14px;
+  font-weight: 800;
+}
+
+.lv3-action-start {
+  background: linear-gradient(135deg, #ffffff, #eef5ff);
+  color: #243cb0;
+  border: 1px solid rgba(76, 103, 220, 0.36);
+  box-shadow: 0 10px 20px rgba(65, 90, 196, 0.18);
+}
+
+.lv3-action-start:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 14px 24px rgba(65, 90, 196, 0.24);
+}
+
+.lv3-action-demo {
+  background: linear-gradient(135deg, #f4ebff, #ece2ff);
+  color: #542b90;
+  border: 1px solid rgba(127, 79, 194, 0.36);
+  box-shadow: 0 10px 20px rgba(120, 80, 188, 0.18);
+}
+
+.lv3-action-demo:hover {
+  background: linear-gradient(135deg, #efe3ff, #e6d6ff);
+  color: #48237f;
+  transform: translateY(-1px);
+}
+
+.lv3-action-recruiter {
+  background: linear-gradient(135deg, #e8f8ff, #ddf3ff);
+  color: #164f73;
+  border: 1px solid rgba(57, 157, 202, 0.35);
+  box-shadow: 0 10px 20px rgba(46, 135, 188, 0.16);
+}
+
+.lv3-action-recruiter:hover {
+  background: linear-gradient(135deg, #dcf3ff, #d2eeff);
+  color: #11435f;
+  transform: translateY(-1px);
+}
+
+.lv3-brand-stage {
+  position: relative;
+  overflow: hidden;
+  border-radius: 28px;
+  padding: clamp(1rem, 1.8vw, 1.4rem);
+  background:
+    radial-gradient(circle at 78% 20%, rgba(185, 129, 255, 0.18), transparent 35%),
+    radial-gradient(circle at 15% 85%, rgba(67, 190, 214, 0.16), transparent 42%),
+    rgba(255, 255, 255, 0.8);
+  border: 1px solid rgba(19, 34, 58, 0.1);
+  box-shadow: 0 14px 30px rgba(48, 65, 132, 0.12);
+}
+
+.lv3-stage-logo-wrap {
+  position: relative;
+  width: fit-content;
+  margin: 0 auto 0.75rem;
+}
+
+.lv3-stage-logo {
+  position: relative;
+  z-index: 2;
+  width: clamp(164px, 18vw, 248px);
+  height: clamp(164px, 18vw, 248px);
+  object-fit: contain;
+  background: #ffffff;
+  border-radius: 28px;
+  padding: 0.5rem;
+  border: 1px solid rgba(73, 95, 214, 0.28);
+  box-shadow: 0 20px 36px rgba(59, 75, 158, 0.22);
+}
+
+.lv3-stage-orbit {
+  position: absolute;
+  border-radius: 999px;
+  filter: blur(0.2px);
+}
+
+.lv3-stage-orbit-a {
+  width: 94px;
+  height: 94px;
+  left: -28px;
+  top: -18px;
+  background: linear-gradient(145deg, rgba(93, 127, 255, 0.34), rgba(184, 100, 255, 0.28));
+}
+
+.lv3-stage-orbit-b {
+  width: 84px;
+  height: 84px;
+  right: -24px;
+  bottom: -16px;
+  background: linear-gradient(145deg, rgba(64, 199, 225, 0.32), rgba(130, 144, 255, 0.3));
+}
+
+.lv3-brand-stage h2 {
+  font-size: clamp(1.4rem, 2.2vw, 2rem);
+  color: #23345d;
+  margin-bottom: 0.55rem;
+}
+
+.lv3-brand-stage p {
+  color: #435c87;
+  line-height: 1.6;
+}
+
+.lv3-stage-list {
+  margin-top: 0.75rem;
+  padding-left: 1rem;
+  color: #2f466f;
+  display: grid;
+  gap: 0.45rem;
+}
+
+.lv3-section {
+  padding: 2.7rem 1.2rem;
+}
+
+.lv3-container {
+  max-width: 1240px;
+  margin: 0 auto;
+}
+
+.lv3-section h2 {
+  font-size: clamp(1.6rem, 2.6vw, 2.3rem);
+  color: #13223a;
+  margin-bottom: 0.8rem;
+}
+
+.lv3-intro {
+  color: #475569;
+  margin-bottom: 1.2rem;
+}
+
+.lv3-diff {
+  background: linear-gradient(160deg, rgba(255, 255, 255, 0.68), rgba(238, 246, 255, 0.72));
+}
+
+.lv3-diff-grid,
+.lv3-cap-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 1rem;
+}
+
+.lv3-diff-card,
+.lv3-cap-card {
+  border-radius: 16px;
+  padding: 1rem 1rem 1.05rem;
+  border: 1px solid rgba(19, 34, 58, 0.09);
+  background: rgba(255, 255, 255, 0.9);
+  box-shadow: 0 8px 20px rgba(19, 34, 58, 0.06);
+}
+
+.lv3-diff-card:nth-child(1) {
+  background: linear-gradient(150deg, rgba(235, 241, 255, 0.98), rgba(226, 236, 255, 0.92));
+  border-color: rgba(76, 104, 235, 0.2);
+}
+
+.lv3-diff-card:nth-child(2) {
+  background: linear-gradient(150deg, rgba(246, 236, 255, 0.97), rgba(239, 228, 255, 0.92));
+  border-color: rgba(138, 86, 210, 0.2);
+}
+
+.lv3-diff-card:nth-child(3) {
+  background: linear-gradient(150deg, rgba(230, 247, 255, 0.97), rgba(223, 242, 255, 0.92));
+  border-color: rgba(58, 165, 209, 0.2);
+}
+
+.lv3-diff-card:nth-child(4) {
+  background: linear-gradient(150deg, rgba(238, 251, 242, 0.97), rgba(229, 247, 236, 0.92));
+  border-color: rgba(44, 156, 115, 0.2);
+}
+
+.lv3-cap-card:nth-child(odd) {
+  background: linear-gradient(148deg, rgba(255, 255, 255, 0.96), rgba(237, 245, 255, 0.9));
+}
+
+.lv3-cap-card:nth-child(even) {
+  background: linear-gradient(148deg, rgba(255, 255, 255, 0.96), rgba(245, 237, 255, 0.88));
+}
+
+.lv3-project-signals {
+  padding-top: 2.2rem;
+}
+
+.lv3-signal-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.95rem;
+}
+
+.lv3-signal-card {
+  border-radius: 16px;
+  padding: 1rem 1.05rem;
+  border: 1px solid rgba(80, 104, 214, 0.18);
+  background: linear-gradient(152deg, rgba(255, 255, 255, 0.95), rgba(235, 243, 255, 0.9));
+  box-shadow: 0 8px 18px rgba(62, 84, 168, 0.08);
+}
+
+.lv3-signal-card h3 {
+  color: #203769;
+  margin-bottom: 0.35rem;
+  font-size: 1rem;
+}
+
+.lv3-signal-card p {
+  color: #4f638d;
+  line-height: 1.5;
+}
+
+.lv3-diff-card h3,
+.lv3-cap-card h3 {
+  color: #1e2e4a;
+  margin-bottom: 0.35rem;
+  font-size: 1.02rem;
+}
+
+.lv3-diff-card p,
+.lv3-cap-card p {
+  color: #52617a;
+  line-height: 1.55;
+}
+
+.lv3-dev {
+  background: linear-gradient(155deg, #eaf3ff, #e6f6ff);
+  border-top: 1px solid rgba(19, 34, 58, 0.08);
+  border-bottom: 1px solid rgba(19, 34, 58, 0.08);
+}
+
+.lv3-dev-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
+  gap: 0.7rem;
+}
+
+.lv3-dev-btn {
+  text-align: left;
+  border-radius: 10px;
+  border: 1px solid rgba(74, 96, 236, 0.28);
+  background: linear-gradient(145deg, #ffffff, #f2f7ff);
+  color: #2a3d5c;
+  padding: 0.72rem 0.82rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.lv3-dev-btn:hover {
+  box-shadow: 0 10px 20px rgba(74, 96, 236, 0.16);
+  transform: translateY(-1px);
+}
+
+.lv3-dev-report {
+  background: linear-gradient(135deg, #5f73eb, #7e57cb);
+  color: white;
+  border-color: transparent;
+}
+
+.lv3-form-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 220;
+  display: grid;
+  place-items: center;
+  background: rgba(8, 14, 27, 0.48);
+  backdrop-filter: blur(4px);
+  padding: 1.2rem;
+}
+
+.lv3-form-card {
+  position: relative;
+  width: min(460px, 96vw);
+  border-radius: 18px;
+  padding: 1.25rem 1.2rem;
+  border: 1px solid rgba(19, 34, 58, 0.12);
+  background: rgba(255, 255, 255, 0.97);
+  box-shadow: 0 20px 45px rgba(19, 34, 58, 0.28);
+}
+
+.lv3-form-card h2 {
+  margin-bottom: 0.25rem;
+}
+
+.lv3-form-card > p {
+  color: #5a6b86;
+  margin-bottom: 0.85rem;
+}
+
+.lv3-close {
+  position: absolute;
+  right: 0.7rem;
+  top: 0.55rem;
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  font-size: 1.2rem;
+  color: #6b7280;
+}
+
+.lv3-form {
+  display: flex;
+  flex-direction: column;
+  gap: 0.56rem;
+}
+
+.lv3-form label {
+  font-size: 0.88rem;
+  font-weight: 700;
+  color: #1f2f4a;
+}
+
+.lv3-form input {
+  border-radius: 9px;
+  border: 1px solid rgba(19, 34, 58, 0.18);
+  padding: 0.66rem 0.72rem;
+  font-size: 0.93rem;
+}
+
+.lv3-form input:focus {
+  outline: none;
+  border-color: rgba(84, 104, 240, 0.68);
+  box-shadow: 0 0 0 3px rgba(84, 104, 240, 0.14);
+}
+
+.lv3-error {
+  border-radius: 9px;
+  border: 1px solid rgba(220, 38, 38, 0.32);
+  background: rgba(220, 38, 38, 0.1);
+  color: #b91c1c;
+  padding: 0.62rem 0.7rem;
+}
+
+.lv3-divider {
+  text-align: center;
+  color: #6b7280;
+  font-size: 0.8rem;
+  margin: 0.4rem 0;
+}
+
+.lv3-full {
+  width: 100%;
+}
+
+@media (max-width: 980px) {
+  .lv3-hero-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .lv3-brand-stage {
+    order: -1;
+  }
+
+  .lv3-stats {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  .lv3-diff-grid,
+  .lv3-cap-grid,
+  .lv3-signal-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 720px) {
+  .lv3-copy-head {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .lv3-action-buttons {
+    display: grid;
+    grid-template-columns: 1fr;
+  }
+
+  .lv3-stats {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 560px) {
+  .lv3-stage-logo {
+    width: 170px;
+    height: 170px;
+  }
+
+  .lv3-recruiter-btn {
+    width: 100%;
+  }
+}

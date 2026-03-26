@@ -1,10 +1,41 @@
-const API_BASE_URL = (typeof import.meta !== 'undefined' && import.meta.env?.VITE_API_BASE_URL)
+const ENV_API_BASE_URL = (typeof import.meta !== 'undefined' && import.meta.env?.VITE_API_BASE_URL)
   ? import.meta.env.VITE_API_BASE_URL
   : '';
+
+const getApiBaseUrl = () => {
+  if (typeof window !== 'undefined' && typeof window.__API_BASE_URL === 'string') {
+    return window.__API_BASE_URL;
+  }
+  return ENV_API_BASE_URL;
+};
 
 // Token management for JWT
 let participantToken = null;
 let tokenExpiresAt = null;
+
+const parseExpiresInSeconds = (expiresIn, defaultSeconds) => {
+  if (typeof expiresIn === 'number' && Number.isFinite(expiresIn)) {
+    return expiresIn;
+  }
+
+  if (typeof expiresIn === 'string') {
+    const normalized = expiresIn.trim().toLowerCase();
+    const match = normalized.match(/^(\d+)([smhd])$/);
+    if (match) {
+      const value = Number(match[1]);
+      const unit = match[2];
+      const multipliers = {
+        s: 1,
+        m: 60,
+        h: 3600,
+        d: 86400
+      };
+      return value * multipliers[unit];
+    }
+  }
+
+  return defaultSeconds;
+};
 
 const getStoredToken = () => {
   try {
@@ -28,8 +59,9 @@ const getStoredToken = () => {
 
 const storeToken = (token, expiresIn) => {
   try {
+    const expiresInSeconds = parseExpiresInSeconds(expiresIn, 3600);
     participantToken = token;
-    tokenExpiresAt = Date.now() + (expiresIn * 1000);
+    tokenExpiresAt = Date.now() + (expiresInSeconds * 1000);
     sessionStorage.setItem('participantToken', token);
     sessionStorage.setItem('tokenExpiresAt', tokenExpiresAt.toString());
   } catch (err) {
@@ -49,7 +81,7 @@ const apiFetch = async (path, options = {}) => {
     headers['Authorization'] = `Bearer ${token}`;
   }
 
-  const response = await fetch(`${API_BASE_URL}${path}`, {
+  const response = await fetch(`${getApiBaseUrl()}${path}`, {
     headers,
     ...options
   });
@@ -111,6 +143,18 @@ export const saveSessionToBackend = async (sessionData) => {
 
 export const getRecruiterSessions = async () => {
   return apiFetch('/api/recruiter/sessions', {
+    method: 'GET'
+  });
+};
+
+export const getRecruiterAnalytics = async () => {
+  return apiFetch('/api/recruiter/analytics', {
+    method: 'GET'
+  });
+};
+
+export const getRecruiterAnalyticsV2 = async () => {
+  return apiFetch('/api/recruiter/analytics/v2', {
     method: 'GET'
   });
 };
