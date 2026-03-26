@@ -9,6 +9,12 @@ const CPTGame = lazy(() => import('../games/HRRHGames').then(m => ({ default: m.
 const DecisionGameHTMX = lazy(() => import('../games/HRRHGames').then(m => ({ default: m.DecisionGameHTMX })));
 const RuleShiftGame = lazy(() => import('../games/HRRHGames').then(m => ({ default: m.RuleShiftGame })));
 const SJTGame = lazy(() => import('../games/HRRHGames').then(m => ({ default: m.SJTGame })));
+const MetacognitiveCalibrationGame = lazy(() => import('../games/ComplementaryGames').then(m => ({ default: m.MetacognitiveCalibrationGame })));
+const OperationalPrioritizationGame = lazy(() => import('../games/ComplementaryGames').then(m => ({ default: m.OperationalPrioritizationGame })));
+const LearningAgilityGame = lazy(() => import('../games/ComplementaryGames').then(m => ({ default: m.LearningAgilityGame })));
+const SocialCoordinationGame = lazy(() => import('../games/ComplementaryGames').then(m => ({ default: m.SocialCoordinationGame })));
+const CognitiveResilienceGame = lazy(() => import('../games/ComplementaryGames').then(m => ({ default: m.CognitiveResilienceGame })));
+const RiskUnderUncertaintyGame = lazy(() => import('../games/ComplementaryGames').then(m => ({ default: m.RiskUnderUncertaintyGame })));
 
 export const GAME_FLOW = [
   {
@@ -92,7 +98,7 @@ export const GAME_FLOW = [
   {
     id: 7,
     path: '/game/7',
-    nextPath: '/report',
+    nextPath: '/game/8',
     component: SJTGame,
     telemetryId: 'sjt_game_7',
     instruction: {
@@ -101,5 +107,83 @@ export const GAME_FLOW = [
       description: 'Evalúa tu juicio ante situaciones laborales reales. Elige la respuesta más apropiada según cultura y valores organizacionales.',
     },
     timeLimit: { full: 240, demo: 120 }, // 4 min / 2 min
+  },
+  {
+    id: 8,
+    path: '/game/8',
+    nextPath: '/game/9',
+    component: MetacognitiveCalibrationGame,
+    telemetryId: 'cmp_meta_8',
+    instruction: {
+      type: 'Metacognitive Calibration',
+      title: 'Calibration Under Uncertainty',
+      description: 'Responde escenarios y regula tu nivel de certeza. Mide alineacion entre confianza y precision real.',
+    },
+    timeLimit: { full: 210, demo: 90 },
+  },
+  {
+    id: 9,
+    path: '/game/9',
+    nextPath: '/game/10',
+    component: OperationalPrioritizationGame,
+    telemetryId: 'cmp_ops_9',
+    instruction: {
+      type: 'Operational Prioritization',
+      title: 'Priority and Deadline Trade-offs',
+      description: 'Ordena tareas por impacto y urgencia bajo restricciones temporales y dependencias cruzadas.',
+    },
+    timeLimit: { full: 210, demo: 90 },
+  },
+  {
+    id: 10,
+    path: '/game/10',
+    nextPath: '/game/11',
+    component: LearningAgilityGame,
+    telemetryId: 'cmp_agility_10',
+    instruction: {
+      type: 'Learning Agility',
+      title: 'Adaptive Rule Learning',
+      description: 'Ajusta tu estrategia cuando cambian las reglas y evalua velocidad de adaptacion.',
+    },
+    timeLimit: { full: 180, demo: 75 },
+  },
+  {
+    id: 11,
+    path: '/game/11',
+    nextPath: '/game/12',
+    component: SocialCoordinationGame,
+    telemetryId: 'cmp_social_11',
+    instruction: {
+      type: 'Social Coordination',
+      title: 'Cross-team Coordination',
+      description: 'Gestiona conflictos entre equipos y selecciona acciones de alineacion colaborativa.',
+    },
+    timeLimit: { full: 180, demo: 75 },
+  },
+  {
+    id: 12,
+    path: '/game/12',
+    nextPath: '/game/13',
+    component: CognitiveResilienceGame,
+    telemetryId: 'cmp_resilience_12',
+    instruction: {
+      type: 'Cognitive Resilience',
+      title: 'Resilience Under Interruptions',
+      description: 'Mantiene desempeno consistente cuando aumenta la carga y aparecen interrupciones.',
+    },
+    timeLimit: { full: 180, demo: 75 },
+  },
+  {
+    id: 13,
+    path: '/game/13',
+    nextPath: '/report',
+    component: RiskUnderUncertaintyGame,
+    telemetryId: 'cmp_risk_13',
+    instruction: {
+      type: 'Risk Under Uncertainty',
+      title: 'Decision Risk Framing',
+      description: 'Selecciona estrategias de riesgo y cobertura cuando la informacion es incompleta.',
+    },
+    timeLimit: { full: 180, demo: 75 },
   },
 ];

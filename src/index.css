@@ -1,14 +1,4 @@
-:root {
-  --bg-color: #f0f4ff;
-  --text-color: #1e1b4b;
-  --accent-primary: #6366f1;
-  --accent-secondary: #a855f7;
-  --accent-success: #059669;
-  --accent-error: #dc2626;
-  --surface-color: rgba(255, 255, 255, 0.75);
-  --border-color: rgba(99, 102, 241, 0.2);
-  --font-main: 'Inter', 'Roboto', sans-serif;
-}
+@import './styles/tokens.css';
 
 * {
   box-sizing: border-box;

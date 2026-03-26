@@ -121,6 +121,25 @@ export const generateDummyReportData = () => {
     // Keep a small legacy tail for backward compatibility checks in report/testing paths
     game8: { score: 66, errors: 8, duration: 90000, details: { nBackLevel: 2 } },
     game9: { score: 61, errors: 10, duration: 108000, details: { efficiency: 3.1 } },
+    futureModules: {
+      metacognitive: [
+        { confidence: 80, correct: true },
+        { confidence: 70, correct: true },
+        { confidence: 55, correct: false },
+        { confidence: 65, correct: true },
+      ],
+      prioritization: [
+        { expectedPriority: 'high', assignedPriority: 'high', completedWithinMs: 4200, deadlineMs: 6000 },
+        { expectedPriority: 'medium', assignedPriority: 'medium', completedWithinMs: 7000, deadlineMs: 9000 },
+        { expectedPriority: 'low', assignedPriority: 'medium', completedWithinMs: 8400, deadlineMs: 7000 },
+      ],
+      learningAgility: [
+        { accuracy: 58, adaptationMs: 2100 },
+        { accuracy: 64, adaptationMs: 1950 },
+        { accuracy: 71, adaptationMs: 1720 },
+        { accuracy: 77, adaptationMs: 1540 },
+      ],
+    },
   };
 };
 

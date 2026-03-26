@@ -18,9 +18,19 @@ const Intro = () => {
     navigate('/report?dummy=true');
   };
 
+  const handleComplementaryBattery = () => {
+    setIsDemo(false);
+    navigate('/complementary/intro');
+  };
+
   const handleDirectGameAccess = (gameNumber) => {
     setIsDemo(false); // Set to full mode for direct access
     navigate(`/game/${gameNumber}`);
+  };
+
+  const handleFutureLabAccess = () => {
+    setIsDemo(false);
+    navigate('/future/lab');
   };
 
   const games = GAME_FLOW.map((game) => ({
@@ -39,9 +49,10 @@ const Intro = () => {
       >
         <h1 className="text-gradient" style={{ fontSize: '3rem', marginBottom: '16px' }}>Cognitive Assessment</h1>
         <p style={{ marginBottom: '40px', color: '#374151', lineHeight: '1.8', fontSize: '1.1rem' }}>
-          Welcome to the HR-focused cognitive assessment platform. You will complete 7 evidence-based tasks
+          Welcome to the HR-focused cognitive assessment platform. You will complete {GAME_FLOW.length} evidence-based tasks
           designed to evaluate working memory, response inhibition, cognitive flexibility, sustained attention,
-          decision quality under pressure, and workplace judgment.
+          decision quality under pressure, workplace judgment, metacognitive calibration, operational prioritization,
+          learning agility, social coordination, resilience, and uncertainty management.
         </p>
 
         <div style={{ display: 'flex', gap: '24px', justifyContent: 'center', flexWrap: 'wrap', alignItems: 'center', marginBottom: '30px' }}>
@@ -53,6 +64,9 @@ const Intro = () => {
           </button>
           <button className="btn" style={{ fontSize: '1.2rem', padding: '16px 36px', background: 'rgba(16, 185, 129, 0.1)', color: '#10b981', border: '1px solid #10b981' }} onClick={handleViewDummyReport}>
             View Demo Report
+          </button>
+          <button className="btn" style={{ fontSize: '1.2rem', padding: '16px 36px', background: 'rgba(14, 165, 233, 0.12)', color: '#0369a1', border: '1px solid #0284c7' }} onClick={handleComplementaryBattery}>
+            Complementary Battery (6 Games)
           </button>
         </div>
 
@@ -82,6 +96,21 @@ const Intro = () => {
             style={{ marginTop: '20px', padding: '20px', backgroundColor: 'rgba(0,0,0,0.05)', borderRadius: '12px' }}
           >
             <h3 style={{ color: '#374151', marginBottom: '16px', fontSize: '1.2rem' }}>Direct Game Access (Development)</h3>
+            <div style={{ marginBottom: '12px' }}>
+              <button
+                className="btn"
+                style={{
+                  fontSize: '0.85rem',
+                  padding: '10px 14px',
+                  background: 'rgba(16, 185, 129, 0.12)',
+                  color: '#047857',
+                  border: '1px solid rgba(4, 120, 87, 0.7)'
+                }}
+                onClick={handleFutureLabAccess}
+              >
+                Open Future Assessment Lab (High Priority Modules)
+              </button>
+            </div>
             <div style={{
               display: 'grid',
               gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',

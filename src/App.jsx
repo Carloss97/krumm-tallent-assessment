@@ -11,7 +11,9 @@ import './App.css';
 // Lazy load components for code splitting
 const Report = lazy(() => import('./Report'));
 const Intro = lazy(() => import('./components/Intro'));
-const LandingPage = lazy(() => import('./components/LandingPageV2'));
+const LandingPage = lazy(() => import('./components/LandingPageV3'));
+const FutureAssessmentLab = lazy(() => import('./components/FutureAssessmentLab'));
+const ComplementaryIntro = lazy(() => import('./components/ComplementaryIntro'));
 
 // Main App Router and State
 function AppContent() {
@@ -45,6 +47,8 @@ function AppContent() {
                 }
               />
             ))}
+            <Route path="/complementary/intro" element={<ComplementaryIntro />} />
+            <Route path="/future/lab" element={<FutureAssessmentLab />} />
             <Route path="/report" element={<Report />} />
           </Routes>
         </Suspense>
