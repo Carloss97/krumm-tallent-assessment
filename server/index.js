@@ -2,6 +2,9 @@
 
 import express from 'express';
 import cors from 'cors';
+import fs from 'node:fs';
+import path from 'node:path';
+import { fileURLToPath } from 'node:url';
 import { saveSession, getSession, getAllSessions, upsertParticipant, getParticipantById } from './db.js';
 import {
   generateParticipantToken,
@@ -10,22 +13,19 @@ import {
   requireParticipant,
   requireRecruiter
 } from './tokenService.js';
+import { rateLimiter, requestLogger } from './middleware.js';
 
 const app = express();
 const PORT = process.env.PORT || 4000;
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+const calibrationDir = path.join(__dirname, '..', 'data', 'calibration');
 
 // Middleware
 app.use(cors());
 app.use(express.json());
-
-// Global error handler middleware
-app.use((err, req, res, next) => {
-  console.error('Unhandled error:', err);
-  res.status(err.status || 500).json({
-    error: err.message || 'Internal server error',
-    timestamp: new Date().toISOString()
-  });
-});
+app.use(requestLogger);
+app.use(rateLimiter({ windowMs: 60_000, maxRequests: 180 }));
 
 // ===== UTILITIES =====
 const isEmail = (value) => {
@@ -73,6 +73,35 @@ const validateRecruiterCredentials = (payload) => {
   }
 
   return null;
+};
+
+const readJsonSafe = (filePath) => {
+  try {
+    if (!fs.existsSync(filePath)) {
+      return null;
+    }
+    return JSON.parse(fs.readFileSync(filePath, 'utf8'));
+  } catch {
+    return null;
+  }
+};
+
+const readQualityAlertSummary = (filePath) => {
+  if (!fs.existsSync(filePath)) {
+    return null;
+  }
+
+  const raw = fs.readFileSync(filePath, 'utf8');
+  const lines = raw.split('\n');
+  const summaryLine = lines.find((line) => line.startsWith('- Global status:'));
+  const sourceLine = lines.find((line) => line.startsWith('Outcome source:'));
+  const syntheticLine = lines.find((line) => line.startsWith('Synthetic outcomes:'));
+
+  return {
+    status: summaryLine ? summaryLine.replace('- Global status:', '').trim() : 'UNKNOWN',
+    outcomeSource: sourceLine ? sourceLine.replace('Outcome source:', '').trim() : 'unknown',
+    syntheticOutcomes: syntheticLine ? syntheticLine.toLowerCase().includes('yes') : null,
+  };
 };
 
 // ===== HEALTH CHECK (No Auth Required) =====
@@ -313,6 +342,99 @@ app.get('/api/recruiter/sessions', authenticateToken, requireRecruiter, (req, re
       details: error.message
     });
   }
+});
+
+/**
+ * GET /api/recruiter/analytics
+ * Recruiter analytics summary endpoint
+ */
+app.get('/api/recruiter/analytics', authenticateToken, requireRecruiter, (req, res) => {
+  try {
+    const sessions = getAllSessions();
+    const now = Date.now();
+    const oneDayAgo = now - (24 * 60 * 60 * 1000);
+
+    const recentSessions = sessions.filter((session) => {
+      const createdAt = new Date(session.created_at).getTime();
+      return Number.isFinite(createdAt) && createdAt >= oneDayAgo;
+    });
+
+    const recommendationDistribution = sessions.reduce((acc, session) => {
+      const recommendation = session.payload?.report?.recommendation || 'UNKNOWN';
+      acc[recommendation] = (acc[recommendation] || 0) + 1;
+      return acc;
+    }, {});
+
+    return res.json({
+      totalSessions: sessions.length,
+      last24hSessions: recentSessions.length,
+      recommendationDistribution,
+    });
+  } catch (error) {
+    console.error('Error retrieving recruiter analytics:', error.message);
+    return res.status(500).json({
+      error: 'Failed to retrieve recruiter analytics',
+      details: error.message
+    });
+  }
+});
+
+/**
+ * GET /api/recruiter/analytics/v2
+ * Extended recruiter analytics including KPI and quality status snapshots
+ */
+app.get('/api/recruiter/analytics/v2', authenticateToken, requireRecruiter, (req, res) => {
+  try {
+    const sessions = getAllSessions();
+    const now = Date.now();
+    const oneDayAgo = now - (24 * 60 * 60 * 1000);
+
+    const recentSessions = sessions.filter((session) => {
+      const createdAt = new Date(session.created_at).getTime();
+      return Number.isFinite(createdAt) && createdAt >= oneDayAgo;
+    });
+
+    const recommendationDistribution = sessions.reduce((acc, session) => {
+      const recommendation = session.payload?.report?.recommendation || 'UNKNOWN';
+      acc[recommendation] = (acc[recommendation] || 0) + 1;
+      return acc;
+    }, {});
+
+    const calibration = readJsonSafe(path.join(calibrationDir, 'latest-calibration.json'));
+    const kpi = readJsonSafe(path.join(calibrationDir, 'latest-kpis.json'));
+    const qualitySummary = readQualityAlertSummary(path.join(calibrationDir, 'quality-alerts.md'));
+
+    return res.json({
+      totalSessions: sessions.length,
+      last24hSessions: recentSessions.length,
+      recommendationDistribution,
+      quality: qualitySummary,
+      calibration: calibration
+        ? {
+          generatedAt: calibration.generatedAt,
+          outcomeSource: calibration.input?.outcomeSource || 'unknown',
+          syntheticOutcomes: calibration.input?.syntheticOutcomes ?? null,
+          thresholdsScale0to10: calibration.thresholdsScale0to10 || null,
+        }
+        : null,
+      kpiSnapshot: kpi?.kpis || null,
+    });
+  } catch (error) {
+    console.error('Error retrieving recruiter analytics v2:', error.message);
+    return res.status(500).json({
+      error: 'Failed to retrieve recruiter analytics v2',
+      details: error.message,
+    });
+  }
+});
+
+// Global error handler middleware
+app.use((err, req, res, next) => {
+  console.error('Unhandled error:', err);
+  res.status(err.status || 500).json({
+    error: err.message || 'Internal server error',
+    timestamp: new Date().toISOString()
+  });
 });
 
 // ===== 404 HANDLER =====

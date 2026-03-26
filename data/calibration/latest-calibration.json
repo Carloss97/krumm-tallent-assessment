@@ -1,0 +1,36 @@
+{
+  "generatedAt": "2026-03-26T21:32:30.520Z",
+  "input": {
+    "sessionCount": 8,
+    "gameCount": 14,
+    "outcomeSource": "deterministic-proxy",
+    "syntheticOutcomes": true,
+    "note": "Outcomes are deterministic proxy labels. Replace with data/calibration/outcomes.json for true HR outcome calibration."
+  },
+  "weights": {
+    "game1": 1.421,
+    "game10": 0.918,
+    "game11": 0.918,
+    "game12": 0.918,
+    "game13": 0.918,
+    "game14": 0.918,
+    "game2": 1.562,
+    "game3": 0.918,
+    "game4": 0.918,
+    "game5": 0.918,
+    "game6": 0.918,
+    "game7": 0.918,
+    "game8": 0.918,
+    "game9": 0.918
+  },
+  "thresholds": {
+    "strong": 0.5533,
+    "solid": 0.5533,
+    "conditional": 0.5362
+  },
+  "thresholdsScale0to10": {
+    "strong": 5.53,
+    "solid": 5.53,
+    "conditional": 5.36
+  }
+}

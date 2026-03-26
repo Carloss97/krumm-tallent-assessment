@@ -143,6 +143,7 @@ export const generateDummyReportData = () => {
       errors: 3,
       duration: 233000,
       details: { scenariosCompleted: 10, accuracy: 84 },
+<<<<<<< HEAD
       hesitationCount: 5,
       avgVelocity: 122,
       avgJerk: 780,
@@ -236,6 +237,38 @@ export const generateDummyReportData = () => {
       webcamFrames: 53,
       webcamQuality: 74,
     }),
+=======
+      cursorMetrics: { hesitationCount: 5, avgVelocity: 122, avgJerk: 780 },
+      mouseMovements: mkMoves(102),
+      clicks: mkClicks(16),
+      trialEvents: mkTrials(31),
+      webcamFrames: mkWebcam(60, 74),
+      webcamQualityScore: 74,
+      qualityFlags: [],
+    },
+    // Keep a small legacy tail for backward compatibility checks in report/testing paths
+    game8: { score: 66, errors: 8, duration: 90000, details: { nBackLevel: 2 } },
+    game9: { score: 61, errors: 10, duration: 108000, details: { efficiency: 3.1 } },
+    futureModules: {
+      metacognitive: [
+        { confidence: 80, correct: true },
+        { confidence: 70, correct: true },
+        { confidence: 55, correct: false },
+        { confidence: 65, correct: true },
+      ],
+      prioritization: [
+        { expectedPriority: 'high', assignedPriority: 'high', completedWithinMs: 4200, deadlineMs: 6000 },
+        { expectedPriority: 'medium', assignedPriority: 'medium', completedWithinMs: 7000, deadlineMs: 9000 },
+        { expectedPriority: 'low', assignedPriority: 'medium', completedWithinMs: 8400, deadlineMs: 7000 },
+      ],
+      learningAgility: [
+        { accuracy: 58, adaptationMs: 2100 },
+        { accuracy: 64, adaptationMs: 1950 },
+        { accuracy: 71, adaptationMs: 1720 },
+        { accuracy: 77, adaptationMs: 1540 },
+      ],
+    },
+>>>>>>> e6bfb86657001ac012294a22e7fc6b2c6375a95a
   };
 };
 

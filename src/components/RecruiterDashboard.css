@@ -187,6 +187,56 @@
   border-color: white;
 }
 
+.analytics-v2-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
+  gap: 1rem;
+}
+
+.analytics-card {
+  background: rgba(255, 255, 255, 0.92);
+  border-radius: 12px;
+  padding: 1rem 1.1rem;
+  box-shadow: 0 10px 24px rgba(22, 30, 56, 0.12);
+}
+
+.analytics-card h3 {
+  margin: 0 0 0.7rem 0;
+  color: #1e293b;
+  font-size: 1rem;
+}
+
+.analytics-card p {
+  margin: 0.3rem 0;
+  color: #334155;
+  font-size: 0.9rem;
+}
+
+.quality-pill {
+  width: fit-content;
+  margin-bottom: 0.7rem;
+  border-radius: 999px;
+  padding: 0.3rem 0.7rem;
+  font-size: 0.78rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+}
+
+.quality-pill.ok {
+  background: #d1fae5;
+  color: #047857;
+}
+
+.quality-pill.alert {
+  background: #fee2e2;
+  color: #b91c1c;
+}
+
+.quality-pill.watch {
+  background: #fef3c7;
+  color: #92400e;
+}
+
 /* Sessions Container */
 .sessions-container {
   background: rgba(255, 255, 255, 0.95);

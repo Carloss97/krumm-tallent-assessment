@@ -257,6 +257,17 @@ export const TelemetryProvider = ({ children }) => {
     timestamp: new Date().toISOString()
   }), [sessionData, participantProfile, consentState, featureFlags]);
 
+  const recordFutureModuleData = useCallback((moduleName, items) => {
+    if (!moduleName) return;
+    setSessionData((prev) => ({
+      ...prev,
+      futureModules: {
+        ...(prev.futureModules || {}),
+        [moduleName]: Array.isArray(items) ? items : []
+      }
+    }));
+  }, []);
+
   return (
     <TelemetryContext.Provider value={{
       // Session & Basic
@@ -290,7 +301,8 @@ export const TelemetryProvider = ({ children }) => {
       
       // Utilities
       getCurrentTelemetry,
-      getSessionMetadata
+      getSessionMetadata,
+      recordFutureModuleData
     }}>
       {/* We wrap children in a div that captures global movements if active */}
       <div 

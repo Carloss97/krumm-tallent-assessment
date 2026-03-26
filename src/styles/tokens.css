@@ -1,0 +1,34 @@
+:root {
+  --font-main: 'Inter', 'Roboto', sans-serif;
+  --font-system: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
+    'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue', sans-serif;
+
+  --primary: #667eea;
+  --primary-dark: #5568d3;
+  --secondary: #764ba2;
+  --accent: #f093fb;
+  --success: #4facfe;
+
+  --accent-primary: #6366f1;
+  --accent-secondary: #a855f7;
+  --accent-success: #059669;
+  --accent-error: #dc2626;
+
+  --dark: #1a1a2e;
+  --dark-light: #16213e;
+  --gray: #6c757d;
+  --gray-light: #f8f9fa;
+  --white: #ffffff;
+
+  --bg-color: #f0f4ff;
+  --text-color: #1e1b4b;
+  --surface-color: rgba(255, 255, 255, 0.75);
+  --border-color: rgba(99, 102, 241, 0.2);
+  --border: #e9ecef;
+
+  --shadow: 0 10px 40px rgba(0, 0, 0, 0.08);
+  --shadow-lg: 0 20px 60px rgba(0, 0, 0, 0.15);
+
+  --brand-logo-size: clamp(104px, 8vw, 128px);
+  --brand-logo-size-mobile: 92px;
+}

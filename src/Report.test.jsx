@@ -128,11 +128,11 @@ describe('Report Component', () => {
       </BrowserRouter>
     );
 
-    // Verify that report renders with profile alignment panel
+    // Verify that report renders with skills/talent signal panel
     await waitFor(
       () => {
         const reportText = container.textContent;
-        expect(reportText.includes('Profile Alignment')).toBeTruthy();
+        expect(reportText.includes('Skills and Talent Signal')).toBeTruthy();
       },
       { timeout: 10000 },
     );
