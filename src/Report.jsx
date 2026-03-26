@@ -186,7 +186,7 @@ const Report = () => {
         {/* Extended Results for new battery */}
         <div className="glass-panel-light" style={{ padding: '24px', marginBottom: '32px' }}>
           <h3 style={{ marginBottom: '16px', color: '#1e1b4b', fontWeight: '700', borderBottom: '1px solid rgba(99,102,241,0.2)', paddingBottom: '8px' }}>
-            Extended Battery Results (Games 1-7)
+            Extended Battery Results (Games 1-13)
           </h3>
           <div style={{ overflowX: 'auto' }}>
             <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.92rem' }}>
@@ -448,6 +448,12 @@ const GAME_ROWS = [
   { id: 'dec_game_5', legacyId: 'game5', name: 'Game 5 - Decision', construct: 'Decision Making' },
   { id: 'rsh_game_6', legacyId: 'game6', name: 'Game 6 - Rule Shift', construct: 'Adaptation' },
   { id: 'sjt_game_7', legacyId: 'game7', name: 'Game 7 - SJT', construct: 'Situational Judgment' },
+  { id: 'cmp_meta_8', legacyId: 'game8', name: 'Game 8 - N-Back', construct: 'Updating & Calibration' },
+  { id: 'cmp_ops_9', legacyId: 'game9', name: 'Game 9 - Tower of London', construct: 'Planning & Sequencing' },
+  { id: 'cmp_agility_10', legacyId: 'game10', name: 'Game 10 - Wisconsin', construct: 'Learning Agility' },
+  { id: 'cmp_social_11', legacyId: 'game11', name: 'Game 11 - Go/No-Go', construct: 'Inhibition Consistency' },
+  { id: 'cmp_resilience_12', legacyId: 'game12', name: 'Game 12 - Trail Making', construct: 'Speed & Set-Shifting' },
+  { id: 'cmp_risk_13', legacyId: 'game13', name: 'Game 13 - Corsi', construct: 'Visuospatial Memory' },
 ];
 
 function hasMinimumAssessmentData(data) {
@@ -472,6 +478,12 @@ function buildEnhancedRows(data) {
     const metric =
       details.operationAccuracy !== undefined ? `Operation accuracy ${details.operationAccuracy}%` :
       details.accuracy !== undefined ? `Accuracy ${details.accuracy}%` :
+      details.nBackLevel !== undefined ? `N-back level ${details.nBackLevel}` :
+      details.efficiency !== undefined ? `Efficiency ${details.efficiency}` :
+      details.categoriesCompleted !== undefined ? `Categories ${details.categoriesCompleted}` :
+      details.noGoAccuracy !== undefined ? `No-Go accuracy ${details.noGoAccuracy}%` :
+      details.totalTime !== undefined ? `Total time ${Math.round(details.totalTime / 1000)}s` :
+      details.maxSequenceLength !== undefined ? `Max sequence ${details.maxSequenceLength}` :
       details.blocksCompleted !== undefined ? `Blocks ${details.blocksCompleted}` :
       details.scenariosCompleted !== undefined ? `Scenarios ${details.scenariosCompleted}` :
       'Telemetry captured';
