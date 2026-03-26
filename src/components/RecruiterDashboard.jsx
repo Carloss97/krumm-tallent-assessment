@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { getCurrentToken, clearToken, getRecruiterSessions } from '../services/backendService';
+import { getCurrentToken, clearToken, getRecruiterSessions, getRecruiterAnalyticsV2 } from '../services/backendService';
 import './RecruiterDashboard.css';
 
 const RecruiterDashboard = () => {
@@ -9,6 +9,14 @@ const RecruiterDashboard = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [filter, setFilter] = useState('all'); // all, recent, highScore
+  const [analytics, setAnalytics] = useState({
+    totalSessions: 0,
+    last24hSessions: 0,
+    recommendationDistribution: {},
+    quality: null,
+    calibration: null,
+    kpiSnapshot: null,
+  });
 
   useEffect(() => {
     const token = getCurrentToken();
@@ -23,8 +31,14 @@ const RecruiterDashboard = () => {
   const fetchSessions = async () => {
     try {
       setLoading(true);
-      const data = await getRecruiterSessions();
+      const [data, analyticsData] = await Promise.all([
+        getRecruiterSessions(),
+        getRecruiterAnalyticsV2().catch(() => null)
+      ]);
       setSessions(Array.isArray(data.sessions) ? data.sessions : []);
+      if (analyticsData) {
+        setAnalytics(analyticsData);
+      }
     } catch (err) {
       console.error('Error fetching sessions:', err);
       setError(err.message);
@@ -56,15 +70,27 @@ const RecruiterDashboard = () => {
   };
 
   const stats = getSessionStats();
+  const qualityStatus = analytics.quality?.status || 'UNKNOWN';
+  const qualityClass = qualityStatus === 'OK' ? 'ok' : qualityStatus === 'ALERT' ? 'alert' : 'watch';
 
   // Anonymized session display (no raw video/audio/biometric data)
   const displaySessions = sessions
+    .filter((session) => {
+      if (filter === 'recent') {
+        const createdAt = new Date(session.created_at).getTime();
+        return Number.isFinite(createdAt) && createdAt > (Date.now() - 24 * 60 * 60 * 1000);
+      }
+      return true;
+    })
     .sort((a, b) => new Date(b.created_at) - new Date(a.created_at))
     .slice(0, 50) // Limit to recent 50
     .map(session => {
       try {
-        const sessionData = JSON.parse(session.session_data || '{}');
-        const games = sessionData.games || [];
+        const sessionData = session.payload || {};
+        const source = Array.isArray(sessionData)
+          ? sessionData
+          : Object.values(sessionData.sessionData || sessionData);
+        const games = source.filter((value) => value && typeof value === 'object' && typeof value.score === 'number');
         const avgScore = games.length > 0
           ? (games.reduce((sum, g) => sum + (g.score || 0), 0) / games.length).toFixed(0)
           : 'N/A';
@@ -115,17 +141,60 @@ const RecruiterDashboard = () => {
         {/* Stats Cards */}
         <div className="stats-container">
           <div className="stat-card">
-            <div className="stat-value">{stats.total}</div>
+            <div className="stat-value">{analytics.totalSessions || stats.total}</div>
             <div className="stat-label">Total Sessions</div>
           </div>
           <div className="stat-card">
-            <div className="stat-value">{stats.recent}</div>
+            <div className="stat-value">{analytics.last24hSessions || stats.recent}</div>
             <div className="stat-label">Last 24 Hours</div>
           </div>
           <div className="stat-card">
             <div className="stat-value">🔒</div>
             <div className="stat-label">End-to-End Encrypted</div>
           </div>
+        </div>
+
+        <div className="glass-panel-light" style={{ padding: '16px', marginBottom: '16px', borderRadius: '10px' }}>
+          <h3 style={{ margin: 0, marginBottom: '10px', color: '#1e293b' }}>Recommendation Distribution</h3>
+          <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
+            {Object.entries(analytics.recommendationDistribution || {}).length === 0 && (
+              <span style={{ color: '#64748b' }}>No recommendation distribution data yet</span>
+            )}
+            {Object.entries(analytics.recommendationDistribution || {}).map(([label, count]) => (
+              <span key={label} className="badge encrypt" style={{ padding: '6px 10px', borderRadius: '999px' }}>
+                {label}: {count}
+              </span>
+            ))}
+          </div>
+        </div>
+
+        <div className="analytics-v2-grid">
+          <section className="analytics-card">
+            <h3>Quality Guardrail</h3>
+            <div className={`quality-pill ${qualityClass}`}>{qualityStatus}</div>
+            <p>
+              Outcome source: <strong>{analytics.quality?.outcomeSource || analytics.calibration?.outcomeSource || 'unknown'}</strong>
+            </p>
+            <p>
+              Synthetic labels: <strong>{analytics.quality?.syntheticOutcomes ? 'yes' : 'no'}</strong>
+            </p>
+          </section>
+
+          <section className="analytics-card">
+            <h3>Calibration Snapshot</h3>
+            <p>Generated: <strong>{analytics.calibration?.generatedAt ? new Date(analytics.calibration.generatedAt).toLocaleString() : 'n/a'}</strong></p>
+            <p>Strong threshold: <strong>{analytics.calibration?.thresholdsScale0to10?.strong ?? 'n/a'}</strong></p>
+            <p>Solid threshold: <strong>{analytics.calibration?.thresholdsScale0to10?.solid ?? 'n/a'}</strong></p>
+            <p>Conditional threshold: <strong>{analytics.calibration?.thresholdsScale0to10?.conditional ?? 'n/a'}</strong></p>
+          </section>
+
+          <section className="analytics-card">
+            <h3>KPI Snapshot</h3>
+            <p>ROC-AUC: <strong>{analytics.kpiSnapshot?.primary?.rocAuc ?? 'n/a'}</strong></p>
+            <p>PR-AUC Lift: <strong>{analytics.kpiSnapshot?.primary?.prAucLift ?? 'n/a'}</strong></p>
+            <p>Brier: <strong>{analytics.kpiSnapshot?.primary?.brier ?? 'n/a'}</strong></p>
+            <p>Selection Rate Ratio: <strong>{analytics.kpiSnapshot?.fairness?.selectionRateRatio ?? 'n/a'}</strong></p>
+          </section>
         </div>
 
         {/* Filter Buttons */}

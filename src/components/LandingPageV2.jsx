@@ -189,9 +189,8 @@ const LandingPage = () => {
       {/* Navigation */}
       <nav className="nav-header">
         <div className="nav-container">
-          <div className="nav-logo">
-            <img src={logo} alt="Krumm" className="logo-img" />
-            <span>KRUMM</span>
+          <div className="nav-logo" aria-label="Marca Krumm">
+            <img src={logo} alt="Krumm - Tech for talent assessment" className="logo-img" />
           </div>
           <div className="nav-actions">
             <button className="nav-btn-portal" onClick={() => navigate('/recruiter/login')}>

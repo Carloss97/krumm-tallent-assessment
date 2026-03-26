@@ -5,7 +5,7 @@ const genAI = new GoogleGenerativeAI(import.meta.env.VITE_GOOGLE_API_KEY);
 
 /**
  * Generate AI-powered assessment report using Gemini
- * @param {Object} sessionData - Game scores, errors, and telemetry from all 7 games
+ * @param {Object} sessionData - Game scores, errors, and telemetry from all assessment games
  * @returns {Promise<Object>} AI-generated report with summary, strengths, risks, and recommendation
  */
 export async function generateAIReport(sessionData, mode = 'recruitment') {
@@ -172,6 +172,96 @@ function prepareGameAnalysis(sessionData) {
                       'Judgment consistency may require follow-up'
     };
   }
+
+  // Game 8: N-Back
+  const game8 = getGame('cmp_meta_8', 'game8');
+  if (game8) {
+    games.game8 = {
+      name: 'N-Back',
+      metric: 'Updating and Metacognitive Calibration',
+      score: game8.score,
+      errors: game8.errors,
+      duration: game8.duration,
+      interpretation: game8.details?.nBackLevel >= 3 ? 'High updating demand managed effectively' :
+                      game8.errors <= 4 ? 'Reasonable updating consistency' :
+                      'Working memory updating may vary under load'
+    };
+  }
+
+  // Game 9: Tower of London
+  const game9 = getGame('cmp_ops_9', 'game9');
+  if (game9) {
+    games.game9 = {
+      name: 'Tower of London',
+      metric: 'Planning and Operational Sequencing',
+      score: game9.score,
+      errors: game9.errors,
+      duration: game9.duration,
+      interpretation: game9.details?.efficiency >= 75 ? 'Efficient planning and sequencing' :
+                      game9.details?.efficiency >= 60 ? 'Adequate planning with minor inefficiencies' :
+                      'Planning efficiency may benefit from structured workflows'
+    };
+  }
+
+  // Game 10: Wisconsin Card Sorting
+  const game10 = getGame('cmp_agility_10', 'game10');
+  if (game10) {
+    games.game10 = {
+      name: 'Wisconsin Card Sorting',
+      metric: 'Learning Agility and Rule Discovery',
+      score: game10.score,
+      errors: game10.errors,
+      duration: game10.duration,
+      interpretation: game10.details?.categoriesCompleted >= 5 ? 'Strong learning agility in changing conditions' :
+                      game10.details?.categoriesCompleted >= 3 ? 'Moderate adaptation to shifting rules' :
+                      'Rule-discovery consistency may require coaching'
+    };
+  }
+
+  // Game 11: Go/No-Go
+  const game11 = getGame('cmp_social_11', 'game11');
+  if (game11) {
+    games.game11 = {
+      name: 'Go/No-Go',
+      metric: 'Inhibition Consistency Under Repetition',
+      score: game11.score,
+      errors: game11.errors,
+      duration: game11.duration,
+      interpretation: game11.details?.noGoAccuracy >= 80 ? 'Consistent inhibitory control' :
+                      game11.details?.noGoAccuracy >= 65 ? 'Moderate response-control stability' :
+                      'Inhibitory control may fluctuate with repetitive load'
+    };
+  }
+
+  // Game 12: Trail Making
+  const game12 = getGame('cmp_resilience_12', 'game12');
+  if (game12) {
+    games.game12 = {
+      name: 'Trail Making',
+      metric: 'Processing Speed and Set-Shifting',
+      score: game12.score,
+      errors: game12.errors,
+      duration: game12.duration,
+      interpretation: game12.errors <= 2 ? 'Strong speed-accuracy balance' :
+                      game12.errors <= 5 ? 'Acceptable balance under cognitive switching' :
+                      'Set-shifting accuracy may drop under time pressure'
+    };
+  }
+
+  // Game 13: Corsi Block Tapping
+  const game13 = getGame('cmp_risk_13', 'game13');
+  if (game13) {
+    games.game13 = {
+      name: 'Corsi Block Tapping',
+      metric: 'Visuospatial Working Memory',
+      score: game13.score,
+      errors: game13.errors,
+      duration: game13.duration,
+      interpretation: game13.details?.maxSequenceLength >= 6 ? 'Strong visuospatial span' :
+                      game13.details?.maxSequenceLength >= 4 ? 'Moderate visuospatial memory capacity' :
+                      'Visuospatial working memory may need support'
+    };
+  }
   
   return games;
 }
@@ -274,7 +364,13 @@ export function generateHeuristicReport(sessionData) {
     game4: 'Sustained attention and reliability',
     game5: 'Decision quality under time pressure',
     game6: 'Rule adaptation and exception handling',
-    game7: 'Workplace judgment and situational awareness'
+    game7: 'Workplace judgment and situational awareness',
+    game8: 'Updating and metacognitive calibration',
+    game9: 'Planning and operational sequencing',
+    game10: 'Learning agility and rule discovery',
+    game11: 'Inhibition consistency under repetition',
+    game12: 'Processing speed and cognitive switching',
+    game13: 'Visuospatial working memory capacity'
   };
   
   sortedGames.forEach(([game, score]) => {
@@ -473,6 +569,60 @@ function normalizeGameScores(gameAnalysis) {
     
     normalized.game7 = Math.max(0, accuracyFit - errorPenalty);
   }
+
+  // Game 8: N-Back - Score 0-100 with moderate sensitivity to errors
+  if (gameAnalysis.game8) {
+    const score = gameAnalysis.game8.score || 0;
+    const errors = gameAnalysis.game8.errors || 0;
+    const scoreFit = Math.min(10, (score / 100) * 10);
+    const errorPenalty = Math.min(3, errors * 0.35);
+    normalized.game8 = Math.max(0, scoreFit - errorPenalty);
+  }
+
+  // Game 9: Tower of London - planning efficiency and execution quality
+  if (gameAnalysis.game9) {
+    const score = gameAnalysis.game9.score || 0;
+    const errors = gameAnalysis.game9.errors || 0;
+    const scoreFit = Math.min(10, (score / 100) * 10);
+    const errorPenalty = Math.min(3, errors * 0.35);
+    normalized.game9 = Math.max(0, scoreFit - errorPenalty);
+  }
+
+  // Game 10: Wisconsin - learning agility under rule changes
+  if (gameAnalysis.game10) {
+    const score = gameAnalysis.game10.score || 0;
+    const errors = gameAnalysis.game10.errors || 0;
+    const scoreFit = Math.min(10, (score / 100) * 10);
+    const errorPenalty = Math.min(3, errors * 0.4);
+    normalized.game10 = Math.max(0, scoreFit - errorPenalty);
+  }
+
+  // Game 11: Go/No-Go - inhibition consistency
+  if (gameAnalysis.game11) {
+    const score = gameAnalysis.game11.score || 0;
+    const errors = gameAnalysis.game11.errors || 0;
+    const scoreFit = Math.min(10, (score / 100) * 10);
+    const errorPenalty = Math.min(3, errors * 0.35);
+    normalized.game11 = Math.max(0, scoreFit - errorPenalty);
+  }
+
+  // Game 12: Trail Making - speed and switching with error control
+  if (gameAnalysis.game12) {
+    const score = gameAnalysis.game12.score || 0;
+    const errors = gameAnalysis.game12.errors || 0;
+    const scoreFit = Math.min(10, (score / 100) * 10);
+    const errorPenalty = Math.min(3, errors * 0.45);
+    normalized.game12 = Math.max(0, scoreFit - errorPenalty);
+  }
+
+  // Game 13: Corsi - visuospatial span
+  if (gameAnalysis.game13) {
+    const score = gameAnalysis.game13.score || 0;
+    const errors = gameAnalysis.game13.errors || 0;
+    const scoreFit = Math.min(10, (score / 100) * 10);
+    const errorPenalty = Math.min(3, errors * 0.35);
+    normalized.game13 = Math.max(0, scoreFit - errorPenalty);
+  }
   
   return normalized;
 }
@@ -497,7 +647,13 @@ function calculateOverallScore(gameAnalysis) {
     game4: 0.9,  // CPT: Attention reliability
     game5: 1.1,  // Decision: Judgment and speed-quality tradeoff
     game6: 1.3,  // Rule Shift: Adaptability + exception handling (highest novelty handling)
-    game7: 1.0   // SJT: Workplace judgment
+    game7: 1.0,  // SJT: Workplace judgment
+    game8: 0.9,  // N-Back: updating and calibration
+    game9: 1.0,  // Tower of London: planning and sequencing
+    game10: 1.2, // Wisconsin: learning agility under shifts
+    game11: 0.9, // Go/No-Go: inhibition consistency
+    game12: 1.0, // Trail Making: switching speed and reliability
+    game13: 0.9  // Corsi: visuospatial span
   };
   
   let totalWeight = 0;
