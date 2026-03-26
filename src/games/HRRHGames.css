@@ -1,0 +1,277 @@
+/* HRRHGames.css */
+
+.hrrh-game-container {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  width: 100%;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  min-height: 100vh;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+}
+
+.game-instruction-box {
+  background: white;
+  padding: 50px 40px;
+  border-radius: 12px;
+  max-width: 500px;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+  text-align: center;
+}
+
+.game-instruction-box h2 {
+  color: #667eea;
+  margin: 0 0 20px 0;
+  font-size: 28px;
+}
+
+.game-instruction-box p {
+  color: #666;
+  font-size: 16px;
+  line-height: 1.6;
+  margin: 10px 0;
+}
+
+.btn-start {
+  background: #667eea;
+  color: white;
+  border: none;
+  padding: 14px 40px;
+  border-radius: 6px;
+  font-size: 16px;
+  font-weight: 600;
+  cursor: pointer;
+  margin-top: 30px;
+  transition: all 0.3s;
+}
+
+.btn-start:hover {
+  background: #5568d3;
+  transform: translateY(-2px);
+  box-shadow: 0 5px 20px rgba(102, 126, 234, 0.4);
+}
+
+/* Game State Box */
+.game-state-box {
+  background: white;
+  padding: 50px 40px;
+  border-radius: 12px;
+  max-width: 600px;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+  text-align: center;
+}
+
+.game-state-box h3 {
+  color: #667eea;
+  margin: 0 0 30px 0;
+  font-size: 20px;
+}
+
+/* Signal (Stop-Signal) */
+.signal {
+  font-size: 80px;
+  font-weight: 700;
+  padding: 40px;
+  margin: 30px 0;
+  border-radius: 12px;
+  font-family: 'Courier New', monospace;
+  letter-spacing: 3px;
+}
+
+.signal.go {
+  background: #10b981;
+  color: white;
+}
+
+.signal.stop {
+  background: #ef4444;
+  color: white;
+}
+
+/* Task Display */
+.task-display {
+  background: #f5f5f5;
+  padding: 30px;
+  border-radius: 8px;
+  margin: 30px 0;
+}
+
+.task-display .rule {
+  font-size: 18px;
+  font-weight: 600;
+  color: #667eea;
+  margin: 0 0 15px 0;
+}
+
+.stimulus {
+  font-size: 48px;
+  font-weight: 700;
+  color: #1a1a1a;
+  margin: 0;
+}
+
+/* Scenario Box */
+.scenario-box {
+  background: #f5f5f5;
+  padding: 25px;
+  border-radius: 8px;
+  margin: 30px 0;
+  line-height: 1.6;
+  color: #333;
+}
+
+.sjt-scenario {
+  background: #f5f5f5;
+  padding: 25px;
+  border-radius: 8px;
+  margin: 30px 0;
+  text-align: left;
+  color: #333;
+}
+
+.sjt-scenario p {
+  margin: 10px 0;
+}
+
+/* Letter Stimulus (CPT) */
+.letter-stimulus {
+  font-size: 100px;
+  font-weight: 700;
+  color: #667eea;
+  min-height: 140px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 30px 0;
+}
+
+/* Rule Display (Rule Shift) */
+.rule-display {
+  background: #dbeafe;
+  padding: 20px;
+  border-radius: 8px;
+  margin: 30px 0;
+  color: #1e40af;
+  font-size: 18px;
+  font-weight: 600;
+  border-left: 4px solid #2563eb;
+}
+
+/* Buttons Group */
+.buttons-group {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+  justify-content: center;
+  margin: 30px 0;
+}
+
+.btn {
+  padding: 12px 24px;
+  border: none;
+  border-radius: 6px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s;
+  min-width: 110px;
+}
+
+.btn-go {
+  background: #10b981;
+  color: white;
+}
+
+.btn-go:hover {
+  background: #059669;
+  transform: translateY(-2px);
+  box-shadow: 0 5px 15px rgba(16, 185, 129, 0.3);
+}
+
+.btn-stop {
+  background: #ef4444;
+  color: white;
+}
+
+.btn-stop:hover {
+  background: #dc2626;
+  transform: translateY(-2px);
+  box-shadow: 0 5px 15px rgba(239, 68, 68, 0.3);
+}
+
+.btn-correct {
+  background: #10b981;
+  color: white;
+}
+
+.btn-correct:hover {
+  background: #059669;
+  transform: translateY(-2px);
+  box-shadow: 0 5px 15px rgba(16, 185, 129, 0.3);
+}
+
+.btn-error {
+  background: #ef4444;
+  color: white;
+}
+
+.btn-error:hover {
+  background: #dc2626;
+  transform: translateY(-2px);
+  box-shadow: 0 5px 15px rgba(239, 68, 68, 0.3);
+}
+
+.btn-option {
+  background: #667eea;
+  color: white;
+  flex: 0 1 calc(50% - 6px);
+  min-width: 150px;
+}
+
+.btn-option:hover {
+  background: #5568d3;
+  transform: translateY(-2px);
+  box-shadow: 0 5px 15px rgba(102, 126, 234, 0.3);
+}
+
+/* Score Display */
+.score {
+  color: #999;
+  font-size: 14px;
+  margin: 20px 0 0 0;
+  font-weight: 500;
+}
+
+/* Responsive */
+@media (max-width: 600px) {
+  .game-instruction-box,
+  .game-state-box {
+    max-width: 95vw;
+    padding: 30px 20px;
+  }
+
+  .game-instruction-box h2 {
+    font-size: 24px;
+  }
+
+  .signal {
+    font-size: 60px;
+    padding: 30px;
+  }
+
+  .buttons-group {
+    flex-direction: column;
+  }
+
+  .btn-option {
+    flex: 1;
+    min-width: 100%;
+  }
+}
+
+/* Accessibility */
+.btn:focus {
+  outline: 2px solid #fff;
+  outline-offset: 2px;
+}

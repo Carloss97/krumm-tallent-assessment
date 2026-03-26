@@ -4,11 +4,14 @@ import { TelemetryProvider } from './TelemetryContext';
 import GlobalProgressBar from './components/GlobalProgressBar';
 import GameLayout from './components/GameLayout';
 import { GAME_FLOW } from './utils/gameFlow';
+import RecruiterLogin from './components/RecruiterLogin';
+import RecruiterDashboard from './components/RecruiterDashboard';
 import './App.css';
 
 // Lazy load components for code splitting
 const Report = lazy(() => import('./Report'));
 const Intro = lazy(() => import('./components/Intro'));
+const LandingPage = lazy(() => import('./components/LandingPageV2'));
 
 // Main App Router and State
 function AppContent() {
@@ -29,7 +32,8 @@ function AppContent() {
       <div style={{ flex: 1, position: 'relative', overflowY: 'auto', overflowX: 'hidden' }}>
         <Suspense fallback={<div className="loading-spinner">Loading...</div>}>
           <Routes>
-            <Route path="/" element={<Intro />} />
+            <Route path="/" element={<LandingPage />} />
+            <Route path="/intro" element={<Intro />} />
             {GAME_FLOW.map(game => (
               <Route
                 key={game.path}
@@ -51,11 +55,23 @@ function AppContent() {
 
 function App() {
   return (
-    <TelemetryProvider>
-      <Router>
-        <AppContent />
-      </Router>
-    </TelemetryProvider>
+    <Router>
+      <Routes>
+        {/* Recruiter routes (separate from telemetry) */}
+        <Route path="/recruiter/login" element={<RecruiterLogin />} />
+        <Route path="/recruiter/dashboard" element={<RecruiterDashboard />} />
+
+        {/* Assessment routes (with telemetry tracking) */}
+        <Route
+          path="/*"
+          element={
+            <TelemetryProvider>
+              <AppContent />
+            </TelemetryProvider>
+          }
+        />
+      </Routes>
+    </Router>
   );
 }
 

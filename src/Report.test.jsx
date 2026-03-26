@@ -24,7 +24,7 @@ vi.mock('./services/aiReportService', () => ({
       { role: 'Data Analyst', fit: 'Strong analytical thinking' }
     ],
     confidenceScore: 75,
-    recommendation: 'HIGHLY RECOMMEND',
+    recommendation: 'STRONG ALIGNMENT',
     source: 'heuristic',
     generatedAt: new Date().toISOString(),
   })),
@@ -128,11 +128,11 @@ describe('Report Component', () => {
       </BrowserRouter>
     );
 
-    // Verify that report renders with recommendation
+    // Verify that report renders with profile alignment panel
     await waitFor(
       () => {
-        const recommendationDiv = container.textContent;
-        expect(recommendationDiv.includes('Recommendation')).toBeTruthy();
+        const reportText = container.textContent;
+        expect(reportText.includes('Profile Alignment')).toBeTruthy();
       },
       { timeout: 10000 },
     );

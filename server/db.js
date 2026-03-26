@@ -8,6 +8,28 @@ const __dirname = path.dirname(__filename);
 const dbPath = path.join(__dirname, 'app.db');
 const db = new Database(dbPath);
 
+const hasColumn = (tableName, columnName) => {
+  const columns = db.prepare(`PRAGMA table_info(${tableName})`).all();
+  return columns.some((column) => column.name === columnName);
+};
+
+const extractGamesFromPayload = (payload) => {
+  const source = payload && payload.sessionData ? payload.sessionData : payload;
+  if (!source || typeof source !== 'object') {
+    return [];
+  }
+
+  return Object.entries(source).filter(([key, value]) => {
+    const looksLikeGameId = /^game\d+$/i.test(key);
+    const hasNumericMetrics = value && typeof value === 'object' && (
+      typeof value.score === 'number' ||
+      typeof value.errors === 'number' ||
+      typeof value.duration === 'number'
+    );
+    return looksLikeGameId || hasNumericMetrics;
+  });
+};
+
 // Create tables if not exist
 const createTables = () => {
   db.prepare(`
@@ -15,7 +37,28 @@ const createTables = () => {
       id INTEGER PRIMARY KEY AUTOINCREMENT,
       created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
       updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-      payload TEXT
+      payload TEXT,
+      participant_id TEXT,
+      participant_email TEXT
+    )
+  `).run();
+
+  if (!hasColumn('sessions', 'participant_id')) {
+    db.prepare('ALTER TABLE sessions ADD COLUMN participant_id TEXT').run();
+  }
+
+  if (!hasColumn('sessions', 'participant_email')) {
+    db.prepare('ALTER TABLE sessions ADD COLUMN participant_email TEXT').run();
+  }
+
+  db.prepare(`
+    CREATE TABLE IF NOT EXISTS participants (
+      participant_id TEXT PRIMARY KEY,
+      full_name TEXT,
+      email TEXT,
+      last_auth_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+      created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+      updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
     )
   `).run();
 
@@ -33,9 +76,30 @@ const createTables = () => {
 
 createTables();
 
+export const upsertParticipant = ({ participantId, fullName, email, authenticatedAt }) => {
+  db.prepare(`
+    INSERT INTO participants (participant_id, full_name, email, last_auth_at, created_at, updated_at)
+    VALUES (?, ?, ?, ?, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
+    ON CONFLICT(participant_id) DO UPDATE SET
+      full_name = excluded.full_name,
+      email = excluded.email,
+      last_auth_at = excluded.last_auth_at,
+      updated_at = CURRENT_TIMESTAMP
+  `).run(participantId, fullName || null, email || null, authenticatedAt || new Date().toISOString());
+};
+
+export const getParticipantById = (participantId) => {
+  return db.prepare('SELECT * FROM participants WHERE participant_id = ?').get(participantId);
+};
+
 export const saveSession = (payload) => {
-  const insert = db.prepare(`INSERT INTO sessions (payload) VALUES (?)`);
-  const result = insert.run(JSON.stringify(payload));
+  const participant = payload?.participant || null;
+  const insert = db.prepare(`INSERT INTO sessions (payload, participant_id, participant_email) VALUES (?, ?, ?)`);
+  const result = insert.run(
+    JSON.stringify(payload),
+    participant?.participantId || null,
+    participant?.email || null
+  );
   const sessionId = result.lastInsertRowid;
 
   const insertMetrics = db.prepare(`
@@ -43,7 +107,7 @@ export const saveSession = (payload) => {
     VALUES (?, ?, ?, ?, ?)
   `);
 
-  Object.entries(payload).forEach(([gameId, gameData]) => {
+  extractGamesFromPayload(payload).forEach(([gameId, gameData]) => {
     if (!gameData) return;
     insertMetrics.run(
       sessionId,

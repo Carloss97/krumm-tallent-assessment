@@ -113,8 +113,11 @@ describe('TelemetryContext', () => {
     // We need to access telemetry to start tracking
     // For simplicity in this test, we'll use a wrapper that starts it
     const StartWrapper = ({ children }) => {
-        const { startTracking } = useTelemetry();
-        useEffect(() => { startTracking(); }, [startTracking]);
+        const { startTracking, setConsent } = useTelemetry();
+        useEffect(() => {
+          setConsent(true, false);
+          startTracking('game1');
+        }, [setConsent, startTracking]);
         return children;
     };
 
@@ -139,8 +142,11 @@ describe('TelemetryContext', () => {
 
   it('throttles mouse movement recording', () => {
     const StartWrapper = ({ children }) => {
-        const { startTracking } = useTelemetry();
-        useEffect(() => { startTracking(); }, [startTracking]);
+        const { startTracking, setConsent } = useTelemetry();
+        useEffect(() => {
+          setConsent(true, false);
+          startTracking('game1');
+        }, [setConsent, startTracking]);
         return children;
     };
 
@@ -169,8 +175,11 @@ describe('TelemetryContext', () => {
 
   it('records clicks when active', () => {
     const StartWrapper = ({ children }) => {
-        const { startTracking } = useTelemetry();
-        useEffect(() => { startTracking(); }, [startTracking]);
+        const { startTracking, setConsent } = useTelemetry();
+        useEffect(() => {
+          setConsent(true, false);
+          startTracking('game1');
+        }, [setConsent, startTracking]);
         return children;
     };
 

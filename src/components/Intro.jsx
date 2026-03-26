@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { useTelemetry } from '../TelemetryContext';
+import { GAME_FLOW } from '../utils/gameFlow';
 
 const Intro = () => {
   const navigate = useNavigate();
@@ -22,22 +23,11 @@ const Intro = () => {
     navigate(`/game/${gameNumber}`);
   };
 
-  const games = [
-    { number: 1, name: 'Color Word Game', type: 'Cognitive Flexibility' },
-    { number: 2, name: 'Frustration Game', type: 'Stress Resilience' },
-    { number: 3, name: 'Memory Game', type: 'Working Memory' },
-    { number: 4, name: 'Balloon Game', type: 'Risk Assessment' },
-    { number: 5, name: 'Vigilance Game', type: 'Sustained Attention' },
-    { number: 6, name: 'Grid Optimizer', type: 'Planning & Logic' },
-    { number: 7, name: 'Laser Puzzle', type: 'Spatial Reasoning' },
-    { number: 8, name: 'N-Back Task', type: 'Working Memory' },
-    { number: 9, name: 'Tower of London', type: 'Planning & Problem Solving' },
-    { number: 10, name: 'Wisconsin Card Sorting', type: 'Cognitive Flexibility' },
-    { number: 11, name: 'Go/No-Go Task', type: 'Response Inhibition' },
-    { number: 12, name: 'Trail Making Test', type: 'Processing Speed' },
-    { number: 13, name: 'Corsi Block Tapping', type: 'Spatial Memory' },
-    { number: 14, name: 'Mental Rotation', type: 'Spatial Reasoning' }
-  ];
+  const games = GAME_FLOW.map((game) => ({
+    number: game.id,
+    name: game.instruction.title,
+    type: game.instruction.type,
+  }));
 
   return (
     <div className="flex-center" style={{ width: '100%', height: '100vh', display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
@@ -49,8 +39,9 @@ const Intro = () => {
       >
         <h1 className="text-gradient" style={{ fontSize: '3rem', marginBottom: '16px' }}>Cognitive Assessment</h1>
         <p style={{ marginBottom: '40px', color: '#374151', lineHeight: '1.8', fontSize: '1.1rem' }}>
-          Welcome to the comprehensive cognitive assessment platform. You will complete 14 scientifically-validated games
-          designed to evaluate working memory, planning, cognitive flexibility, response inhibition, processing speed, spatial memory, and spatial reasoning.
+          Welcome to the HR-focused cognitive assessment platform. You will complete 7 evidence-based tasks
+          designed to evaluate working memory, response inhibition, cognitive flexibility, sustained attention,
+          decision quality under pressure, and workplace judgment.
         </p>
 
         <div style={{ display: 'flex', gap: '24px', justifyContent: 'center', flexWrap: 'wrap', alignItems: 'center', marginBottom: '30px' }}>

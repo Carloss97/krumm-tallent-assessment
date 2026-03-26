@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { useTelemetry } from './TelemetryContext';
@@ -7,7 +7,7 @@ import { saveSessionToBackend } from './services/backendService';
 import { generateDummyReportData } from './utils/dummyDataGenerator';
 
 const Report = () => {
-  const { sessionData } = useTelemetry();
+  const { sessionData, participantProfile, getSessionMetadata } = useTelemetry();
   const [searchParams] = useSearchParams();
   
   // Initialize dummy mode from URL params
@@ -17,6 +17,7 @@ const Report = () => {
   const [aiReport, setAiReport] = useState(null);
   const [useAI, setUseAI] = useState(true); // Toggle between AI and heuristic
   const [useDummyData, setUseDummyData] = useState(initialDummyMode);
+  const [showDevTelemetry, setShowDevTelemetry] = useState(false);
   const [sessionSavedId, setSessionSavedId] = useState(null);
   const [backendError, setBackendError] = useState(null);
   const reportGeneratedRef = useRef(false);
@@ -24,9 +25,19 @@ const Report = () => {
   const aiAnalysisDelayMs = isTestEnv ? 10 : 8000;
   const heuristicAnalysisDelayMs = isTestEnv ? 10 : 3500;
 
+  const isDevBuild = typeof import.meta !== 'undefined' && import.meta.env?.DEV;
+
   // Check if we have sufficient data or should use dummy data
-  const hasRealData = sessionData.game1 && Object.keys(sessionData).length >= 7; // At least some games completed
-  const reportData = useDummyData || !hasRealData ? generateDummyReportData() : Object.values(sessionData);
+  const hasRealData = hasMinimumAssessmentData(sessionData);
+  const reportData = useMemo(() => {
+    if (useDummyData || !hasRealData) {
+      return generateDummyReportData();
+    }
+    return sessionData;
+  }, [useDummyData, hasRealData, sessionData]);
+
+  const extendedGameRows = useMemo(() => buildEnhancedRows(reportData), [reportData]);
+  const devTelemetryOverview = useMemo(() => buildTelemetryOverview(reportData), [reportData]);
 
   // Reset generation state when switching AI/demo modes to avoid stale report output.
   useEffect(() => {
@@ -67,7 +78,15 @@ const Report = () => {
         // Save session to backend
         if (!useDummyData && hasRealData && !sessionSavedId) {
           try {
-            const saveRes = await saveSessionToBackend(reportData);
+            const safeMetadata = typeof getSessionMetadata === 'function'
+              ? getSessionMetadata()
+              : { timestamp: new Date().toISOString() };
+
+            const saveRes = await saveSessionToBackend({
+              participant: participantProfile,
+              sessionData: reportData,
+              metadata: safeMetadata
+            });
             setSessionSavedId(saveRes.sessionId);
             setBackendError(null);
           } catch (error) {
@@ -78,7 +97,17 @@ const Report = () => {
       };
       generateReport();
     }
-  }, [hasRealData, useDummyData, useAI, reportData, sessionSavedId, aiAnalysisDelayMs, heuristicAnalysisDelayMs]);
+  }, [
+    hasRealData,
+    useDummyData,
+    useAI,
+    reportData,
+    participantProfile,
+    getSessionMetadata,
+    sessionSavedId,
+    aiAnalysisDelayMs,
+    heuristicAnalysisDelayMs
+  ]);
 
   if (!hasRealData && !useDummyData) {
     return (
@@ -119,7 +148,7 @@ const Report = () => {
   }
 
   // Use AI report if available, otherwise fallback to heuristic
-  const report = aiReport || generateHeuristicReport(sessionData, 'recruitment');
+  const report = aiReport || generateHeuristicReport(reportData, 'recruitment');
 
   return (
     <div style={{ width: '100%', minHeight: '100%', padding: '40px', paddingBottom: '80px' }}>
@@ -137,7 +166,57 @@ const Report = () => {
           {useDummyData && <span style={{ color: '#7c3aed', fontStyle: 'italic' }}> | Demo Data</span>}
         </p>
 
-        {/* Recommendation Panel */}
+        {participantProfile?.participantId && (
+          <div
+            style={{
+              margin: '0 auto 24px',
+              width: 'fit-content',
+              padding: '8px 14px',
+              borderRadius: '999px',
+              background: 'rgba(16, 185, 129, 0.12)',
+              color: '#065f46',
+              fontSize: '0.9rem',
+              fontWeight: 600
+            }}
+          >
+            Participante: {participantProfile.participantId}
+          </div>
+        )}
+
+        {/* Extended Results for new battery */}
+        <div className="glass-panel-light" style={{ padding: '24px', marginBottom: '32px' }}>
+          <h3 style={{ marginBottom: '16px', color: '#1e1b4b', fontWeight: '700', borderBottom: '1px solid rgba(99,102,241,0.2)', paddingBottom: '8px' }}>
+            Extended Battery Results (Games 1-7)
+          </h3>
+          <div style={{ overflowX: 'auto' }}>
+            <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.92rem' }}>
+              <thead>
+                <tr style={{ color: '#374151', textAlign: 'left' }}>
+                  <th style={{ padding: '8px', borderBottom: '1px solid rgba(99,102,241,0.2)' }}>Game</th>
+                  <th style={{ padding: '8px', borderBottom: '1px solid rgba(99,102,241,0.2)' }}>Construct</th>
+                  <th style={{ padding: '8px', borderBottom: '1px solid rgba(99,102,241,0.2)' }}>Score</th>
+                  <th style={{ padding: '8px', borderBottom: '1px solid rgba(99,102,241,0.2)' }}>Errors</th>
+                  <th style={{ padding: '8px', borderBottom: '1px solid rgba(99,102,241,0.2)' }}>Duration</th>
+                  <th style={{ padding: '8px', borderBottom: '1px solid rgba(99,102,241,0.2)' }}>Key Metric</th>
+                </tr>
+              </thead>
+              <tbody>
+                {extendedGameRows.map((row) => (
+                  <tr key={row.id} style={{ color: '#374151' }}>
+                    <td style={{ padding: '8px', borderBottom: '1px solid rgba(148,163,184,0.15)' }}>{row.name}</td>
+                    <td style={{ padding: '8px', borderBottom: '1px solid rgba(148,163,184,0.15)' }}>{row.construct}</td>
+                    <td style={{ padding: '8px', borderBottom: '1px solid rgba(148,163,184,0.15)' }}>{row.score}</td>
+                    <td style={{ padding: '8px', borderBottom: '1px solid rgba(148,163,184,0.15)' }}>{row.errors}</td>
+                    <td style={{ padding: '8px', borderBottom: '1px solid rgba(148,163,184,0.15)' }}>{row.duration}</td>
+                    <td style={{ padding: '8px', borderBottom: '1px solid rgba(148,163,184,0.15)' }}>{row.metric}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        {/* Profile Alignment Panel */}
         <div style={{ 
           backgroundColor: 'rgba(255,255,255,0.7)', 
           borderRadius: '12px', 
@@ -147,10 +226,13 @@ const Report = () => {
           border: `2px solid ${getRecommendationColor(report.recommendation)}`
         }}>
           <h2 style={{ color: '#374151', fontSize: '1rem', textTransform: 'uppercase', letterSpacing: '2px' }}>
-            {report.source === 'gemini' ? 'AI Recommendation' : 'System Recommendation'}
+            {report.source === 'gemini' ? 'AI Profile Alignment' : 'System Profile Alignment'}
           </h2>
           <div style={{ color: getRecommendationColor(report.recommendation), fontSize: '2.5rem', fontWeight: 'bold', marginTop: '8px' }}>
             {report.recommendation}
+          </div>
+          <div style={{ color: '#475569', marginTop: '8px', fontSize: '0.9rem' }}>
+            Development-oriented signal; combine with interviews and role evidence.
           </div>
           {report.confidenceScore && (
             <div style={{ color: '#7c3aed', marginTop: '12px', fontSize: '0.95rem' }}>
@@ -262,8 +344,64 @@ const Report = () => {
                 {useDummyData ? 'Demo Data' : 'Real Data'}
               </button>
             )}
+            {isDevBuild && (
+              <button
+                className="btn"
+                style={{
+                  padding: '8px 16px',
+                  fontSize: '0.9rem',
+                  background: showDevTelemetry ? '#0ea5e9' : 'rgba(14, 165, 233, 0.2)',
+                  color: showDevTelemetry ? 'white' : '#0369a1',
+                  border: `1px solid ${showDevTelemetry ? '#0ea5e9' : 'rgba(14, 165, 233, 0.5)'}`
+                }}
+                onClick={() => setShowDevTelemetry(prev => !prev)}
+              >
+                {showDevTelemetry ? 'Dev Telemetry: ON' : 'Dev Telemetry: OFF'}
+              </button>
+            )}
           </div>
         </div>
+
+        {/* Development-only telemetry visualization */}
+        {isDevBuild && showDevTelemetry && (
+          <div className="glass-panel-light" style={{ padding: '24px', marginBottom: '32px', border: '1px dashed rgba(14,165,233,0.5)' }}>
+            <h3 style={{ marginBottom: '8px', color: '#0c4a6e', fontWeight: '700' }}>Development Telemetry Panel</h3>
+            <p style={{ color: '#0f172a', fontSize: '0.9rem', marginBottom: '18px' }}>
+              Debug-only panel for cursor/webcam telemetry validation. Do not use for production decisions.
+            </p>
+
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(190px, 1fr))', gap: '12px', marginBottom: '18px' }}>
+              <TelemetryStatCard label="Cursor Events" value={devTelemetryOverview.cursorEvents} />
+              <TelemetryStatCard label="Click Events" value={devTelemetryOverview.clickEvents} />
+              <TelemetryStatCard label="Trial Events" value={devTelemetryOverview.trialEvents} />
+              <TelemetryStatCard label="Webcam Frames" value={devTelemetryOverview.webcamFrames} />
+              <TelemetryStatCard label="Avg Webcam Quality" value={devTelemetryOverview.avgWebcamQuality} />
+              <TelemetryStatCard label="Quality Flags" value={devTelemetryOverview.qualityFlags} />
+            </div>
+
+            <div style={{ marginBottom: '14px' }}>
+              <h4 style={{ color: '#1e293b', margin: '0 0 10px 0' }}>Telemetry Coverage by Game</h4>
+              {devTelemetryOverview.perGameCoverage.map((row) => (
+                <div key={row.id} style={{ marginBottom: '8px' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.82rem', color: '#334155' }}>
+                    <span>{row.name}</span>
+                    <span>{row.coverage}%</span>
+                  </div>
+                  <div style={{ width: '100%', height: 8, background: 'rgba(148,163,184,0.25)', borderRadius: 999 }}>
+                    <div style={{ width: `${row.coverage}%`, height: 8, background: '#0ea5e9', borderRadius: 999 }} />
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            <details>
+              <summary style={{ cursor: 'pointer', color: '#075985', fontWeight: 600 }}>View Raw Telemetry Snapshot</summary>
+              <pre style={{ marginTop: '10px', maxHeight: '260px', overflow: 'auto', background: '#0f172a', color: '#e2e8f0', padding: '12px', borderRadius: '8px', fontSize: '0.75rem' }}>
+                {JSON.stringify(devTelemetryOverview.rawSnapshot, null, 2)}
+              </pre>
+            </details>
+          </div>
+        )}
 
         <div style={{ textAlign: 'center', marginTop: '40px' }}>
           <div style={{ marginBottom: '12px', color: '#475569' }}>
@@ -283,16 +421,125 @@ const Report = () => {
 
 const getRecommendationColor = (recommendation) => {
   switch(recommendation) {
-    case 'HIGHLY RECOMMEND':
+    case 'STRONG ALIGNMENT':
       return '#10b981'; // green
-    case 'RECOMMEND WITH RESERVATIONS':
+    case 'SOLID ALIGNMENT WITH COACHING':
       return '#06b6d4'; // cyan
-    case 'BORDERLINE FIT':
+    case 'CONDITIONAL ALIGNMENT':
       return '#f59e0b'; // amber
-    case 'REQUIRES FOLLOW-UP':
+    case 'EXPLORATORY FIT - NEEDS MORE DATA':
     default:
       return '#f43f5e'; // rose
   }
 };
+
+const TelemetryStatCard = ({ label, value }) => (
+  <div style={{ background: 'rgba(255,255,255,0.75)', border: '1px solid rgba(148,163,184,0.3)', borderRadius: '8px', padding: '10px' }}>
+    <div style={{ color: '#475569', fontSize: '0.75rem', textTransform: 'uppercase', marginBottom: '4px' }}>{label}</div>
+    <div style={{ color: '#0f172a', fontWeight: 700, fontSize: '1.05rem' }}>{value}</div>
+  </div>
+);
+
+const GAME_ROWS = [
+  { id: 'ospan_game_1', legacyId: 'game1', name: 'Game 1 - OSPAN', construct: 'Working Memory' },
+  { id: 'sst_game_2', legacyId: 'game2', name: 'Game 2 - Stop-Signal', construct: 'Response Inhibition' },
+  { id: 'tsw_game_3', legacyId: 'game3', name: 'Game 3 - Task Switching', construct: 'Cognitive Flexibility' },
+  { id: 'cpt_game_4', legacyId: 'game4', name: 'Game 4 - CPT', construct: 'Sustained Attention' },
+  { id: 'dec_game_5', legacyId: 'game5', name: 'Game 5 - Decision', construct: 'Decision Making' },
+  { id: 'rsh_game_6', legacyId: 'game6', name: 'Game 6 - Rule Shift', construct: 'Adaptation' },
+  { id: 'sjt_game_7', legacyId: 'game7', name: 'Game 7 - SJT', construct: 'Situational Judgment' },
+];
+
+function hasMinimumAssessmentData(data) {
+  if (!data) return false;
+  const required = GAME_ROWS.filter((g) => data[g.id] || data[g.legacyId]);
+  return required.length >= 4;
+}
+
+function getGameSnapshot(data, id, legacyId) {
+  return data[id] || data[legacyId] || null;
+}
+
+function formatDuration(ms) {
+  if (!ms || Number.isNaN(ms)) return 'N/A';
+  return `${Math.round(ms / 1000)}s`;
+}
+
+function buildEnhancedRows(data) {
+  return GAME_ROWS.map((game) => {
+    const snapshot = getGameSnapshot(data, game.id, game.legacyId);
+    const details = snapshot?.details || {};
+    const metric =
+      details.operationAccuracy !== undefined ? `Operation accuracy ${details.operationAccuracy}%` :
+      details.accuracy !== undefined ? `Accuracy ${details.accuracy}%` :
+      details.blocksCompleted !== undefined ? `Blocks ${details.blocksCompleted}` :
+      details.scenariosCompleted !== undefined ? `Scenarios ${details.scenariosCompleted}` :
+      'Telemetry captured';
+
+    return {
+      id: game.id,
+      name: game.name,
+      construct: game.construct,
+      score: snapshot?.score ?? 'N/A',
+      errors: snapshot?.errors ?? 'N/A',
+      duration: formatDuration(snapshot?.duration),
+      metric,
+    };
+  });
+}
+
+function buildTelemetryOverview(data) {
+  const snapshots = GAME_ROWS.map((g) => ({
+    id: g.id,
+    name: g.name,
+    snapshot: getGameSnapshot(data, g.id, g.legacyId),
+  })).filter((item) => item.snapshot);
+
+  const sum = (key) => snapshots.reduce((acc, item) => acc + (item.snapshot[key]?.length || 0), 0);
+  const webcamQualityValues = snapshots
+    .map((item) => item.snapshot.webcamQualityScore)
+    .filter((v) => typeof v === 'number' && !Number.isNaN(v));
+
+  const avgWebcamQuality = webcamQualityValues.length
+    ? Math.round(webcamQualityValues.reduce((a, b) => a + b, 0) / webcamQualityValues.length)
+    : 0;
+
+  const perGameCoverage = snapshots.map((item) => {
+    const hasCursor = (item.snapshot.mouseMovements?.length || 0) > 0;
+    const hasClicks = (item.snapshot.clicks?.length || 0) > 0;
+    const hasTrials = (item.snapshot.trialEvents?.length || 0) > 0;
+    const hasWebcam = (item.snapshot.webcamFrames?.length || 0) > 0;
+    const coverage = Math.round(([hasCursor, hasClicks, hasTrials, hasWebcam].filter(Boolean).length / 4) * 100);
+
+    return {
+      id: item.id,
+      name: item.name,
+      coverage,
+    };
+  });
+
+  return {
+    cursorEvents: sum('mouseMovements'),
+    clickEvents: sum('clicks'),
+    trialEvents: sum('trialEvents'),
+    webcamFrames: sum('webcamFrames'),
+    avgWebcamQuality,
+    qualityFlags: snapshots.reduce((acc, item) => acc + (item.snapshot.qualityFlags?.length || 0), 0),
+    perGameCoverage,
+    rawSnapshot: snapshots.map((item) => ({
+      id: item.id,
+      score: item.snapshot.score,
+      errors: item.snapshot.errors,
+      cursorEvents: item.snapshot.mouseMovements?.length || 0,
+      clickEvents: item.snapshot.clicks?.length || 0,
+      trialEvents: item.snapshot.trialEvents?.length || 0,
+      webcamFrames: item.snapshot.webcamFrames?.length || 0,
+      webcamQualityScore: item.snapshot.webcamQualityScore || 0,
+      qualityFlags: item.snapshot.qualityFlags || [],
+      cursorMetrics: item.snapshot.cursorMetrics || null,
+      details: item.snapshot.details || null,
+    })),
+  };
+}
 
 export default Report;
