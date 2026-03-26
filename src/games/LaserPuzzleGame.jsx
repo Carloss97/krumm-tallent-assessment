@@ -209,7 +209,6 @@ const LaserPuzzleGame = ({ isActive, onEndGame, isDemo, timeLimit }) => {
         startTracking();
         quizScore.current = 0;
         const levels = isDemo ? [generateLevel(0)] : [generateLevel(0), generateLevel(1), generateLevel(2)];
-        // eslint-disable-next-line react-hooks/set-state-in-effect
         setProcLevels(levels);
         setLevelIdx(0);
         setGrid(buildGrid(levels[0]));

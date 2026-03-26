@@ -19,8 +19,11 @@ const playTone = (freq, type, duration, vol=0.1, freqSlide=null) => {
     gain.connect(audioCtx.destination);
     osc.start();
     osc.stop(audioCtx.currentTime + duration);
-  } catch {
-    // ignore audio errors if user hasn't interacted with document
+  } catch (err) {
+    // Ignore audio errors if user hasn't interacted with document (autoplay policy)
+    if (typeof console !== 'undefined' && process.env.DEBUG_MODE) {
+      console.debug('Audio playback unavailable:', err.message);
+    }
   }
 };
 
@@ -54,7 +57,10 @@ export const playBalloonPop = () => {
     filter.connect(gain);
     gain.connect(audioCtx.destination);
     noise.start();
-  } catch {
-    // Ignore audio errors caused by autoplay/browser restrictions.
+  } catch (err) {
+    // Ignore audio errors caused by autoplay/browser restrictions
+    if (typeof console !== 'undefined' && process.env.DEBUG_MODE) {
+      console.debug('Balloon pop audio unavailable:', err.message);
+    }
   }
 };

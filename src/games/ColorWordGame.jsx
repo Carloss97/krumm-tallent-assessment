@@ -69,7 +69,6 @@ const ColorWordGame = ({ isActive, onEndGame, isDemo, timeLimit }) => {
       scoreRef.current = 0;
       hasEndedRef.current = false;
       startTracking();
-      // eslint-disable-next-line react-hooks/set-state-in-effect
       generateRound(0);
     }
   }, [isActive, generateRound, startTracking]);

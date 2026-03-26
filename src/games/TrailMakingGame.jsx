@@ -70,7 +70,6 @@ const TrailMakingGame = ({ isActive, onEndGame, isDemo, timeLimit }) => {
     if (isActive) {
       hasEndedRef.current = false;
       startTracking();
-      // eslint-disable-next-line react-hooks/set-state-in-effect
       setPart('A');
       setScore(0);
       setErrors(0);

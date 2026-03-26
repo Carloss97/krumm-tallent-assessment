@@ -31,7 +31,6 @@ const Report = () => {
   // Reset generation state when switching AI/demo modes to avoid stale report output.
   useEffect(() => {
     reportGeneratedRef.current = false;
-    // eslint-disable-next-line react-hooks/set-state-in-effect
     setIsAnalyzing(true);
     setAiReport(null);
     setBackendError(null);

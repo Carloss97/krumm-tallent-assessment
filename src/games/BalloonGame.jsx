@@ -46,7 +46,6 @@ const BalloonGame = ({ isActive, onEndGame, isDemo }) => {
       totalPointsRef.current = 0;
       popsRef.current = 0;
       startTracking();
-      // eslint-disable-next-line react-hooks/set-state-in-effect
       setRound(1);
       setTotalPoints(0);
       initRound();

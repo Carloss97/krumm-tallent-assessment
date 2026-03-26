@@ -70,7 +70,6 @@ const GoNoGoGame = ({ isActive, onEndGame, isDemo, timeLimit }) => {
     if (isActive) {
       hasEndedRef.current = false;
       startTracking();
-      // eslint-disable-next-line react-hooks/set-state-in-effect
       setTrial(1);
       setScore(0);
       setCorrectGo(0);

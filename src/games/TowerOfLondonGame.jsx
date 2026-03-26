@@ -46,7 +46,7 @@ const TowerOfLondonGame = ({ isActive, onEndGame, isDemo, timeLimit }) => {
     setOptimalMoves(currentProblem.optimal);
     setSelectedTower(null);
     problemStartTime.current = Date.now();
-  }, []);
+  }, [problems]);
 
   useEffect(() => {
     if (isActive) {

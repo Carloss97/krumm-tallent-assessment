@@ -106,7 +106,6 @@ const NBackGame = ({ isActive, onEndGame, isDemo, timeLimit }) => {
       isActiveRef.current = true;
       hasEndedRef.current = false;
       startTracking();
-      // eslint-disable-next-line react-hooks/set-state-in-effect
       setRound(1);
       setNBack(2);
       setScore(0);
@@ -122,7 +121,6 @@ const NBackGame = ({ isActive, onEndGame, isDemo, timeLimit }) => {
 
   useEffect(() => {
       if(isActive) {
-        // eslint-disable-next-line react-hooks/set-state-in-effect
         generateRound();
       }
   }, [isActive, round, generateRound])

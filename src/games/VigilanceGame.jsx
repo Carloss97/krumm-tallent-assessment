@@ -109,7 +109,6 @@ const VigilanceGame = ({ isActive, onEndGame, isDemo }) => {
     if (isActive) {
       hasEndedRef.current = false;
       startTracking();
-      // eslint-disable-next-line react-hooks/set-state-in-effect
       setRound(1);
       totalReactionTimeRef.current = 0;
       falseStartsRef.current = 0;

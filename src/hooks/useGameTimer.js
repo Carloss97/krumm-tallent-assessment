@@ -7,7 +7,6 @@ export const useGameTimer = ({ isActive, timeLimit, onEnd }) => {
   useEffect(() => {
     if (isActive && typeof timeLimit === 'number' && timeLimit > 0) {
       // Reset timer when a timed game starts.
-      // eslint-disable-next-line react-hooks/set-state-in-effect
       setTimeLeft(timeLimit);
       timerRef.current = setInterval(() => {
         setTimeLeft(prev => {
