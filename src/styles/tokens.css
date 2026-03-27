@@ -1,7 +1,36 @@
 :root {
-  --font-main: 'Inter', 'Roboto', sans-serif;
+  --font-main: 'Manrope', 'Segoe UI', sans-serif;
+  --font-display: 'Fraunces', Georgia, serif;
   --font-system: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
     'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue', sans-serif;
+
+  /* Global premium-clean palette */
+  --surface-0: #f8fafc;
+  --surface-1: #eef3f8;
+  --surface-2: #e7eef5;
+  --surface-card: rgba(255, 255, 255, 0.92);
+  --surface-card-strong: rgba(255, 255, 255, 0.97);
+
+  --ink-strong: #12243e;
+  --ink-medium: #2e496e;
+  --ink-soft: #476188;
+
+  --brand-700: #1f3558;
+  --brand-600: #26466f;
+  --brand-500: #365e92;
+  --brand-300: #87a8ca;
+
+  --line-soft: rgba(41, 62, 92, 0.14);
+  --line-strong: rgba(29, 50, 78, 0.24);
+
+  --radius-sm: 10px;
+  --radius-md: 14px;
+  --radius-lg: 18px;
+  --radius-pill: 999px;
+
+  --elevation-1: 0 8px 18px rgba(19, 34, 58, 0.08);
+  --elevation-2: 0 14px 30px rgba(21, 37, 61, 0.12);
+  --elevation-3: 0 22px 46px rgba(10, 22, 40, 0.18);
 
   --primary: #667eea;
   --primary-dark: #5568d3;
@@ -20,10 +49,10 @@
   --gray-light: #f8f9fa;
   --white: #ffffff;
 
-  --bg-color: #f0f4ff;
-  --text-color: #1e1b4b;
-  --surface-color: rgba(255, 255, 255, 0.75);
-  --border-color: rgba(99, 102, 241, 0.2);
+  --bg-color: var(--surface-1);
+  --text-color: var(--ink-strong);
+  --surface-color: var(--surface-card);
+  --border-color: var(--line-soft);
   --border: #e9ecef;
 
   --shadow: 0 10px 40px rgba(0, 0, 0, 0.08);
