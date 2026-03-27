@@ -209,11 +209,7 @@ const Report = () => {
         {/* Extended Results for new battery */}
         <div className="glass-panel-light" style={{ padding: '24px', marginBottom: '32px' }}>
           <h3 style={{ marginBottom: '16px', color: '#1e1b4b', fontWeight: '700', borderBottom: '1px solid rgba(99,102,241,0.2)', paddingBottom: '8px' }}>
-<<<<<<< HEAD
-            Extended Battery Results (Games 1-13)
-=======
             Integrated Battery Results (Games 1-13)
->>>>>>> e6bfb86657001ac012294a22e7fc6b2c6375a95a
           </h3>
           <div style={{ overflowX: 'auto' }}>
             <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.92rem' }}>
@@ -519,21 +515,12 @@ const GAME_ROWS = [
   { id: 'dec_game_5', legacyId: 'game5', name: 'Game 5 - Decision', construct: 'Decision Making' },
   { id: 'rsh_game_6', legacyId: 'game6', name: 'Game 6 - Rule Shift', construct: 'Adaptation' },
   { id: 'sjt_game_7', legacyId: 'game7', name: 'Game 7 - SJT', construct: 'Situational Judgment' },
-<<<<<<< HEAD
-  { id: 'cmp_meta_8', legacyId: 'game8', name: 'Game 8 - N-Back', construct: 'Updating & Calibration' },
-  { id: 'cmp_ops_9', legacyId: 'game9', name: 'Game 9 - Tower of London', construct: 'Planning & Sequencing' },
-  { id: 'cmp_agility_10', legacyId: 'game10', name: 'Game 10 - Wisconsin', construct: 'Learning Agility' },
-  { id: 'cmp_social_11', legacyId: 'game11', name: 'Game 11 - Go/No-Go', construct: 'Inhibition Consistency' },
-  { id: 'cmp_resilience_12', legacyId: 'game12', name: 'Game 12 - Trail Making', construct: 'Speed & Set-Shifting' },
-  { id: 'cmp_risk_13', legacyId: 'game13', name: 'Game 13 - Corsi', construct: 'Visuospatial Memory' },
-=======
   { id: 'cmp_meta_8', legacyId: 'game8', name: 'Game 8 - Metacognitive Calibration', construct: 'Metacognitive Accuracy' },
   { id: 'cmp_ops_9', legacyId: 'game9', name: 'Game 9 - Operational Prioritization', construct: 'Operational Prioritization' },
   { id: 'cmp_agility_10', legacyId: 'game10', name: 'Game 10 - Learning Agility', construct: 'Adaptive Learning' },
   { id: 'cmp_social_11', legacyId: 'game11', name: 'Game 11 - Social Coordination', construct: 'Social Coordination' },
   { id: 'cmp_resilience_12', legacyId: 'game12', name: 'Game 12 - Cognitive Resilience', construct: 'Resilience Under Load' },
   { id: 'cmp_risk_13', legacyId: 'game13', name: 'Game 13 - Risk Under Uncertainty', construct: 'Risk Decision Framing' },
->>>>>>> e6bfb86657001ac012294a22e7fc6b2c6375a95a
 ];
 
 function hasMinimumAssessmentData(data) {

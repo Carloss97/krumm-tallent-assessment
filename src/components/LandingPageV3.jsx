@@ -345,6 +345,23 @@ const LandingPageV3 = () => {
 
   return (
     <div className="landing-v3">
+      <div className="lv3-lang-corner" role="group" aria-label="Cambiar idioma">
+        <button
+          type="button"
+          className={`lv3-lang-btn ${language === 'es' ? 'active' : ''}`}
+          onClick={() => setLanguage('es')}
+        >
+          ES
+        </button>
+        <button
+          type="button"
+          className={`lv3-lang-btn ${language === 'en' ? 'active' : ''}`}
+          onClick={() => setLanguage('en')}
+        >
+          EN
+        </button>
+      </div>
+
       <header className="lv3-hero">
         <div className="lv3-hero-grid">
           <motion.section
@@ -389,23 +406,6 @@ const LandingPageV3 = () => {
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.45, delay: 0.15 }}
         >
-          <div className="lv3-lang-toggle" role="group" aria-label="Cambiar idioma">
-            <button
-              type="button"
-              className={`lv3-lang-btn ${language === 'es' ? 'active' : ''}`}
-              onClick={() => setLanguage('es')}
-            >
-              ES
-            </button>
-            <button
-              type="button"
-              className={`lv3-lang-btn ${language === 'en' ? 'active' : ''}`}
-              onClick={() => setLanguage('en')}
-            >
-              EN
-            </button>
-          </div>
-
           <div className="lv3-action-buttons">
             <button className="lv3-primary lv3-action-btn lv3-action-start" onClick={() => setShowForm(true)}>
               <Sparkles size={18} aria-hidden="true" />

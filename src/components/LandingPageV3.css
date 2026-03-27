@@ -1,10 +1,25 @@
 .landing-v3 {
+  position: relative;
   min-height: 100%;
   background:
     radial-gradient(circle at 84% 10%, rgba(233, 197, 255, 0.24), transparent 37%),
     radial-gradient(circle at 10% 86%, rgba(162, 221, 255, 0.22), transparent 40%),
     linear-gradient(158deg, #f8fbff 0%, #edf6ff 48%, #e8f1ff 100%);
   color: #13223a;
+}
+
+.lv3-lang-corner {
+  position: absolute;
+  top: 0.95rem;
+  right: 1rem;
+  z-index: 15;
+  display: inline-flex;
+  width: fit-content;
+  border-radius: 999px;
+  padding: 0.22rem;
+  background: rgba(255, 255, 255, 0.78);
+  border: 1px solid rgba(86, 112, 214, 0.24);
+  box-shadow: 0 8px 18px rgba(67, 90, 184, 0.1);
 }
 
 .lv3-recruiter-btn {
@@ -40,7 +55,7 @@
 .lv3-copy {
   background: linear-gradient(138deg, rgba(82, 109, 226, 0.93), rgba(142, 94, 201, 0.82) 58%, rgba(81, 173, 205, 0.78));
   border: 1px solid rgba(255, 255, 255, 0.3);
-  border-radius: 28px;
+  border-radius: 34px 24px 44px 28px;
   color: #f5f8ff;
   padding: clamp(1.55rem, 2.35vw, 2.3rem);
   box-shadow: 0 18px 36px rgba(49, 67, 140, 0.24);
@@ -127,10 +142,14 @@
 
 .lv3-stats article {
   border: 1px solid rgba(86, 111, 218, 0.2);
-  border-radius: 14px;
+  border-radius: 22px 14px 28px 16px;
   padding: 0.75rem 0.82rem;
   background: linear-gradient(145deg, rgba(255, 255, 255, 0.9), rgba(239, 245, 255, 0.9));
   box-shadow: 0 8px 16px rgba(70, 92, 180, 0.1);
+}
+
+.lv3-stats article:nth-child(even) {
+  border-radius: 14px 28px 16px 24px;
 }
 
 .lv3-stats strong {
@@ -149,16 +168,6 @@
   margin: 1rem auto 0;
   display: grid;
   gap: 0.92rem;
-}
-
-.lv3-lang-toggle {
-  display: inline-flex;
-  width: fit-content;
-  border-radius: 999px;
-  padding: 0.22rem;
-  background: rgba(255, 255, 255, 0.72);
-  border: 1px solid rgba(86, 112, 214, 0.24);
-  box-shadow: 0 8px 18px rgba(67, 90, 184, 0.1);
 }
 
 .lv3-lang-btn {
@@ -242,7 +251,7 @@
 .lv3-brand-stage {
   position: relative;
   overflow: hidden;
-  border-radius: 28px;
+  border-radius: 24px 38px 26px 40px;
   padding: clamp(1rem, 1.8vw, 1.4rem);
   background:
     radial-gradient(circle at 78% 20%, rgba(185, 129, 255, 0.18), transparent 35%),
@@ -315,7 +324,7 @@
 .lv3-stage-list li {
   background: linear-gradient(145deg, rgba(255, 255, 255, 0.8), rgba(237, 244, 255, 0.76));
   border: 1px solid rgba(82, 109, 209, 0.2);
-  border-radius: 14px 20px 14px 20px;
+  border-radius: 18px 26px 16px 24px;
   padding: 0.42rem 0.62rem;
   list-style-position: inside;
 }
@@ -353,7 +362,7 @@
 
 .lv3-diff-card,
 .lv3-cap-card {
-  border-radius: 20px 14px 24px 14px;
+  border-radius: 26px 18px 32px 20px;
   padding: 1rem 1rem 1.05rem;
   border: 1px solid rgba(19, 34, 58, 0.09);
   background: rgba(255, 255, 255, 0.9);
@@ -363,7 +372,19 @@
 .lv3-diff-card:nth-child(even),
 .lv3-cap-card:nth-child(even),
 .lv3-signal-card:nth-child(even) {
-  border-radius: 14px 24px 14px 24px;
+  border-radius: 18px 30px 20px 32px;
+}
+
+.lv3-diff-card:nth-child(odd),
+.lv3-cap-card:nth-child(odd),
+.lv3-signal-card:nth-child(odd) {
+  transform: rotate(-0.5deg);
+}
+
+.lv3-diff-card:nth-child(even),
+.lv3-cap-card:nth-child(even),
+.lv3-signal-card:nth-child(even) {
+  transform: rotate(0.5deg);
 }
 
 .lv3-diff-card:nth-child(1) {
@@ -405,7 +426,7 @@
 }
 
 .lv3-signal-card {
-  border-radius: 20px 14px 22px 14px;
+  border-radius: 24px 16px 28px 18px;
   padding: 1rem 1.05rem;
   border: 1px solid rgba(80, 104, 214, 0.18);
   background: linear-gradient(152deg, rgba(255, 255, 255, 0.95), rgba(235, 243, 255, 0.9));
@@ -593,14 +614,14 @@
 }
 
 @media (max-width: 560px) {
+  .lv3-lang-corner {
+    top: 0.6rem;
+    right: 0.65rem;
+  }
+
   .lv3-stage-logo {
     width: 170px;
     height: 170px;
-  }
-
-  .lv3-lang-toggle {
-    width: 100%;
-    justify-content: center;
   }
 
   .lv3-recruiter-btn {
