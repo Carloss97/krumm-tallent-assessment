@@ -1,7 +1,16 @@
 import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { motion } from 'framer-motion';
+import {
+  Radar,
+  RadarChart,
+  PolarGrid,
+  PolarAngleAxis,
+  PolarRadiusAxis,
+  ResponsiveContainer,
+} from 'recharts';
 import { useTelemetry } from './TelemetryContext';
+import { useLanguage } from './context/LanguageContext';
 import { generateAIReport, generateHeuristicReport } from './services/aiReportService';
 import { saveSessionToBackend } from './services/backendService';
 import { generateDummyReportData } from './utils/dummyDataGenerator';
@@ -15,6 +24,8 @@ import { getExperimentConfig } from './utils/abTesting';
 
 const Report = () => {
   const { sessionData, participantProfile, getSessionMetadata } = useTelemetry();
+  const { language } = useLanguage();
+  const isEn = language === 'en';
   const [searchParams] = useSearchParams();
   
   // Initialize dummy mode from URL params
@@ -25,12 +36,12 @@ const Report = () => {
   const [useAI, setUseAI] = useState(true); // Toggle between AI and heuristic
   const [useDummyData, setUseDummyData] = useState(initialDummyMode);
   const [showDevTelemetry, setShowDevTelemetry] = useState(false);
+  const [insightMeta, setInsightMeta] = useState({ mode: 'pending', reason: '' });
   const [sessionSavedId, setSessionSavedId] = useState(null);
   const [backendError, setBackendError] = useState(null);
   const reportGeneratedRef = useRef(false);
   const isTestEnv = typeof import.meta !== 'undefined' && import.meta.env?.MODE === 'test';
-  const aiAnalysisDelayMs = isTestEnv ? 10 : 8000;
-  const heuristicAnalysisDelayMs = isTestEnv ? 10 : 3500;
+  const hasGeminiKey = Boolean(typeof import.meta !== 'undefined' && import.meta.env?.VITE_GOOGLE_API_KEY);
 
   const isDevBuild = typeof import.meta !== 'undefined' && import.meta.env?.DEV;
 
@@ -59,14 +70,22 @@ const Report = () => {
     };
   }, [reportData]);
 
+  const hasFutureModulesData = useMemo(() => {
+    const modules = reportData?.futureModules || {};
+    return Object.values(modules).some((collection) => Array.isArray(collection) && collection.length > 0);
+  }, [reportData]);
+
   const extendedGameRows = useMemo(() => buildEnhancedRows(reportData), [reportData]);
   const devTelemetryOverview = useMemo(() => buildTelemetryOverview(reportData), [reportData]);
+  const radarProfile = useMemo(() => buildRadarProfile(reportData), [reportData]);
+  const competencyHighlights = useMemo(() => buildCompetencyHighlights(radarProfile), [radarProfile]);
 
   // Reset generation state when switching AI/demo modes to avoid stale report output.
   useEffect(() => {
     reportGeneratedRef.current = false;
     setIsAnalyzing(true);
     setAiReport(null);
+    setInsightMeta({ mode: 'pending', reason: '' });
     setBackendError(null);
     if (useDummyData) {
       setSessionSavedId(null);
@@ -79,23 +98,38 @@ const Report = () => {
       reportGeneratedRef.current = true;
       const generateReport = async () => {
         try {
+          let resolvedReport = null;
+
           if (useAI) {
-            const report = await generateAIReport(reportData, 'recruitment');
-            if (report) {
-              setAiReport(report);
-              setTimeout(() => setIsAnalyzing(false), aiAnalysisDelayMs);
-              return;
+            if (hasGeminiKey) {
+              const report = await generateAIReport(reportData, 'recruitment');
+              if (report) {
+                resolvedReport = report;
+                setInsightMeta({ mode: 'ai', reason: 'Gemini response parsed successfully.' });
+              }
+            } else {
+              setInsightMeta({ mode: 'heuristic', reason: 'Missing VITE_GOOGLE_API_KEY in environment.' });
             }
           }
-          // Fallback to heuristic if AI fails or is disabled
-          const heuristicReport = generateHeuristicReport(reportData);
-          setAiReport(heuristicReport);
-          setTimeout(() => setIsAnalyzing(false), heuristicAnalysisDelayMs);
+
+          if (!resolvedReport) {
+            // Fallback to heuristic if AI fails or is disabled
+            resolvedReport = generateHeuristicReport(reportData);
+            if (!useAI) {
+              setInsightMeta({ mode: 'heuristic', reason: 'AI mode is disabled by user toggle.' });
+            } else if (hasGeminiKey) {
+              setInsightMeta({ mode: 'heuristic', reason: 'AI call failed or returned invalid JSON; fallback activated.' });
+            }
+          }
+
+          setAiReport(resolvedReport);
+          setIsAnalyzing(false);
         } catch (error) {
           console.error('Error generating AI report:', error);
           const heuristicReport = generateHeuristicReport(reportData);
           setAiReport(heuristicReport);
-          setTimeout(() => setIsAnalyzing(false), heuristicAnalysisDelayMs);
+          setInsightMeta({ mode: 'heuristic', reason: 'Runtime error while generating AI report; fallback activated.' });
+          setIsAnalyzing(false);
         }
 
         // Save session to backend
@@ -128,19 +162,18 @@ const Report = () => {
     participantProfile,
     getSessionMetadata,
     sessionSavedId,
-    aiAnalysisDelayMs,
-    heuristicAnalysisDelayMs
+    hasGeminiKey
   ]);
 
   if (!hasRealData && !useDummyData) {
     return (
       <div className="flex-center glass-panel" style={{ margin: 'auto', marginTop: '100px', maxWidth: '600px', padding: '40px', textAlign: 'center' }}>
-        <h2>No Assessment Data Found</h2>
-        <p>Please complete the extended assessment to view the HR report.</p>
+        <h2>{isEn ? 'No Assessment Data Found' : 'No se encontraron datos de evaluacion'}</h2>
+        <p>{isEn ? 'Please complete the extended assessment to view the HR report.' : 'Completa la evaluacion extendida para ver el reporte final.'}</p>
         <div style={{ display: 'flex', gap: '16px', marginTop: '20px' }}>
-          <button className="btn" onClick={() => window.location.href = '/'}>Go to Start</button>
+          <button className="btn" onClick={() => window.location.href = '/'}>{isEn ? 'Go to Start' : 'Ir al inicio'}</button>
           <button className="btn" style={{ background: 'rgba(124, 58, 237, 0.1)', color: '#7c3aed', border: '1px solid #7c3aed' }} onClick={() => setUseDummyData(true)}>
-            View Demo Report
+            {isEn ? 'View Demo Report' : 'Ver reporte demo'}
           </button>
         </div>
       </div>
@@ -161,9 +194,11 @@ const Report = () => {
             transition={{ duration: 2, repeat: Infinity, ease: 'linear' }}
             style={{ width: '60px', height: '60px', border: '4px solid rgba(59, 130, 246, 0.2)', borderTop: '4px solid #3b82f6', borderRadius: '50%' }}
           />
-          <h2 className="text-gradient">Analyzing Telemetry Data...</h2>
+          <h2 className="text-gradient">{isEn ? 'Analyzing Telemetry Data...' : 'Analizando telemetria...'}</h2>
           <p style={{ color: '#374151', fontSize: '1.1rem', maxWidth: '400px', lineHeight: '1.6' }}>
-            {useAI ? 'Calling AI model to interpret cognitive patterns...' : 'Processing behavioral metrics...'}
+            {useAI
+              ? (isEn ? 'Calling AI model to interpret cognitive patterns...' : 'Consultando modelo IA para interpretar patrones cognitivos...')
+              : (isEn ? 'Processing behavioral metrics...' : 'Procesando metricas conductuales...')}
           </p>
         </motion.div>
       </div>
@@ -172,6 +207,7 @@ const Report = () => {
 
   // Use AI report if available, otherwise fallback to heuristic
   const report = aiReport || generateHeuristicReport(reportData, 'recruitment');
+  const actionPriorities = buildActionPriorities(report, competencyHighlights);
 
   return (
     <div style={{ width: '100%', minHeight: '100%', padding: '40px', paddingBottom: '80px' }}>
@@ -182,11 +218,15 @@ const Report = () => {
         style={{ maxWidth: '900px', margin: '0 auto', padding: '40px' }}
       >
         <h1 className="text-gradient" style={{ fontSize: '2.5rem', marginBottom: '8px', textAlign: 'center' }}>
-          {report.source === 'gemini' ? 'AI-Powered Skills Assessment' : 'Skills Evaluation Matrix'}
+          {report.source === 'gemini'
+            ? (isEn ? 'AI-Powered Skills Assessment' : 'Evaluacion de habilidades con IA')
+            : (isEn ? 'Skills Evaluation Matrix' : 'Matriz de evaluacion de habilidades')}
         </h1>
         <p style={{ textAlign: 'center', color: '#374151', marginBottom: '40px' }}>
-          {report.source === 'gemini' ? 'Generated by Google Gemini AI' : 'Heuristic-Based Analysis'}
-          {useDummyData && <span style={{ color: '#7c3aed', fontStyle: 'italic' }}> | Demo Data</span>}
+          {report.source === 'gemini'
+            ? (isEn ? 'Generated by Google Gemini AI' : 'Generado por Google Gemini AI')
+            : (isEn ? 'Heuristic-Based Analysis' : 'Analisis basado en heuristicas')}
+          {useDummyData && <span style={{ color: '#7c3aed', fontStyle: 'italic' }}>{isEn ? ' | Demo Data' : ' | Datos demo'}</span>}
         </p>
 
         {participantProfile?.participantId && (
@@ -202,25 +242,81 @@ const Report = () => {
               fontWeight: 600
             }}
           >
-            Participante: {participantProfile.participantId}
+            {isEn ? 'Participant' : 'Participante'}: {participantProfile.participantId}
           </div>
         )}
+
+        <div className="glass-panel-light" style={{ padding: '24px', marginBottom: '32px' }}>
+          <h3 style={{ marginBottom: '14px', color: '#1e1b4b', fontWeight: '700', borderBottom: '1px solid rgba(99,102,241,0.2)', paddingBottom: '8px' }}>
+            {isEn ? 'Executive Capability Snapshot' : 'Resumen ejecutivo de capacidades'}
+          </h3>
+
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(170px, 1fr))', gap: '10px', marginBottom: '18px' }}>
+            <TelemetryStatCard label={isEn ? 'Profile Signal' : 'Senal de perfil'} value={report.recommendation || 'N/A'} />
+            <TelemetryStatCard label={isEn ? 'Confidence' : 'Confianza'} value={report.confidenceScore ? `${report.confidenceScore}%` : 'N/A'} />
+            <TelemetryStatCard label={isEn ? 'Coverage' : 'Cobertura'} value={`${extendedGameRows.filter((row) => typeof row.score === 'number').length}/${GAME_ROWS.length} ${isEn ? 'games' : 'juegos'}`} />
+          </div>
+
+          <div style={{ display: 'grid', gridTemplateColumns: 'minmax(320px, 1.2fr) minmax(240px, 1fr)', gap: '16px', alignItems: 'center' }}>
+            <div style={{ width: '100%', height: 300, background: 'linear-gradient(150deg, rgba(239,246,255,0.75), rgba(250,245,255,0.78))', borderRadius: '14px', border: '1px solid rgba(129,140,248,0.2)', padding: '8px' }}>
+              {isTestEnv ? (
+                <RadarChart width={520} height={280} data={radarProfile} outerRadius="72%">
+                  <PolarGrid stroke="rgba(99,102,241,0.28)" />
+                  <PolarAngleAxis dataKey="axis" tick={{ fill: '#334155', fontSize: 12 }} />
+                  <PolarRadiusAxis domain={[0, 100]} tick={{ fill: '#64748b', fontSize: 11 }} />
+                  <Radar name="Score" dataKey="value" stroke="#4338ca" fill="#6366f1" fillOpacity={0.42} />
+                  <Radar name="Benchmark" dataKey="baseline" stroke="#0ea5e9" fill="#7dd3fc" fillOpacity={0.2} />
+                </RadarChart>
+              ) : (
+                <ResponsiveContainer width="100%" height="100%">
+                  <RadarChart data={radarProfile} outerRadius="72%">
+                    <PolarGrid stroke="rgba(99,102,241,0.28)" />
+                    <PolarAngleAxis dataKey="axis" tick={{ fill: '#334155', fontSize: 12 }} />
+                    <PolarRadiusAxis domain={[0, 100]} tick={{ fill: '#64748b', fontSize: 11 }} />
+                    <Radar name="Score" dataKey="value" stroke="#4338ca" fill="#6366f1" fillOpacity={0.42} />
+                    <Radar name="Benchmark" dataKey="baseline" stroke="#0ea5e9" fill="#7dd3fc" fillOpacity={0.2} />
+                  </RadarChart>
+                </ResponsiveContainer>
+              )}
+            </div>
+
+            <div style={{ display: 'grid', gap: '12px' }}>
+              <div style={{ padding: '12px', borderRadius: '10px', background: 'rgba(16, 185, 129, 0.1)', border: '1px solid rgba(16, 185, 129, 0.25)' }}>
+                <div style={{ fontWeight: 700, color: '#065f46', marginBottom: '6px' }}>{isEn ? 'Top Strengths' : 'Fortalezas principales'}</div>
+                <ul style={{ margin: 0, paddingLeft: '18px', color: '#065f46', lineHeight: '1.55' }}>
+                  {competencyHighlights.top.map((item) => (
+                    <li key={item.axis}>{item.axis} ({item.value})</li>
+                  ))}
+                </ul>
+              </div>
+
+              <div style={{ padding: '12px', borderRadius: '10px', background: 'rgba(245, 158, 11, 0.12)', border: '1px solid rgba(245, 158, 11, 0.25)' }}>
+                <div style={{ fontWeight: 700, color: '#92400e', marginBottom: '6px' }}>{isEn ? 'Development Focus' : 'Foco de desarrollo'}</div>
+                <ul style={{ margin: 0, paddingLeft: '18px', color: '#92400e', lineHeight: '1.55' }}>
+                  {competencyHighlights.watch.map((item) => (
+                    <li key={item.axis}>{item.axis} ({item.value})</li>
+                  ))}
+                </ul>
+              </div>
+            </div>
+          </div>
+        </div>
 
         {/* Extended Results for new battery */}
         <div className="glass-panel-light" style={{ padding: '24px', marginBottom: '32px' }}>
           <h3 style={{ marginBottom: '16px', color: '#1e1b4b', fontWeight: '700', borderBottom: '1px solid rgba(99,102,241,0.2)', paddingBottom: '8px' }}>
-            Integrated Battery Results (Games 1-13)
+            {isEn ? 'Integrated Battery Results (Games 1-13)' : 'Resultados integrados de bateria (juegos 1-13)'}
           </h3>
           <div style={{ overflowX: 'auto' }}>
             <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.92rem' }}>
               <thead>
                 <tr style={{ color: '#374151', textAlign: 'left' }}>
-                  <th style={{ padding: '8px', borderBottom: '1px solid rgba(99,102,241,0.2)' }}>Game</th>
-                  <th style={{ padding: '8px', borderBottom: '1px solid rgba(99,102,241,0.2)' }}>Construct</th>
+                  <th style={{ padding: '8px', borderBottom: '1px solid rgba(99,102,241,0.2)' }}>{isEn ? 'Game' : 'Juego'}</th>
+                  <th style={{ padding: '8px', borderBottom: '1px solid rgba(99,102,241,0.2)' }}>{isEn ? 'Construct' : 'Constructo'}</th>
                   <th style={{ padding: '8px', borderBottom: '1px solid rgba(99,102,241,0.2)' }}>Score</th>
-                  <th style={{ padding: '8px', borderBottom: '1px solid rgba(99,102,241,0.2)' }}>Errors</th>
-                  <th style={{ padding: '8px', borderBottom: '1px solid rgba(99,102,241,0.2)' }}>Duration</th>
-                  <th style={{ padding: '8px', borderBottom: '1px solid rgba(99,102,241,0.2)' }}>Key Metric</th>
+                  <th style={{ padding: '8px', borderBottom: '1px solid rgba(99,102,241,0.2)' }}>{isEn ? 'Errors' : 'Errores'}</th>
+                  <th style={{ padding: '8px', borderBottom: '1px solid rgba(99,102,241,0.2)' }}>{isEn ? 'Duration' : 'Duracion'}</th>
+                  <th style={{ padding: '8px', borderBottom: '1px solid rgba(99,102,241,0.2)' }}>{isEn ? 'Key Metric' : 'Metrica clave'}</th>
                 </tr>
               </thead>
               <tbody>
@@ -249,17 +345,21 @@ const Report = () => {
           border: `2px solid ${getRecommendationColor(report.recommendation)}`
         }}>
           <h2 style={{ color: '#374151', fontSize: '1rem', textTransform: 'uppercase', letterSpacing: '2px' }}>
-            {report.source === 'gemini' ? 'AI Skills and Talent Signal' : 'System Skills and Talent Signal'}
+            {report.source === 'gemini'
+              ? (isEn ? 'AI Skills and Talent Signal' : 'Senal de talento y habilidades por IA')
+              : (isEn ? 'System Skills and Talent Signal' : 'Senal de talento y habilidades del sistema')}
           </h2>
-          <div style={{ color: getRecommendationColor(report.recommendation), fontSize: '2.5rem', fontWeight: 'bold', marginTop: '8px' }}>
-            {report.recommendation}
+          <div style={{ color: '#475569', marginTop: '10px', fontSize: '0.95rem', lineHeight: '1.6' }}>
+            {isEn
+              ? 'This panel summarizes interpretation context. Primary recommendation and confidence are shown once in the executive snapshot to avoid duplication.'
+              : 'Este panel resume el contexto de interpretacion. La recomendacion principal y confianza se muestran una sola vez para evitar duplicacion.'}
           </div>
-          <div style={{ color: '#475569', marginTop: '8px', fontSize: '0.9rem' }}>
-            Development-oriented signal; combine with interviews and role evidence.
+          <div style={{ marginTop: '12px', display: 'inline-flex', alignItems: 'center', gap: '8px', padding: '6px 12px', borderRadius: '999px', background: 'rgba(99,102,241,0.12)', border: '1px solid rgba(99,102,241,0.3)', color: '#3730a3', fontSize: '0.86rem', fontWeight: 600 }}>
+            {isEn ? 'Insight Source' : 'Fuente de insight'}: {insightMeta.mode === 'ai' ? 'ai' : 'heuristic'}
           </div>
-          {report.confidenceScore && (
-            <div style={{ color: '#7c3aed', marginTop: '12px', fontSize: '0.95rem' }}>
-              Confidence Score: <strong>{report.confidenceScore}%</strong>
+          {insightMeta.reason && (
+            <div style={{ marginTop: '8px', color: '#64748b', fontSize: '0.82rem', maxWidth: '760px', marginLeft: 'auto', marginRight: 'auto' }}>
+              {insightMeta.reason}
             </div>
           )}
         </div>
@@ -289,6 +389,11 @@ const Report = () => {
           <h3 style={{ marginBottom: '12px', color: '#1e1b4b', fontWeight: '700', borderBottom: '1px solid rgba(99,102,241,0.2)', paddingBottom: '8px' }}>
             Future Modules (High-Priority Plan) - Beta Scoring
           </h3>
+          {!hasFutureModulesData && (
+            <div style={{ marginBottom: '12px', padding: '10px 12px', borderRadius: '8px', background: 'rgba(14, 165, 233, 0.1)', border: '1px solid rgba(14, 165, 233, 0.25)', color: '#075985', fontSize: '0.9rem' }}>
+              No future-module events were captured in this session yet. Scores remain in beta and will update when module telemetry is available.
+            </div>
+          )}
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: '12px' }}>
             <div style={{ padding: '12px', borderRadius: '8px', border: '1px solid rgba(15,23,42,0.1)' }}>
               <div style={{ fontWeight: 700, color: '#1e293b' }}>Metacognitive Calibration</div>
@@ -348,6 +453,23 @@ const Report = () => {
                 </li>
               ))}
             </ul>
+          </div>
+        </div>
+
+        <div className="glass-panel-light" style={{ padding: '24px', marginBottom: '32px' }}>
+          <h3 style={{ marginBottom: '16px', color: '#1e1b4b', fontWeight: '700', borderBottom: '1px solid rgba(99,102,241,0.2)', paddingBottom: '8px' }}>
+            90-Day Action Priorities
+          </h3>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: '12px' }}>
+            {actionPriorities.map((priority, idx) => (
+              <div key={idx} style={{ padding: '14px', borderRadius: '10px', border: '1px solid rgba(148,163,184,0.28)', background: 'linear-gradient(145deg, rgba(255,255,255,0.96), rgba(244,247,255,0.9))' }}>
+                <div style={{ fontSize: '0.78rem', color: '#6366f1', fontWeight: 700, textTransform: 'uppercase', marginBottom: '4px' }}>
+                  Priority {idx + 1}
+                </div>
+                <div style={{ fontWeight: 700, color: '#0f172a', marginBottom: '4px' }}>{priority.title}</div>
+                <div style={{ color: '#334155', fontSize: '0.9rem', lineHeight: '1.55' }}>{priority.detail}</div>
+              </div>
+            ))}
           </div>
         </div>
 
@@ -619,6 +741,68 @@ function buildTelemetryOverview(data) {
       details: item.snapshot.details || null,
     })),
   };
+}
+
+function buildRadarProfile(data) {
+  const dims = [
+    { axis: 'Memory', keys: ['ospan_game_1', 'game1', 'cmp_meta_8', 'game8', 'cmp_risk_13', 'game13'] },
+    { axis: 'Control', keys: ['sst_game_2', 'game2', 'cmp_social_11', 'game11'] },
+    { axis: 'Agility', keys: ['tsw_game_3', 'game3', 'rsh_game_6', 'game6', 'cmp_agility_10', 'game10'] },
+    { axis: 'Attention', keys: ['cpt_game_4', 'game4', 'cmp_resilience_12', 'game12'] },
+    { axis: 'Decision', keys: ['dec_game_5', 'game5', 'cmp_ops_9', 'game9'] },
+    { axis: 'Judgment', keys: ['sjt_game_7', 'game7'] },
+  ];
+
+  return dims.map((dim) => {
+    const values = dim.keys
+      .map((k) => data?.[k]?.score)
+      .filter((v) => typeof v === 'number' && !Number.isNaN(v));
+
+    const value = values.length
+      ? Math.round(values.reduce((acc, current) => acc + current, 0) / values.length)
+      : 0;
+
+    return {
+      axis: dim.axis,
+      value,
+      baseline: 70,
+    };
+  });
+}
+
+function buildCompetencyHighlights(radarProfile) {
+  const sorted = [...radarProfile].sort((a, b) => b.value - a.value);
+  return {
+    top: sorted.slice(0, 3),
+    watch: [...sorted].reverse().slice(0, 2),
+  };
+}
+
+function buildActionPriorities(report, competencyHighlights) {
+  const top = competencyHighlights.top[0];
+  const watch = competencyHighlights.watch[0];
+  const monitor = report?.areasToMonitor?.[0];
+
+  return [
+    {
+      title: top ? `Scale ${top.axis}` : 'Scale strongest capability',
+      detail: top
+        ? `Use ${top.axis} in high-impact tasks and mentoring flows to maximize current strengths.`
+        : 'Assign stretch tasks aligned with the strongest demonstrated capability.',
+    },
+    {
+      title: watch ? `Coach ${watch.axis}` : 'Targeted development sprint',
+      detail: watch
+        ? `Set a focused coaching cycle for ${watch.axis} with weekly measurable checkpoints.`
+        : 'Run a 4-6 week development plan with practical rehearsal scenarios.',
+    },
+    {
+      title: 'Interview + manager alignment',
+      detail: monitor
+        ? `Probe this signal in interviews and onboarding plan: ${monitor}`
+        : 'Validate development hypotheses with structured behavioral interviews and manager rubric.',
+    },
+  ];
 }
 
 export default Report;

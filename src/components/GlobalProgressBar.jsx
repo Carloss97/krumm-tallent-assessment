@@ -1,9 +1,11 @@
 import React from 'react';
 import { useLocation } from 'react-router-dom';
 import { GAME_FLOW } from '../utils/gameFlow';
+import { useLanguage } from '../context/LanguageContext';
 
 const GlobalProgressBar = () => {
   const location = useLocation();
+  const { language } = useLanguage();
   const path = location.pathname;
 
   // Calculate progress based on route and current game flow.
@@ -21,7 +23,7 @@ const GlobalProgressBar = () => {
   return (
     <div className="header-bar">
       <div style={{ fontWeight: '600', color: '#3730a3', letterSpacing: '1px', fontSize: '0.85rem' }}>
-        ASSESSMENT PROGRESS
+        {language === 'en' ? 'ASSESSMENT PROGRESS' : 'PROGRESO DE EVALUACION'}
       </div>
       <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
         <div className="progress-container">

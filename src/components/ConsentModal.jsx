@@ -1,4 +1,5 @@
 import React, { useState, useCallback } from 'react';
+import { useLanguage } from '../context/LanguageContext';
 import './ConsentModal.css';
 
 /**
@@ -14,11 +15,12 @@ import './ConsentModal.css';
  * - Información clara de propósito
  * - Idioma accesible
  */
-const ConsentModal = ({ isOpen, onConsentsReady, isDemo = false }) => {
+const ConsentModal = ({ isOpen, onConsentsReady, isDemo = false, language: languageFromProps }) => {
+  const { language: globalLanguage, setLanguage } = useLanguage();
   const [cursorConsent, setCursorConsent] = useState(true); // Recomendado por defecto
   const [webcamConsent, setWebcamConsent] = useState(false); // Conservador
   const [hasReadPrivacy, setHasReadPrivacy] = useState(false);
-  const [selectedLanguage, setSelectedLanguage] = useState('es');
+  const selectedLanguage = languageFromProps || globalLanguage || 'es';
   const [permissionError, setPermissionError] = useState('');
 
   const texts = {
@@ -60,7 +62,9 @@ const ConsentModal = ({ isOpen, onConsentsReady, isDemo = false }) => {
 
   const handleConsent = useCallback(async () => {
     if (!hasReadPrivacy && !isDemo) {
-      alert('Por favor, confirma que has leído la política de privacidad.');
+      alert(selectedLanguage === 'en'
+        ? 'Please confirm you have read the privacy policy.'
+        : 'Por favor, confirma que has leido la politica de privacidad.');
       return;
     }
 
@@ -97,13 +101,13 @@ const ConsentModal = ({ isOpen, onConsentsReady, isDemo = false }) => {
           <div className="language-switcher">
             <button 
               className={selectedLanguage === 'es' ? 'active' : ''} 
-              onClick={() => setSelectedLanguage('es')}
+              onClick={() => setLanguage('es')}
             >
               ES
             </button>
             <button 
               className={selectedLanguage === 'en' ? 'active' : ''} 
-              onClick={() => setSelectedLanguage('en')}
+              onClick={() => setLanguage('en')}
             >
               EN
             </button>

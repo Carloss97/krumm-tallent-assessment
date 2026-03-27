@@ -1,6 +1,8 @@
 import React, { useState, useCallback, useMemo, useEffect } from 'react';
 import { useTelemetry } from '../TelemetryContext';
+import { useLanguage } from '../context/LanguageContext';
 import { GAME_FLOW } from '../utils/gameFlow';
+import { getLocalizedGameInstruction } from '../utils/gameFlowI18n';
 import InstructionInterstitial from './InstructionInterstitial';
 import ConsentModal from './ConsentModal';
 import { useWebcamCapture } from '../hooks/useWebcamCapture';
@@ -13,11 +15,13 @@ const GameLayout = ({ gameId, children }) => {
     recordWebcamFrame,
     setConsent,
   } = useTelemetry();
+  const { language } = useLanguage();
   const [showInstructions, setShowInstructions] = useState(true);
   const [isActive, setIsActive] = useState(false);
   const [webcamFallbackNotice, setWebcamFallbackNotice] = useState('');
 
   const gameConfig = GAME_FLOW.find(g => g.id === gameId);
+  const localizedInstruction = useMemo(() => getLocalizedGameInstruction(gameConfig, language), [gameConfig, language]);
   const needsConsent = !isDemo && !consentState.consentTimestamp;
 
   const shouldCaptureWebcam = useMemo(() => {
@@ -37,10 +41,12 @@ const GameLayout = ({ gameId, children }) => {
 
   const handleConsentsReady = useCallback((consents) => {
     if (consents.requestedWebcam && !consents.webcam) {
-      setWebcamFallbackNotice('Webcam no disponible o denegada. Continuando solo con cursor.');
+      setWebcamFallbackNotice(language === 'en'
+        ? 'Webcam not available or denied. Continuing with cursor telemetry only.'
+        : 'Webcam no disponible o denegada. Continuando solo con cursor.');
     }
     setConsent(consents.cursor, consents.webcam);
-  }, [setConsent]);
+  }, [setConsent, language]);
 
   useEffect(() => {
     if (isDemo && !consentState.consentTimestamp) {
@@ -57,7 +63,7 @@ const GameLayout = ({ gameId, children }) => {
   }, [isActive, gameConfig.nextPath]);
 
   if (!gameConfig) {
-    return <div>Error: Game configuration not found for ID {gameId}</div>;
+    return <div>{language === 'en' ? `Error: Game configuration not found for ID ${gameId}` : `Error: configuracion de juego no encontrada para ID ${gameId}`}</div>;
   }
 
   const timeLimit = typeof gameConfig.timeLimit === 'object'
@@ -70,6 +76,7 @@ const GameLayout = ({ gameId, children }) => {
         isOpen={true}
         onConsentsReady={handleConsentsReady}
         isDemo={isDemo}
+        language={language}
       />
     );
   }
@@ -97,10 +104,11 @@ const GameLayout = ({ gameId, children }) => {
           </div>
         )}
         <InstructionInterstitial
-          type={gameConfig.instruction.type}
-          title={gameConfig.instruction.title}
-          description={gameConfig.instruction.description}
+          type={localizedInstruction.type}
+          title={localizedInstruction.title}
+          description={localizedInstruction.description}
           timeLimit={timeLimit === 'None' || timeLimit === 'Timed' ? timeLimit : `${timeLimit}s`}
+          language={language}
           onStart={handleStart}
         />
         <video ref={videoRef} style={{ display: 'none' }} playsInline muted />
@@ -115,6 +123,7 @@ const GameLayout = ({ gameId, children }) => {
         onEndGame: handleEndGame,
         isDemo,
         timeLimit,
+        language,
       })}
       <video ref={videoRef} style={{ display: 'none' }} playsInline muted />
     </>

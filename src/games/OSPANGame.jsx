@@ -17,7 +17,8 @@ import './OSPANGame.css';
  * - Niveles: Set sizes 3, 4, 5, 6 (3 trials cada uno)
  * - Scoring: Recall accuracy + Operation accuracy + WM span final
  */
-const OSPANGame = ({ isActive, onEndGame, isDemo, timeLimit }) => {
+const OSPANGame = ({ isActive, onEndGame, isDemo, timeLimit, language = 'es' }) => {
+  const isEn = language === 'en';
   const { startTracking, stopTracking, recordError, recordTrialEvent, getConsent } = useTelemetry();
 
   const [gameState, setGameState] = useState('initializing'); // initializing, instruction, operationPhase, letterPhase, recallPhase, ended
@@ -234,16 +235,16 @@ const OSPANGame = ({ isActive, onEndGame, isDemo, timeLimit }) => {
     return (
       <div className="ospan-container">
         <div className="game-instruction">
-          <h2>Memoria de Trabajo - OSPAN</h2>
-          <p>Deberás:</p>
+          <h2>{isEn ? 'Working Memory - OSPAN' : 'Memoria de Trabajo - OSPAN'}</h2>
+          <p>{isEn ? 'You will:' : 'Deberas:'}</p>
           <ol>
-            <li>Responder <strong>Verdadero/Falso</strong> a operaciones matemáticas</li>
-            <li>Después, <strong>memorizar una letra</strong></li>
-            <li>Este ciclo se repite, aumentando en complejidad</li>
-            <li>Cuando terminen los ciclos, <strong>recuerda todas las letras</strong> en orden</li>
+            <li>{isEn ? 'Answer ' : 'Responder '}<strong>{isEn ? 'True/False' : 'Verdadero/Falso'}</strong>{isEn ? ' to math operations' : ' a operaciones matematicas'}</li>
+            <li>{isEn ? 'Then ' : 'Despues, '}<strong>{isEn ? 'memorize a letter' : 'memorizar una letra'}</strong></li>
+            <li>{isEn ? 'This cycle repeats with increasing complexity' : 'Este ciclo se repite, aumentando en complejidad'}</li>
+            <li>{isEn ? 'When cycles finish, ' : 'Cuando terminen los ciclos, '}<strong>{isEn ? 'recall all letters' : 'recuerda todas las letras'}</strong>{isEn ? ' in order' : ' en orden'}</li>
           </ol>
-          <p><strong>Objetivo:</strong> Equilibra velocidad y precisión. Solo tienes pocos segundos para cada fase.</p>
-          <button onClick={startFirstTrial} className="btn-start">Comenzar</button>
+          <p><strong>{isEn ? 'Goal:' : 'Objetivo:'}</strong> {isEn ? 'Balance speed and accuracy. You only have a few seconds for each phase.' : 'Equilibra velocidad y precision. Solo tienes pocos segundos para cada fase.'}</p>
+          <button onClick={startFirstTrial} className="btn-start">{isEn ? 'Start' : 'Comenzar'}</button>
         </div>
       </div>
     );
@@ -260,13 +261,13 @@ const OSPANGame = ({ isActive, onEndGame, isDemo, timeLimit }) => {
           <div className="operation-phase">
             <p className="operation-display">{operation}</p>
             <div className="operation-buttons">
-              <button onClick={() => handleOperationResponse('true')} className="btn btn-true">Verdadero</button>
-              <button onClick={() => handleOperationResponse('false')} className="btn btn-false">Falso</button>
+              <button onClick={() => handleOperationResponse('true')} className="btn btn-true">{isEn ? 'True' : 'Verdadero'}</button>
+              <button onClick={() => handleOperationResponse('false')} className="btn btn-false">{isEn ? 'False' : 'Falso'}</button>
             </div>
           </div>
 
           <div className="progress-info">
-            <span>Set {setSize} / Trial {currentTrial + 1} de {setSize}</span>
+            <span>Set {setSize} / Trial {currentTrial + 1} {isEn ? 'of' : 'de'} {setSize}</span>
           </div>
         </div>
       </div>
@@ -290,12 +291,12 @@ const OSPANGame = ({ isActive, onEndGame, isDemo, timeLimit }) => {
             >
               {currentLetter}
             </motion.div>
-            <p className="instruction">Memoriza esta letra</p>
-            <button onClick={handleLetterConfirm} className="btn btn-confirm">Continuar</button>
+            <p className="instruction">{isEn ? 'Memorize this letter' : 'Memoriza esta letra'}</p>
+            <button onClick={handleLetterConfirm} className="btn btn-confirm">{isEn ? 'Continue' : 'Continuar'}</button>
           </div>
 
           <div className="progress-info">
-            <span>Memorizadas: {lettersToRecall.length > 0 ? lettersToRecall[lettersToRecall.length - 1].length : 0}</span>
+            <span>{isEn ? 'Memorized' : 'Memorizadas'}: {lettersToRecall.length > 0 ? lettersToRecall[lettersToRecall.length - 1].length : 0}</span>
           </div>
         </div>
       </div>
@@ -306,7 +307,7 @@ const OSPANGame = ({ isActive, onEndGame, isDemo, timeLimit }) => {
     return (
       <div className="ospan-container">
         <div className="recall-phase">
-          <h3>Recall - Escribe las letras en orden</h3>
+          <h3>{isEn ? 'Recall - Enter letters in order' : 'Recall - Escribe las letras en orden'}</h3>
           <div className="letter-grid">
             {['B', 'C', 'D', 'F', 'G', 'H', 'J', 'K', 'L', 'M', 'N', 'P', 'R', 'S', 'T', 'V', 'W', 'X', 'Y', 'Z'].map(letter => (
               <button key={letter} className="btn-recall" onClick={() => setRecallSequence([...recallSequence, letter])}>
@@ -314,9 +315,9 @@ const OSPANGame = ({ isActive, onEndGame, isDemo, timeLimit }) => {
               </button>
             ))}
           </div>
-          <p className="recalled-sequence">Recordadas: {recallSequence.join(' ')}</p>
-          <button onClick={() => handleRecallResponse(recallSequence)} className="btn btn-submit">Confirmar</button>
-          <button onClick={() => setRecallSequence(recallSequence.slice(0, -1))} className="btn btn-delete">Borrar última</button>
+          <p className="recalled-sequence">{isEn ? 'Recalled' : 'Recordadas'}: {recallSequence.join(' ')}</p>
+          <button onClick={() => handleRecallResponse(recallSequence)} className="btn btn-submit">{isEn ? 'Confirm' : 'Confirmar'}</button>
+          <button onClick={() => setRecallSequence(recallSequence.slice(0, -1))} className="btn btn-delete">{isEn ? 'Delete last' : 'Borrar ultima'}</button>
         </div>
       </div>
     );
@@ -324,7 +325,7 @@ const OSPANGame = ({ isActive, onEndGame, isDemo, timeLimit }) => {
 
   return (
     <div className="ospan-container">
-      <p>Game ended.</p>
+      <p>{isEn ? 'Game ended.' : 'Juego finalizado.'}</p>
     </div>
   );
 };

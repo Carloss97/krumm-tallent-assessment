@@ -1,15 +1,35 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { ChevronRight, FlaskConical, Globe, Radar, ShieldCheck, Sparkles, UserRoundCog } from 'lucide-react';
+import {
+  BarChart3,
+  Brain,
+  CheckCircle2,
+  ChevronRight,
+  FlaskConical,
+  Globe,
+  LineChart,
+  Lock,
+  Radar,
+  ShieldCheck,
+  Sparkles,
+  Target,
+  TrendingUp,
+  UserRoundCog,
+  Users,
+  Zap
+} from 'lucide-react';
 import { useTelemetry } from '../TelemetryContext';
+import { useLanguage } from '../context/LanguageContext';
 import { authenticateParticipant } from '../services/backendService';
 import { GAME_FLOW } from '../utils/gameFlow';
+import { getLocalizedGameInstruction } from '../utils/gameFlowI18n';
 import logo from '../assets/logo.jpg';
 import './LandingPageV3.css';
 
 const capabilityAreas = [
   {
+    icon: Brain,
     title: {
       es: 'Capacidad atencional y control inhibitorio',
       en: 'Attentional capacity and inhibitory control'
@@ -20,6 +40,7 @@ const capabilityAreas = [
     }
   },
   {
+    icon: BarChart3,
     title: {
       es: 'Memoria de trabajo y destreza operativa',
       en: 'Working memory and operational dexterity'
@@ -30,6 +51,7 @@ const capabilityAreas = [
     }
   },
   {
+    icon: TrendingUp,
     title: {
       es: 'Adaptación y aprendizaje',
       en: 'Adaptation and learning'
@@ -40,6 +62,7 @@ const capabilityAreas = [
     }
   },
   {
+    icon: Target,
     title: {
       es: 'Juicio y riesgo en incertidumbre',
       en: 'Judgment and risk under uncertainty'
@@ -100,6 +123,7 @@ const differentiators = [
 
 const projectSignals = [
   {
+    icon: TrendingUp,
     title: {
       es: 'Resultados que escalan',
       en: 'Results that scale'
@@ -110,6 +134,7 @@ const projectSignals = [
     }
   },
   {
+    icon: CheckCircle2,
     title: {
       es: 'Evidencia que se entiende rápido',
       en: 'Evidence that is quickly understood'
@@ -120,6 +145,7 @@ const projectSignals = [
     }
   },
   {
+    icon: Sparkles,
     title: {
       es: 'Innovación aplicable',
       en: 'Applied innovation'
@@ -130,6 +156,7 @@ const projectSignals = [
     }
   },
   {
+    icon: LineChart,
     title: {
       es: 'Valor visible desde el piloto',
       en: 'Visible value from pilot stage'
@@ -137,6 +164,110 @@ const projectSignals = [
     text: {
       es: 'Métricas de finalización, consistencia y calidad de señal para justificar expansión.',
       en: 'Completion, consistency, and signal quality metrics to justify expansion.'
+    }
+  }
+];
+
+const onePagerCategories = [
+  {
+    icon: Brain,
+    title: { es: 'Ciencia cognitiva', en: 'Cognitive science' },
+    subtitle: { es: 'Fundamento técnico', en: 'Technical foundation' },
+    points: {
+      es: ['Modelos psicométricos validados', 'Señales cognitivas observables'],
+      en: ['Validated psychometric models', 'Observable cognitive signals']
+    }
+  },
+  {
+    icon: BarChart3,
+    title: { es: 'Analítica conductual', en: 'Behavioral analytics' },
+    subtitle: { es: 'Señal accionable', en: 'Actionable signal' },
+    points: {
+      es: ['Telemetría en tiempo real', 'Reportes listos para decidir'],
+      en: ['Real-time telemetry', 'Decision-ready reporting']
+    }
+  },
+  {
+    icon: Lock,
+    title: { es: 'Privacidad y seguridad', en: 'Privacy and security' },
+    subtitle: { es: 'Confianza operativa', en: 'Operational trust' },
+    points: {
+      es: ['Sin perfilamiento invasivo', 'Protección de datos por diseño'],
+      en: ['No invasive profiling', 'Privacy-by-design protection']
+    }
+  },
+  {
+    icon: Zap,
+    title: { es: 'Experiencia gamificada', en: 'Gamified experience' },
+    subtitle: { es: 'Mayor finalización', en: 'Higher completion' },
+    points: {
+      es: ['Interfaz dinámica y simple', 'Flujo continuo de evaluación'],
+      en: ['Dynamic and simple interface', 'Continuous assessment flow']
+    }
+  }
+];
+
+const processSteps = [
+  {
+    number: '01',
+    icon: ShieldCheck,
+    title: { es: 'Acceso seguro', en: 'Secure access' },
+    text: {
+      es: 'Inicio con credenciales o demostración, manteniendo trazabilidad desde el primer evento.',
+      en: 'Start with credentials or guided demo while preserving traceability from the first event.'
+    }
+  },
+  {
+    number: '02',
+    icon: Brain,
+    title: { es: 'Batería de evaluación', en: 'Assessment battery' },
+    text: {
+      es: 'Retos conectados que miden desempeño en memoria, atención, adaptación y toma de decisión.',
+      en: 'Connected challenges that measure performance in memory, attention, adaptation, and decision-making.'
+    }
+  },
+  {
+    number: '03',
+    icon: LineChart,
+    title: { es: 'Informe accionable', en: 'Actionable report' },
+    text: {
+      es: 'Resultados sintetizados en señales claras para selección, desarrollo y movilidad interna.',
+      en: 'Results synthesized into clear signals for selection, development, and internal mobility.'
+    }
+  }
+];
+
+const useCases = [
+  {
+    icon: Target,
+    title: { es: 'Selección técnica', en: 'Technical selection' },
+    text: {
+      es: 'Compara evidencia de desempeño entre candidatos con criterios homogéneos.',
+      en: 'Compare performance evidence between candidates using homogeneous criteria.'
+    }
+  },
+  {
+    icon: TrendingUp,
+    title: { es: 'Desarrollo profesional', en: 'Professional development' },
+    text: {
+      es: 'Detecta oportunidades de crecimiento y entrenamiento focalizado.',
+      en: 'Detect growth opportunities and targeted training paths.'
+    }
+  },
+  {
+    icon: Users,
+    title: { es: 'Movilidad interna', en: 'Internal mobility' },
+    text: {
+      es: 'Apoya decisiones de promoción y rotación con datos comparables.',
+      en: 'Support promotion and rotation decisions with comparable data.'
+    }
+  },
+  {
+    icon: LineChart,
+    title: { es: 'Benchmarking', en: 'Benchmarking' },
+    text: {
+      es: 'Monitorea consistencia y evolución de talento entre cohortes.',
+      en: 'Track consistency and talent evolution across cohorts.'
     }
   }
 ];
@@ -174,7 +305,7 @@ const copy = {
     capabilitiesIntro: 'De memoria y atención hasta riesgo, aprendizaje y coordinación social.',
     signalsTitle: 'Señales de tracción y valor',
     signalsIntro:
-      'Una propuesta diseñada para llamar la atención de revisores exigentes: impacto medible, evidencia comprensible y escalabilidad real.',
+      'Impacto medible, evidencia comprensible y escalabilidad real.',
     devTitle: 'Accesos rápidos de desarrollo',
     devIntro: 'Entrar directo a cada juego integrado y al reporte final.',
     gameLabel: 'Juego',
@@ -213,7 +344,7 @@ const copy = {
     capabilitiesIntro: 'From memory and attention to risk, learning, and social coordination.',
     signalsTitle: 'Traction and value signals',
     signalsIntro:
-      'A proposal built to stand out to demanding reviewers: measurable impact, understandable evidence, and real scalability.',
+      'Measurable impact, understandable evidence, and real scalability.',
     devTitle: 'Development quick access',
     devIntro: 'Jump directly to each integrated game and final report.',
     gameLabel: 'Game',
@@ -229,7 +360,7 @@ const LandingPageV3 = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [authError, setAuthError] = useState('');
   const [showForm, setShowForm] = useState(false);
-  const [language, setLanguage] = useState(() => localStorage.getItem('krumm-lang') || 'es');
+  const { language, setLanguage } = useLanguage();
   const [formData, setFormData] = useState({
     fullName: '',
     participantId: '',
@@ -241,10 +372,6 @@ const LandingPageV3 = () => {
   const t = copy[language] || copy.es;
 
   const totalGames = useMemo(() => GAME_FLOW.length, []);
-
-  useEffect(() => {
-    localStorage.setItem('krumm-lang', language);
-  }, [language]);
 
   const handleChange = (event) => {
     const { name, value } = event.target;
@@ -426,21 +553,6 @@ const LandingPageV3 = () => {
               <ChevronRight size={16} aria-hidden="true" />
             </button>
           </div>
-
-          <div className="lv3-stats">
-            <article>
-              <strong>{totalGames}</strong>
-              <span>{t.statChallenges}</span>
-            </article>
-            <article>
-              <strong>{t.statParticipationTitle}</strong>
-              <span>{t.statParticipationText}</span>
-            </article>
-            <article>
-              <strong>{t.statReportsTitle}</strong>
-              <span>{t.statReportsText}</span>
-            </article>
-          </div>
         </motion.div>
       </header>
 
@@ -521,49 +633,129 @@ const LandingPageV3 = () => {
         </motion.section>
       )}
 
-      <section className="lv3-section lv3-diff">
+      <section className="lv3-section lv3-categories">
         <div className="lv3-container">
-          <h2>{t.diffTitle}</h2>
-          <div className="lv3-diff-grid">
-            {differentiators.map((item) => (
-              <article key={item.label.es} className="lv3-diff-card">
-                <h3>
-                  <item.icon size={18} aria-hidden="true" />
-                  <span>{item.label[language]}</span>
-                </h3>
-                <p>{item.text[language]}</p>
-              </article>
-            ))}
+          <div className="lv3-panel">
+            <div className="lv3-section-head">
+              <h2 className="lv3-section-title"><Radar size={20} aria-hidden="true" /> <span>{t.diffTitle}</span></h2>
+              <p>{language === 'es' ? 'Categorías clave con señal clara para equipos de personas.' : 'Key categories with clear signal for people teams.'}</p>
+            </div>
+            <div className="lv3-cat-grid">
+              {onePagerCategories.map((item) => (
+                <article key={item.title.es} className="lv3-cat-card">
+                  <div className="lv3-cat-top">
+                    <span className="lv3-cat-icon"><item.icon size={19} aria-hidden="true" /></span>
+                    <div>
+                      <h3>{item.title[language]}</h3>
+                      <p className="lv3-cat-subtitle">{item.subtitle[language]}</p>
+                    </div>
+                  </div>
+                  <ul className="lv3-point-list">
+                    {item.points[language].map((point) => (
+                      <li key={point}>
+                        <CheckCircle2 size={15} aria-hidden="true" />
+                        <span>{point}</span>
+                      </li>
+                    ))}
+                  </ul>
+                </article>
+              ))}
+            </div>
           </div>
         </div>
       </section>
 
       <section className="lv3-section lv3-capabilities">
         <div className="lv3-container">
-          <h2>{t.capabilitiesTitle}</h2>
-          <p className="lv3-intro">{t.capabilitiesIntro}</p>
-          <div className="lv3-cap-grid">
-            {capabilityAreas.map((area) => (
-              <article key={area.title.es} className="lv3-cap-card">
-                <h3>{area.title[language]}</h3>
-                <p>{area.detail[language]}</p>
-              </article>
-            ))}
+          <div className="lv3-panel">
+            <div className="lv3-section-head">
+              <h2 className="lv3-section-title"><Brain size={20} aria-hidden="true" /> <span>{t.capabilitiesTitle}</span></h2>
+              <p>{t.capabilitiesIntro}</p>
+            </div>
+            <div className="lv3-cap-grid">
+              {capabilityAreas.map((area) => (
+                <article key={area.title.es} className="lv3-cap-card">
+                  <h3>
+                    <area.icon size={18} aria-hidden="true" />
+                    <span>{area.title[language]}</span>
+                  </h3>
+                  <p>{area.detail[language]}</p>
+                </article>
+              ))}
+            </div>
           </div>
         </div>
       </section>
 
       <section className="lv3-section lv3-project-signals">
         <div className="lv3-container">
-          <h2>{t.signalsTitle}</h2>
-          <p className="lv3-intro">{t.signalsIntro}</p>
-          <div className="lv3-signal-grid">
-            {projectSignals.map((signal) => (
-              <article key={signal.title.es} className="lv3-signal-card">
-                <h3>{signal.title[language]}</h3>
-                <p>{signal.text[language]}</p>
-              </article>
-            ))}
+          <div className="lv3-panel">
+            <div className="lv3-section-head">
+              <h2 className="lv3-section-title"><TrendingUp size={20} aria-hidden="true" /> <span>{t.signalsTitle}</span></h2>
+              <p>{t.signalsIntro}</p>
+            </div>
+            <div className="lv3-signal-grid">
+              {projectSignals.map((signal) => (
+                <article key={signal.title.es} className="lv3-signal-card">
+                  <h3>
+                    <signal.icon size={18} aria-hidden="true" />
+                    <span>{signal.title[language]}</span>
+                  </h3>
+                  <p>{signal.text[language]}</p>
+                </article>
+              ))}
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section className="lv3-section lv3-process">
+        <div className="lv3-container">
+          <div className="lv3-panel">
+            <div className="lv3-section-head">
+              <h2 className="lv3-section-title"><FlaskConical size={20} aria-hidden="true" /> <span>{language === 'es' ? 'Cómo funciona' : 'How it works'}</span></h2>
+              <p>
+                {language === 'es'
+                  ? 'Un flujo simple, medible y fácil de operar para equipos de talento.'
+                  : 'A simple, measurable, and easy-to-operate flow for talent teams.'}
+              </p>
+            </div>
+            <div className="lv3-process-grid">
+              {processSteps.map((step) => (
+                <article key={step.number} className="lv3-process-card">
+                  <span className="lv3-step-number">{step.number}</span>
+                  <h3>
+                    <step.icon size={18} aria-hidden="true" />
+                    <span>{step.title[language]}</span>
+                  </h3>
+                  <p>{step.text[language]}</p>
+                </article>
+              ))}
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section className="lv3-section lv3-usecases">
+        <div className="lv3-container">
+          <div className="lv3-panel">
+            <div className="lv3-section-head">
+              <h2 className="lv3-section-title"><Users size={20} aria-hidden="true" /> <span>{language === 'es' ? 'Casos de uso' : 'Use cases'}</span></h2>
+              <p>
+                {language === 'es'
+                  ? 'Aplicaciones concretas para selección, desarrollo y estrategia de talento.'
+                  : 'Concrete applications for selection, development, and talent strategy.'}
+              </p>
+            </div>
+            <div className="lv3-usecase-grid">
+              {useCases.map((item) => (
+                <article key={item.title.es} className="lv3-usecase-card">
+                  <item.icon size={20} aria-hidden="true" />
+                  <h3>{item.title[language]}</h3>
+                  <p>{item.text[language]}</p>
+                </article>
+              ))}
+            </div>
           </div>
         </div>
       </section>
@@ -580,7 +772,7 @@ const LandingPageV3 = () => {
                   className="lv3-dev-btn"
                   onClick={() => handleQuickGoToGame(game.path)}
                 >
-                  {`${t.gameLabel} ${game.id}: ${game.instruction?.title || t.fallbackEval}`}
+                  {`${t.gameLabel} ${game.id}: ${getLocalizedGameInstruction(game, language).title || t.fallbackEval}`}
                 </button>
               ))}
               <button className="lv3-dev-btn lv3-dev-report" onClick={handleQuickGoToReport}>

@@ -7,7 +7,8 @@ import './HRRHGames.css';
  * Stop-Signal Task (SST) - Inhibición
  * Mide capacidad de inhibir respuesta motora
  */
-export const StopSignalGame = ({ isActive, onEndGame, isDemo, timeLimit }) => {
+export const StopSignalGame = ({ isActive, onEndGame, isDemo, timeLimit, language = 'es' }) => {
+  const isEn = language === 'en';
   const { startTracking, stopTracking, recordError, recordTrialEvent } = useTelemetry();
   const [gameState, setGameState] = useState('instruction');
   const [trial, setTrial] = useState(1);
@@ -76,9 +77,9 @@ export const StopSignalGame = ({ isActive, onEndGame, isDemo, timeLimit }) => {
       <div className="hrrh-game-container">
         <div className="game-instruction-box">
           <h2>Stop-Signal Task</h2>
-          <p>Presiona rápido cuando veas <strong>VERDE</strong></p>
-          <p>NO presiones cuando veas <strong>ROJO</strong></p>
-          <button onClick={() => setGameState('running')} className="btn-start">Comenzar</button>
+          <p>{isEn ? 'Press quickly when you see ' : 'Presiona rapido cuando veas '}<strong>{isEn ? 'GREEN' : 'VERDE'}</strong></p>
+          <p>{isEn ? 'Do NOT press when you see ' : 'NO presiones cuando veas '}<strong>{isEn ? 'RED' : 'ROJO'}</strong></p>
+          <button onClick={() => setGameState('running')} className="btn-start">{isEn ? 'Start' : 'Comenzar'}</button>
         </div>
       </div>
     );
@@ -89,16 +90,16 @@ export const StopSignalGame = ({ isActive, onEndGame, isDemo, timeLimit }) => {
   return (
     <div className="hrrh-game-container">
       <div className="game-state-box">
-        <h3>Trial {trial} de {MAX_TRIALS}</h3>
+        <h3>{isEn ? 'Trial' : 'Trial'} {trial} {isEn ? 'of' : 'de'} {MAX_TRIALS}</h3>
         <div className={`signal ${isStopTrial ? 'stop' : 'go'}`}>
           {isStopTrial ? 'STOP' : 'GO'}
         </div>
         <div className="buttons-group">
-          {!isStopTrial && <button onClick={handleGoClick} className="btn btn-go">Presionar</button>}
-          {isStopTrial && <button onClick={handleStopClick} className="btn btn-stop">Inhibir</button>}
-          <button onClick={handleError} className="btn btn-error">Error</button>
+          {!isStopTrial && <button onClick={handleGoClick} className="btn btn-go">{isEn ? 'Press' : 'Presionar'}</button>}
+          {isStopTrial && <button onClick={handleStopClick} className="btn btn-stop">{isEn ? 'Inhibit' : 'Inhibir'}</button>}
+          <button onClick={handleError} className="btn btn-error">{isEn ? 'Error' : 'Error'}</button>
         </div>
-        <p className="score">Score: {score} | Correctos: {correctGo + correctStop}</p>
+        <p className="score">Score: {score} | {isEn ? 'Correct' : 'Correctos'}: {correctGo + correctStop}</p>
       </div>
     </div>
   );
@@ -107,7 +108,8 @@ export const StopSignalGame = ({ isActive, onEndGame, isDemo, timeLimit }) => {
 /**
  * Task Switching - Flexibilidad Cognitiva
  */
-export const TaskSwitchingGame = ({ isActive, onEndGame, isDemo, timeLimit }) => {
+export const TaskSwitchingGame = ({ isActive, onEndGame, isDemo, timeLimit, language = 'es' }) => {
+  const isEn = language === 'en';
   const { startTracking, stopTracking, recordError } = useTelemetry();
   const [gameState, setGameState] = useState('instruction');
   const [score, setScore] = useState(0);
@@ -160,9 +162,9 @@ export const TaskSwitchingGame = ({ isActive, onEndGame, isDemo, timeLimit }) =>
       <div className="hrrh-game-container">
         <div className="game-instruction-box">
           <h2>Task Switching</h2>
-          <p>Alterna entre clasificar por <strong>COLOR</strong> o <strong>FORMA</strong></p>
-          <p>La regla cambiará periodicamente sin aviso</p>
-          <button onClick={() => setGameState('running')} className="btn-start">Comenzar</button>
+          <p>{isEn ? 'Alternate between ' : 'Alterna entre clasificar por '}<strong>{isEn ? 'COLOR' : 'COLOR'}</strong>{isEn ? ' or ' : ' o '}<strong>{isEn ? 'SHAPE' : 'FORMA'}</strong></p>
+          <p>{isEn ? 'The rule changes periodically without notice' : 'La regla cambiara periodicamente sin aviso'}</p>
+          <button onClick={() => setGameState('running')} className="btn-start">{isEn ? 'Start' : 'Comenzar'}</button>
         </div>
       </div>
     );
@@ -171,13 +173,13 @@ export const TaskSwitchingGame = ({ isActive, onEndGame, isDemo, timeLimit }) =>
   return (
     <div className="hrrh-game-container">
       <div className="game-state-box">
-        <h3>Trial {trial} de {MAX_TRIALS}</h3>
+        <h3>{isEn ? 'Trial' : 'Trial'} {trial} {isEn ? 'of' : 'de'} {MAX_TRIALS}</h3>
         <div className="task-display">
-          <p className="rule">{trial % 2 === 0 ? 'COLOR:' : 'FORMA:'}</p>
-          <div className="stimulus">◆ ROJO</div>
+          <p className="rule">{trial % 2 === 0 ? 'COLOR:' : (isEn ? 'SHAPE:' : 'FORMA:')}</p>
+          <div className="stimulus">◆ {isEn ? 'RED' : 'ROJO'}</div>
         </div>
         <div className="buttons-group">
-          <button onClick={handleResponse} className="btn btn-correct">Respuesta</button>
+          <button onClick={handleResponse} className="btn btn-correct">{isEn ? 'Answer' : 'Respuesta'}</button>
           <button onClick={handleError} className="btn btn-error">Error</button>
         </div>
         <p className="score">Score: {score}</p>
@@ -189,7 +191,8 @@ export const TaskSwitchingGame = ({ isActive, onEndGame, isDemo, timeLimit }) =>
 /**
  * CPT Corto - Atención Sostenida
  */
-export const CPTGame = ({ isActive, onEndGame, isDemo, timeLimit }) => {
+export const CPTGame = ({ isActive, onEndGame, isDemo, timeLimit, language = 'es' }) => {
+  const isEn = language === 'en';
   const { startTracking, stopTracking, recordError } = useTelemetry();
   const [gameState, setGameState] = useState('instruction');
   const [score, setScore] = useState(0);
@@ -242,9 +245,9 @@ export const CPTGame = ({ isActive, onEndGame, isDemo, timeLimit }) => {
       <div className="hrrh-game-container">
         <div className="game-instruction-box">
           <h2>Continuous Performance Test</h2>
-          <p>Presiona cuando vea la letra X</p>
-          <p>Mantén la atención durante toda la prueba</p>
-          <button onClick={() => setGameState('running')} className="btn-start">Comenzar</button>
+          <p>{isEn ? 'Press when you see the letter X' : 'Presiona cuando vea la letra X'}</p>
+          <p>{isEn ? 'Maintain attention throughout the task' : 'Manten la atencion durante toda la prueba'}</p>
+          <button onClick={() => setGameState('running')} className="btn-start">{isEn ? 'Start' : 'Comenzar'}</button>
         </div>
       </div>
     );
@@ -255,15 +258,15 @@ export const CPTGame = ({ isActive, onEndGame, isDemo, timeLimit }) => {
   return (
     <div className="hrrh-game-container">
       <div className="game-state-box">
-        <h3>Bloque {block} de {MAX_BLOCKS}</h3>
+        <h3>{isEn ? 'Block' : 'Bloque'} {block} {isEn ? 'of' : 'de'} {MAX_BLOCKS}</h3>
         <div className="letter-stimulus">
           {letters[Math.floor(Math.random() * letters.length)]}
         </div>
         <div className="buttons-group">
-          <button onClick={handleResponse} className="btn btn-correct">Veo X</button>
-          <button onClick={handleError} className="btn btn-error">No es X</button>
+          <button onClick={handleResponse} className="btn btn-correct">{isEn ? 'I see X' : 'Veo X'}</button>
+          <button onClick={handleError} className="btn btn-error">{isEn ? 'Not X' : 'No es X'}</button>
         </div>
-        <p className="score">Score: {score} | Errores: {errors}</p>
+        <p className="score">Score: {score} | {isEn ? 'Errors' : 'Errores'}: {errors}</p>
       </div>
     </div>
   );
@@ -272,7 +275,8 @@ export const CPTGame = ({ isActive, onEndGame, isDemo, timeLimit }) => {
 /**
  * Decision Under Time Pressure
  */
-export const DecisionGameHTMX = ({ isActive, onEndGame, isDemo, timeLimit }) => {
+export const DecisionGameHTMX = ({ isActive, onEndGame, isDemo, timeLimit, language = 'es' }) => {
+  const isEn = language === 'en';
   const { startTracking, stopTracking } = useTelemetry();
   const [gameState, setGameState] = useState('instruction');
   const [score, setScore] = useState(0);
@@ -315,9 +319,9 @@ export const DecisionGameHTMX = ({ isActive, onEndGame, isDemo, timeLimit }) => 
       <div className="hrrh-game-container">
         <div className="game-instruction-box">
           <h2>Decision Making Under Pressure</h2>
-          <p>Toma decisiones rápidas sobre escenarios laborales</p>
-          <p>El tiempo se reduce en cada ronda</p>
-          <button onClick={() => setGameState('running')} className="btn-start">Comenzar</button>
+          <p>{isEn ? 'Make fast decisions in work scenarios' : 'Toma decisiones rapidas sobre escenarios laborales'}</p>
+          <p>{isEn ? 'Time windows shrink each round' : 'El tiempo se reduce en cada ronda'}</p>
+          <button onClick={() => setGameState('running')} className="btn-start">{isEn ? 'Start' : 'Comenzar'}</button>
         </div>
       </div>
     );
@@ -326,14 +330,14 @@ export const DecisionGameHTMX = ({ isActive, onEndGame, isDemo, timeLimit }) => 
   return (
     <div className="hrrh-game-container">
       <div className="game-state-box">
-        <h3>Escenario {scenario} de {MAX_SCENARIOS}</h3>
+        <h3>{isEn ? 'Scenario' : 'Escenario'} {scenario} {isEn ? 'of' : 'de'} {MAX_SCENARIOS}</h3>
         <div className="scenario-box">
-          <p>Un miembro del equipo no comparte información importante...</p>
+          <p>{isEn ? 'A team member is not sharing important information...' : 'Un miembro del equipo no comparte informacion importante...'}</p>
         </div>
         <div className="buttons-group">
-          <button onClick={handleDecision} className="btn btn-option">Opción A</button>
-          <button onClick={handleDecision} className="btn btn-option">Opción B</button>
-          <button onClick={handleDecision} className="btn btn-option">Opción C</button>
+          <button onClick={handleDecision} className="btn btn-option">{isEn ? 'Option A' : 'Opcion A'}</button>
+          <button onClick={handleDecision} className="btn btn-option">{isEn ? 'Option B' : 'Opcion B'}</button>
+          <button onClick={handleDecision} className="btn btn-option">{isEn ? 'Option C' : 'Opcion C'}</button>
         </div>
         <p className="score">Score: {score}</p>
       </div>
@@ -344,7 +348,8 @@ export const DecisionGameHTMX = ({ isActive, onEndGame, isDemo, timeLimit }) => 
 /**
  * Rule Shift + Exceptions
  */
-export const RuleShiftGame = ({ isActive, onEndGame, isDemo, timeLimit }) => {
+export const RuleShiftGame = ({ isActive, onEndGame, isDemo, timeLimit, language = 'es' }) => {
+  const isEn = language === 'en';
   const { startTracking, stopTracking, recordError } = useTelemetry();
   const [gameState, setGameState] = useState('instruction');
   const [block, setBlock] = useState(1); // 1: Learning, 2: Shift, 3: Exceptions
@@ -390,10 +395,10 @@ export const RuleShiftGame = ({ isActive, onEndGame, isDemo, timeLimit }) => {
       <div className="hrrh-game-container">
         <div className="game-instruction-box">
           <h2>Rule Shift + Exceptions</h2>
-          <p>Aprende a clasificar con una regla</p>
-          <p>La regla cambiará, deberás adaptarte</p>
-          <p>Luego habrá excepciones a la regla</p>
-          <button onClick={() => setGameState('running')} className="btn-start">Comenzar</button>
+          <p>{isEn ? 'Learn to classify with a rule' : 'Aprende a clasificar con una regla'}</p>
+          <p>{isEn ? 'The rule will change and you must adapt' : 'La regla cambiara, deberas adaptarte'}</p>
+          <p>{isEn ? 'Then exceptions will appear' : 'Luego habra excepciones a la regla'}</p>
+          <button onClick={() => setGameState('running')} className="btn-start">{isEn ? 'Start' : 'Comenzar'}</button>
         </div>
       </div>
     );
@@ -402,15 +407,15 @@ export const RuleShiftGame = ({ isActive, onEndGame, isDemo, timeLimit }) => {
   return (
     <div className="hrrh-game-container">
       <div className="game-state-box">
-        <h3>Bloque {block} de 3</h3>
+        <h3>{isEn ? 'Block' : 'Bloque'} {block} {isEn ? 'of' : 'de'} 3</h3>
         <div className="rule-display">
-          {block === 1 && <p>Clasifica por COLOR</p>}
-          {block === 2 && <p>Cambia: Clasifica por FORMA</p>}
-          {block === 3 && <p>Excepciones: Rojo siempre es rojo</p>}
+          {block === 1 && <p>{isEn ? 'Classify by COLOR' : 'Clasifica por COLOR'}</p>}
+          {block === 2 && <p>{isEn ? 'Switch: Classify by SHAPE' : 'Cambia: Clasifica por FORMA'}</p>}
+          {block === 3 && <p>{isEn ? 'Exceptions: Red is always red' : 'Excepciones: Rojo siempre es rojo'}</p>}
         </div>
-        <div className="stimulus">◆ ROJO</div>
+        <div className="stimulus">◆ {isEn ? 'RED' : 'ROJO'}</div>
         <div className="buttons-group">
-          <button onClick={handleResponse} className="btn btn-correct">Respuesta</button>
+          <button onClick={handleResponse} className="btn btn-correct">{isEn ? 'Answer' : 'Respuesta'}</button>
           <button onClick={handleError} className="btn btn-error">Error</button>
         </div>
         <p className="score">Score: {score}</p>
@@ -422,7 +427,8 @@ export const RuleShiftGame = ({ isActive, onEndGame, isDemo, timeLimit }) => {
 /**
  * SJT - Situational Judgment Test
  */
-export const SJTGame = ({ isActive, onEndGame, isDemo, timeLimit }) => {
+export const SJTGame = ({ isActive, onEndGame, isDemo, timeLimit, language = 'es' }) => {
+  const isEn = language === 'en';
   const { startTracking, stopTracking } = useTelemetry();
   const [gameState, setGameState] = useState('instruction');
   const [score, setScore] = useState(0);
@@ -466,9 +472,9 @@ export const SJTGame = ({ isActive, onEndGame, isDemo, timeLimit }) => {
       <div className="hrrh-game-container">
         <div className="game-instruction-box">
           <h2>Situational Judgment Test</h2>
-          <p>Evalúa tu juicio ante situaciones laborales</p>
-          <p>Elige la respuesta más apropiada</p>
-          <button onClick={() => setGameState('running')} className="btn-start">Comenzar</button>
+          <p>{isEn ? 'Assess your judgment in workplace scenarios' : 'Evalua tu juicio ante situaciones laborales'}</p>
+          <p>{isEn ? 'Choose the most appropriate response' : 'Elige la respuesta mas apropiada'}</p>
+          <button onClick={() => setGameState('running')} className="btn-start">{isEn ? 'Start' : 'Comenzar'}</button>
         </div>
       </div>
     );
@@ -477,15 +483,15 @@ export const SJTGame = ({ isActive, onEndGame, isDemo, timeLimit }) => {
   return (
     <div className="hrrh-game-container">
       <div className="game-state-box">
-        <h3>Escenario {scenario} de {MAX_SCENARIOS}</h3>
+        <h3>{isEn ? 'Scenario' : 'Escenario'} {scenario} {isEn ? 'of' : 'de'} {MAX_SCENARIOS}</h3>
         <div className="sjt-scenario">
-          <p><strong>Situación:</strong> Tu líder asigna una tarea con un plazo muy corto...</p>
+          <p><strong>{isEn ? 'Situation:' : 'Situacion:'}</strong> {isEn ? 'Your lead assigns a task with a very short deadline...' : 'Tu lider asigna una tarea con un plazo muy corto...'}</p>
         </div>
         <div className="buttons-group">
-          <button onClick={handleResponse} className="btn btn-option">Aceptar sin cuestionar</button>
-          <button onClick={handleResponse} className="btn btn-option">Discutir el plazo</button>
-          <button onClick={handleResponse} className="btn btn-option">Proponer alternativas</button>
-          <button onClick={handleResponse} className="btn btn-option">Declinar la tarea</button>
+          <button onClick={handleResponse} className="btn btn-option">{isEn ? 'Accept without questioning' : 'Aceptar sin cuestionar'}</button>
+          <button onClick={handleResponse} className="btn btn-option">{isEn ? 'Discuss the deadline' : 'Discutir el plazo'}</button>
+          <button onClick={handleResponse} className="btn btn-option">{isEn ? 'Propose alternatives' : 'Proponer alternativas'}</button>
+          <button onClick={handleResponse} className="btn btn-option">{isEn ? 'Decline task' : 'Declinar la tarea'}</button>
         </div>
         <p className="score">Score: {score}</p>
       </div>

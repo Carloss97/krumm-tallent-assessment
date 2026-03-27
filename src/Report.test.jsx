@@ -1,8 +1,9 @@
-import { render, screen, waitFor } from '@testing-library/react';
+import { render, screen, waitFor, fireEvent } from '@testing-library/react';
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import React from 'react';
 import Report from './Report';
 import { BrowserRouter } from 'react-router-dom';
+import { LanguageProvider } from './context/LanguageContext';
 
 const { mockUseTelemetry } = vi.hoisted(() => ({
   mockUseTelemetry: vi.fn(),
@@ -35,8 +36,17 @@ vi.mock('./services/backendService', () => ({
 }));
 
 describe('Report Component', () => {
+  const renderReport = (props = {}) => render(
+    <LanguageProvider>
+      <BrowserRouter>
+        <Report {...props} />
+      </BrowserRouter>
+    </LanguageProvider>
+  );
+
   beforeEach(() => {
     mockUseTelemetry.mockClear();
+    window.localStorage.setItem('talenttrack-language', 'en');
   });
 
   afterEach(() => {
@@ -46,13 +56,9 @@ describe('Report Component', () => {
   it('renders "No Assessment Data Found" when sessionData.game1 is missing', () => {
     mockUseTelemetry.mockReturnValue({ sessionData: {} });
 
-    render(
-      <BrowserRouter>
-        <Report useDummyData={false} />
-      </BrowserRouter>
-    );
+    renderReport({ useDummyData: false });
 
-    expect(screen.getByText(/No Assessment Data Found/i)).toBeDefined();
+    expect(screen.getByRole('heading', { name: /no assessment data found|no se encontraron datos de evaluacion/i })).toBeDefined();
   });
 
   it('renders report when data is available', async () => {
@@ -68,18 +74,19 @@ describe('Report Component', () => {
 
     mockUseTelemetry.mockReturnValue({ sessionData: mockSessionData });
 
-    const { container } = render(
-      <BrowserRouter>
-        <Report useDummyData={false} />
-      </BrowserRouter>
-    );
+    const { container } = renderReport({ useDummyData: false });
 
     // Check that report is rendered by looking for report title
     await waitFor(
       () => {
         const h1 = container.querySelector('h1');
         const titleText = h1 ? h1.textContent : '';
-        expect(titleText.includes('Assessment') || titleText.includes('Evaluation')).toBeTruthy();
+        expect(
+          titleText.includes('Assessment') ||
+          titleText.includes('Evaluation') ||
+          titleText.includes('Evaluacion') ||
+          titleText.includes('habilidades')
+        ).toBeTruthy();
       },
       { timeout: 10000 },
     );
@@ -88,21 +95,24 @@ describe('Report Component', () => {
   it('uses dummy data when useDummyData prop is true', async () => {
     mockUseTelemetry.mockReturnValue({ sessionData: {} });
 
-    render(
-      <BrowserRouter>
-        <Report useDummyData={true} />
-      </BrowserRouter>
-    );
+    renderReport({ useDummyData: true });
+
+    fireEvent.click(screen.getByRole('button', { name: /view demo report|ver reporte demo/i }));
 
     await waitFor(
       () => {
-        // Dummy data should generate a report even though sessionData is empty
+        // Report should be generated after enabling demo mode from no-data state.
         const elements = screen.queryAllByText((content, element) =>
-          element && (content.includes('Cognitive') || content.includes('Assessment'))
+          element && (
+            content.includes('Cognitive') ||
+            content.includes('Assessment') ||
+            content.includes('Evaluacion') ||
+            content.includes('habilidades')
+          )
         );
         expect(elements.length).toBeGreaterThan(0);
       },
-      { timeout: 4000 },
+      { timeout: 10000 },
     );
   });
 
@@ -122,17 +132,18 @@ describe('Report Component', () => {
       saveToBackend: vi.fn(() => Promise.resolve()),
     });
 
-    const { container } = render(
-      <BrowserRouter>
-        <Report useDummyData={false} />
-      </BrowserRouter>
-    );
+    const { container } = renderReport({ useDummyData: false });
 
     // Verify that report renders with skills/talent signal panel
     await waitFor(
       () => {
         const reportText = container.textContent;
-        expect(reportText.includes('Skills and Talent Signal')).toBeTruthy();
+        expect(
+          reportText.includes('Skills and Talent Signal') ||
+          reportText.includes('Matriz de evaluacion de habilidades') ||
+          reportText.includes('Executive Capability Snapshot') ||
+          reportText.includes('Resumen ejecutivo de capacidades')
+        ).toBeTruthy();
       },
       { timeout: 10000 },
     );

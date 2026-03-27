@@ -20,62 +20,66 @@ vi.mock('react-router-dom', () => ({
 const wrap = (node) => render(<TelemetryProvider>{node}</TelemetryProvider>);
 
 describe('Complementary battery games', () => {
+  const clickStart = () => {
+    fireEvent.click(screen.getByRole('button', { name: /start|comenzar/i }));
+  };
+
   beforeEach(() => {
     navigateMock.mockClear();
   });
 
   it('MetacognitiveCalibrationGame flows to next route', () => {
     wrap(<MetacognitiveCalibrationGame />);
-    fireEvent.click(screen.getByRole('button', { name: /start/i }));
-    fireEvent.click(screen.getByRole('button', { name: 'Yes' }));
-    fireEvent.click(screen.getByRole('button', { name: 'Yes' }));
-    fireEvent.click(screen.getByRole('button', { name: 'Yes' }));
-    fireEvent.click(screen.getByRole('button', { name: 'Yes' }));
+    clickStart();
+    fireEvent.click(screen.getByRole('button', { name: /yes|si/i }));
+    fireEvent.click(screen.getByRole('button', { name: /yes|si/i }));
+    fireEvent.click(screen.getByRole('button', { name: /yes|si/i }));
+    fireEvent.click(screen.getByRole('button', { name: /yes|si/i }));
     expect(navigateMock).toHaveBeenCalledWith('/game/9');
   });
 
   it('OperationalPrioritizationGame flows to next route', () => {
     wrap(<OperationalPrioritizationGame />);
-    fireEvent.click(screen.getByRole('button', { name: /start/i }));
-    fireEvent.click(screen.getByRole('button', { name: 'High' }));
-    fireEvent.click(screen.getByRole('button', { name: 'High' }));
-    fireEvent.click(screen.getByRole('button', { name: 'High' }));
-    fireEvent.click(screen.getByRole('button', { name: 'High' }));
+    clickStart();
+    fireEvent.click(screen.getByRole('button', { name: /high|alta/i }));
+    fireEvent.click(screen.getByRole('button', { name: /high|alta/i }));
+    fireEvent.click(screen.getByRole('button', { name: /high|alta/i }));
+    fireEvent.click(screen.getByRole('button', { name: /high|alta/i }));
     expect(navigateMock).toHaveBeenCalledWith('/game/10');
   });
 
   it('LearningAgilityGame flows to next route', () => {
     wrap(<LearningAgilityGame />);
-    fireEvent.click(screen.getByRole('button', { name: /start/i }));
+    clickStart();
     for (let i = 0; i < 5; i += 1) {
-      fireEvent.click(screen.getByRole('button', { name: 'Correct adaptation' }));
+      fireEvent.click(screen.getByRole('button', { name: /correct adaptation|adaptacion correcta/i }));
     }
     expect(navigateMock).toHaveBeenCalledWith('/game/11');
   });
 
   it('SocialCoordinationGame flows to next route', () => {
     wrap(<SocialCoordinationGame />);
-    fireEvent.click(screen.getByRole('button', { name: /start/i }));
+    clickStart();
     for (let i = 0; i < 4; i += 1) {
-      fireEvent.click(screen.getByRole('button', { name: 'Align stakeholders' }));
+      fireEvent.click(screen.getByRole('button', { name: /align stakeholders|alinear stakeholders/i }));
     }
     expect(navigateMock).toHaveBeenCalledWith('/game/12');
   });
 
   it('CognitiveResilienceGame flows to next route', () => {
     wrap(<CognitiveResilienceGame />);
-    fireEvent.click(screen.getByRole('button', { name: /start/i }));
+    clickStart();
     for (let i = 0; i < 5; i += 1) {
-      fireEvent.click(screen.getByRole('button', { name: 'Maintain performance' }));
+      fireEvent.click(screen.getByRole('button', { name: /maintain performance|mantener desempeno/i }));
     }
     expect(navigateMock).toHaveBeenCalledWith('/game/13');
   });
 
   it('RiskUnderUncertaintyGame ends at report', () => {
     wrap(<RiskUnderUncertaintyGame />);
-    fireEvent.click(screen.getByRole('button', { name: /start/i }));
+    clickStart();
     for (let i = 0; i < 4; i += 1) {
-      fireEvent.click(screen.getByRole('button', { name: 'Balanced hedge' }));
+      fireEvent.click(screen.getByRole('button', { name: /balanced hedge|cobertura balanceada/i }));
     }
     expect(navigateMock).toHaveBeenCalledWith('/report');
   });

@@ -1,6 +1,7 @@
 import React, { lazy, Suspense } from 'react';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import { TelemetryProvider } from './TelemetryContext';
+import { LanguageProvider } from './context/LanguageContext';
 import GlobalProgressBar from './components/GlobalProgressBar';
 import GameLayout from './components/GameLayout';
 import { GAME_FLOW } from './utils/gameFlow';
@@ -59,23 +60,25 @@ function AppContent() {
 
 function App() {
   return (
-    <Router>
-      <Routes>
-        {/* Recruiter routes (separate from telemetry) */}
-        <Route path="/recruiter/login" element={<RecruiterLogin />} />
-        <Route path="/recruiter/dashboard" element={<RecruiterDashboard />} />
+    <LanguageProvider>
+      <Router>
+        <Routes>
+          {/* Recruiter routes (separate from telemetry) */}
+          <Route path="/recruiter/login" element={<RecruiterLogin />} />
+          <Route path="/recruiter/dashboard" element={<RecruiterDashboard />} />
 
-        {/* Assessment routes (with telemetry tracking) */}
-        <Route
-          path="/*"
-          element={
-            <TelemetryProvider>
-              <AppContent />
-            </TelemetryProvider>
-          }
-        />
-      </Routes>
-    </Router>
+          {/* Assessment routes (with telemetry tracking) */}
+          <Route
+            path="/*"
+            element={
+              <TelemetryProvider>
+                <AppContent />
+              </TelemetryProvider>
+            }
+          />
+        </Routes>
+      </Router>
+    </LanguageProvider>
   );
 }
 

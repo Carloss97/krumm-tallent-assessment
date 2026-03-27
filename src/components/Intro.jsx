@@ -3,11 +3,15 @@ import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { useTelemetry } from '../TelemetryContext';
 import { GAME_FLOW } from '../utils/gameFlow';
+import { useLanguage } from '../context/LanguageContext';
+import { getLocalizedGameInstruction } from '../utils/gameFlowI18n';
 
 const Intro = () => {
   const navigate = useNavigate();
   const { setIsDemo } = useTelemetry();
+  const { language } = useLanguage();
   const [showDevTools, setShowDevTools] = useState(false);
+  const isEn = language === 'en';
 
   const handleStart = (demo = false) => {
     setIsDemo(demo);
@@ -35,8 +39,8 @@ const Intro = () => {
 
   const games = GAME_FLOW.map((game) => ({
     number: game.id,
-    name: game.instruction.title,
-    type: game.instruction.type,
+    name: getLocalizedGameInstruction(game, language).title,
+    type: getLocalizedGameInstruction(game, language).type,
   }));
 
   return (
@@ -47,26 +51,25 @@ const Intro = () => {
         className="glass-panel"
         style={{ padding: '60px', textAlign: 'center', maxWidth: '800px' }}
       >
-        <h1 className="text-gradient" style={{ fontSize: '3rem', marginBottom: '16px' }}>Cognitive Assessment</h1>
+        <h1 className="text-gradient" style={{ fontSize: '3rem', marginBottom: '16px' }}>{isEn ? 'Cognitive Assessment' : 'Evaluacion Cognitiva'}</h1>
         <p style={{ marginBottom: '40px', color: '#374151', lineHeight: '1.8', fontSize: '1.1rem' }}>
-          Welcome to the HR-focused cognitive assessment platform. You will complete {GAME_FLOW.length} evidence-based tasks
-          designed to evaluate working memory, response inhibition, cognitive flexibility, sustained attention,
-          decision quality under pressure, workplace judgment, metacognitive calibration, operational prioritization,
-          learning agility, social coordination, resilience, and uncertainty management.
+          {isEn
+            ? `Welcome to the HR-focused cognitive assessment platform. You will complete ${GAME_FLOW.length} evidence-based tasks designed to evaluate memory, inhibition, flexibility, attention, decision quality under pressure, judgment, calibration, prioritization, agility, coordination, resilience, and uncertainty management.`
+            : `Bienvenido a la plataforma de evaluacion cognitiva para RRHH. Completaras ${GAME_FLOW.length} tareas basadas en evidencia para evaluar memoria, inhibicion, flexibilidad, atencion, calidad de decision bajo presion, juicio, calibracion, priorizacion, agilidad, coordinacion, resiliencia y manejo de incertidumbre.`}
         </p>
 
         <div style={{ display: 'flex', gap: '24px', justifyContent: 'center', flexWrap: 'wrap', alignItems: 'center', marginBottom: '30px' }}>
           <button className="btn" style={{ fontSize: '1.2rem', padding: '16px 36px' }} onClick={() => handleStart(false)}>
-            Begin Assessment
+            {isEn ? 'Begin Assessment' : 'Comenzar evaluacion'}
           </button>
           <button className="btn" style={{ fontSize: '1.2rem', padding: '16px 36px', background: 'rgba(124, 58, 237, 0.1)', color: '#7c3aed', border: '1px solid #7c3aed' }} onClick={() => handleStart(true)}>
-            Quick Demo
+            {isEn ? 'Quick Demo' : 'Demo rapida'}
           </button>
           <button className="btn" style={{ fontSize: '1.2rem', padding: '16px 36px', background: 'rgba(16, 185, 129, 0.1)', color: '#10b981', border: '1px solid #10b981' }} onClick={handleViewDummyReport}>
-            View Demo Report
+            {isEn ? 'View Demo Report' : 'Ver reporte demo'}
           </button>
           <button className="btn" style={{ fontSize: '1.2rem', padding: '16px 36px', background: 'rgba(14, 165, 233, 0.12)', color: '#0369a1', border: '1px solid #0284c7' }} onClick={handleComplementaryBattery}>
-            Complementary Battery (6 Games)
+            {isEn ? 'Complementary Battery (6 Games)' : 'Bateria complementaria (6 juegos)'}
           </button>
         </div>
 
@@ -83,7 +86,7 @@ const Intro = () => {
             }}
             onClick={() => setShowDevTools(!showDevTools)}
           >
-            {showDevTools ? 'Hide' : 'Show'} Development Tools
+            {(showDevTools ? (isEn ? 'Hide' : 'Ocultar') : (isEn ? 'Show' : 'Mostrar')) + ` ${isEn ? 'Development Tools' : 'herramientas de desarrollo'}`}
           </button>
         </div>
 
@@ -95,7 +98,7 @@ const Intro = () => {
             exit={{ opacity: 0, height: 0 }}
             style={{ marginTop: '20px', padding: '20px', backgroundColor: 'rgba(0,0,0,0.05)', borderRadius: '12px' }}
           >
-            <h3 style={{ color: '#374151', marginBottom: '16px', fontSize: '1.2rem' }}>Direct Game Access (Development)</h3>
+            <h3 style={{ color: '#374151', marginBottom: '16px', fontSize: '1.2rem' }}>{isEn ? 'Direct Game Access (Development)' : 'Acceso directo a juegos (desarrollo)'}</h3>
             <div style={{ marginBottom: '12px' }}>
               <button
                 className="btn"
@@ -108,7 +111,7 @@ const Intro = () => {
                 }}
                 onClick={handleFutureLabAccess}
               >
-                Open Future Assessment Lab (High Priority Modules)
+                {isEn ? 'Open Future Assessment Lab (High Priority Modules)' : 'Abrir laboratorio de evaluaciones futuras (modulos prioritarios)'}
               </button>
             </div>
             <div style={{
@@ -132,7 +135,7 @@ const Intro = () => {
                   }}
                   onClick={() => handleDirectGameAccess(game.number)}
                 >
-                  <div style={{ fontWeight: 'bold' }}>Game {game.number}</div>
+                  <div style={{ fontWeight: 'bold' }}>{isEn ? 'Game' : 'Juego'} {game.number}</div>
                   <div style={{ fontSize: '0.7rem', opacity: 0.8 }}>{game.name}</div>
                   <div style={{ fontSize: '0.6rem', opacity: 0.6 }}>{game.type}</div>
                 </button>
