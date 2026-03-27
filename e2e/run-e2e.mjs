@@ -12,15 +12,6 @@ function sleep(ms) {
   return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
-async function isUrlUp(url) {
-  try {
-    const response = await fetch(url);
-    return response.ok;
-  } catch {
-    return false;
-  }
-}
-
 async function waitForUrl(url, timeoutMs = 90_000) {
   const start = Date.now();
   while (Date.now() - start < timeoutMs) {
@@ -58,10 +49,15 @@ async function findAvailablePort(startPort) {
   throw new Error(`Unable to find available port starting from ${startPort}`);
 }
 
-function spawnCommand(command, args, label, envOverrides = {}) {
-  const proc = spawn(command, args, {
+function spawnNpm(args, label, envOverrides = {}) {
+  const npmExecPath = process.env.npm_execpath;
+  if (!npmExecPath) {
+    throw new Error('npm_execpath is unavailable; run this script via npm.');
+  }
+
+  const proc = spawn(process.execPath, [npmExecPath, ...args], {
     stdio: ['ignore', 'pipe', 'pipe'],
-    shell: true,
+    shell: false,
     env: {
       ...process.env,
       ...envOverrides,
@@ -92,13 +88,11 @@ async function runScenarios(frontendUrl, backendUrl, backendHealthUrl) {
   const page = await context.newPage();
 
   try {
-    // Scenario 1: backend health endpoint via Playwright request context.
     const healthRes = await context.request.get(backendHealthUrl);
     if (!healthRes.ok()) {
       throw new Error(`Health endpoint did not return 200. Status: ${healthRes.status()}`);
     }
 
-    // Scenario 2: intro -> quick demo -> progress bar reaches 1/13 -> jump to game 8 -> reach game 9.
     await page.goto(`${frontendUrl}/intro`, { waitUntil: 'networkidle' });
     await page.getByRole('heading', { name: /cognitive assessment|evaluacion cognitiva/i }).waitFor({ timeout: 15_000 });
     await page.getByRole('button', { name: /quick demo|demo rapida/i }).click();
@@ -107,7 +101,6 @@ async function runScenarios(frontendUrl, backendUrl, backendHealthUrl) {
 
     await page.goto(`${frontendUrl}/game/8`, { waitUntil: 'networkidle' });
 
-    // Handle consent modal for non-demo direct access.
     const consentContinue = page.getByRole('button', { name: 'Continuar con la Evaluación' });
     if (await consentContinue.isVisible().catch(() => false)) {
       const checkboxes = page.locator('input[type="checkbox"]');
@@ -122,7 +115,6 @@ async function runScenarios(frontendUrl, backendUrl, backendHealthUrl) {
     await page.getByText(/complementary game 1|juego complementario 1|metacognitive calibration|calibracion metacognitiva/i).waitFor({ timeout: 15_000 });
     await page.locator('div').filter({ hasText: /8\s*\/\s*13/ }).first().waitFor({ timeout: 15_000 });
 
-    // Scenario 3: recruiter QA login -> dashboard (stable against credential/env drift).
     await page.goto(`${frontendUrl}/recruiter/login?qa=1`, { waitUntil: 'networkidle' });
     await page.getByRole('button', { name: /enter qa dashboard|continue offline/i }).first().click();
     await page.waitForURL('**/recruiter/dashboard**');
@@ -147,30 +139,18 @@ async function runScenarios(frontendUrl, backendUrl, backendHealthUrl) {
 }
 
 async function main() {
-  const npmCommand = process.platform === 'win32' ? 'npm.cmd' : 'npm';
   const frontendPort = await findAvailablePort(FRONTEND_PORT_BASE);
   const backendPort = await findAvailablePort(BACKEND_PORT_BASE);
   const frontendUrl = `http://${HOST}:${frontendPort}`;
   const backendUrl = `http://${HOST}:${backendPort}`;
   const backendHealthUrl = `${backendUrl}/health`;
 
-  const startFrontend = true;
-  const startBackend = true;
-
-  console.log(`[e2e] frontend url: ${frontendUrl}`);
-  console.log(`[e2e] backend url: ${backendUrl}`);
-
-  const frontendProc = startFrontend
-    ? spawnCommand(
-      npmCommand,
-      ['run', 'dev:frontend', '--', '--host', HOST, '--port', String(frontendPort), '--strictPort', '--open', 'false'],
-      'frontend',
-      { VITE_API_BASE_URL: backendUrl }
-    )
-    : null;
-  const backendProc = startBackend
-    ? spawnCommand(npmCommand, ['run', 'dev:server'], 'backend', { PORT: String(backendPort) })
-    : null;
+  const frontendProc = spawnNpm(
+    ['run', 'dev:frontend', '--', '--host', HOST, '--port', String(frontendPort), '--strictPort', '--open', 'false'],
+    'frontend',
+    { VITE_API_BASE_URL: backendUrl }
+  );
+  const backendProc = spawnNpm(['run', 'dev:server'], 'backend', { PORT: String(backendPort) });
 
   const cleanup = () => {
     if (frontendProc && !frontendProc.killed) frontendProc.kill();

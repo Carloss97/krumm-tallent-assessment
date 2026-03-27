@@ -44,7 +44,13 @@ app.use((error, req, res, next) => {
   return next(error);
 });
 app.use(requestLogger);
-app.use(rateLimiter({ windowMs: 60_000, maxRequests: 180 }));
+const globalLimiter = rateLimiter({ windowMs: 60_000, maxRequests: 180 });
+app.use((req, res, next) => {
+  if (req.path === '/health') {
+    return next();
+  }
+  return globalLimiter(req, res, next);
+});
 
 // ===== UTILITIES =====
 const isEmail = (value) => {
