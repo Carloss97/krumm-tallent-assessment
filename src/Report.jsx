@@ -63,6 +63,16 @@ const Report = () => {
   const hasGeminiKey = Boolean(typeof import.meta !== 'undefined' && import.meta.env?.VITE_GOOGLE_API_KEY);
   const canUseGemini = useBackendGeminiProxy || hasGeminiKey;
   const preferEdgeLocalInference = typeof import.meta !== 'undefined' && import.meta.env?.VITE_USE_EDGE_LOCAL_INFERENCE !== 'false';
+  const edgeGeminiEscalationEnabled = typeof import.meta !== 'undefined' && import.meta.env?.VITE_EDGE_ESCALATION_ENABLED !== 'false';
+  const edgeEscalationMinConfidence = readEnvNumber('VITE_EDGE_ESCALATE_MIN_CONFIDENCE', 66);
+  const edgeEscalationMinTelemetryCoverage = readEnvNumber('VITE_EDGE_ESCALATE_MIN_TELEMETRY_COVERAGE', 55);
+  const edgeEscalationMinBiometricQuality = readEnvNumber('VITE_EDGE_ESCALATE_MIN_BIOMETRIC_QUALITY', 50);
+  const edgeEscalationConfidenceBandMin = readEnvNumber('VITE_EDGE_ESCALATE_CONFIDENCE_BAND_MIN', 64);
+  const edgeEscalationConfidenceBandMax = readEnvNumber('VITE_EDGE_ESCALATE_CONFIDENCE_BAND_MAX', 72);
+  const edgeEscalationRecommendations = readEnvList(
+    'VITE_EDGE_ESCALATE_ON_RECOMMENDATIONS',
+    ['CONDITIONAL ALIGNMENT', 'EXPLORATORY FIT - NEEDS MORE DATA']
+  );
 
   const isDevBuild = typeof import.meta !== 'undefined' && import.meta.env?.DEV;
 
@@ -240,6 +250,37 @@ const Report = () => {
                     ? `Local edge inference completed in browser without raw-data exfiltration (coverage ${edgeReport?.signalAudit?.telemetryCoverageScore ?? 0}%, biometric quality ${edgeReport?.signalAudit?.biometricSignalQualityScore ?? 0}%).`
                     : `Inferencia edge-local completada en navegador sin exfiltracion de datos crudos (cobertura ${edgeReport?.signalAudit?.telemetryCoverageScore ?? 0}%, calidad biometrica ${edgeReport?.signalAudit?.biometricSignalQualityScore ?? 0}%).`
                 });
+
+                const escalation = evaluateEdgeGeminiEscalation(edgeReport, {
+                  enabled: edgeGeminiEscalationEnabled,
+                  minConfidence: edgeEscalationMinConfidence,
+                  minTelemetryCoverage: edgeEscalationMinTelemetryCoverage,
+                  minBiometricQuality: edgeEscalationMinBiometricQuality,
+                  confidenceBandMin: edgeEscalationConfidenceBandMin,
+                  confidenceBandMax: edgeEscalationConfidenceBandMax,
+                  recommendationList: edgeEscalationRecommendations,
+                  isEn,
+                });
+
+                if (escalation.shouldEscalate && canUseGemini) {
+                  const report = await generateAIReport(reportData, 'recruitment', language);
+                  if (report) {
+                    resolvedReport = report;
+                    setInsightMeta({
+                      mode: 'ai',
+                      reason: isEn
+                        ? `Gemini escalation triggered after edge-local due to: ${escalation.reasons.join('; ')}.`
+                        : `Escalamiento a Gemini activado tras edge-local por: ${escalation.reasons.join('; ')}.`
+                    });
+                  } else {
+                    setInsightMeta({
+                      mode: 'edge-local',
+                      reason: isEn
+                        ? `Edge-local retained after Gemini escalation attempt failed (${escalation.reasons.join('; ')}).`
+                        : `Se mantiene edge-local tras fallo en escalamiento Gemini (${escalation.reasons.join('; ')}).`
+                    });
+                  }
+                }
               }
             }
 
@@ -318,7 +359,14 @@ const Report = () => {
     canUseGemini,
     generationNonce,
     isEn,
-    preferEdgeLocalInference
+    preferEdgeLocalInference,
+    edgeGeminiEscalationEnabled,
+    edgeEscalationMinConfidence,
+    edgeEscalationMinTelemetryCoverage,
+    edgeEscalationMinBiometricQuality,
+    edgeEscalationConfidenceBandMin,
+    edgeEscalationConfidenceBandMax,
+    edgeEscalationRecommendations
   ]);
 
   if (!hasRealData && !useDummyData) {
@@ -1055,6 +1103,72 @@ function getGeminiActionHint(code, isEn) {
   return hints[code] || (isEn
     ? 'Inspect Gemini debug attempts and use heuristic fallback while connectivity is unstable.'
     : 'Inspecciona los intentos debug de Gemini y usa fallback heuristico mientras la conectividad sea inestable.');
+}
+
+function readEnvNumber(key, fallback) {
+  const raw = typeof import.meta !== 'undefined' ? import.meta.env?.[key] : undefined;
+  const parsed = Number(raw);
+  return Number.isFinite(parsed) ? parsed : fallback;
+}
+
+function readEnvList(key, fallback) {
+  const raw = typeof import.meta !== 'undefined' ? import.meta.env?.[key] : '';
+  if (!raw || typeof raw !== 'string') return fallback;
+  const values = raw
+    .split('|')
+    .map((item) => item.trim())
+    .filter(Boolean);
+  return values.length > 0 ? values : fallback;
+}
+
+function evaluateEdgeGeminiEscalation(edgeReport, config) {
+  if (!config?.enabled || !edgeReport || edgeReport.source !== 'edge-local') {
+    return { shouldEscalate: false, reasons: [] };
+  }
+
+  const reasons = [];
+  const confidence = Number(edgeReport?.confidenceScore ?? 0);
+  const telemetryCoverage = Number(edgeReport?.signalAudit?.telemetryCoverageScore ?? 0);
+  const biometricQuality = Number(edgeReport?.signalAudit?.biometricSignalQualityScore ?? 0);
+  const recommendation = String(edgeReport?.recommendation || '').trim();
+
+  if (confidence < config.minConfidence) {
+    reasons.push(
+      config.isEn
+        ? `low confidence ${confidence}% < ${config.minConfidence}%`
+        : `confianza baja ${confidence}% < ${config.minConfidence}%`
+    );
+  }
+
+  if (telemetryCoverage < config.minTelemetryCoverage) {
+    reasons.push(
+      config.isEn
+        ? `telemetry coverage ${telemetryCoverage}% < ${config.minTelemetryCoverage}%`
+        : `cobertura telemetrica ${telemetryCoverage}% < ${config.minTelemetryCoverage}%`
+    );
+  }
+
+  if (biometricQuality < config.minBiometricQuality) {
+    reasons.push(
+      config.isEn
+        ? `biometric quality ${biometricQuality}% < ${config.minBiometricQuality}%`
+        : `calidad biometrica ${biometricQuality}% < ${config.minBiometricQuality}%`
+    );
+  }
+
+  const inBorderlineBand = confidence >= config.confidenceBandMin && confidence <= config.confidenceBandMax;
+  if (inBorderlineBand && config.recommendationList.includes(recommendation)) {
+    reasons.push(
+      config.isEn
+        ? `borderline recommendation ${recommendation} within confidence band ${config.confidenceBandMin}-${config.confidenceBandMax}%`
+        : `recomendacion borderline ${recommendation} dentro de banda de confianza ${config.confidenceBandMin}-${config.confidenceBandMax}%`
+    );
+  }
+
+  return {
+    shouldEscalate: reasons.length > 0,
+    reasons,
+  };
 }
 
 function translateTelemetrySignal(signal, isEn) {

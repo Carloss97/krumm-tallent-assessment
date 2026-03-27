@@ -29,6 +29,16 @@ When `outcomes.json` is present and complete, alerts become strict and can fail 
 - `VITE_EDGE_AB_MODE=false`: disable A/B and use calibrated variant only.
 - `VITE_EDGE_AB_FORCE_VARIANT=control|calibrated`: force one variant in QA/dev.
 
+## Edge -> Gemini Escalation Controls
+
+- `VITE_EDGE_ESCALATION_ENABLED=true|false`: enable threshold-based escalation from edge-local to Gemini.
+- `VITE_EDGE_ESCALATE_MIN_CONFIDENCE`: escalate if edge confidence is below this value (default `66`).
+- `VITE_EDGE_ESCALATE_MIN_TELEMETRY_COVERAGE`: escalate if telemetry coverage is below this value (default `55`).
+- `VITE_EDGE_ESCALATE_MIN_BIOMETRIC_QUALITY`: escalate if biometric quality is below this value (default `50`).
+- `VITE_EDGE_ESCALATE_CONFIDENCE_BAND_MIN`: lower bound for borderline confidence band (default `64`).
+- `VITE_EDGE_ESCALATE_CONFIDENCE_BAND_MAX`: upper bound for borderline confidence band (default `72`).
+- `VITE_EDGE_ESCALATE_ON_RECOMMENDATIONS`: pipe-separated recommendations that trigger escalation when confidence is in the borderline band. Default: `CONDITIONAL ALIGNMENT|EXPLORATORY FIT - NEEDS MORE DATA`.
+
 ## Edge Quality Gate
 
 Run:
