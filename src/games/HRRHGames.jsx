@@ -99,9 +99,16 @@ export const StopSignalGame = ({ isActive, onEndGame, isDemo, timeLimit, languag
     return (
       <div className="hrrh-game-container">
         <div className="game-instruction-box">
-          <h2>Stop-Signal Task</h2>
-          <p>{isEn ? 'Press quickly when you see ' : 'Presiona rapido cuando veas '}<strong>{isEn ? 'GREEN' : 'VERDE'}</strong></p>
-          <p>{isEn ? 'Do NOT press when you see ' : 'NO presiones cuando veas '}<strong>{isEn ? 'RED' : 'ROJO'}</strong></p>
+          <h2>{isEn ? 'Impulse Control (SST)' : 'Control de Impulso (SST)'}</h2>
+          <p>
+            {isEn ? 'When you see ' : 'Cuando veas '}<strong>GO</strong>{isEn ? ', press quickly.' : ', presiona rapido.'}
+          </p>
+          <p>
+            {isEn ? 'When you see ' : 'Cuando veas '}<strong>STOP</strong>{isEn ? ', do not press and continue to next trial.' : ', no presiones y continua al siguiente trial.'}
+          </p>
+          <p style={{ fontSize: '0.9rem', color: '#64748b' }}>
+            {isEn ? 'Tip: focus on accuracy first, then speed.' : 'Tip: prioriza precision primero y luego velocidad.'}
+          </p>
           <button onClick={beginGame} className="btn-start">{isEn ? 'Start' : 'Comenzar'}</button>
         </div>
       </div>
@@ -115,12 +122,12 @@ export const StopSignalGame = ({ isActive, onEndGame, isDemo, timeLimit, languag
         <div className={`signal ${isStopTrial ? 'stop' : 'go'}`}>
           {isStopTrial ? 'STOP' : 'GO'}
         </div>
-        <div className="buttons-group">
-          {!isStopTrial && <button onClick={handleGoClick} className="btn btn-go">{isEn ? 'Press' : 'Presionar'}</button>}
-          {isStopTrial && <button onClick={handleStopClick} className="btn btn-stop">{isEn ? 'Inhibit' : 'Inhibir'}</button>}
-          <button onClick={handleMiss} className="btn btn-error">{isEn ? 'Missed' : 'Falle'}</button>
-        </div>
-        <p className="score">Score: {score} | {isEn ? 'Correct' : 'Correctos'}: {correctGo + correctStop} | {isEn ? 'Tempo' : 'Ritmo'}: {tempoTag}</p>
+            <div className="buttons-group">
+              {!isStopTrial && <button onClick={handleGoClick} className="btn btn-go">{isEn ? 'Press' : 'Presionar'}</button>}
+              {isStopTrial && <button onClick={handleStopClick} className="btn btn-stop">{isEn ? 'Continue (no press)' : 'Continuar (sin presionar)'}</button>}
+              <button onClick={handleMiss} className="btn btn-error">{isEn ? 'I missed it' : 'No alcance'}</button>
+            </div>
+            <p className="score">Score: {score} | {isEn ? 'Correct' : 'Correctos'}: {correctGo + correctStop} | {isEn ? 'Tempo' : 'Ritmo'}: {tempoTag}</p>
       </div>
     </div>
   );
@@ -669,3 +676,4 @@ export const SJTGame = ({ isActive, onEndGame, isDemo, timeLimit, language = 'es
     </div>
   );
 };
+
