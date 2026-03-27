@@ -156,6 +156,20 @@ const Report = () => {
 
     const runHealthCheck = async () => {
       if (isTestEnv) return;
+      if (preferEdgeLocalInference && !isDevBuild) {
+        setGeminiHealth({
+          checked: true,
+          ok: true,
+          message: isEn
+            ? 'Edge-local inference active. Gemini health probe paused to reduce backend load.'
+            : 'Inferencia edge-local activa. Sondeo de salud Gemini pausado para reducir carga backend.',
+          code: 'SKIPPED_EDGE_LOCAL',
+        });
+        return;
+      }
+      if (isCooldownActive) {
+        return;
+      }
       if (!useAI) {
         setGeminiHealth({
           checked: true,
@@ -191,7 +205,7 @@ const Report = () => {
     return () => {
       cancelled = true;
     };
-  }, [isEn, isTestEnv, useAI, canUseGemini, cooldownTick]);
+  }, [isEn, isTestEnv, useAI, canUseGemini, isCooldownActive, preferEdgeLocalInference, isDevBuild]);
 
   // Reset generation state when switching AI/demo modes to avoid stale report output.
   useEffect(() => {

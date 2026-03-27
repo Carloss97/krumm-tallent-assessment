@@ -10,6 +10,37 @@ const USE_BACKEND_GEMINI_PROXY = !IS_TEST_ENV && import.meta?.env?.VITE_USE_BACK
 const ALLOW_BROWSER_GEMINI_FALLBACK = IS_TEST_ENV || import.meta?.env?.VITE_ALLOW_BROWSER_GEMINI_FALLBACK === 'true';
 const API_BASE_URL = import.meta?.env?.VITE_API_BASE_URL || '';
 const USE_PROXY_BASE_FALLBACKS = import.meta?.env?.VITE_PROXY_BASE_FALLBACK !== 'false';
+const GEMINI_HEALTH_CACHE_TTL_MS = 30000;
+let geminiHealthCache = {
+  key: '',
+  expiresAt: 0,
+  value: null,
+};
+
+function getGeminiHealthCacheKey(modelName) {
+  const mode = USE_BACKEND_GEMINI_PROXY ? 'proxy' : 'direct';
+  const fallback = ALLOW_BROWSER_GEMINI_FALLBACK ? 'fb1' : 'fb0';
+  return `${mode}|${fallback}|${normalizeBaseUrl(API_BASE_URL)}|${modelName}`;
+}
+
+function readGeminiHealthCache(cacheKey) {
+  if (!geminiHealthCache.value) return null;
+  if (geminiHealthCache.key !== cacheKey) return null;
+  if (Date.now() >= geminiHealthCache.expiresAt) return null;
+  return {
+    ...geminiHealthCache.value,
+    cached: true,
+  };
+}
+
+function writeGeminiHealthCache(cacheKey, value) {
+  geminiHealthCache = {
+    key: cacheKey,
+    expiresAt: Date.now() + GEMINI_HEALTH_CACHE_TTL_MS,
+    value: { ...value },
+  };
+  return value;
+}
 
 function normalizeBaseUrl(baseUrl) {
   const base = String(baseUrl || '').trim();
@@ -102,6 +133,11 @@ export async function checkGeminiHealth(modelName) {
   lastAIDebugTrace = [];
   const key = import.meta?.env?.VITE_GOOGLE_API_KEY;
   const preferredModel = modelName || import.meta?.env?.VITE_GEMINI_MODEL || DEFAULT_GEMINI_MODEL;
+  const cacheKey = getGeminiHealthCacheKey(preferredModel);
+  const cached = readGeminiHealthCache(cacheKey);
+  if (cached) {
+    return cached;
+  }
   const modelCandidates = Array.from(new Set([preferredModel, 'gemini-1.5-flash-latest']));
 
   if (USE_BACKEND_GEMINI_PROXY) {
@@ -110,34 +146,34 @@ export async function checkGeminiHealth(modelName) {
         method: 'GET',
       });
       lastAIDebugTrace = Array.isArray(proxyResult.attempts) ? [...proxyResult.attempts] : [];
-      return {
+      return writeGeminiHealthCache(cacheKey, {
         ok: Boolean(proxyResult.ok),
         code: proxyResult.code || 'OK',
         message: proxyResult.message || 'Gemini health check completed via backend proxy.',
         model: proxyResult.model || preferredModel,
         status: 200,
-      };
+      });
     } catch (error) {
       lastAIDebugTrace = Array.isArray(error?.attempts) ? [...error.attempts] : [];
       if (!ALLOW_BROWSER_GEMINI_FALLBACK) {
-        return {
+        return writeGeminiHealthCache(cacheKey, {
           ok: false,
           code: error?.code || 'PROXY_ERROR',
           message: error?.message || 'Gemini backend proxy is unavailable.',
           model: preferredModel,
           status: error?.status || 502,
-        };
+        });
       }
     }
   }
 
   if (!key) {
-    return {
+    return writeGeminiHealthCache(cacheKey, {
       ok: false,
       code: 'MISSING_KEY',
       message: 'Missing VITE_GOOGLE_API_KEY in environment.',
       model: preferredModel,
-    };
+    });
   }
 
   try {
@@ -154,13 +190,13 @@ export async function checkGeminiHealth(modelName) {
         code: mapped.code,
         message: mapped.message,
       });
-      return {
+      return writeGeminiHealthCache(cacheKey, {
         ok: false,
         code: mapped.code,
         message: mapped.message,
         model: preferredModel,
         status: listResponse.status,
-      };
+      });
     }
 
     const failures = [];
@@ -187,13 +223,13 @@ export async function checkGeminiHealth(modelName) {
           code: 'OK',
           message: 'Model probe succeeded.',
         });
-        return {
+        return writeGeminiHealthCache(cacheKey, {
           ok: true,
           code: 'OK',
           message: `Gemini connection healthy (${candidate}).`,
           model: candidate,
           status: 200,
-        };
+        });
       }
 
       const text = await probeResponse.text();
@@ -208,13 +244,13 @@ export async function checkGeminiHealth(modelName) {
 
       // Stop immediately for global failures that won't be solved by model switching.
       if (mapped.code === 'KEY_INVALID' || mapped.code === 'KEY_LEAKED' || mapped.code === 'PERMISSION_DENIED' || mapped.code === 'QUOTA_EXCEEDED') {
-        return {
+        return writeGeminiHealthCache(cacheKey, {
           ok: false,
           code: mapped.code,
           message: mapped.message,
           model: candidate,
           status: probeResponse.status,
-        };
+        });
       }
 
       failures.push({ candidate, ...mapped, status: probeResponse.status });
@@ -224,31 +260,31 @@ export async function checkGeminiHealth(modelName) {
     const hasNotFound = failures.some((f) => f.code === 'MODEL_NOT_FOUND');
 
     if (hasQuota && hasNotFound) {
-      return {
+      return writeGeminiHealthCache(cacheKey, {
         ok: false,
         code: 'MODEL_AND_QUOTA_CONFLICT',
         message: 'Selected model alias is unavailable and available fallbacks are currently quota-limited.',
         model: preferredModel,
         status: 429,
-      };
+      });
     }
 
     const primaryFailure = failures[0] || { code: 'UNKNOWN', message: 'Unknown Gemini API error during health check.' };
-    return {
+    return writeGeminiHealthCache(cacheKey, {
       ok: false,
       code: primaryFailure.code,
       message: primaryFailure.message,
       model: primaryFailure.candidate || preferredModel,
       status: primaryFailure.status,
-    };
+    });
   } catch (error) {
-    return {
+    return writeGeminiHealthCache(cacheKey, {
       ok: false,
       code: 'NETWORK_ERROR',
       message: 'Network error while checking Gemini connectivity.',
       model: preferredModel,
       error: error?.message || String(error),
-    };
+    });
   }
 }
 
