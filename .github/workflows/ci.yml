@@ -25,8 +25,30 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
-      - name: Install Playwright browser
-        run: npx playwright install --with-deps chromium
+      - name: Lint
+        run: npm run lint
 
       - name: Run tests, build and e2e
         run: npm run ci:verify
+
+      - name: Backend SLO verification
+        env:
+          BACKEND_BASE_URL: http://127.0.0.1:4000
+          BACKEND_LOAD_TOTAL: 200
+          BACKEND_LOAD_CONCURRENCY: 20
+          BACKEND_SLO_P95_MS: 60
+          BACKEND_SLO_MAX_THROTTLE_RATE: 0
+        run: |
+          npm run dev:server > backend.log 2>&1 &
+          SERVER_PID=$!
+          trap "kill $SERVER_PID" EXIT
+
+          for i in {1..30}; do
+            if curl -fsS "$BACKEND_BASE_URL/health" > /dev/null; then
+              break
+            fi
+            sleep 1
+          done
+
+          curl -fsS "$BACKEND_BASE_URL/health" > /dev/null || (cat backend.log && exit 1)
+          npm run load-test:backend

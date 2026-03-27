@@ -27,6 +27,7 @@ const OSPANGame = ({ isActive, onEndGame, isDemo, timeLimit, language = 'es' }) 
 
   // Operación actual
   const [operation, setOperation] = useState('');
+  const [operationIsCorrect, setOperationIsCorrect] = useState(null);
 
   // Letra actual
   const [currentLetter, setCurrentLetter] = useState('');
@@ -89,6 +90,7 @@ const OSPANGame = ({ isActive, onEndGame, isDemo, timeLimit, language = 'es' }) 
     const displayResult = isCorrect ? result : result + Math.floor(Math.random() * 5) + 1;
 
     setOperation(`${expression} = ${displayResult}?`);
+    setOperationIsCorrect(isCorrect);
     operationStartTimeRef.current = Date.now();
 
     recordTrialEvent({
@@ -136,7 +138,9 @@ const OSPANGame = ({ isActive, onEndGame, isDemo, timeLimit, language = 'es' }) 
     const rt = Date.now() - operationStartTimeRef.current;
 
     // Verificar si es correcto (lógica simplificada)
-    const isCorrect = Math.random() > 0.3; // Para demo
+    const expectedTrue = operationIsCorrect === true;
+    const answeredTrue = answer === 'true';
+    const isCorrect = answeredTrue === expectedTrue;
 
     if (isCorrect) {
       setCorrectOperations(prev => prev + 1);
@@ -158,7 +162,7 @@ const OSPANGame = ({ isActive, onEndGame, isDemo, timeLimit, language = 'es' }) 
     setTimeout(() => {
       nextPhase();
     }, 500);
-  }, [nextPhase, recordError, recordTrialEvent]);
+  }, [nextPhase, recordError, recordTrialEvent, operationIsCorrect]);
 
   // Manejar respuesta de letra
   const handleLetterConfirm = useCallback(() => {
@@ -313,4 +317,8 @@ const OSPANGame = ({ isActive, onEndGame, isDemo, timeLimit, language = 'es' }) 
 };
 
 export default OSPANGame;
+
+
+
+
 

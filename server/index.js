@@ -15,6 +15,7 @@ import {
   requireRecruiter
 } from './tokenService.js';
 import { rateLimiter, requestLogger } from './middleware.js';
+import { serverConfig } from './config.js';
 
 dotenv.config();
 
@@ -44,9 +45,11 @@ app.use((error, req, res, next) => {
   return next(error);
 });
 app.use(requestLogger);
-const globalLimiter = rateLimiter({ windowMs: 60_000, maxRequests: 180 });
+const globalLimiter = rateLimiter(serverConfig.rateLimit.global);
+const bypassedRateLimitPaths = new Set(serverConfig.rateLimit.bypassPaths);
 app.use((req, res, next) => {
-  if (req.path === '/health') {
+  // Keep health-style probes always available so monitoring remains reliable under traffic spikes.
+  if (bypassedRateLimitPaths.has(req.path)) {
     return next();
   }
   return globalLimiter(req, res, next);
@@ -256,7 +259,7 @@ app.get('/health', (req, res) => {
 });
 
 // Tighten AI endpoint rate to reduce bursty retries hitting Gemini quotas.
-app.use('/api/ai', rateLimiter({ windowMs: 60_000, maxRequests: 20 }));
+app.use('/api/ai', rateLimiter(serverConfig.rateLimit.ai));
 
 app.get('/api/ai/health', async (req, res) => {
   try {
@@ -676,4 +679,5 @@ app.listen(PORT, () => {
   console.log(`✓ Recruiter auth: POST /api/auth/recruiter`);
   console.log(`✓ Environment: ${process.env.NODE_ENV || 'development'}`);
 });
+
 
