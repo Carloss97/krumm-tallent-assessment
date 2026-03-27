@@ -23,6 +23,43 @@ function Ensure-Command {
   }
 }
 
+function Resolve-CloudflaredPath {
+  $cmd = Get-Command 'cloudflared' -ErrorAction SilentlyContinue
+  if ($cmd) {
+    return $cmd.Source
+  }
+
+  $candidatePaths = @(
+    (Join-Path $env:LOCALAPPDATA 'Microsoft\WinGet\Links\cloudflared.exe'),
+    (Join-Path $env:ProgramFiles 'cloudflared\cloudflared.exe'),
+    (Join-Path ${env:ProgramFiles(x86)} 'cloudflared\cloudflared.exe')
+  )
+
+  foreach ($path in $candidatePaths) {
+    if ($path -and (Test-Path $path)) {
+      return $path
+    }
+  }
+
+  $wingetPackageRoots = @(
+    (Join-Path $env:LOCALAPPDATA 'Microsoft\WinGet\Packages'),
+    (Join-Path $env:ProgramFiles 'WindowsApps')
+  )
+
+  foreach ($root in $wingetPackageRoots) {
+    if (-not (Test-Path $root)) {
+      continue
+    }
+
+    $found = Get-ChildItem -Path $root -Recurse -Filter 'cloudflared.exe' -ErrorAction SilentlyContinue | Select-Object -First 1
+    if ($found) {
+      return $found.FullName
+    }
+  }
+
+  throw 'No se encontro cloudflared. Instala con: winget install --id Cloudflare.cloudflared -e --accept-package-agreements --accept-source-agreements'
+}
+
 function Test-HttpReady {
   param([string]$Url)
   try {
@@ -62,7 +99,7 @@ function Assert-NotRunning {
 }
 
 Ensure-Command -Name 'npm'
-Ensure-Command -Name 'cloudflared'
+$cloudflaredPath = Resolve-CloudflaredPath
 
 New-Item -ItemType Directory -Path $stateDir -Force | Out-Null
 Assert-NotRunning -Name 'Servidor de desarrollo' -PidPath $devPidFile
@@ -91,7 +128,7 @@ if (-not (Test-HttpReady -Url $frontendUrl)) {
 }
 
 Write-Host 'Iniciando Cloudflare Quick Tunnel...'
-$tunnelProcess = Start-Process -FilePath 'cloudflared' -ArgumentList @('tunnel', '--url', "http://localhost:$FrontendPort") -WorkingDirectory $projectRoot -PassThru -RedirectStandardOutput $tunnelOutLog -RedirectStandardError $tunnelErrLog
+$tunnelProcess = Start-Process -FilePath $cloudflaredPath -ArgumentList @('tunnel', '--url', "http://localhost:$FrontendPort") -WorkingDirectory $projectRoot -PassThru -RedirectStandardOutput $tunnelOutLog -RedirectStandardError $tunnelErrLog
 $tunnelProcess.Id | Set-Content -Path $tunnelPidFile -NoNewline
 
 $urlRegex = 'https://[-a-zA-Z0-9]+\.trycloudflare\.com'
