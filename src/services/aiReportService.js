@@ -4,6 +4,89 @@ import { GoogleGenerativeAI } from '@google/generative-ai';
 const genAI = new GoogleGenerativeAI(import.meta.env.VITE_GOOGLE_API_KEY);
 let lastAIFailureReason = '';
 let lastAIDebugTrace = [];
+const DEFAULT_GEMINI_MODEL = 'gemini-1.5-flash-latest';
+const USE_BACKEND_GEMINI_PROXY = import.meta?.env?.VITE_USE_BACKEND_GEMINI_PROXY !== 'false';
+const ALLOW_BROWSER_GEMINI_FALLBACK = import.meta?.env?.VITE_ALLOW_BROWSER_GEMINI_FALLBACK === 'true';
+const API_BASE_URL = import.meta?.env?.VITE_API_BASE_URL || '';
+
+function normalizeBaseUrl(baseUrl) {
+  const base = String(baseUrl || '').trim();
+  if (!base) return '';
+  return base.replace(/\/$/, '');
+}
+
+function getProxyBaseCandidates() {
+  return Array.from(new Set([
+    normalizeBaseUrl(API_BASE_URL),
+    '',
+    'http://localhost:4000',
+  ]));
+}
+
+function buildApiUrl(path, baseUrl) {
+  const base = normalizeBaseUrl(baseUrl);
+  return base ? `${base}${path}` : path;
+}
+
+async function callGeminiProxy(path, options = {}) {
+  const proxyBases = getProxyBaseCandidates();
+  let lastResponseError = null;
+  let lastNetworkError = null;
+
+  for (const baseUrl of proxyBases) {
+    const endpoint = buildApiUrl(path, baseUrl);
+    try {
+      const response = await fetch(endpoint, {
+        headers: {
+          'Content-Type': 'application/json',
+          ...(options.headers || {}),
+        },
+        ...options,
+      });
+
+      const body = await response.json().catch(() => ({}));
+      if (response.ok && body?.ok !== false) {
+        return body;
+      }
+
+      const message = body?.message || body?.error || `Gemini proxy request failed (${response.status}).`;
+      const error = new Error(message);
+      error.status = response.status;
+      error.code = body?.code || 'PROXY_ERROR';
+      error.attempts = Array.isArray(body?.attempts) ? body.attempts : [];
+
+      // If backend returned a structured code, stop and surface it.
+      if (body?.code) {
+        throw error;
+      }
+
+      lastResponseError = error;
+      continue;
+    } catch (error) {
+      const isNetworkError = String(error?.message || '').toLowerCase().includes('failed to fetch') || String(error?.name || '').toLowerCase().includes('typeerror');
+      if (isNetworkError) {
+        lastNetworkError = error;
+        continue;
+      }
+      throw error;
+    }
+  }
+
+  const detail = proxyBases
+    .map((base) => (base ? `${base}${path}` : path))
+    .join(' | ');
+
+  const proxyError = new Error(
+    `Gemini backend proxy unreachable. Verify API server is running and VITE_API_BASE_URL is correct. Tried: ${detail}`
+  );
+  proxyError.status = lastResponseError?.status || 502;
+  proxyError.code = 'PROXY_UNREACHABLE';
+  proxyError.attempts = [];
+  if (lastNetworkError) {
+    proxyError.cause = lastNetworkError;
+  }
+  throw proxyError;
+}
 
 export function getLastAIFailureReason() {
   return lastAIFailureReason;
@@ -16,16 +99,35 @@ export function getLastAIDebugTrace() {
 export async function checkGeminiHealth(modelName) {
   lastAIDebugTrace = [];
   const key = import.meta?.env?.VITE_GOOGLE_API_KEY;
-  const preferredModel = modelName || import.meta?.env?.VITE_GEMINI_MODEL || 'gemini-1.5-flash-latest';
-  const modelCandidates = Array.from(new Set([
-    preferredModel,
-    'gemini-1.5-flash-latest',
-    'gemini-1.5-flash',
-    'gemini-1.5-flash-8b',
-    'gemini-2.0-flash',
-    'gemini-2.5-flash-lite',
-    'gemini-flash-latest'
-  ]));
+  const preferredModel = modelName || import.meta?.env?.VITE_GEMINI_MODEL || DEFAULT_GEMINI_MODEL;
+  const modelCandidates = Array.from(new Set([preferredModel, 'gemini-1.5-flash-latest']));
+
+  if (USE_BACKEND_GEMINI_PROXY) {
+    try {
+      const proxyResult = await callGeminiProxy(`/api/ai/health?model=${encodeURIComponent(preferredModel)}`, {
+        method: 'GET',
+      });
+      lastAIDebugTrace = Array.isArray(proxyResult.attempts) ? [...proxyResult.attempts] : [];
+      return {
+        ok: Boolean(proxyResult.ok),
+        code: proxyResult.code || 'OK',
+        message: proxyResult.message || 'Gemini health check completed via backend proxy.',
+        model: proxyResult.model || preferredModel,
+        status: 200,
+      };
+    } catch (error) {
+      lastAIDebugTrace = Array.isArray(error?.attempts) ? [...error.attempts] : [];
+      if (!ALLOW_BROWSER_GEMINI_FALLBACK) {
+        return {
+          ok: false,
+          code: error?.code || 'PROXY_ERROR',
+          message: error?.message || 'Gemini backend proxy is unavailable.',
+          model: preferredModel,
+          status: error?.status || 502,
+        };
+      }
+    }
+  }
 
   if (!key) {
     return {
@@ -211,17 +313,73 @@ export async function generateAIReport(sessionData, mode = 'recruitment', langua
     const viteModel = (typeof window !== 'undefined' && import.meta && import.meta.env && import.meta.env.VITE_GEMINI_MODEL)
       ? import.meta.env.VITE_GEMINI_MODEL
       : null;
+    const preferredModel = viteModel || DEFAULT_GEMINI_MODEL;
 
-    const preferredModel = viteModel || 'gemini-1.5-flash-latest';
-    const fallbackModels = [
-      'gemini-1.5-flash-latest',
-      'gemini-1.5-flash',
-      'gemini-1.5-flash-8b',
-      'gemini-2.0-flash',
-      'gemini-2.5-flash-lite',
-      'gemini-flash-latest'
-    ];
-    const modelCandidates = Array.from(new Set([preferredModel, ...fallbackModels]));
+    if (USE_BACKEND_GEMINI_PROXY) {
+      try {
+        const proxyResult = await callGeminiProxy('/api/ai/generate', {
+          method: 'POST',
+          body: JSON.stringify({
+            prompt,
+            preferredModel,
+          }),
+        });
+
+        if (Array.isArray(proxyResult.attempts)) {
+          lastAIDebugTrace = [...proxyResult.attempts];
+        }
+
+        let aiReport = parseAIResponse(proxyResult.text || '');
+
+        if (!aiReport && proxyResult.text && proxyResult.model) {
+          try {
+            const repairText = await requestJsonRepair(proxyResult.text, proxyResult.model);
+            aiReport = parseAIResponse(repairText);
+            lastAIDebugTrace.push({
+              stage: 'generate:repair',
+              model: proxyResult.model,
+              status: aiReport ? 200 : null,
+              code: aiReport ? 'OK' : 'PARSE_FAILED',
+              message: aiReport ? 'Repair parse succeeded.' : 'Repair parse failed.',
+            });
+          } catch (repairError) {
+            lastAIDebugTrace.push({
+              stage: 'generate:repair',
+              model: proxyResult.model,
+              status: null,
+              code: 'REPAIR_ERROR',
+              message: 'JSON repair request failed.',
+            });
+          }
+        }
+
+        if (!aiReport) {
+          lastAIFailureReason = 'AI returned malformed JSON that could not be repaired.';
+        }
+
+        return aiReport;
+      } catch (proxyError) {
+        if (Array.isArray(proxyError?.attempts)) {
+          lastAIDebugTrace = [...proxyError.attempts];
+        }
+
+        if (proxyError?.code === 'KEY_INVALID') {
+          lastAIFailureReason = 'Gemini API key is invalid or expired (confirmed by backend response).';
+        } else if (proxyError?.code === 'PERMISSION_DENIED') {
+          lastAIFailureReason = 'Gemini key lacks required permissions for this project.';
+        } else if (proxyError?.code === 'QUOTA_EXCEEDED') {
+          lastAIFailureReason = 'Gemini quota/rate limit reached for current key.';
+        } else {
+          lastAIFailureReason = proxyError?.message || 'Gemini backend proxy failed.';
+        }
+
+        if (!ALLOW_BROWSER_GEMINI_FALLBACK) {
+          return null;
+        }
+      }
+    }
+
+    const modelCandidates = Array.from(new Set([preferredModel, 'gemini-1.5-flash']));
 
     let lastError = null;
     let responseText = null;
@@ -320,10 +478,31 @@ export async function generateAIReport(sessionData, mode = 'recruitment', langua
   } catch (error) {
     console.error('Error calling Gemini API:', error);
     const msg = error?.message?.toLowerCase() || '';
+    const inferredStatus = msg.includes('429')
+      ? 429
+      : msg.includes('404')
+        ? 404
+        : msg.includes('403')
+          ? 403
+          : msg.includes('400')
+            ? 400
+            : 0;
+    const mappedFailure = mapGeminiFailure(msg, inferredStatus);
+
+    lastAIDebugTrace.push({
+      stage: 'generate:exception',
+      model: null,
+      status: inferredStatus || null,
+      code: mappedFailure.code,
+      message: mappedFailure.message,
+    });
+
     if (msg.includes('reported as leaked') || msg.includes('leaked')) {
       lastAIFailureReason = 'Gemini API key was reported as leaked. Rotate to a new key and update environment variables.';
-    } else if (msg.includes('api key') || msg.includes('permission') || msg.includes('unauthorized') || msg.includes('403')) {
-      lastAIFailureReason = 'Gemini API key is invalid or lacks required permissions.';
+    } else if (mappedFailure.code === 'KEY_INVALID' || msg.includes('api key expired') || msg.includes('expired')) {
+      lastAIFailureReason = 'Gemini API key is invalid or expired (confirmed by Google API response).';
+    } else if (mappedFailure.code === 'PERMISSION_DENIED' || msg.includes('permission') || msg.includes('unauthorized') || msg.includes('403')) {
+      lastAIFailureReason = 'Gemini API key lacks required permissions for this project.';
     } else if (msg.includes('quota') || msg.includes('429') || msg.includes('too many requests')) {
       lastAIFailureReason = 'Gemini quota/rate limit reached for current key.';
     } else {
