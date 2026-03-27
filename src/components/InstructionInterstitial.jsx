@@ -1,6 +1,6 @@
 import React from "react";
 
-const InstructionInterstitial = ({ title, description, timeLimit, type, language = "es", onStart, mission, strategy, rewardHint, varietyHint }) => {
+const InstructionInterstitial = ({ title, description, timeLimit, type, language = "es", onStart }) => {
   const isEn = language === "en";
 
   return (
