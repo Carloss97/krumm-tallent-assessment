@@ -205,17 +205,10 @@ export const TaskSwitchingGame = ({ isActive, onEndGame, isDemo, timeLimit, lang
           <div className="stimulus">{stimulus.shape} - {stimulus.color}</div>
         </div>
         <div className="buttons-group">
-          {currentRule === 'COLOR' ? (
-            <>
-              <button onClick={() => handleSelection('RED')} className="btn btn-option">{isEn ? 'RED' : 'ROJO'}</button>
-              <button onClick={() => handleSelection('BLUE')} className="btn btn-option">{isEn ? 'BLUE' : 'AZUL'}</button>
-            </>
-          ) : (
-            <>
-              <button onClick={() => handleSelection('CIRCLE')} className="btn btn-option">{isEn ? 'CIRCLE' : 'CIRCULO'}</button>
-              <button onClick={() => handleSelection('SQUARE')} className="btn btn-option">{isEn ? 'SQUARE' : 'CUADRADO'}</button>
-            </>
-          )}
+          <button onClick={() => handleSelection('RED')} className="btn btn-option">{isEn ? 'RED' : 'ROJO'}</button>
+          <button onClick={() => handleSelection('BLUE')} className="btn btn-option">{isEn ? 'BLUE' : 'AZUL'}</button>
+          <button onClick={() => handleSelection('CIRCLE')} className="btn btn-option">{isEn ? 'CIRCLE' : 'CIRCULO'}</button>
+          <button onClick={() => handleSelection('SQUARE')} className="btn btn-option">{isEn ? 'SQUARE' : 'CUADRADO'}</button>
         </div>
         <p className="score">Score: {score}</p>
       </div>
@@ -650,3 +643,4 @@ export const SJTGame = ({ isActive, onEndGame, isDemo, timeLimit, language = 'es
     </div>
   );
 };
+

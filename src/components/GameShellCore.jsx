@@ -256,6 +256,10 @@ const GameShellCore = ({ gameId, children }) => {
           type={localizedInstruction.type}
           title={localizedInstruction.title}
           description={localizedInstruction.description}
+          mission={localizedInstruction.mission}
+          strategy={localizedInstruction.strategy}
+          rewardHint={localizedInstruction.rewardHint}
+          varietyHint={localizedInstruction.varietyHint}
           timeLimit={timeLimit === 'None' || timeLimit === 'Timed' ? timeLimit : `${timeLimit}s`}
           language={language}
           onStart={handleStart}
@@ -324,6 +328,7 @@ const GameShellCore = ({ gameId, children }) => {
 };
 
 export default GameShellCore;
+
 
 
 
