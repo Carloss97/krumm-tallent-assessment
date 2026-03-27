@@ -1,7 +1,70 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { getCurrentToken, clearToken, getRecruiterSessions, getRecruiterAnalyticsV2 } from '../services/backendService';
+import { getQaMode } from '../utils/qaMode';
 import './RecruiterDashboard.css';
+
+const buildQaMockSessions = () => {
+  const now = Date.now();
+  return [
+    {
+      id: 'QA-SESSION-001',
+      participant_id: 'QA-ALFA-01',
+      participant_email: 'qa.alfa@local',
+      created_at: new Date(now - 20 * 60 * 1000).toISOString(),
+      payload: {
+        game1: { score: 88 },
+        game2: { score: 81 },
+        game3: { score: 90 },
+        game4: { score: 84 },
+      }
+    },
+    {
+      id: 'QA-SESSION-002',
+      participant_id: 'QA-BETA-02',
+      participant_email: 'qa.beta@local',
+      created_at: new Date(now - 90 * 60 * 1000).toISOString(),
+      payload: {
+        game1: { score: 73 },
+        game2: { score: 79 },
+        game3: { score: 76 },
+      }
+    }
+  ];
+};
+
+const QA_ANALYTICS = {
+  totalSessions: 2,
+  last24hSessions: 2,
+  recommendationDistribution: {
+    'STRONG ALIGNMENT': 1,
+    'SOLID ALIGNMENT WITH COACHING': 1,
+  },
+  quality: {
+    status: 'OK',
+    syntheticOutcomes: true,
+    outcomeSource: 'qa_offline_simulation',
+  },
+  calibration: {
+    generatedAt: new Date().toISOString(),
+    outcomeSource: 'qa_offline_simulation',
+    thresholdsScale0to10: {
+      strong: 8,
+      solid: 6,
+      conditional: 4,
+    }
+  },
+  kpiSnapshot: {
+    primary: {
+      rocAuc: 0.79,
+      prAucLift: 0.22,
+      brier: 0.18,
+    },
+    fairness: {
+      selectionRateRatio: 0.96,
+    }
+  }
+};
 
 const RecruiterDashboard = () => {
   const navigate = useNavigate();
@@ -17,10 +80,11 @@ const RecruiterDashboard = () => {
     calibration: null,
     kpiSnapshot: null,
   });
+  const [isQaMode] = useState(() => getQaMode());
 
   useEffect(() => {
     const token = getCurrentToken();
-    if (!token) {
+    if (!token && !isQaMode) {
       navigate('/recruiter/login');
       return;
     }
@@ -31,6 +95,14 @@ const RecruiterDashboard = () => {
   const fetchSessions = async () => {
     try {
       setLoading(true);
+
+      if (isQaMode) {
+        setSessions(buildQaMockSessions());
+        setAnalytics(QA_ANALYTICS);
+        setError(null);
+        return;
+      }
+
       const [data, analyticsData] = await Promise.all([
         getRecruiterSessions(),
         getRecruiterAnalyticsV2().catch(() => null)
@@ -123,7 +195,7 @@ const RecruiterDashboard = () => {
       <header className="dashboard-header">
         <div className="header-content">
           <h1>👥 Recruiter Dashboard</h1>
-          <p className="subtitle">Aggregated Assessment Analytics (Raw Data Protected)</p>
+          <p className="subtitle">Aggregated Assessment Analytics (Raw Data Protected){isQaMode ? ' | QA/OFFLINE' : ''}</p>
         </div>
         <button onClick={handleLogout} className="logout-btn">
           Logout

@@ -1,12 +1,12 @@
 import React from 'react';
-import GameLayout from './GameLayout';
+import GameShellCore from './GameShellCore';
 
 /**
  * Transitional shell for game routes.
  * Keeps current behavior while we evolve a dedicated game container.
  */
 const GameShell = (props) => {
-  return <GameLayout {...props} />;
+  return <GameShellCore {...props} />;
 };
 
 export default GameShell;

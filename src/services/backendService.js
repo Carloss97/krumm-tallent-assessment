@@ -81,10 +81,15 @@ const apiFetch = async (path, options = {}) => {
     headers['Authorization'] = `Bearer ${token}`;
   }
 
-  const response = await fetch(`${getApiBaseUrl()}${path}`, {
-    headers,
-    ...options
-  });
+  let response;
+  try {
+    response = await fetch(`${getApiBaseUrl()}${path}`, {
+      headers,
+      ...options
+    });
+  } catch (error) {
+    throw new Error('No se pudo conectar al backend. Verifica que el servidor API este activo.');
+  }
 
   const body = await response.json().catch(() => ({}));
   
@@ -172,4 +177,8 @@ export const clearToken = () => {
   } catch (err) {
     console.warn('Error clearing token:', err);
   }
+};
+
+export const setQaAuthToken = () => {
+  storeToken('qa-offline-token', 60 * 60 * 12);
 };

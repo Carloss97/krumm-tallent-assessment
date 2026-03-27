@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { authenticateRecruiter } from '../services/backendService';
+import { authenticateRecruiter, setQaAuthToken } from '../services/backendService';
+import { getQaMode, setQaMode } from '../utils/qaMode';
 import './RecruiterLogin.css';
 
 const RecruiterLogin = () => {
@@ -9,11 +10,18 @@ const RecruiterLogin = () => {
   const [password, setPassword] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
+  const [isQaMode, setIsQaMode] = useState(() => getQaMode());
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError('');
     setIsLoading(true);
+
+    if (isQaMode) {
+      setQaAuthToken();
+      navigate('/recruiter/dashboard?qa=1');
+      return;
+    }
 
     try {
       await authenticateRecruiter({
@@ -30,6 +38,18 @@ const RecruiterLogin = () => {
     }
   };
 
+  const handleToggleQa = () => {
+    const next = !isQaMode;
+    setIsQaMode(next);
+    setQaMode(next);
+    setError('');
+  };
+
+  const handleQaDirectAccess = () => {
+    setQaAuthToken();
+    navigate('/recruiter/dashboard?qa=1');
+  };
+
   return (
     <div className="recruiter-login-page">
       <div className="login-background"></div>
@@ -39,6 +59,14 @@ const RecruiterLogin = () => {
           <div className="login-header">
             <h1>👥 Recruiter Access</h1>
             <p>View assessment analytics and insights</p>
+            <button
+              type="button"
+              className="submit-btn"
+              style={{ marginTop: '12px', background: isQaMode ? '#0369a1' : '#334155' }}
+              onClick={handleToggleQa}
+            >
+              QA Mode: {isQaMode ? 'ON' : 'OFF'}
+            </button>
           </div>
 
           <form onSubmit={handleSubmit} className="login-form">
@@ -51,7 +79,7 @@ const RecruiterLogin = () => {
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 disabled={isLoading}
-                required
+                required={!isQaMode}
               />
             </div>
 
@@ -64,7 +92,7 @@ const RecruiterLogin = () => {
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 disabled={isLoading}
-                required
+                required={!isQaMode}
               />
             </div>
 
@@ -75,8 +103,19 @@ const RecruiterLogin = () => {
               disabled={isLoading}
               className="submit-btn"
             >
-              {isLoading ? 'Signing In...' : 'Sign In'}
+              {isLoading ? 'Signing In...' : (isQaMode ? 'Enter QA Dashboard' : 'Sign In')}
             </button>
+
+            {isQaMode && (
+              <button
+                type="button"
+                className="submit-btn"
+                style={{ marginTop: '10px', background: '#0ea5e9' }}
+                onClick={handleQaDirectAccess}
+              >
+                Continue Offline (QA)
+              </button>
+            )}
           </form>
 
           <div className="demo-credentials">

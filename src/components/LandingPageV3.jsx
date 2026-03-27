@@ -24,6 +24,7 @@ import { useLanguage } from '../context/LanguageContext';
 import { authenticateParticipant } from '../services/backendService';
 import { GAME_FLOW } from '../utils/gameFlow';
 import { getLocalizedGameInstruction } from '../utils/gameFlowI18n';
+import { getQaMode, setQaMode, qaModeLabel } from '../utils/qaMode';
 import logo from '../assets/logo.jpg';
 import './LandingPageV3.css';
 
@@ -361,6 +362,7 @@ const LandingPageV3 = () => {
   const [authError, setAuthError] = useState('');
   const [showForm, setShowForm] = useState(false);
   const { language, setLanguage } = useLanguage();
+  const [isQaMode, setIsQaMode] = useState(() => getQaMode());
   const [formData, setFormData] = useState({
     fullName: '',
     participantId: '',
@@ -383,6 +385,21 @@ const LandingPageV3 = () => {
 
   const handleStartAssessment = (event) => {
     event.preventDefault();
+
+    if (isQaMode) {
+      setIsDemo(false);
+      setParticipantProfile({
+        fullName: formData.fullName.trim() || 'Usuario QA',
+        participantId: formData.participantId.trim() || `QA-${Date.now()}`,
+        email: formData.email.trim() || 'qa@local',
+        authenticatedAt: new Date().toISOString(),
+        participantToken: null,
+        preferredLanguage: language,
+        source: 'qa_offline'
+      });
+      navigate(`/game/1?lang=${language}`);
+      return;
+    }
 
     const authenticate = async () => {
       setIsSubmitting(true);
@@ -447,6 +464,12 @@ const LandingPageV3 = () => {
     navigate(`/game/1?lang=${language}`);
   };
 
+  const handleToggleQaMode = () => {
+    const next = !isQaMode;
+    setIsQaMode(next);
+    setQaMode(next);
+  };
+
   const ensureQuickAccessProfile = () => {
     setIsDemo(true);
     setParticipantProfile({
@@ -487,6 +510,17 @@ const LandingPageV3 = () => {
         >
           EN
         </button>
+        {isDev && (
+          <button
+            type="button"
+            className={`lv3-lang-btn lv3-qa-toggle ${isQaMode ? 'active' : ''}`}
+            onClick={handleToggleQaMode}
+            aria-label={qaModeLabel(language)}
+            title={qaModeLabel(language)}
+          >
+            QA {isQaMode ? 'ON' : 'OFF'}
+          </button>
+        )}
       </div>
 
       <header className="lv3-hero">
@@ -573,6 +607,20 @@ const LandingPageV3 = () => {
             <p>{t.formDescription}</p>
 
             <form className="lv3-form" onSubmit={handleStartAssessment}>
+              {isDev && (
+                <div className="lv3-divider" style={{ marginBottom: '8px' }}>
+                  {qaModeLabel(language)}: {isQaMode ? 'ON' : 'OFF'}
+                </div>
+              )}
+
+              {isDev && isQaMode && (
+                <div className="lv3-divider" style={{ marginBottom: '14px', color: '#0369a1', borderColor: 'rgba(2,132,199,0.35)' }}>
+                  {language === 'en'
+                    ? 'QA/offline enabled: credentials are optional and backend is skipped.'
+                    : 'QA/offline activo: credenciales opcionales y sin llamada a backend.'}
+                </div>
+              )}
+
               <label htmlFor="fullName">Nombre completo</label>
               <input
                 id="fullName"
@@ -591,7 +639,7 @@ const LandingPageV3 = () => {
                 placeholder="KRUMM-2026-001"
                 value={formData.participantId}
                 onChange={handleChange}
-                required
+                required={!isQaMode}
               />
 
               <label htmlFor="email">Correo electrónico *</label>
@@ -602,7 +650,7 @@ const LandingPageV3 = () => {
                 placeholder="tu@email.com"
                 value={formData.email}
                 onChange={handleChange}
-                required
+                required={!isQaMode}
               />
 
               <label htmlFor="accessCode">Código de acceso *</label>
@@ -613,14 +661,14 @@ const LandingPageV3 = () => {
                 placeholder="••••••••"
                 value={formData.accessCode}
                 onChange={handleChange}
-                required
+                required={!isQaMode}
                 minLength={4}
               />
 
               {authError && <div className="lv3-error">{authError}</div>}
 
               <button type="submit" className="lv3-primary lv3-full" disabled={isSubmitting}>
-                {isSubmitting ? t.validating : t.startEvaluation}
+                {isSubmitting ? t.validating : (isQaMode ? (language === 'en' ? 'Enter in QA mode' : 'Entrar en modo QA') : t.startEvaluation)}
               </button>
 
               {isDev && (
