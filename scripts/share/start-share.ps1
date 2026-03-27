@@ -1,0 +1,128 @@
+param(
+  [int]$FrontendPort = 5180,
+  [int]$StartupTimeoutSeconds = 90
+)
+
+$ErrorActionPreference = 'Stop'
+
+$scriptDir = Split-Path -Parent $MyInvocation.MyCommand.Path
+$projectRoot = Resolve-Path (Join-Path $scriptDir '..\..')
+$stateDir = Join-Path $projectRoot '.runtime\share'
+$devPidFile = Join-Path $stateDir 'dev.pid'
+$tunnelPidFile = Join-Path $stateDir 'tunnel.pid'
+$devOutLog = Join-Path $stateDir 'dev.out.log'
+$devErrLog = Join-Path $stateDir 'dev.err.log'
+$tunnelOutLog = Join-Path $stateDir 'tunnel.out.log'
+$tunnelErrLog = Join-Path $stateDir 'tunnel.err.log'
+$shareUrlFile = Join-Path $stateDir 'share.url'
+
+function Ensure-Command {
+  param([string]$Name)
+  if (-not (Get-Command $Name -ErrorAction SilentlyContinue)) {
+    throw "No se encontro el comando requerido: $Name"
+  }
+}
+
+function Test-HttpReady {
+  param([string]$Url)
+  try {
+    $null = Invoke-WebRequest -Uri $Url -TimeoutSec 3 -UseBasicParsing
+    return $true
+  } catch {
+    return $false
+  }
+}
+
+function Read-PidFile {
+  param([string]$Path)
+  if (-not (Test-Path $Path)) {
+    return $null
+  }
+  $content = (Get-Content $Path -Raw).Trim()
+  if ([string]::IsNullOrWhiteSpace($content)) {
+    return $null
+  }
+  $parsed = 0
+  if ([int]::TryParse($content, [ref]$parsed)) {
+    return $parsed
+  }
+  return $null
+}
+
+function Assert-NotRunning {
+  param([string]$Name, [string]$PidPath)
+  $pidValue = Read-PidFile -Path $PidPath
+  if ($null -eq $pidValue) {
+    return
+  }
+  $proc = Get-Process -Id $pidValue -ErrorAction SilentlyContinue
+  if ($null -ne $proc) {
+    throw "$Name ya esta en ejecucion (PID $pidValue). Ejecuta scripts/share/stop-share.ps1 antes de volver a iniciar."
+  }
+}
+
+Ensure-Command -Name 'npm'
+Ensure-Command -Name 'cloudflared'
+
+New-Item -ItemType Directory -Path $stateDir -Force | Out-Null
+Assert-NotRunning -Name 'Servidor de desarrollo' -PidPath $devPidFile
+Assert-NotRunning -Name 'Tunnel' -PidPath $tunnelPidFile
+
+Remove-Item $devOutLog, $devErrLog, $tunnelOutLog, $tunnelErrLog, $shareUrlFile -ErrorAction SilentlyContinue
+
+Write-Host "Iniciando app local en puerto $FrontendPort..."
+$devProcess = Start-Process -FilePath 'npm.cmd' -ArgumentList @('run', 'dev') -WorkingDirectory $projectRoot -PassThru -RedirectStandardOutput $devOutLog -RedirectStandardError $devErrLog
+$devProcess.Id | Set-Content -Path $devPidFile -NoNewline
+
+$frontendUrl = "http://127.0.0.1:$FrontendPort"
+$deadline = (Get-Date).AddSeconds($StartupTimeoutSeconds)
+while ((Get-Date) -lt $deadline) {
+  if (Test-HttpReady -Url $frontendUrl) {
+    break
+  }
+  Start-Sleep -Seconds 2
+}
+
+if (-not (Test-HttpReady -Url $frontendUrl)) {
+  Write-Host 'La app no quedo disponible a tiempo. Revisa logs y corrige antes de exponer.' -ForegroundColor Red
+  Write-Host "Log salida: $devOutLog"
+  Write-Host "Log error : $devErrLog"
+  throw 'No fue posible iniciar la app local.'
+}
+
+Write-Host 'Iniciando Cloudflare Quick Tunnel...'
+$tunnelProcess = Start-Process -FilePath 'cloudflared' -ArgumentList @('tunnel', '--url', "http://localhost:$FrontendPort") -WorkingDirectory $projectRoot -PassThru -RedirectStandardOutput $tunnelOutLog -RedirectStandardError $tunnelErrLog
+$tunnelProcess.Id | Set-Content -Path $tunnelPidFile -NoNewline
+
+$urlRegex = 'https://[-a-zA-Z0-9]+\.trycloudflare\.com'
+$publicUrl = $null
+$tunnelDeadline = (Get-Date).AddSeconds($StartupTimeoutSeconds)
+while ((Get-Date) -lt $tunnelDeadline) {
+  if (Test-Path $tunnelOutLog) {
+    $match = Select-String -Path $tunnelOutLog -Pattern $urlRegex | Select-Object -Last 1
+    if ($null -ne $match) {
+      $urlMatch = [regex]::Match($match.Line, $urlRegex)
+      if ($urlMatch.Success) {
+        $publicUrl = $urlMatch.Value
+        break
+      }
+    }
+  }
+  Start-Sleep -Seconds 2
+}
+
+if ([string]::IsNullOrWhiteSpace($publicUrl)) {
+  Write-Host 'No se pudo extraer la URL publica del tunnel. Revisa logs.' -ForegroundColor Red
+  Write-Host "Log salida: $tunnelOutLog"
+  Write-Host "Log error : $tunnelErrLog"
+  throw 'Tunnel iniciado sin URL detectable.'
+}
+
+$publicUrl | Set-Content -Path $shareUrlFile -NoNewline
+
+Write-Host ''
+Write-Host 'Listo. Acceso temporal activo.' -ForegroundColor Green
+Write-Host "URL publica  : $publicUrl"
+Write-Host "Frontend local: $frontendUrl"
+Write-Host 'Stop comando : .\scripts\share\stop-share.ps1'
+Write-Host "Estado/logs  : $stateDir"

@@ -26,6 +26,9 @@
     "quality:check": "npm run calibrate:scoring && npm run quality:alerts && npm run quality:edge",
     "load-test": "node load-test.js",
     "load-test:backend": "node scripts/loadTestBackend.mjs",
+    "share:start": "powershell -ExecutionPolicy Bypass -File ./scripts/share/start-share.ps1",
+    "share:check": "powershell -ExecutionPolicy Bypass -File ./scripts/share/check-share.ps1",
+    "share:stop": "powershell -ExecutionPolicy Bypass -File ./scripts/share/stop-share.ps1",
     "phase:close": "npm run quality:check && npm run load-test:backend && npm run test && npm run build",
     "list-models": "node tmp-list-models.mjs"
   },

@@ -27,6 +27,7 @@ vi.mock('../TelemetryContext', () => ({
       enableCursorTracking: true,
       enableWebcamTracking: true,
       enableQualityGates: true,
+      enablePreGameBrief: true,
     },
     recordWebcamFrame: vi.fn(),
     setConsent: vi.fn(),
@@ -67,3 +68,4 @@ describe('GameLayout', () => {
     });
   });
 });
+

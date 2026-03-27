@@ -204,8 +204,8 @@ export const TaskSwitchingGame = ({ isActive, onEndGame, isDemo, timeLimit, lang
       <div className="hrrh-game-container">
         <div className="game-instruction-box">
           <h2>Task Switching</h2>
-          <p>{isEn ? 'Alternate between classifying by ' : 'Alterna entre clasificar por '}<strong>{isEn ? 'COLOR' : 'COLOR'}</strong>{isEn ? ' and ' : ' y '}<strong>{isEn ? 'SHAPE' : 'FORMA'}</strong></p>
-          <p>{isEn ? 'Rule alternates every trial and stimuli vary in 3x3 matrix' : 'La regla alterna cada trial y el estimulo varia en matriz 3x3'}</p>
+          <p>{isEn ? 'Each trial tells you the active rule. Follow ONLY that rule.' : 'Cada trial te indica la regla activa. Sigue SOLO esa regla.'}</p>
+          <p><strong>{isEn ? 'COLOR' : 'COLOR'}:</strong> {isEn ? 'choose RED/BLUE/GREEN.' : 'elige ROJO/AZUL/VERDE.'} <strong>{isEn ? 'SHAPE' : 'FORMA'}:</strong> {isEn ? 'choose CIRCLE/SQUARE/TRIANGLE.' : 'elige CIRCULO/CUADRADO/TRIANGULO.'}</p>
           <button onClick={beginGame} className="btn-start">{isEn ? 'Start' : 'Comenzar'}</button>
         </div>
       </div>
@@ -219,6 +219,9 @@ export const TaskSwitchingGame = ({ isActive, onEndGame, isDemo, timeLimit, lang
         <div className="task-display">
           <p className="rule">{currentRule === 'COLOR' ? (isEn ? 'RULE: COLOR' : 'REGLA: COLOR') : (isEn ? 'RULE: SHAPE' : 'REGLA: FORMA')}</p>
           <div className="stimulus">{stimulus.shape} - {stimulus.color}</div>
+          <p className="rule" style={{ marginTop: '8px', opacity: 0.9 }}>
+            {isEn ? 'Answer only by the current rule shown above.' : 'Responde solo segun la regla actual mostrada arriba.'}
+          </p>
         </div>
         <div className="buttons-group">
           <button onClick={() => handleSelection('RED')} className="btn btn-option">{isEn ? 'RED' : 'ROJO'}</button>
@@ -311,8 +314,8 @@ export const CPTGame = ({ isActive, onEndGame, isDemo, timeLimit, language = 'es
       <div className="hrrh-game-container">
         <div className="game-instruction-box">
           <h2>Continuous Performance Test</h2>
-          <p>{isEn ? 'Press when you see the target letter' : 'Presiona cuando veas la letra objetivo'}</p>
-          <p>{isEn ? 'Target letter may shift by block' : 'La letra objetivo puede cambiar por bloque'}</p>
+          <p>{isEn ? 'Watch the current target letter and decide fast.' : 'Observa la letra objetivo actual y decide rapido.'}</p>
+          <p>{isEn ? 'If the displayed letter matches target, tap "I see". If not, tap "Not".' : 'Si la letra mostrada coincide con el objetivo, toca "Veo". Si no coincide, toca "No es".'}</p>
           <button onClick={beginGame} className="btn-start">{isEn ? 'Start' : 'Comenzar'}</button>
         </div>
       </div>
@@ -323,6 +326,7 @@ export const CPTGame = ({ isActive, onEndGame, isDemo, timeLimit, language = 'es
     <div className="hrrh-game-container">
       <div className="game-state-box">
         <h3>{isEn ? 'Block' : 'Bloque'} {block} {isEn ? 'of' : 'de'} {MAX_BLOCKS}</h3>
+        <p className="rule">{isEn ? 'Target letter' : 'Letra objetivo'}: <strong>{targetLetter}</strong></p>
         <div className="letter-stimulus">{currentLetter}</div>
         <div className="buttons-group">
           <button onClick={handleSeeX} className="btn btn-correct">{isEn ? `I see ${targetLetter}` : `Veo ${targetLetter}`}</button>
@@ -426,8 +430,8 @@ export const DecisionGameHTMX = ({ isActive, onEndGame, isDemo, timeLimit, langu
       <div className="hrrh-game-container">
         <div className="game-instruction-box">
           <h2>Decision Making Under Pressure</h2>
-          <p>{isEn ? 'Make fast decisions in work scenarios' : 'Toma decisiones rapidas sobre escenarios laborales'}</p>
-          <p>{isEn ? 'Choose robust trade-offs with changing context' : 'Elige trade-offs robustos con contexto cambiante'}</p>
+          <p>{isEn ? 'Read the situation and choose the BEST action.' : 'Lee la situacion y elige la MEJOR accion.'}</p>
+          <p>{isEn ? 'Prioritize impact, feasibility and communication quality.' : 'Prioriza impacto, factibilidad y calidad de comunicacion.'}</p>
           <button onClick={beginGame} className="btn-start">{isEn ? 'Start' : 'Comenzar'}</button>
         </div>
       </div>
@@ -445,6 +449,9 @@ export const DecisionGameHTMX = ({ isActive, onEndGame, isDemo, timeLimit, langu
         <div className="scenario-box">
           <p>{isEn ? currentScenario.textEn : currentScenario.textEs}</p>
         </div>
+        <p className="rule" style={{ marginTop: '10px' }}>
+          {isEn ? 'Question: What should you do first?' : 'Pregunta: ?Que deberias hacer primero?'}
+        </p>
         <div className="buttons-group">
           {options.map((label, idx) => (
             <button key={label} onClick={() => handleDecision(idx)} className="btn btn-option">{label}</button>
@@ -524,9 +531,10 @@ export const RuleShiftGame = ({ isActive, onEndGame, timeLimit, language = 'es' 
       <div className="hrrh-game-container">
         <div className="game-instruction-box">
           <h2>Rule Shift + Exceptions</h2>
-          <p>{isEn ? 'Block 1: classify by COLOR' : 'Bloque 1: clasifica por COLOR'}</p>
-          <p>{isEn ? 'Block 2: classify by SHAPE' : 'Bloque 2: clasifica por FORMA'}</p>
-          <p>{isEn ? 'Block 3: exception, RED always maps to RED' : 'Bloque 3: excepcion, ROJO siempre va a ROJO'}</p>
+          <p>{isEn ? 'Rules change by block. Read the active rule before answering.' : 'Las reglas cambian por bloque. Lee la regla activa antes de responder.'}</p>
+          <p><strong>{isEn ? 'Block 1:' : 'Bloque 1:'}</strong> {isEn ? 'classify by COLOR.' : 'clasifica por COLOR.'}</p>
+          <p><strong>{isEn ? 'Block 2:' : 'Bloque 2:'}</strong> {isEn ? 'classify by SHAPE.' : 'clasifica por FORMA.'}</p>
+          <p><strong>{isEn ? 'Block 3:' : 'Bloque 3:'}</strong> {isEn ? 'if RED, choose RED; otherwise choose SHAPE.' : 'si es ROJO, elige ROJO; si no, elige FORMA.'}</p>
           <button onClick={beginGame} className="btn-start">{isEn ? 'Start' : 'Comenzar'}</button>
         </div>
       </div>
@@ -540,9 +548,12 @@ export const RuleShiftGame = ({ isActive, onEndGame, timeLimit, language = 'es' 
         <div className="rule-display">
           {block === 1 && <p>{isEn ? 'Rule: COLOR' : 'Regla: COLOR'}</p>}
           {block === 2 && <p>{isEn ? 'Rule: SHAPE' : 'Regla: FORMA'}</p>}
-          {block === 3 && <p>{isEn ? 'Rule: RED exception' : 'Regla: excepcion ROJO'}</p>}
+          {block === 3 && <p>{isEn ? 'Rule: if RED -> RED, else SHAPE' : 'Regla: si ROJO -> ROJO, si no -> FORMA'}</p>}
         </div>
         <div className="stimulus">{stimulus.shape} - {stimulus.color}</div>
+          <p className="rule" style={{ marginTop: '8px', opacity: 0.9 }}>
+            {isEn ? 'Answer only by the current rule shown above.' : 'Responde solo segun la regla actual mostrada arriba.'}
+          </p>
         <div className="buttons-group">
           <button onClick={() => handleSelection('RED')} className="btn btn-option">{isEn ? 'RED' : 'ROJO'}</button>
           <button onClick={() => handleSelection('BLUE')} className="btn btn-option">{isEn ? 'BLUE' : 'AZUL'}</button>
@@ -647,8 +658,8 @@ export const SJTGame = ({ isActive, onEndGame, isDemo, timeLimit, language = 'es
       <div className="hrrh-game-container">
         <div className="game-instruction-box">
           <h2>Situational Judgment Test</h2>
-          <p>{isEn ? 'Assess your judgment in workplace scenarios' : 'Evalua tu juicio ante situaciones laborales'}</p>
-          <p>{isEn ? 'Choose the most appropriate response' : 'Elige la respuesta mas apropiada'}</p>
+          <p>{isEn ? 'Read each workplace scenario and choose the BEST first response.' : 'Lee cada escenario laboral y elige la MEJOR primera respuesta.'}</p>
+          <p>{isEn ? 'Prioritize collaboration, clarity and responsible execution.' : 'Prioriza colaboracion, claridad y ejecucion responsable.'}</p>
           <button onClick={beginGame} className="btn-start">{isEn ? 'Start' : 'Comenzar'}</button>
         </div>
       </div>
@@ -666,9 +677,12 @@ export const SJTGame = ({ isActive, onEndGame, isDemo, timeLimit, language = 'es
         <div className="sjt-scenario">
           <p><strong>{isEn ? 'Situation:' : 'Situacion:'}</strong> {isEn ? currentScenario.promptEn : currentScenario.promptEs}</p>
         </div>
+        <p className="rule" style={{ marginTop: '10px' }}>
+          {isEn ? 'Question: What should you do first?' : 'Pregunta: ?Que deberias hacer primero?'}
+        </p>
         <div className="buttons-group">
           {options.map((label, idx) => (
-            <button key={label} onClick={() => handleResponse(idx)} className="btn btn-option">{label}</button>
+            <button key={label} onClick={() => handleResponse(idx)} className="btn btn-option">{`${idx + 1}. ${label}`}</button>
           ))}
         </div>
         <p className="score">Score: {score}</p>
@@ -676,4 +690,10 @@ export const SJTGame = ({ isActive, onEndGame, isDemo, timeLimit, language = 'es
     </div>
   );
 };
+
+
+
+
+
+
 
