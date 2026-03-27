@@ -18,6 +18,7 @@ import {
   getLastAIDebugTrace,
   checkGeminiHealth,
 } from './services/aiReportService';
+import { generateEdgeLocalReport } from './services/edgeLocalInferenceService';
 import { saveSessionToBackend } from './services/backendService';
 import { generateDummyReportData } from './utils/dummyDataGenerator';
 import { analyzeTelemetry, buildTelemetryRiskSignals } from './utils/telemetryAnalytics';
@@ -36,12 +37,13 @@ const Report = () => {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   
-  // Initialize dummy mode from URL params
+  // Initialize modes from URL params (useful for deterministic QA scenarios).
   const initialDummyMode = searchParams.get('dummy') === 'true';
+  const initialAiMode = searchParams.get('ai') !== 'false';
   
   const [isAnalyzing, setIsAnalyzing] = useState(true);
   const [aiReport, setAiReport] = useState(null);
-  const [useAI, setUseAI] = useState(true); // Toggle between AI and heuristic
+  const [useAI, setUseAI] = useState(initialAiMode); // Toggle between AI and heuristic
   const [useDummyData, setUseDummyData] = useState(initialDummyMode);
   const [showDevTelemetry, setShowDevTelemetry] = useState(false);
   const [isAiProbeRunning, setIsAiProbeRunning] = useState(false);
@@ -60,6 +62,7 @@ const Report = () => {
   const useBackendGeminiProxy = typeof import.meta !== 'undefined' && import.meta.env?.VITE_USE_BACKEND_GEMINI_PROXY !== 'false';
   const hasGeminiKey = Boolean(typeof import.meta !== 'undefined' && import.meta.env?.VITE_GOOGLE_API_KEY);
   const canUseGemini = useBackendGeminiProxy || hasGeminiKey;
+  const preferEdgeLocalInference = typeof import.meta !== 'undefined' && import.meta.env?.VITE_USE_EDGE_LOCAL_INFERENCE !== 'false';
 
   const isDevBuild = typeof import.meta !== 'undefined' && import.meta.env?.DEV;
 
@@ -211,13 +214,28 @@ const Report = () => {
           let resolvedReport = null;
 
           if (useAI) {
-            if (canUseGemini) {
+            if (preferEdgeLocalInference) {
+              const edgeReport = generateEdgeLocalReport(reportData, language, {
+                participantId: participantProfile?.participantId || 'anonymous',
+              });
+              if (edgeReport) {
+                resolvedReport = edgeReport;
+                setInsightMeta({
+                  mode: 'edge-local',
+                  reason: isEn
+                    ? `Local edge inference completed in browser without raw-data exfiltration (coverage ${edgeReport?.signalAudit?.telemetryCoverageScore ?? 0}%, biometric quality ${edgeReport?.signalAudit?.biometricSignalQualityScore ?? 0}%).`
+                    : `Inferencia edge-local completada en navegador sin exfiltracion de datos crudos (cobertura ${edgeReport?.signalAudit?.telemetryCoverageScore ?? 0}%, calidad biometrica ${edgeReport?.signalAudit?.biometricSignalQualityScore ?? 0}%).`
+                });
+              }
+            }
+
+            if (!resolvedReport && canUseGemini) {
               const report = await generateAIReport(reportData, 'recruitment', language);
               if (report) {
                 resolvedReport = report;
                 setInsightMeta({ mode: 'ai', reason: 'Gemini response parsed successfully.' });
               }
-            } else {
+            } else if (!resolvedReport && !preferEdgeLocalInference) {
               setInsightMeta({ mode: 'heuristic', reason: 'Missing Gemini configuration (proxy disabled and no frontend API key).' });
             }
           }
@@ -230,6 +248,13 @@ const Report = () => {
             } else if (canUseGemini) {
               const fallbackReason = getLastAIFailureReason() || 'AI call failed or returned invalid JSON; fallback activated.';
               setInsightMeta({ mode: 'heuristic', reason: fallbackReason });
+            } else {
+              setInsightMeta({
+                mode: 'heuristic',
+                reason: isEn
+                  ? 'Edge-local output unavailable and Gemini not configured; heuristic fallback activated.'
+                  : 'Salida edge-local no disponible y Gemini no configurado; fallback heuristico activado.'
+              });
             }
           }
 
@@ -278,7 +303,8 @@ const Report = () => {
     sessionSavedId,
     canUseGemini,
     generationNonce,
-    isEn
+    isEn,
+    preferEdgeLocalInference
   ]);
 
   if (!hasRealData && !useDummyData) {
@@ -339,12 +365,16 @@ const Report = () => {
         style={{ maxWidth: '900px', margin: '0 auto', padding: '40px' }}
       >
         <h1 className="text-gradient report-heading" style={{ fontSize: '2.5rem', marginBottom: '8px', textAlign: 'center' }}>
-          {report.source === 'gemini'
+          {report.source === 'edge-local'
+            ? (isEn ? 'Edge-Local Skills Assessment' : 'Evaluacion de habilidades edge-local')
+            : report.source === 'gemini'
             ? (isEn ? 'AI-Powered Skills Assessment' : 'Evaluacion de habilidades con IA')
             : (isEn ? 'Skills Evaluation Matrix' : 'Matriz de evaluacion de habilidades')}
         </h1>
         <p className="report-subheading" style={{ textAlign: 'center', color: '#374151', marginBottom: '40px' }}>
-          {report.source === 'gemini'
+          {report.source === 'edge-local'
+            ? (isEn ? 'Generated by local edge model in browser' : 'Generado por modelo edge local en navegador')
+            : report.source === 'gemini'
             ? (isEn ? 'Generated by Google Gemini AI' : 'Generado por Google Gemini AI')
             : (isEn ? 'Heuristic-Based Analysis' : 'Analisis basado en heuristicas')}
           {useDummyData && <span style={{ color: '#7c3aed', fontStyle: 'italic' }}>{isEn ? ' | Demo Data' : ' | Datos demo'}</span>}
@@ -377,6 +407,15 @@ const Report = () => {
             <TelemetryStatCard label={isEn ? 'Profile Signal' : 'Senal de perfil'} value={recommendationLabel || 'N/A'} />
             <TelemetryStatCard label={isEn ? 'Confidence' : 'Confianza'} value={report.confidenceScore ? `${report.confidenceScore}%` : 'N/A'} />
             <TelemetryStatCard label={isEn ? 'Coverage' : 'Cobertura'} value={`${extendedGameRows.filter((row) => typeof row.score === 'number').length}/${GAME_ROWS.length} ${isEn ? 'games' : 'juegos'}`} />
+            {report.source === 'edge-local' && report.runtime?.latencyMs != null && (
+              <TelemetryStatCard label={isEn ? 'Edge p95 target' : 'Objetivo p95 edge'} value={`${report.runtime.latencyMs} ms`} />
+            )}
+            {report.source === 'edge-local' && report.signalAudit?.telemetryCoverageScore != null && (
+              <TelemetryStatCard label={isEn ? 'Telemetry coverage' : 'Cobertura telemetrica'} value={`${report.signalAudit.telemetryCoverageScore}%`} />
+            )}
+            {report.source === 'edge-local' && report.signalAudit?.biometricSignalQualityScore != null && (
+              <TelemetryStatCard label={isEn ? 'Biometric quality' : 'Calidad biometrica'} value={`${report.signalAudit.biometricSignalQualityScore}%`} />
+            )}
           </div>
 
           <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '14px', flexWrap: 'wrap' }}>
@@ -495,7 +534,9 @@ const Report = () => {
           border: `2px solid ${getRecommendationColor(report.recommendation)}`
         }}>
           <h2 style={{ color: '#374151', fontSize: '1rem', textTransform: 'uppercase', letterSpacing: '2px' }}>
-            {report.source === 'gemini'
+            {report.source === 'edge-local'
+              ? (isEn ? 'Edge-Local Skills and Talent Signal' : 'Senal edge-local de talento y habilidades')
+              : report.source === 'gemini'
               ? (isEn ? 'AI Skills and Talent Signal' : 'Senal de talento y habilidades por IA')
               : (isEn ? 'System Skills and Talent Signal' : 'Senal de talento y habilidades del sistema')}
           </h2>
@@ -505,11 +546,17 @@ const Report = () => {
               : 'Este panel resume el contexto de interpretacion. La recomendacion principal y confianza se muestran una sola vez para evitar duplicacion.'}
           </div>
           <div style={{ marginTop: '12px', display: 'inline-flex', alignItems: 'center', gap: '8px', padding: '6px 12px', borderRadius: '999px', background: 'rgba(99,102,241,0.12)', border: '1px solid rgba(99,102,241,0.3)', color: '#3730a3', fontSize: '0.86rem', fontWeight: 600 }}>
-            {isEn ? 'Insight Source' : 'Fuente de insight'}: {insightMeta.mode === 'ai' ? 'ai' : 'heuristic'}
+            {isEn ? 'Insight Source' : 'Fuente de insight'}: {insightMeta.mode === 'edge-local' ? 'edge-local' : insightMeta.mode === 'ai' ? 'ai' : 'heuristic'}
           </div>
           {insightMeta.reason && (
             <div style={{ marginTop: '8px', color: '#64748b', fontSize: '0.82rem', maxWidth: '760px', marginLeft: 'auto', marginRight: 'auto' }}>
               {insightMeta.reason}
+            </div>
+          )}
+          {report.source === 'edge-local' && report.model?.calibrationVersion && (
+            <div style={{ marginTop: '8px', color: '#475569', fontSize: '0.8rem' }}>
+              {isEn ? 'Calibration' : 'Calibracion'}: {report.model.calibrationVersion} | {isEn ? 'cohort' : 'cohorte'} {report.model.calibrationCohort || 'general'} | A/B {report.model.calibrationVariant || 'calibrated'}
+              {report.model.rollbackToStable ? ` (${isEn ? 'rollback to stable' : 'rollback a estable'})` : ''}
             </div>
           )}
         </div>
@@ -529,6 +576,27 @@ const Report = () => {
             </div>
           )}
         </div>
+
+        {report.source === 'edge-local' && report.signalAudit && (
+          <div className="glass-panel-light report-health" style={{ padding: '14px', marginBottom: '24px', border: '1px solid rgba(2,132,199,0.35)' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', gap: '12px', flexWrap: 'wrap', alignItems: 'center' }}>
+              <strong style={{ color: '#0c4a6e' }}>
+                {isEn ? 'Edge Telemetry/Biometric Audit' : 'Auditoria edge telemetrica/biometrica'}
+              </strong>
+              <span style={{ color: '#475569', fontSize: '0.86rem' }}>
+                {isEn ? 'Derived signals only, no raw video exfiltration.' : 'Solo senales derivadas, sin exfiltracion de video crudo.'}
+              </span>
+            </div>
+            <div style={{ marginTop: '10px', display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(160px, 1fr))', gap: '8px' }}>
+              <TelemetryStatCard label={isEn ? 'Cursor events' : 'Eventos cursor'} value={report.signalAudit.cursorEvents} />
+              <TelemetryStatCard label={isEn ? 'Webcam frames' : 'Frames webcam'} value={report.signalAudit.webcamFrames} />
+              <TelemetryStatCard label={isEn ? 'Face presence' : 'Presencia facial'} value={`${report.signalAudit.facePresenceRatio}%`} />
+              <TelemetryStatCard label={isEn ? 'Blink rate' : 'Tasa parpadeo'} value={report.signalAudit.avgBlinkRate} />
+              <TelemetryStatCard label={isEn ? 'Webcam quality' : 'Calidad webcam'} value={report.signalAudit.avgWebcamQuality} />
+              <TelemetryStatCard label={isEn ? 'Quality flags' : 'Quality flags'} value={report.signalAudit.qualityFlags} />
+            </div>
+          </div>
+        )}
 
         {isDevBuild && aiDebugRows.length > 0 && (
           <div className="glass-panel-light report-debug" style={{ padding: '14px', marginBottom: '24px', border: '1px dashed rgba(51,65,85,0.35)' }}>
@@ -1141,4 +1209,6 @@ function buildActionPriorities(report, competencyHighlights, isEn) {
 }
 
 export default Report;
+
+
 

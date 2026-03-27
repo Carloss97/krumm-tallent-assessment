@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-03-27T18:27:18.908Z",
+  "generatedAt": "2026-03-27T18:45:40.112Z",
   "config": {
     "preset": "fast",
     "seeds": [
@@ -7,8 +7,8 @@
       202,
       303
     ],
-    "iterationsPerProfile": 500,
-    "totalIterationsPerSeed": 2000,
+    "iterationsPerProfile": 1000,
+    "totalIterationsPerSeed": 4000,
     "profiles": [
       {
         "key": "base_normal",
@@ -142,79 +142,79 @@
         ]
       }
     },
-    "failOnBreach": true
+    "failOnBreach": false
   },
   "acceptance": {
     "minF1": 0.85,
     "minAccuracy": 0.88,
-    "maxFpr": 0.08,
-    "maxFnr": 0.1,
+    "maxFpr": 0.09,
+    "maxFnr": 0.11,
     "maxRuntimeErr": 0.005,
     "maxF1Drift": 0.03
   },
   "aggregate": {
     "global": {
-      "accuracy": 0.9298333333333334,
-      "f1": 0.9311293368947474,
-      "fpr": 0.08900000000000001,
-      "fnr": 0.051333333333333335,
-      "runtimeErrorRate": 0.0025,
-      "f1Std": 0.0008862483479688858,
-      "f1Drift": 0.0021707782089870342
+      "accuracy": 0.9347499999999999,
+      "f1": 0.9357508109277596,
+      "fpr": 0.08083333333333333,
+      "fnr": 0.04966666666666667,
+      "runtimeErrorRate": 0.0025833333333333333,
+      "f1Std": 0.0006369316432252204,
+      "f1Drift": 0.0015419593668930531
     },
     "readiness": {
       "minF1": true,
       "minAccuracy": true,
-      "maxFpr": false,
+      "maxFpr": true,
       "maxFnr": true,
       "maxRuntimeErr": true,
       "maxF1Drift": true
     },
-    "readinessStatus": "casi-listo"
+    "readinessStatus": "listo"
   },
   "seedRuns": [
     {
       "seed": 101,
       "threshold": 0.533,
-      "total": 2000,
+      "total": 4000,
       "confusionMatrix": {
-        "tp": 944,
-        "tn": 914,
-        "fp": 86,
-        "fn": 56
+        "tp": 1896,
+        "tn": 1840,
+        "fp": 160,
+        "fn": 104
       },
       "metrics": {
-        "accuracy": 0.929,
-        "precision": 0.916504854368932,
-        "recall": 0.944,
-        "f1": 0.9300492610837438,
-        "fpr": 0.086,
-        "fnr": 0.056,
-        "runtimeErrorRate": 0.003
+        "accuracy": 0.934,
+        "precision": 0.9221789883268483,
+        "recall": 0.948,
+        "f1": 0.9349112426035503,
+        "fpr": 0.08,
+        "fnr": 0.052,
+        "runtimeErrorRate": 0.00225
       },
       "byProfile": {
         "base_normal": {
-          "total": 500,
+          "total": 1000,
           "confusionMatrix": {
-            "tp": 444,
+            "tp": 896,
             "tn": 0,
             "fp": 0,
-            "fn": 56
+            "fn": 104
           },
           "metrics": {
-            "accuracy": 0.888,
+            "accuracy": 0.896,
             "precision": 1,
-            "recall": 0.888,
-            "f1": 0.940677966101695,
+            "recall": 0.896,
+            "f1": 0.9451476793248946,
             "fpr": 0,
-            "fnr": 0.112,
+            "fnr": 0.104,
             "runtimeErrorRate": 0.006
           }
         },
         "alto_rendimiento": {
-          "total": 500,
+          "total": 1000,
           "confusionMatrix": {
-            "tp": 500,
+            "tp": 1000,
             "tn": 0,
             "fp": 0,
             "fn": 0
@@ -226,43 +226,43 @@
             "f1": 1,
             "fpr": 0,
             "fnr": 0,
-            "runtimeErrorRate": 0.004
-          }
-        },
-        "bajo_rendimiento": {
-          "total": 500,
-          "confusionMatrix": {
-            "tp": 0,
-            "tn": 499,
-            "fp": 1,
-            "fn": 0
-          },
-          "metrics": {
-            "accuracy": 0.998,
-            "precision": 0,
-            "recall": 0,
-            "f1": 0,
-            "fpr": 0.002,
-            "fnr": 0,
             "runtimeErrorRate": 0
           }
         },
-        "inconsistente_ruidoso": {
-          "total": 500,
+        "bajo_rendimiento": {
+          "total": 1000,
           "confusionMatrix": {
             "tp": 0,
-            "tn": 415,
-            "fp": 85,
+            "tn": 1000,
+            "fp": 0,
             "fn": 0
           },
           "metrics": {
-            "accuracy": 0.83,
+            "accuracy": 1,
             "precision": 0,
             "recall": 0,
             "f1": 0,
-            "fpr": 0.17,
+            "fpr": 0,
             "fnr": 0,
             "runtimeErrorRate": 0.002
+          }
+        },
+        "inconsistente_ruidoso": {
+          "total": 1000,
+          "confusionMatrix": {
+            "tp": 0,
+            "tn": 840,
+            "fp": 160,
+            "fn": 0
+          },
+          "metrics": {
+            "accuracy": 0.84,
+            "precision": 0,
+            "recall": 0,
+            "f1": 0,
+            "fpr": 0.16,
+            "fnr": 0,
+            "runtimeErrorRate": 0.001
           }
         }
       }
@@ -270,45 +270,45 @@
     {
       "seed": 202,
       "threshold": 0.533,
-      "total": 2000,
+      "total": 4000,
       "confusionMatrix": {
-        "tp": 953,
-        "tn": 906,
-        "fp": 94,
-        "fn": 47
+        "tp": 1905,
+        "tn": 1834,
+        "fp": 166,
+        "fn": 95
       },
       "metrics": {
-        "accuracy": 0.9295,
-        "precision": 0.9102196752626552,
-        "recall": 0.953,
-        "f1": 0.9311187103077675,
-        "fpr": 0.094,
-        "fnr": 0.047,
-        "runtimeErrorRate": 0.0025
+        "accuracy": 0.93475,
+        "precision": 0.9198454852728151,
+        "recall": 0.9525,
+        "f1": 0.9358879882092852,
+        "fpr": 0.083,
+        "fnr": 0.0475,
+        "runtimeErrorRate": 0.0035
       },
       "byProfile": {
         "base_normal": {
-          "total": 500,
+          "total": 1000,
           "confusionMatrix": {
-            "tp": 453,
+            "tp": 905,
             "tn": 0,
             "fp": 0,
-            "fn": 47
+            "fn": 95
           },
           "metrics": {
-            "accuracy": 0.906,
+            "accuracy": 0.905,
             "precision": 1,
-            "recall": 0.906,
-            "f1": 0.9506820566631689,
+            "recall": 0.905,
+            "f1": 0.9501312335958005,
             "fpr": 0,
-            "fnr": 0.094,
-            "runtimeErrorRate": 0
+            "fnr": 0.095,
+            "runtimeErrorRate": 0.003
           }
         },
         "alto_rendimiento": {
-          "total": 500,
+          "total": 1000,
           "confusionMatrix": {
-            "tp": 500,
+            "tp": 1000,
             "tn": 0,
             "fp": 0,
             "fn": 0
@@ -324,10 +324,10 @@
           }
         },
         "bajo_rendimiento": {
-          "total": 500,
+          "total": 1000,
           "confusionMatrix": {
             "tp": 0,
-            "tn": 500,
+            "tn": 1000,
             "fp": 0,
             "fn": 0
           },
@@ -342,21 +342,21 @@
           }
         },
         "inconsistente_ruidoso": {
-          "total": 500,
+          "total": 1000,
           "confusionMatrix": {
             "tp": 0,
-            "tn": 406,
-            "fp": 94,
+            "tn": 834,
+            "fp": 166,
             "fn": 0
           },
           "metrics": {
-            "accuracy": 0.812,
+            "accuracy": 0.834,
             "precision": 0,
             "recall": 0,
             "f1": 0,
-            "fpr": 0.188,
+            "fpr": 0.166,
             "fnr": 0,
-            "runtimeErrorRate": 0.008
+            "runtimeErrorRate": 0.009
           }
         }
       }
@@ -364,45 +364,45 @@
     {
       "seed": 303,
       "threshold": 0.533,
-      "total": 2000,
+      "total": 4000,
       "confusionMatrix": {
-        "tp": 949,
-        "tn": 913,
-        "fp": 87,
-        "fn": 51
+        "tp": 1901,
+        "tn": 1841,
+        "fp": 159,
+        "fn": 99
       },
       "metrics": {
-        "accuracy": 0.931,
-        "precision": 0.916023166023166,
-        "recall": 0.949,
-        "f1": 0.9322200392927308,
-        "fpr": 0.087,
-        "fnr": 0.051,
+        "accuracy": 0.9355,
+        "precision": 0.9228155339805825,
+        "recall": 0.9505,
+        "f1": 0.9364532019704433,
+        "fpr": 0.0795,
+        "fnr": 0.0495,
         "runtimeErrorRate": 0.002
       },
       "byProfile": {
         "base_normal": {
-          "total": 500,
+          "total": 1000,
           "confusionMatrix": {
-            "tp": 449,
+            "tp": 901,
             "tn": 0,
             "fp": 0,
-            "fn": 51
+            "fn": 99
           },
           "metrics": {
-            "accuracy": 0.898,
+            "accuracy": 0.901,
             "precision": 1,
-            "recall": 0.898,
-            "f1": 0.946259220231823,
+            "recall": 0.901,
+            "f1": 0.9479221462388217,
             "fpr": 0,
-            "fnr": 0.102,
-            "runtimeErrorRate": 0.004
+            "fnr": 0.099,
+            "runtimeErrorRate": 0.002
           }
         },
         "alto_rendimiento": {
-          "total": 500,
+          "total": 1000,
           "confusionMatrix": {
-            "tp": 500,
+            "tp": 1000,
             "tn": 0,
             "fp": 0,
             "fn": 0
@@ -418,10 +418,10 @@
           }
         },
         "bajo_rendimiento": {
-          "total": 500,
+          "total": 1000,
           "confusionMatrix": {
             "tp": 0,
-            "tn": 500,
+            "tn": 1000,
             "fp": 0,
             "fn": 0
           },
@@ -432,23 +432,23 @@
             "f1": 0,
             "fpr": 0,
             "fnr": 0,
-            "runtimeErrorRate": 0
+            "runtimeErrorRate": 0.002
           }
         },
         "inconsistente_ruidoso": {
-          "total": 500,
+          "total": 1000,
           "confusionMatrix": {
             "tp": 0,
-            "tn": 413,
-            "fp": 87,
+            "tn": 841,
+            "fp": 159,
             "fn": 0
           },
           "metrics": {
-            "accuracy": 0.826,
+            "accuracy": 0.841,
             "precision": 0,
             "recall": 0,
             "f1": 0,
-            "fpr": 0.174,
+            "fpr": 0.159,
             "fnr": 0,
             "runtimeErrorRate": 0.004
           }

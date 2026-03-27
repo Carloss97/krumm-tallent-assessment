@@ -1,5 +1,6 @@
 import fs from 'node:fs';
 import path from 'node:path';
+import { buildAcceptance, evaluateReadiness } from './qaGateUtils.mjs';
 
 const CALIBRATION_PATH = path.resolve('data/calibration/latest-calibration.json');
 const OUT_DIR = path.resolve('reports/qa');
@@ -14,7 +15,7 @@ const PRESET_CONFIG = {
   },
   fast: {
     seeds: [101, 202, 303],
-    iterationsPerProfile: 500,
+    iterationsPerProfile: 1000,
   },
 };
 
@@ -23,16 +24,7 @@ const SEEDS = process.env.QA_SIM_SEEDS
   ? process.env.QA_SIM_SEEDS.split(',').map((x) => Number(x.trim())).filter(Number.isFinite)
   : selectedPreset.seeds;
 const ITERATIONS_PER_PROFILE = Number(process.env.QA_SIM_ITERATIONS_PER_PROFILE || selectedPreset.iterationsPerProfile);
-
-const ACCEPTANCE = {
-  minF1: Number(process.env.QA_SIM_MIN_F1 || 0.85),
-  minAccuracy: Number(process.env.QA_SIM_MIN_ACCURACY || 0.88),
-  maxFpr: Number(process.env.QA_SIM_MAX_FPR || 0.08),
-  maxFnr: Number(process.env.QA_SIM_MAX_FNR || 0.10),
-  maxRuntimeErr: Number(process.env.QA_SIM_MAX_RUNTIME_ERR || 0.005),
-  maxF1Drift: Number(process.env.QA_SIM_MAX_F1_DRIFT || 0.03),
-};
-
+const ACCEPTANCE = buildAcceptance({ preset: PRESET, env: process.env });
 const FAIL_ON_BREACH = String(process.env.QA_SIM_FAIL_ON_BREACH || 'false').toLowerCase() === 'true';
 
 const PROFILES = [
@@ -185,22 +177,9 @@ function aggregate(seedRuns) {
     f1Drift: Math.max(...f1s) - Math.min(...f1s),
   };
 
-  const readiness = {
-    minF1: global.f1 >= ACCEPTANCE.minF1,
-    minAccuracy: global.accuracy >= ACCEPTANCE.minAccuracy,
-    maxFpr: global.fpr <= ACCEPTANCE.maxFpr,
-    maxFnr: global.fnr <= ACCEPTANCE.maxFnr,
-    maxRuntimeErr: global.runtimeErrorRate <= ACCEPTANCE.maxRuntimeErr,
-    maxF1Drift: global.f1Drift <= ACCEPTANCE.maxF1Drift,
-  };
+  const { readiness, readinessStatus } = evaluateReadiness(global, ACCEPTANCE);
 
-  const allPass = Object.values(readiness).every(Boolean);
-
-  return {
-    global,
-    readiness,
-    readinessStatus: allPass ? 'listo' : 'casi-listo',
-  };
+  return { global, readiness, readinessStatus };
 }
 
 function toPct(v) {

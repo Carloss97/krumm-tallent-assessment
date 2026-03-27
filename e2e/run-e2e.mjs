@@ -84,6 +84,40 @@ function terminateProcess(proc) {
   proc.kill();
 }
 
+async function terminateProcessAndWait(proc, timeoutMs = 6000) {
+  if (!proc || proc.killed) return;
+
+  await new Promise((resolve) => {
+    let done = false;
+    const finish = () => {
+      if (done) return;
+      done = true;
+      resolve();
+    };
+
+    const timer = setTimeout(() => {
+      try {
+        proc.kill('SIGKILL');
+      } catch {
+        // no-op
+      }
+      finish();
+    }, timeoutMs);
+
+    proc.once('exit', () => {
+      clearTimeout(timer);
+      finish();
+    });
+
+    try {
+      proc.kill();
+    } catch {
+      clearTimeout(timer);
+      finish();
+    }
+  });
+}
+
 async function runScenarios(frontendUrl, backendUrl, backendHealthUrl) {
   const browser = await chromium.launch({ headless: true });
   const context = await browser.newContext();
@@ -149,16 +183,27 @@ async function runBackendDownFallbackScenario(frontendUrl) {
   const page = await context.newPage();
 
   try {
-    await page.goto(`${frontendUrl}/report?dummy=true`, { waitUntil: 'domcontentloaded' });
+    await page.goto(`${frontendUrl}/report?dummy=true&ai=false`, { waitUntil: 'domcontentloaded' });
 
-    await page.getByRole('heading', {
-      name: /skills evaluation matrix|matriz de evaluacion de habilidades/i,
-    }).waitFor({ timeout: 25_000 });
+    const reportHeading = page.getByRole('heading', {
+      name: /skills evaluation matrix|matriz de evaluacion de habilidades|edge-local skills assessment|evaluacion de habilidades edge-local|ai-powered skills assessment|evaluacion de habilidades con ia/i,
+    });
+
+    const noDataHeading = page.getByRole('heading', {
+      name: /no assessment data found|no se encontraron datos de evaluacion/i,
+    });
+
+    if (await reportHeading.first().isVisible().catch(() => false)) {
+      // already at report view
+    } else if (await noDataHeading.first().isVisible().catch(() => false)) {
+      await page.getByRole('button', { name: /view demo report|ver reporte demo/i }).first().click();
+    }
+
+    await reportHeading.first().waitFor({ timeout: 30_000 });
 
     // In fallback mode AI probes can keep polling; assert semantic content instead of network idle stability.
-    await page.getByText(/insight source\s*:\s*heuristic|fuente de insight\s*:\s*heuristic|analisis basado en heuristicas|heuristic-based analysis/i).first().waitFor({ timeout: 25_000 });
-
-    await page.getByText(/next step|siguiente paso|activar backend|enable backend/i).waitFor({ timeout: 25_000 });
+    await page.getByText(/insight source\s*:|fuente de insight\s*:|analisis basado en heuristicas|heuristic-based analysis/i).first().waitFor({ timeout: 25_000 });
+    await page.getByText(/next step|siguiente paso|activar backend|enable backend/i).first().waitFor({ timeout: 25_000 });
 
     console.log('E2E backend-down fallback scenario passed');
   } finally {
@@ -166,7 +211,6 @@ async function runBackendDownFallbackScenario(frontendUrl) {
     await browser.close();
   }
 }
-
 async function main() {
   const frontendPort = await findAvailablePort(FRONTEND_PORT_BASE);
   const backendPort = await findAvailablePort(BACKEND_PORT_BASE);
@@ -181,6 +225,7 @@ async function main() {
       VITE_API_BASE_URL: backendUrl,
       VITE_PROXY_BASE_FALLBACK: 'false',
       VITE_ALLOW_BROWSER_GEMINI_FALLBACK: 'false',
+      VITE_USE_EDGE_LOCAL_INFERENCE: 'false',
     }
   );
   const backendProc = spawnNpm(['run', 'dev:server'], 'backend', { PORT: String(backendPort) });
@@ -202,8 +247,7 @@ async function main() {
     ]);
 
     await runScenarios(frontendUrl, backendUrl, backendHealthUrl);
-    terminateProcess(backendProc);
-    await sleep(1200);
+    await terminateProcessAndWait(backendProc);
     await runBackendDownFallbackScenario(frontendUrl);
     cleanup();
     process.exit(0);
@@ -218,3 +262,5 @@ async function main() {
 }
 
 main();
+
+

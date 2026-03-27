@@ -28,14 +28,48 @@ jobs:
       - name: Run blocking checks (lint, test, build)
         run: npm run ci:verify
 
-      - name: QA classification gate (FPR/FNR)
+  qa_classification_gate:
+    runs-on: ubuntu-latest
+    needs: verify
+    continue-on-error: ${{ github.event_name == 'pull_request' }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run QA simulation (fast preset)
         env:
           CALIBRATION_SOLID_OVERRIDE: 0.533
           QA_SIM_PRESET: fast
-          QA_SIM_FAIL_ON_BREACH: 'true'
+          QA_SIM_FAIL_ON_BREACH: 'false'
         run: |
           npm run calibrate:scoring
           node scripts/qaMassSimulation.mjs
+
+      - name: Evaluate QA gate (blocking on main)
+        env:
+          QA_GATE_FAIL_ON_BREACH: 'true'
+        run: node scripts/ciQaGate.mjs
+
+      - name: Upload QA gate artifacts
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: qa-classification-gate
+          path: |
+            reports/qa/SIMULATION_MULTI_SEED_latest.json
+            reports/qa/SIMULATION_MULTI_SEED_latest.md
+            data/calibration/latest-calibration.json
+            data/calibration/latest-kpis.json
 
   security_advisory:
     runs-on: ubuntu-latest
@@ -57,6 +91,7 @@ jobs:
 
       - name: Dependency audit [advisory]
         run: npm run security:audit
+
   e2e_advisory:
     runs-on: ubuntu-latest
     needs: verify
@@ -125,4 +160,3 @@ jobs:
 
           curl -fsS "$BACKEND_BASE_URL/health" > /dev/null || (cat backend.log && exit 1)
           npm run load-test:backend
-

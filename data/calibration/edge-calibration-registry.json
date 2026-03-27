@@ -1,0 +1,105 @@
+{
+  "generatedAt": "2026-03-27T00:00:00.000Z",
+  "description": "Edge-local calibration registry with versioned cohorts and rollback metadata.",
+  "stableVersion": "2026-03-27.v1-stable",
+  "activeVersion": "2026-03-27.v2-calibrated",
+  "rollbackPolicy": {
+    "mode": "stable-on-demand",
+    "triggerEnv": "VITE_EDGE_ROLLBACK_TO_STABLE",
+    "fallback": "2026-03-27.v1-stable"
+  },
+  "versions": {
+    "2026-03-27.v1-stable": {
+      "fitWeights": {
+        "executionControl": 0.24,
+        "adaptability": 0.2,
+        "attentionStability": 0.18,
+        "decisionQuality": 0.22,
+        "learningVelocity": 0.16
+      },
+      "thresholds": {
+        "strong": 78,
+        "solid": 62,
+        "conditional": 46
+      },
+      "cohorts": {
+        "general": {
+          "confidenceBias": 0,
+          "dimensionMultiplier": {
+            "executionControl": 1,
+            "adaptability": 1,
+            "attentionStability": 1,
+            "decisionQuality": 1,
+            "learningVelocity": 1
+          }
+        },
+        "operations": {
+          "confidenceBias": 1,
+          "dimensionMultiplier": {
+            "executionControl": 1.06,
+            "adaptability": 0.98,
+            "attentionStability": 1.08,
+            "decisionQuality": 1.05,
+            "learningVelocity": 0.97
+          }
+        },
+        "tech": {
+          "confidenceBias": 0,
+          "dimensionMultiplier": {
+            "executionControl": 0.98,
+            "adaptability": 1.08,
+            "attentionStability": 1,
+            "decisionQuality": 1,
+            "learningVelocity": 1.07
+          }
+        }
+      }
+    },
+    "2026-03-27.v2-calibrated": {
+      "fitWeights": {
+        "executionControl": 0.22,
+        "adaptability": 0.23,
+        "attentionStability": 0.2,
+        "decisionQuality": 0.2,
+        "learningVelocity": 0.15
+      },
+      "thresholds": {
+        "strong": 76,
+        "solid": 60,
+        "conditional": 45
+      },
+      "cohorts": {
+        "general": {
+          "confidenceBias": 1,
+          "dimensionMultiplier": {
+            "executionControl": 1,
+            "adaptability": 1,
+            "attentionStability": 1.03,
+            "decisionQuality": 1,
+            "learningVelocity": 1.02
+          }
+        },
+        "operations": {
+          "confidenceBias": 2,
+          "dimensionMultiplier": {
+            "executionControl": 1.08,
+            "adaptability": 0.99,
+            "attentionStability": 1.1,
+            "decisionQuality": 1.07,
+            "learningVelocity": 0.98
+          }
+        },
+        "tech": {
+          "confidenceBias": 1,
+          "dimensionMultiplier": {
+            "executionControl": 0.97,
+            "adaptability": 1.1,
+            "attentionStability": 1.02,
+            "decisionQuality": 1,
+            "learningVelocity": 1.1
+          }
+        }
+      }
+    }
+  }
+}
