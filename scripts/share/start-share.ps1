@@ -98,8 +98,16 @@ $urlRegex = 'https://[-a-zA-Z0-9]+\.trycloudflare\.com'
 $publicUrl = $null
 $tunnelDeadline = (Get-Date).AddSeconds($StartupTimeoutSeconds)
 while ((Get-Date) -lt $tunnelDeadline) {
+  $candidateLogs = @()
   if (Test-Path $tunnelOutLog) {
-    $match = Select-String -Path $tunnelOutLog -Pattern $urlRegex | Select-Object -Last 1
+    $candidateLogs += $tunnelOutLog
+  }
+  if (Test-Path $tunnelErrLog) {
+    $candidateLogs += $tunnelErrLog
+  }
+
+  if ($candidateLogs.Count -gt 0) {
+    $match = Select-String -Path $candidateLogs -Pattern $urlRegex | Select-Object -Last 1
     if ($null -ne $match) {
       $urlMatch = [regex]::Match($match.Line, $urlRegex)
       if ($urlMatch.Success) {

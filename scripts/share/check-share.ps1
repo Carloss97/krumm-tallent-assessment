@@ -30,11 +30,11 @@ function Read-PidFile {
 }
 
 function Test-PidRunning {
-  param([int]$Pid)
-  if ($null -eq $Pid -or $Pid -le 0) {
+  param([int]$ProcessId)
+  if ($null -eq $ProcessId -or $ProcessId -le 0) {
     return $false
   }
-  return $null -ne (Get-Process -Id $Pid -ErrorAction SilentlyContinue)
+  return $null -ne (Get-Process -Id $ProcessId -ErrorAction SilentlyContinue)
 }
 
 function Test-Endpoint {
@@ -66,8 +66,8 @@ $publicUrl = if (Test-Path $shareUrlFile) { (Get-Content $shareUrlFile -Raw).Tri
 $devPid = Read-PidFile -Path $devPidFile
 $tunnelPid = Read-PidFile -Path $tunnelPidFile
 
-$devRunning = if ($null -ne $devPid) { Test-PidRunning -Pid $devPid } else { $false }
-$tunnelRunning = if ($null -ne $tunnelPid) { Test-PidRunning -Pid $tunnelPid } else { $false }
+$devRunning = if ($null -ne $devPid) { Test-PidRunning -ProcessId $devPid } else { $false }
+$tunnelRunning = if ($null -ne $tunnelPid) { Test-PidRunning -ProcessId $tunnelPid } else { $false }
 
 $frontendCheck = Test-Endpoint -Url $frontendUrl -Seconds $TimeoutSec
 $backendCheck = Test-Endpoint -Url $backendHealthUrl -Seconds $TimeoutSec
@@ -99,7 +99,12 @@ if (-not $publicCheck.Ok -and $publicCheck.Error) {
   Write-Host "Public error  : $($publicCheck.Error)" -ForegroundColor Yellow
 }
 
-$allOk = $devRunning -and $tunnelRunning -and $frontendCheck.Ok -and $backendCheck.Ok -and $publicCheck.Ok
+$publicReachable = $publicCheck.Ok -or ($publicCheck.Status -eq 403)
+if ($publicCheck.Status -eq 403) {
+  Write-Host 'Public note   : 403 en PowerShell puede ser normal con Quick Tunnel (UA no navegador).' -ForegroundColor Yellow
+}
+
+$allOk = $devRunning -and $tunnelRunning -and $frontendCheck.Ok -and $backendCheck.Ok -and $publicReachable
 if ($allOk) {
   Write-Host ''
   Write-Host 'Resultado: OK. La sesion de sharing esta operativa.' -ForegroundColor Green
