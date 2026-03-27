@@ -10,7 +10,10 @@ const GlobalProgressBar = () => {
 
   // Calculate progress based on route and current game flow.
   const totalSteps = GAME_FLOW.length;
-  const currentGame = GAME_FLOW.find((game) => path.includes(game.path));
+  const normalizedPath = path.endsWith('/') && path.length > 1 ? path.slice(0, -1) : path;
+  const currentGame = GAME_FLOW.find((game) => (
+    normalizedPath === game.path || normalizedPath.startsWith(`${game.path}/`)
+  ));
   let currentStep = currentGame ? currentGame.id : 0;
 
   if (path.includes('report')) currentStep = totalSteps;

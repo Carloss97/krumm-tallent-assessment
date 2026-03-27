@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-03-27T16:16:41.084Z",
+  "generatedAt": "2026-03-27T18:01:30.784Z",
   "sessionCount": 8,
   "outcomeSource": "deterministic-proxy",
   "syntheticOutcomes": true,
@@ -18,18 +18,18 @@
       "falseNegativeRateHighPotential": 0
     },
     "fairness": {
-      "selectionRateRatio": null,
-      "tprGap": 0,
+      "selectionRateRatio": 1,
+      "tprGap": 0.3333,
       "calibrationGap": 0.2329,
       "avgScoreGapStd": 0.2441,
       "byGroup": {
         "selectionRate": {
-          "group_a": 0,
-          "group_b": 0
+          "group_a": 0.75,
+          "group_b": 0.75
         },
         "tpr": {
-          "group_a": 0,
-          "group_b": 0
+          "group_a": 0.6666666666666666,
+          "group_b": 1
         },
         "ece": {
           "group_a": 0.2138,

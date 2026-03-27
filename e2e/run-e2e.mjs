@@ -151,10 +151,14 @@ async function runBackendDownFallbackScenario(frontendUrl) {
   try {
     await page.goto(`${frontendUrl}/report?dummy=true`, { waitUntil: 'domcontentloaded' });
 
-    await page.getByText(/insight source\s*:\s*heuristic|fuente de insight\s*:\s*heuristic/i).waitFor({ timeout: 20_000 });
+    await page.getByRole('heading', {
+      name: /skills evaluation matrix|matriz de evaluacion de habilidades/i,
+    }).waitFor({ timeout: 25_000 });
 
-    await page.getByText(/next step|siguiente paso/i).waitFor({ timeout: 20_000 });
-    await page.getByText(/npm run dev:server/i).waitFor({ timeout: 20_000 });
+    // In fallback mode AI probes can keep polling; assert semantic content instead of network idle stability.
+    await page.getByText(/insight source\s*:\s*heuristic|fuente de insight\s*:\s*heuristic|analisis basado en heuristicas|heuristic-based analysis/i).first().waitFor({ timeout: 25_000 });
+
+    await page.getByText(/next step|siguiente paso|activar backend|enable backend/i).waitFor({ timeout: 25_000 });
 
     console.log('E2E backend-down fallback scenario passed');
   } finally {

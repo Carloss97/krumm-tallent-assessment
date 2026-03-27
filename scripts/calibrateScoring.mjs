@@ -318,6 +318,62 @@ const scoreWithWeights = (features, weights, gameKeys) => {
   return weighted / total;
 };
 
+const evaluateThreshold = (predictions, labels, threshold) => {
+  let tp = 0;
+  let tn = 0;
+  let fp = 0;
+  let fn = 0;
+
+  for (let i = 0; i < predictions.length; i += 1) {
+    const pred = predictions[i] >= threshold ? 1 : 0;
+    const actual = labels[i];
+
+    if (pred === 1 && actual === 1) tp += 1;
+    else if (pred === 0 && actual === 0) tn += 1;
+    else if (pred === 1 && actual === 0) fp += 1;
+    else fn += 1;
+  }
+
+  const precision = tp / Math.max(1, tp + fp);
+  const recall = tp / Math.max(1, tp + fn);
+  const f1 = (2 * precision * recall) / Math.max(1e-9, precision + recall);
+  const fpr = fp / Math.max(1, fp + tn);
+  const fnr = fn / Math.max(1, fn + tp);
+
+  return { precision, recall, f1, fpr, fnr };
+};
+
+const tuneSolidThreshold = (predictions, labels, baseline) => {
+  let best = {
+    threshold: baseline,
+    metrics: evaluateThreshold(predictions, labels, baseline),
+    constrained: false,
+  };
+
+  const candidates = [];
+  for (let i = 30; i <= 70; i += 1) {
+    const q = i / 100;
+    candidates.push(Number(quantile(predictions, q).toFixed(4)));
+  }
+
+  for (const threshold of candidates) {
+    const metrics = evaluateThreshold(predictions, labels, threshold);
+    const constrained = metrics.fnr <= 0.1 && metrics.fpr <= 0.08;
+
+    if (constrained) {
+      if (!best.constrained || metrics.f1 > best.metrics.f1) {
+        best = { threshold, metrics, constrained: true };
+      }
+      continue;
+    }
+
+    if (!best.constrained && metrics.fnr < best.metrics.fnr) {
+      best = { threshold, metrics, constrained: false };
+    }
+  }
+
+  return best;
+};
 const computeGroupMetric = (rows, valueFn) => {
   const groups = new Map();
   for (const row of rows) {
@@ -428,9 +484,17 @@ const main = () => {
   const baselineWeights = Object.fromEntries(gameKeys.map((key) => [key, 1]));
   const baselinePredictions = rows.map((row) => scoreWithWeights(row.features, baselineWeights, gameKeys));
 
+  const labels = rows.map((row) => row.success_6m);
+  const baselineSolid = Number(quantile(predictions, 0.5).toFixed(4));
+  const tunedSolid = tuneSolidThreshold(predictions, labels, baselineSolid);
+
+  const solidThreshold = Number((tunedSolid.constrained
+    ? tunedSolid.threshold
+    : Math.max(0.3, tunedSolid.threshold - 0.03)).toFixed(4));
+
   const thresholds = {
     strong: Number(quantile(predictions, 0.75).toFixed(4)),
-    solid: Number(quantile(predictions, 0.5).toFixed(4)),
+    solid: solidThreshold,
     conditional: Number(quantile(predictions, 0.25).toFixed(4)),
   };
 
@@ -475,3 +539,5 @@ const main = () => {
 };
 
 main();
+
+

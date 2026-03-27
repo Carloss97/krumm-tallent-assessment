@@ -1,6 +1,6 @@
 # Quality Alerts
 
-Generated at: 2026-03-27T16:16:41.482Z
+Generated at: 2026-03-27T18:00:47.631Z
 Input KPI file: C:\Users\sarlo\OneDrive\Escritorio\Test\data\calibration\latest-kpis.json
 Outcome source: deterministic-proxy
 Synthetic outcomes: yes
