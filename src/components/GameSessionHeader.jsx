@@ -30,6 +30,7 @@ const GameSessionHeader = ({
     const initialTime = parseInt(timeLimit, 10);
     if (isNaN(initialTime)) return;
 
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setRemainingTime(initialTime);
 
     const interval = setInterval(() => {

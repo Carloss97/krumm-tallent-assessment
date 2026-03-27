@@ -127,7 +127,7 @@ const NBackGame = ({ isActive, onEndGame, isDemo, timeLimit }) => {
 
   useEffect(() => {
     if (isActive && sequence.length > 0) {
-      // eslint-disable-next-line react-hooks/set-state-in-effect
+       
       playRound();
     }
   }, [isActive, sequence, playRound]);

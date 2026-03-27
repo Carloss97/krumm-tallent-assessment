@@ -75,6 +75,7 @@ const capabilityAreas = [
   }
 ];
 
+// eslint-disable-next-line no-unused-vars
 const differentiators = [
   {
     icon: ShieldCheck,

@@ -27,7 +27,7 @@ const FrustrationGame = ({ isActive, onEndGame, timeLimit }) => {
       hasEndedRef.current = false;
       startTracking();
       trackingTimeRef.current = 0;
-      // eslint-disable-next-line react-hooks/set-state-in-effect
+       
       setTrackingTimeMs(0);
       // Move the ring: random
       const moveInterval = setInterval(() => {

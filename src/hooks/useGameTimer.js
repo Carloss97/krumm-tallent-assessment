@@ -7,6 +7,7 @@ export const useGameTimer = ({ isActive, timeLimit, onEnd }) => {
   useEffect(() => {
     if (isActive && typeof timeLimit === 'number' && timeLimit > 0) {
       // Reset timer when a timed game starts.
+       
       setTimeLeft(timeLimit);
       timerRef.current = setInterval(() => {
         setTimeLeft(prev => {

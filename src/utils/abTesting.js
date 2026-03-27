@@ -21,7 +21,7 @@ export function assignVariant(experimentKey, identitySeed = 'anonymous', variant
     if (existing && variants.includes(existing)) {
       return existing;
     }
-  } catch (err) {
+  } catch {
     // Ignore storage read errors and fallback to deterministic hash.
   }
 
@@ -30,7 +30,7 @@ export function assignVariant(experimentKey, identitySeed = 'anonymous', variant
 
   try {
     sessionStorage.setItem(storageKey, selected);
-  } catch (err) {
+  } catch {
     // Ignore storage write errors.
   }
 

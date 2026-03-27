@@ -119,7 +119,7 @@ const VigilanceGame = ({ isActive, onEndGame, isDemo }) => {
 
   useEffect(() => {
     if (isActive && round > 1 && round <= MAX_ROUNDS) {
-        // eslint-disable-next-line react-hooks/set-state-in-effect
+         
         initRound();
     }
   }, [round, isActive, initRound, MAX_ROUNDS]);

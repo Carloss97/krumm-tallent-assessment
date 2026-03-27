@@ -87,7 +87,7 @@ const TowerOfLondonGame = ({ isActive, onEndGame, isDemo, timeLimit }) => {
     setSelectedTower(null);
 
     if (JSON.stringify(newTowers) === JSON.stringify(targetTowers)) {
-      // eslint-disable-next-line react-hooks/purity
+       
       const timeTaken = Date.now() - problemStartTime.current;
       setProblemTimes(prev => [...prev, timeTaken]);
 

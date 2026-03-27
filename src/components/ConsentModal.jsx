@@ -78,7 +78,9 @@ const ConsentModal = ({ isOpen, onConsentsReady, isDemo = false, language: langu
         stream.getTracks().forEach((track) => track.stop());
       } catch {
         webcamAllowed = false;
-        setPermissionError(text.webcamDenied);
+        setPermissionError(selectedLanguage === 'en'
+          ? 'Camera access was denied. We will continue with cursor telemetry only.'
+          : 'No se pudo acceder a la camara. Continuaremos solo con telemetria de cursor.');
       }
     }
 
@@ -88,7 +90,7 @@ const ConsentModal = ({ isOpen, onConsentsReady, isDemo = false, language: langu
       requestedWebcam: webcamConsent,
       timestamp: new Date().toISOString()
     });
-  }, [cursorConsent, webcamConsent, hasReadPrivacy, isDemo, onConsentsReady, text.webcamDenied]);
+  }, [cursorConsent, webcamConsent, hasReadPrivacy, isDemo, onConsentsReady, selectedLanguage]);
 
   if (!isOpen) return null;
 

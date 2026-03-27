@@ -1,4 +1,5 @@
 const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+const DEBUG_AUDIO = Boolean(import.meta?.env?.DEV || import.meta?.env?.VITE_DEBUG_MODE);
 
 const playTone = (freq, type, duration, vol=0.1, freqSlide=null) => {
   try {
@@ -21,7 +22,7 @@ const playTone = (freq, type, duration, vol=0.1, freqSlide=null) => {
     osc.stop(audioCtx.currentTime + duration);
   } catch (err) {
     // Ignore audio errors if user hasn't interacted with document (autoplay policy)
-    if (typeof console !== 'undefined' && process.env.DEBUG_MODE) {
+    if (typeof console !== 'undefined' && DEBUG_AUDIO) {
       console.debug('Audio playback unavailable:', err.message);
     }
   }
@@ -59,7 +60,7 @@ export const playBalloonPop = () => {
     noise.start();
   } catch (err) {
     // Ignore audio errors caused by autoplay/browser restrictions
-    if (typeof console !== 'undefined' && process.env.DEBUG_MODE) {
+    if (typeof console !== 'undefined' && DEBUG_AUDIO) {
       console.debug('Balloon pop audio unavailable:', err.message);
     }
   }

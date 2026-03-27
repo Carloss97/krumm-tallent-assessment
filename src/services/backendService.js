@@ -10,8 +10,6 @@ const getApiBaseUrl = () => {
 };
 
 // Token management for JWT
-let participantToken = null;
-let tokenExpiresAt = null;
 
 const parseExpiresInSeconds = (expiresIn, defaultSeconds) => {
   if (typeof expiresIn === 'number' && Number.isFinite(expiresIn)) {
@@ -42,14 +40,10 @@ const getStoredToken = () => {
     const stored = sessionStorage.getItem('participantToken');
     const expiresAt = sessionStorage.getItem('tokenExpiresAt');
     if (stored && expiresAt && Date.now() < parseInt(expiresAt, 10)) {
-      participantToken = stored;
-      tokenExpiresAt = parseInt(expiresAt, 10);
       return stored;
     }
     sessionStorage.removeItem('participantToken');
     sessionStorage.removeItem('tokenExpiresAt');
-    participantToken = null;
-    tokenExpiresAt = null;
     return null;
   } catch (err) {
     console.warn('Error reading stored token:', err);
@@ -60,8 +54,7 @@ const getStoredToken = () => {
 const storeToken = (token, expiresIn) => {
   try {
     const expiresInSeconds = parseExpiresInSeconds(expiresIn, 3600);
-    participantToken = token;
-    tokenExpiresAt = Date.now() + (expiresInSeconds * 1000);
+    const tokenExpiresAt = Date.now() + (expiresInSeconds * 1000);
     sessionStorage.setItem('participantToken', token);
     sessionStorage.setItem('tokenExpiresAt', tokenExpiresAt.toString());
   } catch (err) {
@@ -87,7 +80,7 @@ const apiFetch = async (path, options = {}) => {
       headers,
       ...options
     });
-  } catch (error) {
+  } catch {
     throw new Error('No se pudo conectar al backend. Verifica que el servidor API este activo.');
   }
 
@@ -98,8 +91,6 @@ const apiFetch = async (path, options = {}) => {
       // Token invalid or expired, clear it
       sessionStorage.removeItem('participantToken');
       sessionStorage.removeItem('tokenExpiresAt');
-      participantToken = null;
-      tokenExpiresAt = null;
     }
     throw new Error(body.error || body.message || 'Backend request failed');
   }
@@ -172,8 +163,6 @@ export const clearToken = () => {
   try {
     sessionStorage.removeItem('participantToken');
     sessionStorage.removeItem('tokenExpiresAt');
-    participantToken = null;
-    tokenExpiresAt = null;
   } catch (err) {
     console.warn('Error clearing token:', err);
   }

@@ -9,7 +9,7 @@ import './HRRHGames.css';
  */
 export const StopSignalGame = ({ isActive, onEndGame, isDemo, timeLimit, language = 'es' }) => {
   const isEn = language === 'en';
-  const { startTracking, stopTracking, recordError, recordTrialEvent } = useTelemetry();
+  const { startTracking, stopTracking, recordError } = useTelemetry();
   const [gameState, setGameState] = useState('instruction');
   const [trial, setTrial] = useState(1);
   const [score, setScore] = useState(0);
@@ -281,7 +281,7 @@ export const DecisionGameHTMX = ({ isActive, onEndGame, isDemo, timeLimit, langu
   const [gameState, setGameState] = useState('instruction');
   const [score, setScore] = useState(0);
   const [scenario, setScenario] = useState(1);
-  const [errors, setErrors] = useState(0);
+  const [errors] = useState(0);
   const hasEndedRef = useRef(false);
 
   const MAX_SCENARIOS = isDemo ? 4 : 8;
@@ -348,7 +348,7 @@ export const DecisionGameHTMX = ({ isActive, onEndGame, isDemo, timeLimit, langu
 /**
  * Rule Shift + Exceptions
  */
-export const RuleShiftGame = ({ isActive, onEndGame, isDemo, timeLimit, language = 'es' }) => {
+export const RuleShiftGame = ({ isActive, onEndGame, timeLimit, language = 'es' }) => {
   const isEn = language === 'en';
   const { startTracking, stopTracking, recordError } = useTelemetry();
   const [gameState, setGameState] = useState('instruction');
@@ -433,7 +433,7 @@ export const SJTGame = ({ isActive, onEndGame, isDemo, timeLimit, language = 'es
   const [gameState, setGameState] = useState('instruction');
   const [score, setScore] = useState(0);
   const [scenario, setScenario] = useState(1);
-  const [errors, setErrors] = useState(0);
+  const [errors] = useState(0);
   const hasEndedRef = useRef(false);
 
   const MAX_SCENARIOS = isDemo ? 4 : 10;
@@ -498,3 +498,6 @@ export const SJTGame = ({ isActive, onEndGame, isDemo, timeLimit, language = 'es
     </div>
   );
 };
+
+
+

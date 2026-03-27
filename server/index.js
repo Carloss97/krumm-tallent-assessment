@@ -1,4 +1,3 @@
-/* global process */
 
 import express from 'express';
 import cors from 'cors';
@@ -35,6 +34,15 @@ const GEMINI_FALLBACK_MODELS = [
 // Middleware
 app.use(cors());
 app.use(express.json());
+app.use((error, req, res, next) => {
+  if (error?.type === 'entity.parse.failed' || error instanceof SyntaxError) {
+    return res.status(400).json({
+      error: 'Invalid JSON payload',
+      details: 'Request body must be valid JSON',
+    });
+  }
+  return next(error);
+});
 app.use(requestLogger);
 app.use(rateLimiter({ windowMs: 60_000, maxRequests: 180 }));
 
@@ -636,6 +644,7 @@ app.get('/api/recruiter/analytics/v2', authenticateToken, requireRecruiter, (req
 });
 
 // Global error handler middleware
+// eslint-disable-next-line no-unused-vars
 app.use((err, req, res, next) => {
   console.error('Unhandled error:', err);
   res.status(err.status || 500).json({
@@ -661,3 +670,4 @@ app.listen(PORT, () => {
   console.log(`✓ Recruiter auth: POST /api/auth/recruiter`);
   console.log(`✓ Environment: ${process.env.NODE_ENV || 'development'}`);
 });
+

@@ -1,5 +1,6 @@
 #!/usr/bin/env node
 
+
 /**
  * Load Testing Script for Cognitive Assessment Platform
  *
@@ -10,12 +11,12 @@
 import { chromium } from 'playwright';
 
 const CONFIG = {
-  baseUrl: 'http://localhost:5173', // Vite dev server
-  concurrentUsers: 5, // Number of simultaneous users
-  usersPerBatch: 2, // Users to start per batch
-  batchDelay: 1000, // Delay between batches (ms)
-  gameTimeout: 30000, // Timeout per game (ms)
-  totalTimeout: 300000, // Total test timeout (5 minutes)
+  baseUrl: process.env.LOAD_TEST_BASE_URL || 'http://127.0.0.1:5180',
+  concurrentUsers: Number(process.env.LOAD_TEST_USERS || 5),
+  usersPerBatch: Number(process.env.LOAD_TEST_BATCH || 2),
+  batchDelay: Number(process.env.LOAD_TEST_BATCH_DELAY || 1000),
+  gameTimeout: Number(process.env.LOAD_TEST_GAME_TIMEOUT || 30000),
+  totalTimeout: Number(process.env.LOAD_TEST_TOTAL_TIMEOUT || 300000),
 };
 
 class LoadTester {
@@ -204,7 +205,6 @@ async function main() {
   console.log('🔍 Checking server status...');
 
   if (!(await checkServer())) {
-    // eslint-disable-next-line no-undef
     process.exit(1);
   }
 
@@ -212,7 +212,6 @@ async function main() {
   await tester.runLoadTest();
 }
 
-// eslint-disable-next-line no-undef
 if (import.meta.url === `file://${process.argv[1]}`) {
   main().catch(console.error);
 }

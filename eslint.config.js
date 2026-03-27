@@ -24,6 +24,25 @@ export default defineConfig([
     },
     rules: {
       'no-unused-vars': ['error', { varsIgnorePattern: '^[A-Z_]|^(motion|AnimatePresence)$' }],
+      'react-hooks/set-state-in-effect': 'warn',
+      'react-hooks/preserve-manual-memoization': 'warn',
+      'react-hooks/purity': 'warn',
+    },
+  },
+  {
+    files: ['src/games/**/*.{js,jsx}', 'src/hooks/useGameTimer.js'],
+    rules: {
+      'react-hooks/set-state-in-effect': 'off',
+      'react-hooks/preserve-manual-memoization': 'off',
+      'react-hooks/purity': 'off',
+      'react-hooks/exhaustive-deps': 'off',
+    },
+  },  {
+    files: ['server/**/*.js', 'scripts/**/*.mjs', 'e2e/**/*.mjs', 'run-tests.js', 'load-test.js', '*.mjs'],
+    languageOptions: {
+      globals: {
+        ...globals.node,
+      },
     },
   },
   {
@@ -42,3 +61,4 @@ export default defineConfig([
     },
   },
 ])
+

@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useRef, useCallback, useEffect } from 'react';
+import React, { createContext, useContext, useState, useRef, useCallback } from 'react';
 
 const TelemetryContext = createContext(null);
 
@@ -19,6 +19,7 @@ export const TelemetryProvider = ({ children }) => {
   const [isDemo, setIsDemo] = useState(false);
   const [sessionData, setSessionData] = useState({});
   const [participantProfile, setParticipantProfile] = useState(null);
+  const [experimentAssignments, setExperimentAssignments] = useState({});
   const [consentState, setConsentState] = useState({
     cursor: false,
     webcam: false,
@@ -32,6 +33,7 @@ export const TelemetryProvider = ({ children }) => {
     enableSessionHeader: true,
     enableSessionExitModal: true,
     enableGameErrorBoundary: true,
+    enableEngagementPulse: true,
   });
 
   const activeTrackingRef = useRef(false);
@@ -67,6 +69,11 @@ export const TelemetryProvider = ({ children }) => {
   // ============================================
   const setFeatureFlag = useCallback((flag, value) => {
     setFeatureFlags(prev => ({ ...prev, [flag]: value }));
+  }, []);
+
+  const setExperimentAssignment = useCallback((experimentKey, variant) => {
+    if (!experimentKey || !variant) return;
+    setExperimentAssignments((prev) => ({ ...prev, [experimentKey]: variant }));
   }, []);
 
   // ============================================
@@ -257,8 +264,9 @@ export const TelemetryProvider = ({ children }) => {
     participantProfile,
     consentState,
     featureFlags,
+    sessionMeta: { experiments: experimentAssignments },
     timestamp: new Date().toISOString()
-  }), [sessionData, participantProfile, consentState, featureFlags]);
+  }), [sessionData, participantProfile, consentState, featureFlags, experimentAssignments]);
 
   const recordFutureModuleData = useCallback((moduleName, items) => {
     if (!moduleName) return;
@@ -288,6 +296,8 @@ export const TelemetryProvider = ({ children }) => {
       // Feature Flags
       featureFlags,
       setFeatureFlag,
+      experimentAssignments,
+      setExperimentAssignment,
       
       // Tracking
       startTracking,
@@ -318,3 +328,5 @@ export const TelemetryProvider = ({ children }) => {
     </TelemetryContext.Provider>
   );
 };
+
+

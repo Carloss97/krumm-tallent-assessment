@@ -1,8 +1,12 @@
 #!/usr/bin/env node
 
+/* global process */
+
 const BASE_URL = process.env.BACKEND_BASE_URL || 'http://127.0.0.1:4000';
 const TOTAL_REQUESTS = Number(process.env.BACKEND_LOAD_TOTAL || 200);
 const CONCURRENCY = Number(process.env.BACKEND_LOAD_CONCURRENCY || 20);
+const TARGET_P95_MS = Number(process.env.BACKEND_SLO_P95_MS || 60);
+const MAX_THROTTLE_RATE = Number(process.env.BACKEND_SLO_MAX_THROTTLE_RATE || 15);
 
 const now = () => performance.now();
 
@@ -38,12 +42,10 @@ const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 
 const preflightHealthCheck = async () => {
   for (let attempt = 1; attempt <= 5; attempt += 1) {
-    // eslint-disable-next-line no-await-in-loop
     const result = await runSingleRequest();
     if (result.ok || result.status === 429) {
       return result;
     }
-    // eslint-disable-next-line no-await-in-loop
     await sleep(350 * attempt);
   }
   return { ok: false, status: 0 };
@@ -52,7 +54,6 @@ const preflightHealthCheck = async () => {
 const worker = async (requestsPerWorker) => {
   const results = [];
   for (let i = 0; i < requestsPerWorker; i += 1) {
-    // eslint-disable-next-line no-await-in-loop
     const result = await runSingleRequest();
     results.push(result);
   }
@@ -94,6 +95,10 @@ const main = async () => {
       p95Ms: Number(percentile(latencies, 95).toFixed(2)),
       p99Ms: Number(percentile(latencies, 99).toFixed(2)),
     },
+    slo: {
+      targetP95Ms: TARGET_P95_MS,
+      maxThrottleRate: MAX_THROTTLE_RATE,
+    },
   };
 
   console.log('\nBackend load summary');
@@ -109,6 +114,17 @@ const main = async () => {
 
   if (summary.throttledCount > 0) {
     console.warn(`Detected ${summary.throttledCount} throttled requests (429). Rate limiting is active under load.`);
+  }
+
+  const throttleRate = Number(((summary.throttledCount / TOTAL_REQUESTS) * 100).toFixed(2));
+  if (summary.latency.p95Ms > TARGET_P95_MS) {
+    console.error(`SLO breach: p95 latency ${summary.latency.p95Ms}ms exceeds target ${TARGET_P95_MS}ms.`);
+    process.exit(1);
+  }
+
+  if (throttleRate > MAX_THROTTLE_RATE) {
+    console.error(`SLO breach: throttle rate ${throttleRate}% exceeds maximum ${MAX_THROTTLE_RATE}%.`);
+    process.exit(1);
   }
 };
 

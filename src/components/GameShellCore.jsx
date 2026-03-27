@@ -2,12 +2,14 @@ import React, { useState, useCallback, useMemo, useEffect } from 'react';
 import { useTelemetry } from '../TelemetryContext';
 import { useLanguage } from '../context/LanguageContext';
 import { GAME_FLOW } from '../utils/gameFlow';
+import { assignVariant } from '../utils/abTesting';
 import { getLocalizedGameInstruction } from '../utils/gameFlowI18n';
 import InstructionInterstitial from './InstructionInterstitial';
 import ConsentModal from './ConsentModal';
 import GameSessionHeader from './GameSessionHeader';
 import GameErrorBoundary from './GameErrorBoundary';
 import GameExitModal from './GameExitModal';
+import EngagementPulse from './EngagementPulse';
 import './GameShellCore.css';
 import { useWebcamCapture } from '../hooks/useWebcamCapture';
 import {
@@ -23,6 +25,9 @@ const GameShellCore = ({ gameId, children }) => {
     featureFlags,
     recordWebcamFrame,
     setConsent,
+    recordTrialEvent,
+    participantProfile,
+    setExperimentAssignment = () => {},
   } = useTelemetry();
   const { language } = useLanguage();
   const [showInstructions, setShowInstructions] = useState(true);
@@ -40,8 +45,13 @@ const GameShellCore = ({ gameId, children }) => {
   const isGameplayVisible = isActive && !showInstructions;
 
   const gameConfig = GAME_FLOW.find(g => g.id === gameId);
+  const totalGames = GAME_FLOW.length;
   const localizedInstruction = useMemo(() => getLocalizedGameInstruction(gameConfig, language), [gameConfig, language]);
   const needsConsent = !isDemo && !consentState.consentTimestamp;
+
+  const engagementVariant = useMemo(() => (
+    assignVariant('engagement-pulse-v1', participantProfile?.participantId || 'anonymous', ['control', 'gamified'])
+  ), [participantProfile?.participantId]);
 
   const shouldCaptureWebcam = useMemo(() => {
     return isActive && consentState.webcam && featureFlags.enableWebcamTracking;
@@ -73,6 +83,10 @@ const GameShellCore = ({ gameId, children }) => {
     }
   }, [isDemo, consentState.consentTimestamp, setConsent]);
 
+  useEffect(() => {
+    setExperimentAssignment('engagement-pulse-v1', engagementVariant);
+  }, [engagementVariant, setExperimentAssignment]);
+
   const handleEndGame = useCallback(() => {
     if (!isActive || !gameConfig) return;
     setIsActive(false);
@@ -96,7 +110,7 @@ const GameShellCore = ({ gameId, children }) => {
 
     const exitConfirm = language === 'en'
       ? 'Are you sure you want to exit? Your progress will not be saved.'
-      : '¿Estás seguro de que deseas salir? Tu progreso no será guardado.';
+      : '¿Estas seguro de que deseas salir? Tu progreso no sera guardado.';
     if (window.confirm(exitConfirm)) {
       navigateHome('native-confirm');
     }
@@ -155,6 +169,7 @@ const GameShellCore = ({ gameId, children }) => {
   }, [gameId]);
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setRuntimeError('');
     setBoundaryKey(0);
     setShowExitModal(false);
@@ -250,6 +265,7 @@ const GameShellCore = ({ gameId, children }) => {
   }
 
   const enableSessionHeader = featureFlags.enableSessionHeader !== false;
+  const enableEngagementPulse = featureFlags.enableEngagementPulse !== false && engagementVariant === 'gamified';
   const enableGameErrorBoundary = featureFlags.enableGameErrorBoundary !== false;
 
   const gameChild = React.cloneElement(children, {
@@ -284,6 +300,17 @@ const GameShellCore = ({ gameId, children }) => {
           <div className="game-shell-body">{gameChild}</div>
         </GameErrorBoundary>
       ) : <div className="game-shell-body">{gameChild}</div>}
+      {enableEngagementPulse && isActive && (
+        <EngagementPulse
+          key={`game-${gameId}-pulse`}
+          gameId={gameId}
+          totalGames={totalGames}
+          isActive={isActive}
+          timeLimit={typeof timeLimit === 'number' ? timeLimit : null}
+          language={language}
+          onMilestoneUnlocked={(event) => recordTrialEvent({ ...event, experiment: 'engagement-pulse-v1', variant: engagementVariant })}
+        />
+      )}
       <GameExitModal
         isOpen={showExitModal}
         language={language}
@@ -296,3 +323,5 @@ const GameShellCore = ({ gameId, children }) => {
 };
 
 export default GameShellCore;
+
+

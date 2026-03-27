@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef, useCallback } from 'react';
+import React, { useState, useRef, useCallback } from 'react';
 import { motion } from 'framer-motion';
 import { useTelemetry } from '../TelemetryContext';
 import { useGameTimer } from '../hooks/useGameTimer';
@@ -19,22 +19,17 @@ import './OSPANGame.css';
  */
 const OSPANGame = ({ isActive, onEndGame, isDemo, timeLimit, language = 'es' }) => {
   const isEn = language === 'en';
-  const { startTracking, stopTracking, recordError, recordTrialEvent, getConsent } = useTelemetry();
+  const { startTracking, stopTracking, recordError, recordTrialEvent } = useTelemetry();
 
-  const [gameState, setGameState] = useState('initializing'); // initializing, instruction, operationPhase, letterPhase, recallPhase, ended
+  const [gameState, setGameState] = useState('instruction'); // instruction, operationPhase, letterPhase, recallPhase, ended
   const [setSize, setSetSize] = useState(3);
   const [currentTrial, setCurrentTrial] = useState(0);
-  const [round, setRound] = useState(1);
 
   // Operación actual
   const [operation, setOperation] = useState('');
-  const [operationCorrect, setOperationCorrect] = useState(null);
-  const [operationResponse, setOperationResponse] = useState('');
-  const [operationRT, setOperationRT] = useState(0);
 
   // Letra actual
   const [currentLetter, setCurrentLetter] = useState('');
-  const [letterRT, setLetterRT] = useState(0);
 
   // Almacenamiento para recall
   const [lettersToRecall, setLettersToRecall] = useState([]);
@@ -79,7 +74,7 @@ const OSPANGame = ({ isActive, onEndGame, isDemo, timeLimit, language = 'es' }) 
       recallAccuracy,
       workingMemorySpan
     });
-  }, [score, totalOperations, correctOperations, correctRecalls, lettersToRecall, stopTracking, onEndGame]);
+  }, [score, totalOperations, correctOperations, correctRecalls, totalRecalls, lettersToRecall, stopTracking, onEndGame]);
 
   const gameTimer = useGameTimer({ isActive, timeLimit, onEnd: endGame });
 
@@ -139,12 +134,9 @@ const OSPANGame = ({ isActive, onEndGame, isDemo, timeLimit, language = 'es' }) 
   // Manejar respuesta de operación
   const handleOperationResponse = useCallback((answer) => {
     const rt = Date.now() - operationStartTimeRef.current;
-    setOperationRT(rt);
 
     // Verificar si es correcto (lógica simplificada)
     const isCorrect = Math.random() > 0.3; // Para demo
-    setOperationCorrect(isCorrect);
-    setOperationResponse(answer);
 
     if (isCorrect) {
       setCorrectOperations(prev => prev + 1);
@@ -164,7 +156,6 @@ const OSPANGame = ({ isActive, onEndGame, isDemo, timeLimit, language = 'es' }) 
 
     // Pasar a siguiente fase
     setTimeout(() => {
-      setOperationCorrect(null);
       nextPhase();
     }, 500);
   }, [nextPhase, recordError, recordTrialEvent]);
@@ -172,7 +163,6 @@ const OSPANGame = ({ isActive, onEndGame, isDemo, timeLimit, language = 'es' }) 
   // Manejar respuesta de letra
   const handleLetterConfirm = useCallback(() => {
     const rt = Date.now() - letterStartTimeRef.current;
-    setLetterRT(rt);
 
     setLettersToRecall(prev => [...prev, [...prev[prev.length - 1] || [], currentLetter]]);
     setTotalRecalls(prev => prev + setSize);
@@ -212,24 +202,16 @@ const OSPANGame = ({ isActive, onEndGame, isDemo, timeLimit, language = 'es' }) 
       setLettersToRecall([]);
       generateOperation();
     }
-  }, [lettersToRecall, recallSequence, setSize, endGame, recordError]);
-
-  // Inicializar juego
-  useEffect(() => {
-    if (!isActive) return;
-    if (gameState !== 'initializing') return;
-
-    startTracking(gameIdRef.current);
-    setGameState('instruction');
-  }, [isActive, gameState, startTracking]);
+  }, [lettersToRecall, recallSequence, setSize, endGame, recordError, generateOperation]);
 
   // Empezar primer trial
   const startFirstTrial = useCallback(() => {
+    startTracking(gameIdRef.current);
     setGameState('operationPhase');
     setCurrentTrial(0);
     setLettersToRecall([]);
     generateOperation();
-  }, [generateOperation]);
+  }, [generateOperation, startTracking]);
 
   if (gameState === 'instruction') {
     return (
@@ -331,3 +313,4 @@ const OSPANGame = ({ isActive, onEndGame, isDemo, timeLimit, language = 'es' }) 
 };
 
 export default OSPANGame;
+

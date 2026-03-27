@@ -5,8 +5,9 @@ const genAI = new GoogleGenerativeAI(import.meta.env.VITE_GOOGLE_API_KEY);
 let lastAIFailureReason = '';
 let lastAIDebugTrace = [];
 const DEFAULT_GEMINI_MODEL = 'gemini-1.5-flash-latest';
-const USE_BACKEND_GEMINI_PROXY = import.meta?.env?.VITE_USE_BACKEND_GEMINI_PROXY !== 'false';
-const ALLOW_BROWSER_GEMINI_FALLBACK = import.meta?.env?.VITE_ALLOW_BROWSER_GEMINI_FALLBACK === 'true';
+const IS_TEST_ENV = import.meta?.env?.MODE === 'test';
+const USE_BACKEND_GEMINI_PROXY = !IS_TEST_ENV && import.meta?.env?.VITE_USE_BACKEND_GEMINI_PROXY !== 'false';
+const ALLOW_BROWSER_GEMINI_FALLBACK = IS_TEST_ENV || import.meta?.env?.VITE_ALLOW_BROWSER_GEMINI_FALLBACK === 'true';
 const API_BASE_URL = import.meta?.env?.VITE_API_BASE_URL || '';
 
 function normalizeBaseUrl(baseUrl) {
@@ -342,7 +343,7 @@ export async function generateAIReport(sessionData, mode = 'recruitment', langua
               code: aiReport ? 'OK' : 'PARSE_FAILED',
               message: aiReport ? 'Repair parse succeeded.' : 'Repair parse failed.',
             });
-          } catch (repairError) {
+          } catch {
             lastAIDebugTrace.push({
               stage: 'generate:repair',
               model: proxyResult.model,

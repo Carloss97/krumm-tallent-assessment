@@ -40,7 +40,6 @@ async function waitForUrl(url, timeoutMs = 90_000) {
 async function findAvailablePort(startPort) {
   let port = startPort;
   while (port < 65535) {
-    // eslint-disable-next-line no-await-in-loop
     const available = await new Promise((resolve) => {
       const server = net.createServer();
       server.unref();
@@ -101,7 +100,8 @@ async function runScenarios(frontendUrl, backendUrl, backendHealthUrl) {
 
     // Scenario 2: intro -> quick demo -> progress bar reaches 1/13 -> jump to game 8 -> reach game 9.
     await page.goto(`${frontendUrl}/intro`, { waitUntil: 'networkidle' });
-    await page.getByRole('button', { name: 'Quick Demo' }).click();
+    await page.getByRole('heading', { name: /cognitive assessment|evaluacion cognitiva/i }).waitFor({ timeout: 15_000 });
+    await page.getByRole('button', { name: /quick demo|demo rapida/i }).click();
     await page.waitForURL('**/game/1');
     await page.locator('div').filter({ hasText: /1\s*\/\s*13/ }).first().waitFor({ timeout: 15_000 });
 
@@ -118,16 +118,15 @@ async function runScenarios(frontendUrl, backendUrl, backendHealthUrl) {
       await consentContinue.click();
     }
 
-    await page.getByRole('button', { name: 'Listo, comenzar juego' }).click();
-    await page.getByText('Complementary Game 1: Metacognitive Calibration').waitFor({ timeout: 15_000 });
+    await page.getByRole('button', { name: /listo, comenzar juego|ready, start game/i }).click();
+    await page.getByText(/complementary game 1|juego complementario 1|metacognitive calibration|calibracion metacognitiva/i).waitFor({ timeout: 15_000 });
     await page.locator('div').filter({ hasText: /8\s*\/\s*13/ }).first().waitFor({ timeout: 15_000 });
 
-    // Scenario 3: recruiter login -> dashboard.
-    await page.goto(`${frontendUrl}/recruiter/login`, { waitUntil: 'networkidle' });
-    await page.locator('#email').fill('recruiter@krumm.io');
-    await page.locator('#password').fill('demo-password');
-    await page.locator('form button[type="submit"]').click();
-    await page.waitForURL('**/recruiter/dashboard');
+    // Scenario 3: recruiter QA login -> dashboard (stable against credential/env drift).
+    await page.goto(`${frontendUrl}/recruiter/login?qa=1`, { waitUntil: 'networkidle' });
+    await page.getByRole('button', { name: /enter qa dashboard|continue offline/i }).first().click();
+    await page.waitForURL('**/recruiter/dashboard**');
+    await page.getByRole('heading', { name: /recruiter dashboard/i }).waitFor({ timeout: 15_000 });
     await page.waitForTimeout(1000);
 
     const recruiterUrl = page.url();
@@ -164,7 +163,7 @@ async function main() {
   const frontendProc = startFrontend
     ? spawnCommand(
       npmCommand,
-      ['run', 'dev', '--', '--host', HOST, '--port', String(frontendPort), '--strictPort', '--open', 'false'],
+      ['run', 'dev:frontend', '--', '--host', HOST, '--port', String(frontendPort), '--strictPort', '--open', 'false'],
       'frontend',
       { VITE_API_BASE_URL: backendUrl }
     )

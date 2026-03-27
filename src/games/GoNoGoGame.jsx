@@ -84,7 +84,7 @@ const GoNoGoGame = ({ isActive, onEndGame, isDemo, timeLimit }) => {
 
   useEffect(() => {
     if(isActive && trial > 1) {
-        // eslint-disable-next-line react-hooks/set-state-in-effect
+         
         setGameState('waiting');
         setTimeout(() => startTrial(), 500);
     }

@@ -266,7 +266,7 @@ const LaserPuzzleGame = ({ isActive, onEndGame, isDemo, timeLimit }) => {
     if (gamePhase !== 'playing') return;
     const antennaKeys = Object.keys(grid).filter(k => grid[k].type === 'antenna');
     if (antennaKeys.length > 0 && antennaKeys.every(k => litAntennas.has(k))) {
-      // eslint-disable-next-line react-hooks/set-state-in-effect
+       
       setGamePhase('levelComplete');
       setTimeout(advanceLevel, 1400);
     }

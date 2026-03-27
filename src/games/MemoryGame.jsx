@@ -68,7 +68,7 @@ const MemoryGame = ({ isActive, onEndGame, isDemo, timeLimit }) => {
       hasEndedRef.current = false;
       scoreRef.current = 0;
       startTracking();
-      // eslint-disable-next-line react-hooks/set-state-in-effect
+       
       setRound(1)
       generateSequence(1);
     } else {

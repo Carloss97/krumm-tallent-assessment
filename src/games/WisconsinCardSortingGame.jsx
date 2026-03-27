@@ -103,7 +103,7 @@ const WisconsinCardSortingGame = ({ isActive, onEndGame, isDemo, timeLimit }) =>
   const handleCardClick = (stimulusIndex) => {
     if (!currentCard || feedback) return;
 
-    // eslint-disable-next-line react-hooks/purity
+     
     reactionTimes.current.push(Date.now() - cardStartTimeRef.current);
     const stimulusCard = stimulusCards[stimulusIndex];
     const isCorrect = (() => {

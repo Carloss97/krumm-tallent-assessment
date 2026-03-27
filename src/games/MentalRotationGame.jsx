@@ -89,7 +89,7 @@ const MentalRotationGame = ({ isActive, onEndGame, isDemo, timeLimit }) => {
     if (isActive) {
       hasEndedRef.current = false;
       startTracking();
-      // eslint-disable-next-line react-hooks/set-state-in-effect
+       
       setCurrentTrial(1);
       setScore(0);
       setCorrectAnswers(0);
@@ -102,7 +102,7 @@ const MentalRotationGame = ({ isActive, onEndGame, isDemo, timeLimit }) => {
   
   useEffect(() => {
     if (isActive && currentTrial > 1) {
-        // eslint-disable-next-line react-hooks/set-state-in-effect
+         
         startTrial();
     }
   }, [currentTrial, isActive, startTrial]);

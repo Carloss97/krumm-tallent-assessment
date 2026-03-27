@@ -3,6 +3,7 @@
  * Generates and validates JWT tokens for participant sessions
  */
 
+
 import jwt from 'jsonwebtoken';
 
 const SECRET_KEY = process.env.JWT_SECRET_KEY || 'dev-secret-key-change-in-production';
@@ -123,3 +124,4 @@ export default {
   requireParticipant,
   requireRecruiter
 };
+

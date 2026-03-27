@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { getCurrentToken, clearToken, getRecruiterSessions, getRecruiterAnalyticsV2 } from '../services/backendService';
 import { getQaMode } from '../utils/qaMode';
@@ -72,6 +72,77 @@ const QA_ANALYTICS = {
   }
 };
 
+const AB_EXPERIMENT_KEY = 'engagement-pulse-v1';
+const FULL_BATTERY_GAMES = 13;
+
+const computeAbEngagementStats = (sessions) => {
+  const buckets = {
+    control: [],
+    gamified: [],
+    unknown: [],
+  };
+
+  (sessions || []).forEach((session) => {
+    const payload = session?.payload || {};
+    const metadata = payload?.metadata || {};
+    const variant = metadata?.sessionMeta?.experiments?.[AB_EXPERIMENT_KEY] || 'unknown';
+    const sessionData = payload?.sessionData || payload;
+
+    const gameSnapshots = Object.values(sessionData || {}).filter((value) => (
+      value && typeof value === 'object' && typeof value.score === 'number'
+    ));
+
+    const completedGames = gameSnapshots.length;
+    const completedSession = completedGames >= FULL_BATTERY_GAMES;
+    const avgModuleDurationSec = completedGames > 0
+      ? gameSnapshots.reduce((sum, game) => sum + (Number(game.duration) || 0), 0) / completedGames / 1000
+      : 0;
+    const qualityFlags = gameSnapshots.reduce((sum, game) => sum + ((game.qualityFlags || []).length), 0);
+
+    const target = buckets[variant] ? variant : 'unknown';
+    buckets[target].push({
+      completedGames,
+      completedSession,
+      avgModuleDurationSec,
+      qualityFlags,
+    });
+  });
+
+  const summarize = (items) => {
+    const total = items.length;
+    if (!total) {
+      return {
+        sessions: 0,
+        completionRate: 0,
+        abandonmentRate: 0,
+        avgCompletedGames: 0,
+        avgModuleDurationSec: 0,
+        avgQualityFlags: 0,
+      };
+    }
+
+    const completed = items.filter((item) => item.completedSession).length;
+    const avgCompletedGames = items.reduce((sum, item) => sum + item.completedGames, 0) / total;
+    const avgModuleDurationSec = items.reduce((sum, item) => sum + item.avgModuleDurationSec, 0) / total;
+    const avgQualityFlags = items.reduce((sum, item) => sum + item.qualityFlags, 0) / total;
+
+    return {
+      sessions: total,
+      completionRate: (completed / total) * 100,
+      abandonmentRate: ((total - completed) / total) * 100,
+      avgCompletedGames,
+      avgModuleDurationSec,
+      avgQualityFlags,
+    };
+  };
+
+  return {
+    control: summarize(buckets.control),
+    gamified: summarize(buckets.gamified),
+    unknown: summarize(buckets.unknown),
+  };
+};
+
 const RecruiterDashboard = () => {
   const navigate = useNavigate();
   const [sessions, setSessions] = useState([]);
@@ -96,17 +167,7 @@ const RecruiterDashboard = () => {
     ? Math.round((recoveries24h / errors24h) * 100)
     : null;
 
-  useEffect(() => {
-    const token = getCurrentToken();
-    if (!token && !isQaMode) {
-      navigate('/recruiter/login');
-      return;
-    }
-
-    fetchSessions();
-  }, [navigate]);
-
-  const fetchSessions = async () => {
+  const fetchSessions = useCallback(async () => {
     try {
       setLoading(true);
 
@@ -132,7 +193,17 @@ const RecruiterDashboard = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [isQaMode]);
+
+  useEffect(() => {
+    const token = getCurrentToken();
+    if (!token && !isQaMode) {
+      navigate('/recruiter/login');
+      return;
+    }
+
+    fetchSessions();
+  }, [navigate, isQaMode, fetchSessions]);
 
   const handleLogout = () => {
     clearToken();
@@ -164,6 +235,7 @@ const RecruiterDashboard = () => {
   const stats = getSessionStats();
   const qualityStatus = analytics.quality?.status || 'UNKNOWN';
   const qualityClass = qualityStatus === 'OK' ? 'ok' : qualityStatus === 'ALERT' ? 'alert' : 'watch';
+  const abEngagementStats = useMemo(() => computeAbEngagementStats(sessions), [sessions]);
 
   // Anonymized session display (no raw video/audio/biometric data)
   const displaySessions = sessions
@@ -286,6 +358,22 @@ const RecruiterDashboard = () => {
             <p>PR-AUC Lift: <strong>{analytics.kpiSnapshot?.primary?.prAucLift ?? 'n/a'}</strong></p>
             <p>Brier: <strong>{analytics.kpiSnapshot?.primary?.brier ?? 'n/a'}</strong></p>
             <p>Selection Rate Ratio: <strong>{analytics.kpiSnapshot?.fairness?.selectionRateRatio ?? 'n/a'}</strong></p>
+          </section>
+
+          <section className="analytics-card">
+            <h3>A/B Engagement Pulse</h3>
+            <p><strong>Control sessions:</strong> {abEngagementStats.control.sessions}</p>
+            <p><strong>Gamified sessions:</strong> {abEngagementStats.gamified.sessions}</p>
+            <p><strong>Unknown variant:</strong> {abEngagementStats.unknown.sessions}</p>
+            <hr style={{ border: 'none', borderTop: '1px solid #e2e8f0', margin: '8px 0' }} />
+            <p>Control completion: <strong>{abEngagementStats.control.completionRate.toFixed(1)}%</strong></p>
+            <p>Gamified completion: <strong>{abEngagementStats.gamified.completionRate.toFixed(1)}%</strong></p>
+            <p>Control abandonment: <strong>{abEngagementStats.control.abandonmentRate.toFixed(1)}%</strong></p>
+            <p>Gamified abandonment: <strong>{abEngagementStats.gamified.abandonmentRate.toFixed(1)}%</strong></p>
+            <p>Control avg module sec: <strong>{abEngagementStats.control.avgModuleDurationSec.toFixed(1)}</strong></p>
+            <p>Gamified avg module sec: <strong>{abEngagementStats.gamified.avgModuleDurationSec.toFixed(1)}</strong></p>
+            <p>Control avg quality flags: <strong>{abEngagementStats.control.avgQualityFlags.toFixed(2)}</strong></p>
+            <p>Gamified avg quality flags: <strong>{abEngagementStats.gamified.avgQualityFlags.toFixed(2)}</strong></p>
           </section>
 
           {isQaMode && (
@@ -417,3 +505,6 @@ const RecruiterDashboard = () => {
 };
 
 export default RecruiterDashboard;
+
+
+
