@@ -344,35 +344,53 @@ const evaluateThreshold = (predictions, labels, threshold) => {
 };
 
 const tuneSolidThreshold = (predictions, labels, baseline) => {
-  let best = {
-    threshold: baseline,
-    metrics: evaluateThreshold(predictions, labels, baseline),
-    constrained: false,
-  };
+  const targets = { maxFpr: 0.08, maxFnr: 0.10 };
+  const candidateThresholds = new Set([Number(baseline.toFixed(4))]);
 
-  const candidates = [];
-  for (let i = 30; i <= 70; i += 1) {
+  for (let i = 20; i <= 80; i += 1) {
     const q = i / 100;
-    candidates.push(Number(quantile(predictions, q).toFixed(4)));
+    candidateThresholds.add(Number(quantile(predictions, q).toFixed(4)));
   }
 
-  for (const threshold of candidates) {
-    const metrics = evaluateThreshold(predictions, labels, threshold);
-    const constrained = metrics.fnr <= 0.1 && metrics.fpr <= 0.08;
+  const candidates = Array.from(candidateThresholds)
+    .sort((a, b) => a - b)
+    .map((threshold) => {
+      const metrics = evaluateThreshold(predictions, labels, threshold);
+      const fprExcess = Math.max(0, metrics.fpr - targets.maxFpr);
+      const fnrExcess = Math.max(0, metrics.fnr - targets.maxFnr);
+      const penalty = Number((fprExcess + fnrExcess).toFixed(6));
+      const constrained = penalty === 0;
+      return {
+        threshold,
+        constrained,
+        penalty,
+        metrics,
+      };
+    });
 
-    if (constrained) {
-      if (!best.constrained || metrics.f1 > best.metrics.f1) {
-        best = { threshold, metrics, constrained: true };
-      }
-      continue;
-    }
+  candidates.sort((a, b) => {
+    if (a.constrained !== b.constrained) return a.constrained ? -1 : 1;
+    if (a.penalty !== b.penalty) return a.penalty - b.penalty;
+    if (b.metrics.f1 !== a.metrics.f1) return b.metrics.f1 - a.metrics.f1;
+    return Math.abs(a.threshold - baseline) - Math.abs(b.threshold - baseline);
+  });
 
-    if (!best.constrained && metrics.fnr < best.metrics.fnr) {
-      best = { threshold, metrics, constrained: false };
-    }
-  }
+  const selected = candidates[0];
 
-  return best;
+  return {
+    baseline: Number(baseline.toFixed(4)),
+    selected,
+    topCandidates: candidates.slice(0, 8).map((c) => ({
+      threshold: c.threshold,
+      constrained: c.constrained,
+      penalty: c.penalty,
+      f1: Number(c.metrics.f1.toFixed(4)),
+      fpr: Number(c.metrics.fpr.toFixed(4)),
+      fnr: Number(c.metrics.fnr.toFixed(4)),
+      precision: Number(c.metrics.precision.toFixed(4)),
+      recall: Number(c.metrics.recall.toFixed(4)),
+    })),
+  };
 };
 const computeGroupMetric = (rows, valueFn) => {
   const groups = new Map();
@@ -486,16 +504,19 @@ const main = () => {
 
   const labels = rows.map((row) => row.success_6m);
   const baselineSolid = Number(quantile(predictions, 0.5).toFixed(4));
-  const tunedSolid = tuneSolidThreshold(predictions, labels, baselineSolid);
+  const tuning = tuneSolidThreshold(predictions, labels, baselineSolid);
 
-  const solidThreshold = Number((tunedSolid.constrained
-    ? tunedSolid.threshold
-    : Math.max(0.3, tunedSolid.threshold - 0.03)).toFixed(4));
+  const selectedSolid = Number(tuning.selected.threshold.toFixed(4));
+  const overrideSolid = Number(process.env.CALIBRATION_SOLID_OVERRIDE);
+  const hasOverrideSolid = Number.isFinite(overrideSolid) && overrideSolid > 0 && overrideSolid < 1;
+  const effectiveSolid = hasOverrideSolid ? Number(overrideSolid.toFixed(4)) : selectedSolid;
+  const conditionalRaw = Number(quantile(predictions, 0.25).toFixed(4));
+  const strongRaw = Number(quantile(predictions, 0.75).toFixed(4));
 
   const thresholds = {
-    strong: Number(quantile(predictions, 0.75).toFixed(4)),
-    solid: solidThreshold,
-    conditional: Number(quantile(predictions, 0.25).toFixed(4)),
+    strong: Number(Math.max(strongRaw, selectedSolid + 0.01).toFixed(4)),
+    solid: effectiveSolid,
+    conditional: Number(Math.min(conditionalRaw, selectedSolid - 0.01).toFixed(4)),
   };
 
   const kpis = computeKpis(rows, predictions, thresholds, baselinePredictions);
@@ -510,6 +531,19 @@ const main = () => {
       note: outcomeMeta.synthetic
         ? 'Outcomes are deterministic proxy labels. Replace with data/calibration/outcomes.json for true HR outcome calibration.'
         : 'Outcomes loaded from data/calibration/outcomes.json',
+      thresholdTuning: {
+        baseline: tuning.baseline,
+        overrideApplied: hasOverrideSolid ? effectiveSolid : null,
+        selected: {
+          threshold: tuning.selected.threshold,
+          constrained: tuning.selected.constrained,
+          penalty: tuning.selected.penalty,
+          f1: Number(tuning.selected.metrics.f1.toFixed(4)),
+          fpr: Number(tuning.selected.metrics.fpr.toFixed(4)),
+          fnr: Number(tuning.selected.metrics.fnr.toFixed(4)),
+        },
+        topCandidates: tuning.topCandidates,
+      },
     },
     weights,
     thresholds,
@@ -539,5 +573,9 @@ const main = () => {
 };
 
 main();
+
+
+
+
 
 

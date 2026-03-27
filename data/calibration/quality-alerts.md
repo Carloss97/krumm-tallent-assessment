@@ -1,6 +1,6 @@
 # Quality Alerts
 
-Generated at: 2026-03-27T18:00:47.631Z
+Generated at: 2026-03-27T18:14:42.969Z
 Input KPI file: C:\Users\sarlo\OneDrive\Escritorio\Test\data\calibration\latest-kpis.json
 Outcome source: deterministic-proxy
 Synthetic outcomes: yes
@@ -19,8 +19,8 @@ Synthetic outcomes: yes
 - [PASS] falseNegativeRateHighPotential: value=0.0000 target=0.2 alert=0.28 (lower)
 
 ## fairness
-- [ALERT] selectionRateRatio: value=0.0000 target=0.8 alert=0.75 (higher)
-- [PASS] tprGap: value=0.0000 target=0.1 alert=0.15 (lower)
+- [PASS] selectionRateRatio: value=1.0000 target=0.8 alert=0.75 (higher)
+- [ALERT] tprGap: value=0.3333 target=0.1 alert=0.15 (lower)
 - [ALERT] calibrationGap: value=0.2329 target=0.03 alert=0.05 (lower)
 - [PASS] avgScoreGapStd: value=0.2441 target=0.35 alert=0.5 (lower)
 
