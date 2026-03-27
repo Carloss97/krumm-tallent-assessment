@@ -3,7 +3,7 @@ import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import { TelemetryProvider } from './TelemetryContext';
 import { LanguageProvider } from './context/LanguageContext';
 import GlobalProgressBar from './components/GlobalProgressBar';
-import GameLayout from './components/GameLayout';
+import GameShell from './components/GameShell';
 import { GAME_FLOW } from './utils/gameFlow';
 import RecruiterLogin from './components/RecruiterLogin';
 import RecruiterDashboard from './components/RecruiterDashboard';
@@ -42,9 +42,9 @@ function AppContent() {
                 key={game.path}
                 path={game.path}
                 element={
-                  <GameLayout gameId={game.id}>
+                  <GameShell gameId={game.id}>
                     <game.component />
-                  </GameLayout>
+                  </GameShell>
                 }
               />
             ))}

@@ -298,8 +298,8 @@ const copy = {
     formDescription: 'Completa tus datos para iniciar la batería gamificada.',
     validating: 'Validando...',
     startEvaluation: 'Comenzar evaluación',
-    continueNoBackend: 'o continuar sin backend',
-    continueLocal: 'Continuar localmente',
+    continueNoBackend: 'modo QA/offline (solo desarrollo)',
+    continueLocal: 'Continuar en modo QA/offline',
     diffTitle: 'Diferenciadores de la experiencia',
     capabilitiesTitle: 'Qué se evalúa durante la prueba',
     capabilitiesIntro: 'De memoria y atención hasta riesgo, aprendizaje y coordinación social.',
@@ -337,8 +337,8 @@ const copy = {
     formDescription: 'Complete your details to begin the gamified battery.',
     validating: 'Validating...',
     startEvaluation: 'Start evaluation',
-    continueNoBackend: 'or continue without backend',
-    continueLocal: 'Continue locally',
+    continueNoBackend: 'QA/offline mode (development only)',
+    continueLocal: 'Continue in QA/offline mode',
     diffTitle: 'Experience differentiators',
     capabilitiesTitle: 'What is evaluated during the assessment',
     capabilitiesIntro: 'From memory and attention to risk, learning, and social coordination.',
@@ -623,11 +623,15 @@ const LandingPageV3 = () => {
                 {isSubmitting ? t.validating : t.startEvaluation}
               </button>
 
-              <div className="lv3-divider">{t.continueNoBackend}</div>
+              {isDev && (
+                <>
+                  <div className="lv3-divider">{t.continueNoBackend}</div>
 
-              <button type="button" className="lv3-ghost lv3-full" onClick={handleContinueLocal}>
-                {t.continueLocal}
-              </button>
+                  <button type="button" className="lv3-ghost lv3-full" onClick={handleContinueLocal}>
+                    {t.continueLocal}
+                  </button>
+                </>
+              )}
             </form>
           </motion.div>
         </motion.section>
