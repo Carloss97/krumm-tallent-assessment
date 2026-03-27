@@ -44,6 +44,8 @@ const statusIcon = (status) => {
   return '[ALERT]';
 };
 
+const shouldBlockSynthetic = process.env.QUALITY_ALERTS_BLOCK_SYNTHETIC === 'true';
+
 const main = () => {
   if (!fs.existsSync(KPI_PATH)) {
     throw new Error('Missing data/calibration/latest-kpis.json. Run npm run calibrate:scoring first.');
@@ -84,14 +86,7 @@ const main = () => {
   lines.push('## Summary');
   lines.push(`- Global status: ${hasAlert ? 'ALERT' : 'OK'}`);
   lines.push('- Note: Alerts are computed from calibrated KPI outputs and should be reviewed with cohort context.');
-  if (raw.syntheticOutcomes) {
-    lines.push('- Guardrail: synthetic outcomes detected; alert breaches are non-blocking until labeled HR outcomes are provided.');
-  }
-
-  fs.writeFileSync(ALERT_PATH, `${lines.join('\n')}\n`, 'utf8');
-
-  console.log(`Saved quality alert report: ${ALERT_PATH}`);
-  if (raw.syntheticOutcomes) {
+  if (raw.syntheticOutcomes && !shouldBlockSynthetic) {
     if (hasAlert) {
       console.warn('Alert thresholds breached, but run is non-blocking because outcomes are synthetic proxies.');
     }
@@ -108,3 +103,4 @@ const main = () => {
 };
 
 main();
+

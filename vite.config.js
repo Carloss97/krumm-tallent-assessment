@@ -28,5 +28,16 @@ export default defineConfig({
     threads: true,
     maxThreads: 2,
     minThreads: 1,
+    coverage: {
+      provider: 'v8',
+      reporter: ['text', 'json-summary'],
+      thresholds: {
+        lines: 40,
+        functions: 40,
+        branches: 30,
+        statements: 40,
+      },
+    },
   },
 })
+

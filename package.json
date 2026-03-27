@@ -14,9 +14,10 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "test:coverage": "vitest run --coverage",
+    "security:audit": "npm audit --audit-level=high",
     "test:e2e": "node e2e/run-e2e.mjs",
     "test:e2e:install": "npx playwright install chromium",
-    "ci:verify": "npm run lint && npm run test && npm run build",
+    "ci:verify": "npm run lint && npm run test && npm run test:coverage && npm run build",
     "ci:e2e": "npm run test:e2e",
     "ci:quality:advisory": "npm run quality:check",
     "calibrate:scoring": "node scripts/calibrateScoring.mjs",
@@ -65,3 +66,7 @@
     "vitest": "^4.1.0"
   }
 }
+
+
+
+

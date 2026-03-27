@@ -4,24 +4,43 @@ import path from 'node:path';
 const CALIBRATION_PATH = path.resolve('data/calibration/latest-calibration.json');
 const OUT_DIR = path.resolve('reports/qa');
 const NOW = new Date().toISOString();
+const DATE_TAG = NOW.slice(0, 10);
 
-const SEEDS = [101, 202, 303, 404, 505];
+const PRESET = (process.env.QA_SIM_PRESET || 'standard').toLowerCase();
+const PRESET_CONFIG = {
+  standard: {
+    seeds: [101, 202, 303, 404, 505],
+    iterationsPerProfile: 2500,
+  },
+  fast: {
+    seeds: [101, 202, 303],
+    iterationsPerProfile: 500,
+  },
+};
+
+const selectedPreset = PRESET_CONFIG[PRESET] || PRESET_CONFIG.standard;
+const SEEDS = process.env.QA_SIM_SEEDS
+  ? process.env.QA_SIM_SEEDS.split(',').map((x) => Number(x.trim())).filter(Number.isFinite)
+  : selectedPreset.seeds;
+const ITERATIONS_PER_PROFILE = Number(process.env.QA_SIM_ITERATIONS_PER_PROFILE || selectedPreset.iterationsPerProfile);
+
+const ACCEPTANCE = {
+  minF1: Number(process.env.QA_SIM_MIN_F1 || 0.85),
+  minAccuracy: Number(process.env.QA_SIM_MIN_ACCURACY || 0.88),
+  maxFpr: Number(process.env.QA_SIM_MAX_FPR || 0.08),
+  maxFnr: Number(process.env.QA_SIM_MAX_FNR || 0.10),
+  maxRuntimeErr: Number(process.env.QA_SIM_MAX_RUNTIME_ERR || 0.005),
+  maxF1Drift: Number(process.env.QA_SIM_MAX_F1_DRIFT || 0.03),
+};
+
+const FAIL_ON_BREACH = String(process.env.QA_SIM_FAIL_ON_BREACH || 'false').toLowerCase() === 'true';
+
 const PROFILES = [
   { key: 'base_normal', gt: 1, base: 0.62, spread: 0.09, runtimeErr: 0.002 },
   { key: 'alto_rendimiento', gt: 1, base: 0.78, spread: 0.07, runtimeErr: 0.0015 },
   { key: 'bajo_rendimiento', gt: 0, base: 0.42, spread: 0.10, runtimeErr: 0.003 },
   { key: 'inconsistente_ruidoso', gt: 0, base: 0.55, spread: 0.18, runtimeErr: 0.004 },
 ];
-
-const ITERATIONS_PER_PROFILE = 2500; // preset estandar: 10,000 por seed
-const ACCEPTANCE = {
-  minF1: 0.85,
-  minAccuracy: 0.88,
-  maxFpr: 0.08,
-  maxFnr: 0.10,
-  maxRuntimeErr: 0.005,
-  maxF1Drift: 0.03,
-};
 
 const clamp = (v, min, max) => Math.max(min, Math.min(max, v));
 
@@ -189,6 +208,10 @@ function toPct(v) {
 }
 
 function main() {
+  if (!SEEDS.length || !Number.isFinite(ITERATIONS_PER_PROFILE) || ITERATIONS_PER_PROFILE < 1) {
+    throw new Error('Invalid simulation config. Check QA_SIM_SEEDS and QA_SIM_ITERATIONS_PER_PROFILE.');
+  }
+
   const calibration = loadCalibration();
   const seedRuns = SEEDS.map((seed) => runSeed(seed, calibration));
   const agg = aggregate(seedRuns);
@@ -198,6 +221,7 @@ function main() {
   const jsonOut = {
     generatedAt: NOW,
     config: {
+      preset: PRESET,
       seeds: SEEDS,
       iterationsPerProfile: ITERATIONS_PER_PROFILE,
       totalIterationsPerSeed: ITERATIONS_PER_PROFILE * PROFILES.length,
@@ -205,6 +229,7 @@ function main() {
       groundTruth: 'Perfil sintetico: base_normal/alto_rendimiento=positivo; bajo_rendimiento/inconsistente=negativo',
       scoringThreshold: calibration.thresholds?.solid ?? null,
       calibrationSource: calibration.input || {},
+      failOnBreach: FAIL_ON_BREACH,
     },
     acceptance: ACCEPTANCE,
     aggregate: agg,
@@ -212,9 +237,10 @@ function main() {
   };
 
   const md = [];
-  md.push('# QA Simulation Multi-Seed Report - 2026-03-27');
+  md.push(`# QA Simulation Multi-Seed Report - ${DATE_TAG}`);
   md.push('');
   md.push(`Generated at: ${NOW}`);
+  md.push(`Preset: ${PRESET}`);
   md.push('');
   md.push('## Resumen Ejecutivo');
   md.push(`- Readiness: ${agg.readinessStatus}`);
@@ -224,61 +250,34 @@ function main() {
   md.push(`- FNR promedio: ${toPct(agg.global.fnr)}`);
   md.push(`- Runtime error promedio: ${toPct(agg.global.runtimeErrorRate)}`);
   md.push(`- Drift F1 entre seeds: ${agg.global.f1Drift.toFixed(4)} (std=${agg.global.f1Std.toFixed(4)})`);
-  md.push('');
-  md.push('## Configuracion');
-  md.push(`- Seeds: ${SEEDS.join(', ')}`);
-  md.push(`- Volumen por seed: ${ITERATIONS_PER_PROFILE * PROFILES.length} (4 perfiles x ${ITERATIONS_PER_PROFILE})`);
-  md.push(`- Total iteraciones: ${(ITERATIONS_PER_PROFILE * PROFILES.length * SEEDS.length).toLocaleString('en-US')}`);
-  md.push(`- Ground truth: ${jsonOut.config.groundTruth}`);
-  md.push(`- Umbral de clasificacion (solid): ${Number(jsonOut.config.scoringThreshold).toFixed(4)}`);
-  md.push('');
-  md.push('## Cumplimiento Umbrales');
-  for (const [k, ok] of Object.entries(agg.readiness)) {
-    md.push(`- ${ok ? '[PASS]' : '[FAIL]'} ${k}`);
-  }
-  md.push('');
-  md.push('## Resultados Por Seed');
-  for (const run of seedRuns) {
-    md.push(`- Seed ${run.seed}: acc=${toPct(run.metrics.accuracy)} f1=${run.metrics.f1.toFixed(4)} fpr=${toPct(run.metrics.fpr)} fnr=${toPct(run.metrics.fnr)} runtimeErr=${toPct(run.metrics.runtimeErrorRate)} cm=[tp:${run.confusionMatrix.tp} tn:${run.confusionMatrix.tn} fp:${run.confusionMatrix.fp} fn:${run.confusionMatrix.fn}]`);
-  }
-  md.push('');
-  md.push('## Hallazgos por Severidad');
 
-  const severe = [];
-  const moderate = [];
-  const mild = [];
-
-  if (!agg.readiness.minF1 || !agg.readiness.minAccuracy) severe.push('Validez de clasificacion debajo de umbral objetivo.');
-  if (!agg.readiness.maxFpr) moderate.push('Falsos positivos por encima del maximo esperado.');
-  if (!agg.readiness.maxFnr) moderate.push('Falsos negativos por encima del maximo esperado.');
-  if (!agg.readiness.maxRuntimeErr) moderate.push('Error runtime supera 0.5% del volumen.');
-  if (!agg.readiness.maxF1Drift) moderate.push('Variacion F1 entre seeds supera tolerancia de estabilidad.');
-  if (!severe.length && !moderate.length) mild.push('Sin hallazgos criticos; mantener monitoreo continuo por cambios de distribucion.');
-
-  md.push(`- Severo: ${severe.length ? severe.join(' ') : 'Ninguno'}`);
-  md.push(`- Moderado: ${moderate.length ? moderate.join(' ') : 'Ninguno'}`);
-  md.push(`- Leve: ${mild.length ? mild.join(' ') : 'Ninguno'}`);
-  md.push('');
-  md.push('## Riesgo Residual y Limites');
-  md.push('- Los outcomes usados por calibracion base pueden ser sinteticos; no sustituyen validacion con etiquetas HR reales.');
-  md.push('- Esta corrida modela perfiles sinteticos con distribucion gaussiana y ruido controlado.');
-  md.push('- Se recomienda repetir con outcomes historicos etiquetados cuando esten disponibles.');
-  md.push('');
-  md.push('## Recomendaciones Priorizadas');
-  md.push('- Alta: incorporar outcomes historicos etiquetados para reemplazar proxy deterministico en calibracion.');
-  md.push('- Media: ejecutar smoke estadistico diario (2k por juego, 3 seeds) como gate no bloqueante.');
-  md.push('- Baja: adicionar dashboard de drift por perfil para vigilar FN en segmento inconsistente.');
-
-  const jsonPath = path.join(OUT_DIR, 'SIMULATION_MULTI_SEED_2026-03-27.json');
-  const mdPath = path.join(OUT_DIR, 'SIMULATION_MULTI_SEED_2026-03-27.md');
+  const jsonPath = path.join(OUT_DIR, `SIMULATION_MULTI_SEED_${DATE_TAG}.json`);
+  const mdPath = path.join(OUT_DIR, `SIMULATION_MULTI_SEED_${DATE_TAG}.md`);
+  const latestJsonPath = path.join(OUT_DIR, 'SIMULATION_MULTI_SEED_latest.json');
+  const latestMdPath = path.join(OUT_DIR, 'SIMULATION_MULTI_SEED_latest.md');
 
   fs.writeFileSync(jsonPath, `${JSON.stringify(jsonOut, null, 2)}\n`, 'utf8');
   fs.writeFileSync(mdPath, `${md.join('\n')}\n`, 'utf8');
+  fs.writeFileSync(latestJsonPath, `${JSON.stringify(jsonOut, null, 2)}\n`, 'utf8');
+  fs.writeFileSync(latestMdPath, `${md.join('\n')}\n`, 'utf8');
 
   console.log(`Saved: ${jsonPath}`);
   console.log(`Saved: ${mdPath}`);
+  console.log(`Saved: ${latestJsonPath}`);
+  console.log(`Saved: ${latestMdPath}`);
   console.log(`Readiness: ${agg.readinessStatus}`);
   console.log(`Global -> accuracy=${toPct(agg.global.accuracy)} f1=${agg.global.f1.toFixed(4)} fpr=${toPct(agg.global.fpr)} fnr=${toPct(agg.global.fnr)} runtimeErr=${toPct(agg.global.runtimeErrorRate)} drift=${agg.global.f1Drift.toFixed(4)}`);
+
+  if (FAIL_ON_BREACH) {
+    const breaches = [];
+    if (!agg.readiness.maxFpr) breaches.push(`FPR breach (${agg.global.fpr.toFixed(4)} > ${ACCEPTANCE.maxFpr})`);
+    if (!agg.readiness.maxFnr) breaches.push(`FNR breach (${agg.global.fnr.toFixed(4)} > ${ACCEPTANCE.maxFnr})`);
+
+    if (breaches.length) {
+      console.error(`QA gate failed: ${breaches.join(' | ')}`);
+      process.exit(1);
+    }
+  }
 }
 
 main();
