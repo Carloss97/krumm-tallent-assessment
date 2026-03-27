@@ -277,7 +277,8 @@ const Report = () => {
     getSessionMetadata,
     sessionSavedId,
     canUseGemini,
-    generationNonce
+    generationNonce,
+    isEn
   ]);
 
   if (!hasRealData && !useDummyData) {
@@ -1140,3 +1141,4 @@ function buildActionPriorities(report, competencyHighlights, isEn) {
 }
 
 export default Report;
+

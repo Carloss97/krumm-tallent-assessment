@@ -176,10 +176,11 @@ const GameShellCore = ({ gameId, children }) => {
   }, [gameId]);
 
   useEffect(() => {
+    const gate = errorGateRef.current;
     return () => {
-      if (errorGateRef.current.uiTimer) {
-        clearTimeout(errorGateRef.current.uiTimer);
-        errorGateRef.current.uiTimer = null;
+      if (gate.uiTimer) {
+        clearTimeout(gate.uiTimer);
+        gate.uiTimer = null;
       }
     };
   }, []);
@@ -323,5 +324,7 @@ const GameShellCore = ({ gameId, children }) => {
 };
 
 export default GameShellCore;
+
+
 
 
