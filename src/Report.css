@@ -1,0 +1,114 @@
+.report-page {
+  color: var(--ink-strong);
+  font-family: var(--font-main);
+}
+
+.report-shell {
+  border: 1px solid var(--line-soft);
+  box-shadow: var(--elevation-2);
+  border-radius: var(--radius-lg);
+}
+
+.report-heading {
+  font-family: var(--font-display);
+  letter-spacing: -0.01em;
+}
+
+.report-subheading {
+  color: var(--ink-medium) !important;
+}
+
+.report-meta-pill {
+  border: 1px solid rgba(34, 197, 94, 0.3);
+  box-shadow: 0 8px 16px rgba(20, 83, 45, 0.08);
+}
+
+.report-section {
+  border: 1px solid var(--line-soft);
+  border-radius: var(--radius-md);
+}
+
+.report-section-title {
+  color: var(--brand-700) !important;
+  font-family: var(--font-display);
+  letter-spacing: -0.01em;
+}
+
+.report-ai-signal {
+  border: 1px solid var(--line-soft);
+  box-shadow: var(--elevation-1);
+}
+
+.report-health,
+.report-debug {
+  border-radius: var(--radius-md);
+}
+
+.report-stat-card {
+  border-radius: var(--radius-sm) !important;
+  border-color: var(--line-soft) !important;
+}
+
+.report-toggle-zone .btn {
+  border-radius: 10px;
+}
+
+.report-footer .btn {
+  border-radius: 12px;
+}
+
+.report-empty,
+.report-loading-card {
+  border: 1px solid var(--line-soft);
+  box-shadow: var(--elevation-2);
+}
+
+.report-inline-actions {
+  justify-content: center;
+  flex-wrap: wrap;
+}
+
+.report-btn-muted {
+  background: rgba(36, 66, 101, 0.08) !important;
+  color: var(--brand-700) !important;
+  border: 1px solid rgba(36, 66, 101, 0.35) !important;
+}
+
+@media (max-width: 900px) {
+  .report-page {
+    padding: 20px !important;
+    padding-bottom: 50px !important;
+  }
+
+  .report-shell {
+    padding: 24px !important;
+  }
+
+  .report-heading {
+    font-size: clamp(1.8rem, 6.2vw, 2.3rem) !important;
+  }
+}
+
+@media (max-width: 640px) {
+  .report-shell {
+    padding: 16px !important;
+  }
+
+  .report-section,
+  .report-health,
+  .report-debug,
+  .report-ai-signal {
+    padding: 14px !important;
+    margin-bottom: 18px !important;
+  }
+
+  .report-toggle-actions {
+    gap: 8px !important;
+  }
+
+  .report-toggle-actions .btn {
+    width: 100%;
+    font-size: 0.88rem !important;
+    padding: 9px 10px !important;
+  }
+}

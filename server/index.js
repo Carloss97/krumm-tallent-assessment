@@ -2,9 +2,11 @@
 
 import express from 'express';
 import cors from 'cors';
+import dotenv from 'dotenv';
 import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { GoogleGenerativeAI } from '@google/generative-ai';
 import { saveSession, getSession, getAllSessions, upsertParticipant, getParticipantById } from './db.js';
 import {
   generateParticipantToken,
@@ -15,11 +17,20 @@ import {
 } from './tokenService.js';
 import { rateLimiter, requestLogger } from './middleware.js';
 
+dotenv.config();
+
 const app = express();
 const PORT = process.env.PORT || 4000;
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 const calibrationDir = path.join(__dirname, '..', 'data', 'calibration');
+const DEFAULT_GEMINI_MODEL = process.env.GEMINI_MODEL || process.env.VITE_GEMINI_MODEL || 'gemini-2.5-flash';
+const GEMINI_FALLBACK_MODELS = [
+  'gemini-2.5-flash',
+  'gemini-2.5-pro',
+  'gemini-2.0-flash',
+  'gemini-2.0-flash-lite'
+];
 
 // Middleware
 app.use(cors());
@@ -104,6 +115,123 @@ const readQualityAlertSummary = (filePath) => {
   };
 };
 
+const getGeminiApiKey = () => {
+  const key = process.env.GOOGLE_API_KEY || process.env.GEMINI_API_KEY || '';
+  return String(key).trim();
+};
+
+const getModelCandidates = (preferredModel) => {
+  return Array.from(new Set([preferredModel || DEFAULT_GEMINI_MODEL, ...GEMINI_FALLBACK_MODELS]));
+};
+
+const inferStatusFromMessage = (text) => {
+  const msg = String(text || '').toLowerCase();
+  if (msg.includes('429') || msg.includes('quota') || msg.includes('too many requests')) return 429;
+  if (msg.includes('404') || msg.includes('not found') || msg.includes('not supported')) return 404;
+  if (msg.includes('403') || msg.includes('permission_denied') || msg.includes('permission')) return 403;
+  if (msg.includes('400') || msg.includes('api_key_invalid') || msg.includes('expired')) return 400;
+  return 0;
+};
+
+const mapGeminiFailure = (responseText, statusCode) => {
+  const raw = String(responseText || '').toLowerCase();
+  if (raw.includes('reported as leaked') || raw.includes('leaked')) {
+    return { code: 'KEY_LEAKED', message: 'Gemini API key was reported as leaked. Rotate to a new key.' };
+  }
+  if (raw.includes('expired') || raw.includes('api_key_invalid')) {
+    return { code: 'KEY_INVALID', message: 'Gemini API key is invalid or expired.' };
+  }
+  if (statusCode === 403 || raw.includes('permission_denied') || raw.includes('permission')) {
+    return { code: 'PERMISSION_DENIED', message: 'Gemini key lacks required permissions for this project.' };
+  }
+  if (statusCode === 404 || raw.includes('not found') || raw.includes('not supported')) {
+    return { code: 'MODEL_NOT_FOUND', message: 'Selected Gemini model is not available for this endpoint/version.' };
+  }
+  if (statusCode === 429 || raw.includes('quota') || raw.includes('rate limit')) {
+    return { code: 'QUOTA_EXCEEDED', message: 'Gemini quota/rate limit reached for this project.' };
+  }
+  if (statusCode === 400) {
+    return { code: 'BAD_REQUEST', message: 'Gemini request was rejected (bad request/configuration).' };
+  }
+  return { code: 'UNKNOWN', message: 'Unknown Gemini API error.' };
+};
+
+const getHttpStatusFromGeminiCode = (code) => {
+  if (code === 'MISSING_KEY') return 503;
+  if (code === 'KEY_INVALID' || code === 'BAD_REQUEST') return 400;
+  if (code === 'KEY_LEAKED' || code === 'PERMISSION_DENIED') return 403;
+  if (code === 'MODEL_NOT_FOUND') return 404;
+  if (code === 'QUOTA_EXCEEDED') return 429;
+  return 502;
+};
+
+const runGeminiGeneration = async ({ prompt, preferredModel, generationConfig = {} }) => {
+  const key = getGeminiApiKey();
+  if (!key) {
+    return {
+      ok: false,
+      code: 'MISSING_KEY',
+      message: 'Missing GOOGLE_API_KEY/GEMINI_API_KEY on server. Configure one of these in .env and restart the backend.',
+      model: preferredModel || DEFAULT_GEMINI_MODEL,
+      attempts: [],
+    };
+  }
+
+  const client = new GoogleGenerativeAI(key);
+  const modelCandidates = getModelCandidates(preferredModel || DEFAULT_GEMINI_MODEL);
+  const attempts = [];
+
+  for (const modelName of modelCandidates) {
+    try {
+      const model = client.getGenerativeModel({
+        model: modelName,
+        generationConfig: {
+          temperature: 0.2,
+          responseMimeType: 'application/json',
+          ...generationConfig,
+        },
+      });
+
+      const result = await model.generateContent(prompt);
+      const responseText = result?.response?.text?.() || '';
+      attempts.push({ stage: 'generate:content', model: modelName, status: 200, code: 'OK', message: 'Generation succeeded.' });
+      return {
+        ok: true,
+        code: 'OK',
+        message: 'Generation succeeded.',
+        model: modelName,
+        text: responseText,
+        attempts,
+      };
+    } catch (error) {
+      const raw = error?.message || String(error);
+      const status = inferStatusFromMessage(raw);
+      const mapped = mapGeminiFailure(raw, status);
+      attempts.push({ stage: 'generate:content', model: modelName, status: status || null, code: mapped.code, message: mapped.message });
+
+      const isGlobalFailure = mapped.code === 'KEY_INVALID' || mapped.code === 'KEY_LEAKED' || mapped.code === 'PERMISSION_DENIED' || mapped.code === 'QUOTA_EXCEEDED';
+      if (isGlobalFailure) {
+        return {
+          ok: false,
+          code: mapped.code,
+          message: mapped.message,
+          model: modelName,
+          attempts,
+        };
+      }
+    }
+  }
+
+  const lastAttempt = attempts[attempts.length - 1] || { code: 'UNKNOWN', message: 'Unknown Gemini API error.', model: preferredModel || DEFAULT_GEMINI_MODEL };
+  return {
+    ok: false,
+    code: lastAttempt.code,
+    message: lastAttempt.message,
+    model: lastAttempt.model,
+    attempts,
+  };
+};
+
 // ===== HEALTH CHECK (No Auth Required) =====
 app.get('/health', (req, res) => {
   return res.json({
@@ -111,6 +239,85 @@ app.get('/health', (req, res) => {
     timestamp: new Date().toISOString(),
     uptime: process.uptime()
   });
+});
+
+// Tighten AI endpoint rate to reduce bursty retries hitting Gemini quotas.
+app.use('/api/ai', rateLimiter({ windowMs: 60_000, maxRequests: 20 }));
+
+app.get('/api/ai/health', async (req, res) => {
+  try {
+    const preferredModel = typeof req.query.model === 'string' ? req.query.model : undefined;
+    const result = await runGeminiGeneration({
+      prompt: 'Respond with valid JSON only: {"ok":true}',
+      preferredModel,
+      generationConfig: { temperature: 0 },
+    });
+
+    return res.status(result.ok ? 200 : getHttpStatusFromGeminiCode(result.code)).json({
+      ok: result.ok,
+      code: result.code,
+      message: result.ok ? `Gemini connection healthy (${result.model}).` : result.message,
+      model: result.model,
+      attempts: result.attempts || [],
+    });
+  } catch (error) {
+    return res.status(500).json({
+      ok: false,
+      code: 'SERVER_ERROR',
+      message: 'Server error while checking Gemini health.',
+      details: error?.message || String(error),
+      attempts: [],
+    });
+  }
+});
+
+app.post('/api/ai/generate', async (req, res) => {
+  const prompt = typeof req.body?.prompt === 'string' ? req.body.prompt.trim() : '';
+  const preferredModel = typeof req.body?.preferredModel === 'string' ? req.body.preferredModel.trim() : undefined;
+
+  if (!prompt || prompt.length < 12) {
+    return res.status(400).json({
+      ok: false,
+      code: 'BAD_REQUEST',
+      message: 'Prompt is required and must contain at least 12 characters.',
+      attempts: [],
+    });
+  }
+
+  try {
+    const result = await runGeminiGeneration({
+      prompt,
+      preferredModel,
+      generationConfig: { temperature: 0.2, responseMimeType: 'application/json' },
+    });
+
+    if (!result.ok) {
+      return res.status(getHttpStatusFromGeminiCode(result.code)).json({
+        ok: false,
+        code: result.code,
+        message: result.message,
+        model: result.model,
+        attempts: result.attempts || [],
+      });
+    }
+
+    return res.status(200).json({
+      ok: true,
+      code: 'OK',
+      message: 'Generation succeeded.',
+      model: result.model,
+      text: result.text,
+      attempts: result.attempts || [],
+    });
+  } catch (error) {
+    return res.status(500).json({
+      ok: false,
+      code: 'SERVER_ERROR',
+      message: 'Server error while generating Gemini content.',
+      details: error?.message || String(error),
+      attempts: [],
+    });
+  }
 });
 
 // ===== AUTHENTICATION ENDPOINTS =====

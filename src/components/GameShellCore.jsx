@@ -8,6 +8,7 @@ import ConsentModal from './ConsentModal';
 import GameSessionHeader from './GameSessionHeader';
 import GameErrorBoundary from './GameErrorBoundary';
 import GameExitModal from './GameExitModal';
+import './GameShellCore.css';
 import { useWebcamCapture } from '../hooks/useWebcamCapture';
 import {
   recordGameShellRuntimeError,
@@ -280,9 +281,9 @@ const GameShellCore = ({ gameId, children }) => {
           onRetry={handleRetryAfterError}
           onExit={() => navigateHome('error-fallback')}
         >
-          {gameChild}
+          <div className="game-shell-body">{gameChild}</div>
         </GameErrorBoundary>
-      ) : gameChild}
+      ) : <div className="game-shell-body">{gameChild}</div>}
       <GameExitModal
         isOpen={showExitModal}
         language={language}

@@ -1,7 +1,8 @@
 .game-exit-modal-overlay {
   position: fixed;
   inset: 0;
-  background: rgba(15, 23, 42, 0.45);
+  background: rgba(10, 21, 38, 0.48);
+  backdrop-filter: blur(4px);
   display: grid;
   place-items: center;
   z-index: 1600;
@@ -10,23 +11,24 @@
 
 .game-exit-modal-card {
   width: min(420px, 100%);
-  background: #ffffff;
-  border: 1px solid rgba(148, 163, 184, 0.35);
-  border-radius: 14px;
-  box-shadow: 0 20px 48px rgba(2, 6, 23, 0.24);
-  padding: 1rem;
+  background: linear-gradient(150deg, rgba(255, 255, 255, 0.98), rgba(245, 249, 253, 0.95));
+  border: 1px solid rgba(41, 62, 92, 0.16);
+  border-radius: 16px;
+  box-shadow: 0 22px 48px rgba(10, 22, 40, 0.22);
+  padding: 1.05rem;
 }
 
 .game-exit-modal-card h3 {
   margin: 0 0 0.45rem;
-  font-size: 1rem;
-  color: #0f172a;
+  font-size: 1.05rem;
+  color: #142b49;
+  font-family: var(--font-display);
 }
 
 .game-exit-modal-card p {
   margin: 0;
-  font-size: 0.9rem;
-  color: #334155;
+  font-size: 0.92rem;
+  color: #355376;
 }
 
 .game-exit-modal-actions {
@@ -39,28 +41,32 @@
 .game-exit-btn-secondary,
 .game-exit-btn-danger {
   border: 1px solid transparent;
-  border-radius: 8px;
-  padding: 0.5rem 0.72rem;
+  border-radius: 10px;
+  padding: 0.5rem 0.8rem;
   font-size: 0.85rem;
   font-weight: 700;
   cursor: pointer;
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
 }
 
 .game-exit-btn-secondary {
-  border-color: rgba(148, 163, 184, 0.45);
-  background: #f8fafc;
-  color: #0f172a;
+  border-color: rgba(41, 62, 92, 0.22);
+  background: rgba(255, 255, 255, 0.9);
+  color: #1f3f68;
 }
 
 .game-exit-btn-danger {
-  background: #dc2626;
+  background: linear-gradient(135deg, #be2431, #9e1f2a);
   color: #ffffff;
+  box-shadow: 0 8px 14px rgba(158, 31, 42, 0.22);
 }
 
 .game-exit-btn-secondary:hover {
-  background: #f1f5f9;
+  background: #eef3f8;
+  transform: translateY(-1px);
 }
 
 .game-exit-btn-danger:hover {
-  background: #b91c1c;
+  background: linear-gradient(135deg, #aa212d, #8e1b25);
+  transform: translateY(-1px);
 }

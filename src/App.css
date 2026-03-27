@@ -4,16 +4,17 @@
   justify-content: center;
   align-items: center;
   height: 100vh;
-  font-size: 1.2rem;
-  color: #6b7280;
+  font-size: 1.05rem;
+  color: var(--ink-medium);
+  font-family: var(--font-main);
 }
 
 .loading-spinner::after {
   content: '';
   width: 24px;
   height: 24px;
-  border: 3px solid #e5e7eb;
-  border-top: 3px solid #3b82f6;
+  border: 3px solid rgba(54, 94, 146, 0.2);
+  border-top: 3px solid var(--brand-600);
   border-radius: 50%;
   animation: spin 1s linear infinite;
   margin-left: 12px;

@@ -27,6 +27,7 @@ import {
   evaluateLearningAgility,
 } from './services/futureAssessments';
 import { getExperimentConfig } from './utils/abTesting';
+import './Report.css';
 
 const Report = () => {
   const { sessionData, participantProfile, getSessionMetadata } = useTelemetry();
@@ -56,7 +57,9 @@ const Report = () => {
   const [backendError, setBackendError] = useState(null);
   const reportGeneratedRef = useRef(false);
   const isTestEnv = typeof import.meta !== 'undefined' && import.meta.env?.MODE === 'test';
+  const useBackendGeminiProxy = typeof import.meta !== 'undefined' && import.meta.env?.VITE_USE_BACKEND_GEMINI_PROXY !== 'false';
   const hasGeminiKey = Boolean(typeof import.meta !== 'undefined' && import.meta.env?.VITE_GOOGLE_API_KEY);
+  const canUseGemini = useBackendGeminiProxy || hasGeminiKey;
 
   const isDevBuild = typeof import.meta !== 'undefined' && import.meta.env?.DEV;
 
@@ -101,6 +104,7 @@ const Report = () => {
   const roleOptions = useMemo(() => getTargetRoleOptions(isEn), [isEn]);
   const isCooldownActive = cooldownUntil > Date.now();
   const cooldownSeconds = Math.max(0, Math.ceil((cooldownUntil - Date.now()) / 1000));
+  const geminiActionHint = getGeminiActionHint(geminiHealth?.code, isEn);
 
   const triggerAiRetry = () => {
     if (isCooldownActive) return;
@@ -158,11 +162,11 @@ const Report = () => {
         });
         return;
       }
-      if (!hasGeminiKey) {
+      if (!canUseGemini) {
         setGeminiHealth({
           checked: true,
           ok: false,
-          message: 'Missing VITE_GOOGLE_API_KEY in environment.',
+          message: 'Missing Gemini configuration (proxy disabled and VITE_GOOGLE_API_KEY not found).',
           code: 'MISSING_KEY',
         });
         return;
@@ -184,7 +188,7 @@ const Report = () => {
     return () => {
       cancelled = true;
     };
-  }, [isEn, isTestEnv, useAI, hasGeminiKey, cooldownTick]);
+  }, [isEn, isTestEnv, useAI, canUseGemini, cooldownTick]);
 
   // Reset generation state when switching AI/demo modes to avoid stale report output.
   useEffect(() => {
@@ -207,14 +211,14 @@ const Report = () => {
           let resolvedReport = null;
 
           if (useAI) {
-            if (hasGeminiKey) {
+            if (canUseGemini) {
               const report = await generateAIReport(reportData, 'recruitment', language);
               if (report) {
                 resolvedReport = report;
                 setInsightMeta({ mode: 'ai', reason: 'Gemini response parsed successfully.' });
               }
             } else {
-              setInsightMeta({ mode: 'heuristic', reason: 'Missing VITE_GOOGLE_API_KEY in environment.' });
+              setInsightMeta({ mode: 'heuristic', reason: 'Missing Gemini configuration (proxy disabled and no frontend API key).' });
             }
           }
 
@@ -223,7 +227,7 @@ const Report = () => {
             resolvedReport = generateHeuristicReport(reportData, language);
             if (!useAI) {
               setInsightMeta({ mode: 'heuristic', reason: isEn ? 'AI mode is disabled by user toggle.' : 'El modo IA esta desactivado por el usuario.' });
-            } else if (hasGeminiKey) {
+            } else if (canUseGemini) {
               const fallbackReason = getLastAIFailureReason() || 'AI call failed or returned invalid JSON; fallback activated.';
               setInsightMeta({ mode: 'heuristic', reason: fallbackReason });
             }
@@ -272,18 +276,18 @@ const Report = () => {
     participantProfile,
     getSessionMetadata,
     sessionSavedId,
-    hasGeminiKey,
+    canUseGemini,
     generationNonce
   ]);
 
   if (!hasRealData && !useDummyData) {
     return (
-      <div className="flex-center glass-panel" style={{ margin: 'auto', marginTop: '100px', maxWidth: '600px', padding: '40px', textAlign: 'center' }}>
+      <div className="flex-center glass-panel report-empty" style={{ margin: 'auto', marginTop: '100px', maxWidth: '600px', padding: '40px', textAlign: 'center' }}>
         <h2>{isEn ? 'No Assessment Data Found' : 'No se encontraron datos de evaluacion'}</h2>
         <p>{isEn ? 'Please complete the extended assessment to view the HR report.' : 'Completa la evaluacion extendida para ver el reporte final.'}</p>
-        <div style={{ display: 'flex', gap: '16px', marginTop: '20px' }}>
+        <div className="report-inline-actions" style={{ display: 'flex', gap: '16px', marginTop: '20px' }}>
           <button className="btn" onClick={() => window.location.href = '/'}>{isEn ? 'Go to Start' : 'Ir al inicio'}</button>
-          <button className="btn" style={{ background: 'rgba(124, 58, 237, 0.1)', color: '#7c3aed', border: '1px solid #7c3aed' }} onClick={() => setUseDummyData(true)}>
+          <button className="btn report-btn-muted" style={{ background: 'rgba(124, 58, 237, 0.1)', color: '#7c3aed', border: '1px solid #7c3aed' }} onClick={() => setUseDummyData(true)}>
             {isEn ? 'View Demo Report' : 'Ver reporte demo'}
           </button>
         </div>
@@ -293,11 +297,11 @@ const Report = () => {
 
   if (isAnalyzing) {
     return (
-      <div className="flex-center" style={{ width: '100%', minHeight: '100vh', flexDirection: 'column', padding: '40px' }}>
+      <div className="flex-center report-loading" style={{ width: '100%', minHeight: '100vh', flexDirection: 'column', padding: '40px' }}>
         <motion.div
            initial={{ opacity: 0, scale: 0.9 }}
            animate={{ opacity: 1, scale: 1 }}
-           className="glass-panel"
+           className="glass-panel report-loading-card"
            style={{ padding: '60px', textAlign: 'center', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '20px' }}
         >
           <motion.div
@@ -326,19 +330,19 @@ const Report = () => {
   const targetRadarFill = '#56B4E9';
 
   return (
-    <div style={{ width: '100%', minHeight: '100%', padding: '40px', paddingBottom: '80px' }}>
+    <div className="report-page" style={{ width: '100%', minHeight: '100%', padding: '40px', paddingBottom: '80px' }}>
       <motion.div 
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
-        className="glass-panel"
+        className="glass-panel report-shell"
         style={{ maxWidth: '900px', margin: '0 auto', padding: '40px' }}
       >
-        <h1 className="text-gradient" style={{ fontSize: '2.5rem', marginBottom: '8px', textAlign: 'center' }}>
+        <h1 className="text-gradient report-heading" style={{ fontSize: '2.5rem', marginBottom: '8px', textAlign: 'center' }}>
           {report.source === 'gemini'
             ? (isEn ? 'AI-Powered Skills Assessment' : 'Evaluacion de habilidades con IA')
             : (isEn ? 'Skills Evaluation Matrix' : 'Matriz de evaluacion de habilidades')}
         </h1>
-        <p style={{ textAlign: 'center', color: '#374151', marginBottom: '40px' }}>
+        <p className="report-subheading" style={{ textAlign: 'center', color: '#374151', marginBottom: '40px' }}>
           {report.source === 'gemini'
             ? (isEn ? 'Generated by Google Gemini AI' : 'Generado por Google Gemini AI')
             : (isEn ? 'Heuristic-Based Analysis' : 'Analisis basado en heuristicas')}
@@ -347,6 +351,7 @@ const Report = () => {
 
         {participantProfile?.participantId && (
           <div
+            className="report-meta-pill"
             style={{
               margin: '0 auto 24px',
               width: 'fit-content',
@@ -362,8 +367,8 @@ const Report = () => {
           </div>
         )}
 
-        <div className="glass-panel-light" style={{ padding: '24px', marginBottom: '32px' }}>
-          <h3 style={{ marginBottom: '14px', color: '#1e1b4b', fontWeight: '700', borderBottom: '1px solid rgba(99,102,241,0.2)', paddingBottom: '8px' }}>
+        <div className="glass-panel-light report-section" style={{ padding: '24px', marginBottom: '32px' }}>
+          <h3 className="report-section-title" style={{ marginBottom: '14px', color: '#1e1b4b', fontWeight: '700', borderBottom: '1px solid rgba(99,102,241,0.2)', paddingBottom: '8px' }}>
             {isEn ? 'Executive Capability Snapshot' : 'Resumen ejecutivo de capacidades'}
           </h3>
 
@@ -391,7 +396,7 @@ const Report = () => {
             </div>
           </div>
 
-          <div style={{ display: 'grid', gridTemplateColumns: 'minmax(320px, 1.2fr) minmax(240px, 1fr)', gap: '16px', alignItems: 'center' }}>
+          <div style={{ display: 'grid', gridTemplateColumns: 'minmax(320px, 1.2fr) minmax(240px, 1fr)', gap: '16px', alignItems: 'start' }}>
             <div style={{ width: '100%', height: 300, background: 'linear-gradient(150deg, rgba(239,246,255,0.75), rgba(250,245,255,0.78))', borderRadius: '14px', border: '1px solid rgba(129,140,248,0.2)', padding: '8px' }}>
               {isTestEnv ? (
                 <RadarChart width={520} height={280} data={radarProfile} outerRadius="72%">
@@ -413,18 +418,6 @@ const Report = () => {
                 </ResponsiveContainer>
               )}
             </div>
-
-            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '10px', marginTop: '-4px', marginBottom: '6px', justifyContent: 'center' }}>
-              <div style={{ display: 'inline-flex', alignItems: 'center', gap: '8px', padding: '5px 10px', borderRadius: '999px', background: 'rgba(255,255,255,0.86)', border: '1px solid rgba(148,163,184,0.35)' }}>
-                <span style={{ width: 12, height: 12, borderRadius: 999, background: participantRadarColor, border: `2px solid ${participantRadarFill}` }} />
-                <span style={{ fontSize: '0.8rem', color: '#1e293b', fontWeight: 600 }}>{isEn ? 'Participant score' : 'Puntaje postulante'}</span>
-              </div>
-              <div style={{ display: 'inline-flex', alignItems: 'center', gap: '8px', padding: '5px 10px', borderRadius: '999px', background: 'rgba(255,255,255,0.86)', border: '1px solid rgba(148,163,184,0.35)' }}>
-                <span style={{ width: 12, height: 12, borderRadius: 999, background: targetRadarColor, border: `2px solid ${targetRadarFill}` }} />
-                <span style={{ fontSize: '0.8rem', color: '#1e293b', fontWeight: 600 }}>{isEn ? 'Target role profile' : 'Perfil objetivo del puesto'}</span>
-              </div>
-            </div>
-
             <div style={{ display: 'grid', gap: '12px' }}>
               <div style={{ padding: '12px', borderRadius: '10px', background: 'rgba(16, 185, 129, 0.1)', border: '1px solid rgba(16, 185, 129, 0.25)' }}>
                 <div style={{ fontWeight: 700, color: '#065f46', marginBottom: '6px' }}>{isEn ? 'Top Strengths' : 'Fortalezas principales'}</div>
@@ -445,11 +438,22 @@ const Report = () => {
               </div>
             </div>
           </div>
+
+          <div style={{ display: 'flex', flexWrap: 'wrap', gap: '10px', marginTop: '12px', justifyContent: 'center' }}>
+            <div style={{ display: 'inline-flex', alignItems: 'center', gap: '8px', padding: '5px 10px', borderRadius: '999px', background: 'rgba(255,255,255,0.86)', border: '1px solid rgba(148,163,184,0.35)' }}>
+              <span style={{ width: 12, height: 12, borderRadius: 999, background: participantRadarColor, border: `2px solid ${participantRadarFill}` }} />
+              <span style={{ fontSize: '0.8rem', color: '#1e293b', fontWeight: 600 }}>{isEn ? 'Participant score' : 'Puntaje postulante'}</span>
+            </div>
+            <div style={{ display: 'inline-flex', alignItems: 'center', gap: '8px', padding: '5px 10px', borderRadius: '999px', background: 'rgba(255,255,255,0.86)', border: '1px solid rgba(148,163,184,0.35)' }}>
+              <span style={{ width: 12, height: 12, borderRadius: 999, background: targetRadarColor, border: `2px solid ${targetRadarFill}` }} />
+              <span style={{ fontSize: '0.8rem', color: '#1e293b', fontWeight: 600 }}>{isEn ? 'Target role profile' : 'Perfil objetivo del puesto'}</span>
+            </div>
+          </div>
         </div>
 
         {/* Extended Results for new battery */}
-        <div className="glass-panel-light" style={{ padding: '24px', marginBottom: '32px' }}>
-          <h3 style={{ marginBottom: '16px', color: '#1e1b4b', fontWeight: '700', borderBottom: '1px solid rgba(99,102,241,0.2)', paddingBottom: '8px' }}>
+        <div className="glass-panel-light report-section" style={{ padding: '24px', marginBottom: '32px' }}>
+          <h3 className="report-section-title" style={{ marginBottom: '16px', color: '#1e1b4b', fontWeight: '700', borderBottom: '1px solid rgba(99,102,241,0.2)', paddingBottom: '8px' }}>
             {isEn ? 'Integrated Battery Results (Games 1-13)' : 'Resultados integrados de bateria (juegos 1-13)'}
           </h3>
           <div style={{ overflowX: 'auto' }}>
@@ -481,7 +485,7 @@ const Report = () => {
         </div>
 
         {/* Skills and Talent Signal Panel */}
-        <div style={{ 
+        <div className="report-ai-signal" style={{ 
           backgroundColor: 'rgba(255,255,255,0.7)', 
           borderRadius: '12px', 
           padding: '24px', 
@@ -509,7 +513,7 @@ const Report = () => {
           )}
         </div>
 
-        <div className="glass-panel-light" style={{ padding: '14px', marginBottom: '24px', border: `1px solid ${geminiHealth.ok ? 'rgba(16,185,129,0.35)' : 'rgba(245,158,11,0.4)'}` }}>
+        <div className="glass-panel-light report-health" style={{ padding: '14px', marginBottom: '24px', border: `1px solid ${geminiHealth.ok ? 'rgba(16,185,129,0.35)' : 'rgba(245,158,11,0.4)'}` }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', gap: '12px', flexWrap: 'wrap', alignItems: 'center' }}>
             <strong style={{ color: geminiHealth.ok ? '#047857' : '#92400e' }}>
               {isEn ? 'Gemini Health Check' : 'Chequeo de salud Gemini'}: {geminiHealth.ok ? 'OK' : (isEn ? 'Warning' : 'Advertencia')}
@@ -518,10 +522,15 @@ const Report = () => {
               {geminiHealth.checked ? geminiHealth.message : (isEn ? 'Checking...' : 'Verificando...')}
             </span>
           </div>
+          {!geminiHealth.ok && geminiHealth.checked && geminiActionHint && (
+            <div style={{ marginTop: '8px', color: '#92400e', fontSize: '0.84rem' }}>
+              {isEn ? 'Next step' : 'Siguiente paso'}: {geminiActionHint}
+            </div>
+          )}
         </div>
 
         {isDevBuild && aiDebugRows.length > 0 && (
-          <div className="glass-panel-light" style={{ padding: '14px', marginBottom: '24px', border: '1px dashed rgba(51,65,85,0.35)' }}>
+          <div className="glass-panel-light report-debug" style={{ padding: '14px', marginBottom: '24px', border: '1px dashed rgba(51,65,85,0.35)' }}>
             <h4 style={{ margin: '0 0 10px 0', color: '#1e293b' }}>
               {isEn ? 'Gemini Debug Attempts (Dev)' : 'Intentos debug Gemini (Dev)'}
             </h4>
@@ -573,8 +582,8 @@ const Report = () => {
           </div>
         )}
 
-        <div className="glass-panel-light" style={{ padding: '24px', marginBottom: '32px' }}>
-          <h3 style={{ marginBottom: '12px', color: '#1e1b4b', fontWeight: '700', borderBottom: '1px solid rgba(99,102,241,0.2)', paddingBottom: '8px' }}>
+        <div className="glass-panel-light report-section" style={{ padding: '24px', marginBottom: '32px' }}>
+          <h3 className="report-section-title" style={{ marginBottom: '12px', color: '#1e1b4b', fontWeight: '700', borderBottom: '1px solid rgba(99,102,241,0.2)', paddingBottom: '8px' }}>
             {isEn ? 'Future Modules (High-Priority Plan) - Beta Scoring' : 'Modulos futuros (plan prioritario) - scoring beta'}
           </h3>
           {!hasFutureModulesData && (
@@ -613,8 +622,8 @@ const Report = () => {
         </div>
 
         {/* AI Summary */}
-        <div className="glass-panel-light" style={{ padding: '24px', marginBottom: '32px' }}>
-          <h3 style={{ marginBottom: '16px', color: '#1e1b4b', fontWeight: '700', borderBottom: '1px solid rgba(99,102,241,0.2)', paddingBottom: '8px' }}>
+        <div className="glass-panel-light report-section" style={{ padding: '24px', marginBottom: '32px' }}>
+          <h3 className="report-section-title" style={{ marginBottom: '16px', color: '#1e1b4b', fontWeight: '700', borderBottom: '1px solid rgba(99,102,241,0.2)', paddingBottom: '8px' }}>
             {isEn ? 'Executive Summary' : 'Resumen ejecutivo'}
           </h3>
           <p style={{ color: '#374151', lineHeight: '1.8', fontSize: '1.05rem' }}>
@@ -655,8 +664,8 @@ const Report = () => {
           </div>
         </div>
 
-        <div className="glass-panel-light" style={{ padding: '24px', marginBottom: '32px' }}>
-          <h3 style={{ marginBottom: '16px', color: '#1e1b4b', fontWeight: '700', borderBottom: '1px solid rgba(99,102,241,0.2)', paddingBottom: '8px' }}>
+        <div className="glass-panel-light report-section" style={{ padding: '24px', marginBottom: '32px' }}>
+          <h3 className="report-section-title" style={{ marginBottom: '16px', color: '#1e1b4b', fontWeight: '700', borderBottom: '1px solid rgba(99,102,241,0.2)', paddingBottom: '8px' }}>
             {isEn ? '90-Day Action Priorities' : 'Prioridades de accion a 90 dias'}
           </h3>
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: '12px' }}>
@@ -674,8 +683,8 @@ const Report = () => {
 
         {/* Career Fit */}
         {report.careerRecommendations && report.careerRecommendations.length > 0 && (
-          <div className="glass-panel-light" style={{ padding: '24px', marginBottom: '32px' }}>
-            <h3 style={{ marginBottom: '16px', color: '#1e1b4b', fontWeight: '700', borderBottom: '1px solid rgba(99,102,241,0.2)', paddingBottom: '8px' }}>
+          <div className="glass-panel-light report-section" style={{ padding: '24px', marginBottom: '32px' }}>
+            <h3 className="report-section-title" style={{ marginBottom: '16px', color: '#1e1b4b', fontWeight: '700', borderBottom: '1px solid rgba(99,102,241,0.2)', paddingBottom: '8px' }}>
               {isEn ? 'Career Fit Recommendations' : 'Recomendaciones de encaje de carrera'}
             </h3>
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))', gap: '16px' }}>
@@ -702,8 +711,8 @@ const Report = () => {
         )}
 
         {/* Toggle AI/Heuristic */}
-        <div style={{ textAlign: 'center', marginBottom: '20px' }}>
-          <div style={{ display: 'flex', gap: '12px', justifyContent: 'center', flexWrap: 'wrap' }}>
+        <div className="report-toggle-zone" style={{ textAlign: 'center', marginBottom: '20px' }}>
+          <div className="report-toggle-actions" style={{ display: 'flex', gap: '12px', justifyContent: 'center', flexWrap: 'wrap' }}>
             <button
               className="btn"
               style={{
@@ -839,7 +848,7 @@ const Report = () => {
           </div>
         )}
 
-        <div style={{ textAlign: 'center', marginTop: '40px' }}>
+        <div className="report-footer" style={{ textAlign: 'center', marginTop: '40px' }}>
           <div style={{ marginBottom: '12px', color: '#475569' }}>
             {!useDummyData && backendError && <span style={{ color: '#dc2626' }}>[WARN] {backendError}</span>}
             {!useDummyData && !backendError && sessionSavedId && <span style={{ color: '#16a34a' }}>{isEn ? `[OK] Session saved with ID ${sessionSavedId}` : `[OK] Sesion guardada con ID ${sessionSavedId}`}</span>}
@@ -870,7 +879,7 @@ const getRecommendationColor = (recommendation) => {
 };
 
 const TelemetryStatCard = ({ label, value }) => (
-  <div style={{ background: 'rgba(255,255,255,0.75)', border: '1px solid rgba(148,163,184,0.3)', borderRadius: '8px', padding: '10px' }}>
+  <div className="report-stat-card" style={{ background: 'rgba(255,255,255,0.75)', border: '1px solid rgba(148,163,184,0.3)', borderRadius: '8px', padding: '10px' }}>
     <div style={{ color: '#475569', fontSize: '0.75rem', textTransform: 'uppercase', marginBottom: '4px' }}>{label}</div>
     <div style={{ color: '#0f172a', fontWeight: 700, fontSize: '1.05rem' }}>{value}</div>
   </div>
@@ -927,6 +936,42 @@ function getRecommendationLabel(recommendation, isEn) {
     'EXPLORATORY FIT - NEEDS MORE DATA': isEn ? 'Exploratory Fit - Needs More Data' : 'Encaje exploratorio - requiere mas datos',
   };
   return labels[recommendation] || recommendation;
+}
+
+function getGeminiActionHint(code, isEn) {
+  const hints = {
+    MISSING_KEY: isEn
+      ? 'Add VITE_GOOGLE_API_KEY to .env and restart Vite.'
+      : 'Agrega VITE_GOOGLE_API_KEY en .env y reinicia Vite.',
+    KEY_INVALID: isEn
+      ? 'Rotate the API key and verify it belongs to the active Google Cloud project.'
+      : 'Rota la API key y verifica que pertenezca al proyecto activo de Google Cloud.',
+    KEY_LEAKED: isEn
+      ? 'Create a new key immediately and restrict it by HTTP referrer and API scope.'
+      : 'Crea una nueva key de inmediato y restringela por referrer HTTP y alcance de API.',
+    PERMISSION_DENIED: isEn
+      ? 'Enable Generative Language API and billing, then retry.'
+      : 'Habilita Generative Language API y billing, luego reintenta.',
+    MODEL_NOT_FOUND: isEn
+      ? 'Use a model listed in health probe results or update VITE_GEMINI_MODEL.'
+      : 'Usa un modelo listado en el probe de salud o actualiza VITE_GEMINI_MODEL.',
+    QUOTA_EXCEEDED: isEn
+      ? 'Wait for quota reset or route requests through backend with throttling/queue.'
+      : 'Espera el reinicio de cuota o enruta requests por backend con throttling/cola.',
+    MODEL_AND_QUOTA_CONFLICT: isEn
+      ? 'Switch to an available model and reduce probe frequency to avoid quota lock.'
+      : 'Cambia a un modelo disponible y reduce la frecuencia de probes para evitar bloqueo por cuota.',
+    NETWORK_ERROR: isEn
+      ? 'Check network/VPN/firewall rules and retry from backend to isolate browser restrictions.'
+      : 'Revisa red/VPN/firewall y reintenta desde backend para aislar restricciones del navegador.',
+    PROXY_UNREACHABLE: isEn
+      ? 'Start backend server (npm run dev:server) and verify VITE_API_BASE_URL points to it.'
+      : 'Inicia el backend (npm run dev:server) y verifica que VITE_API_BASE_URL apunte a ese servidor.',
+  };
+
+  return hints[code] || (isEn
+    ? 'Inspect Gemini debug attempts and use heuristic fallback while connectivity is unstable.'
+    : 'Inspecciona los intentos debug de Gemini y usa fallback heuristico mientras la conectividad sea inestable.');
 }
 
 function translateTelemetrySignal(signal, isEn) {
