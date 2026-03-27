@@ -30,7 +30,8 @@ const GameShellCore = ({ gameId, children }) => {
     setExperimentAssignment = () => {},
   } = useTelemetry();
   const { language } = useLanguage();
-  const [showInstructions, setShowInstructions] = useState(true);
+  const enablePreGameBrief = featureFlags.enablePreGameBrief === true;
+  const [showInstructions, setShowInstructions] = useState(enablePreGameBrief);
   const [isActive, setIsActive] = useState(false);
   const [webcamFallbackNotice, setWebcamFallbackNotice] = useState('');
   const [showExitModal, setShowExitModal] = useState(false);
@@ -67,6 +68,13 @@ const GameShellCore = ({ gameId, children }) => {
     setShowInstructions(false);
     setIsActive(true);
   }, []);
+
+  useEffect(() => {
+    if (needsConsent) return;
+    if (!showInstructions && !isActive) {
+      setIsActive(true);
+    }
+  }, [needsConsent, showInstructions, isActive]);
 
   const handleConsentsReady = useCallback((consents) => {
     if (consents.requestedWebcam && !consents.webcam) {

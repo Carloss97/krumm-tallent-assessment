@@ -52,7 +52,6 @@ const Report = () => {
   const [insightMeta, setInsightMeta] = useState({ mode: 'pending', reason: '' });
   const [geminiHealth, setGeminiHealth] = useState({ checked: false, ok: false, message: '', code: 'UNKNOWN' });
   const [cooldownUntil, setCooldownUntil] = useState(0);
-  const [cooldownTick, setCooldownTick] = useState(0);
   const [lastProbeAt, setLastProbeAt] = useState(null);
   const [aiDebugRows, setAiDebugRows] = useState([]);
   const [sessionSavedId, setSessionSavedId] = useState(null);
@@ -63,6 +62,7 @@ const Report = () => {
   const hasGeminiKey = Boolean(typeof import.meta !== 'undefined' && import.meta.env?.VITE_GOOGLE_API_KEY);
   const canUseGemini = useBackendGeminiProxy || hasGeminiKey;
   const preferEdgeLocalInference = typeof import.meta !== 'undefined' && import.meta.env?.VITE_USE_EDGE_LOCAL_INFERENCE !== 'false';
+  const enableGeminiProbeInDev = typeof import.meta !== 'undefined' && import.meta.env?.VITE_GEMINI_HEALTH_PROBE_DEV === 'true';
   const edgeGeminiEscalationEnabled = typeof import.meta !== 'undefined' && import.meta.env?.VITE_EDGE_ESCALATION_ENABLED !== 'false';
   const edgeEscalationMinConfidence = readEnvNumber('VITE_EDGE_ESCALATE_MIN_CONFIDENCE', 66);
   const edgeEscalationMinTelemetryCoverage = readEnvNumber('VITE_EDGE_ESCALATE_MIN_TELEMETRY_COVERAGE', 55);
@@ -116,8 +116,8 @@ const Report = () => {
   const competencyHighlights = useMemo(() => buildCompetencyHighlights(radarProfile), [radarProfile]);
   const roleOptions = useMemo(() => getTargetRoleOptions(isEn), [isEn]);
   const isCooldownActive = cooldownUntil > Date.now();
-  const cooldownSeconds = Math.max(0, Math.ceil((cooldownUntil - Date.now()) / 1000));
   const geminiActionHint = getGeminiActionHint(geminiHealth?.code, isEn);
+  const isGeminiProbeSkipped = geminiHealth?.code === 'SKIPPED_EDGE_LOCAL';
 
   const triggerAiRetry = () => {
     if (isCooldownActive) return;
@@ -148,11 +148,12 @@ const Report = () => {
 
   useEffect(() => {
     if (!isCooldownActive) return;
-    const timer = setInterval(() => {
-      setCooldownTick((value) => value + 1);
-    }, 1000);
-    return () => clearInterval(timer);
-  }, [isCooldownActive]);
+    const remainingMs = Math.max(0, cooldownUntil - Date.now());
+    const timer = setTimeout(() => {
+      setCooldownUntil(0);
+    }, remainingMs + 25);
+    return () => clearTimeout(timer);
+  }, [isCooldownActive, cooldownUntil]);
 
   useEffect(() => {
     const reason = `${geminiHealth?.code || ''} ${geminiHealth?.message || ''} ${insightMeta?.reason || ''}`.toLowerCase();
@@ -166,13 +167,13 @@ const Report = () => {
 
     const runHealthCheck = async () => {
       if (isTestEnv) return;
-      if (preferEdgeLocalInference && !isDevBuild) {
+      if (preferEdgeLocalInference && (!isDevBuild || !enableGeminiProbeInDev)) {
         setGeminiHealth({
           checked: true,
           ok: true,
           message: isEn
-            ? 'Edge-local inference active. Gemini health probe paused to reduce backend load.'
-            : 'Inferencia edge-local activa. Sondeo de salud Gemini pausado para reducir carga backend.',
+            ? 'Edge-local inference active. Gemini health probe is on-demand to reduce backend load and quota usage.'
+            : 'Inferencia edge-local activa. El chequeo de Gemini queda bajo demanda para reducir carga y uso de cuota.',
           code: 'SKIPPED_EDGE_LOCAL',
         });
         return;
@@ -215,7 +216,7 @@ const Report = () => {
     return () => {
       cancelled = true;
     };
-  }, [isEn, isTestEnv, useAI, canUseGemini, isCooldownActive, preferEdgeLocalInference, isDevBuild]);
+  }, [isEn, isTestEnv, useAI, canUseGemini, isCooldownActive, preferEdgeLocalInference, isDevBuild, enableGeminiProbeInDev]);
 
   // Reset generation state when switching AI/demo modes to avoid stale report output.
   useEffect(() => {
@@ -248,7 +249,7 @@ const Report = () => {
                   mode: 'edge-local',
                   reason: isEn
                     ? `Local edge inference completed in browser without raw-data exfiltration (coverage ${edgeReport?.signalAudit?.telemetryCoverageScore ?? 0}%, biometric quality ${edgeReport?.signalAudit?.biometricSignalQualityScore ?? 0}%).`
-                    : `Inferencia edge-local completada en navegador sin exfiltracion de datos crudos (cobertura ${edgeReport?.signalAudit?.telemetryCoverageScore ?? 0}%, calidad biometrica ${edgeReport?.signalAudit?.biometricSignalQualityScore ?? 0}%).`
+                    : `Inferencia edge-local completada en navegador sin exfiltración de datos crudos (cobertura ${edgeReport?.signalAudit?.telemetryCoverageScore ?? 0}%, calidad biométrica ${edgeReport?.signalAudit?.biometricSignalQualityScore ?? 0}%).`
                 });
 
                 const escalation = evaluateEdgeGeminiEscalation(edgeReport, {
@@ -277,7 +278,7 @@ const Report = () => {
                       mode: 'edge-local',
                       reason: isEn
                         ? `Edge-local retained after Gemini escalation attempt failed (${escalation.reasons.join('; ')}).`
-                        : `Se mantiene edge-local tras fallo en escalamiento Gemini (${escalation.reasons.join('; ')}).`
+                        : `Se mantiene edge-local tras fallo en el escalamiento de Gemini (${escalation.reasons.join('; ')}).`
                     });
                   }
                 }
@@ -299,7 +300,7 @@ const Report = () => {
             // Fallback to heuristic if AI fails or is disabled
             resolvedReport = generateHeuristicReport(reportData, language);
             if (!useAI) {
-              setInsightMeta({ mode: 'heuristic', reason: isEn ? 'AI mode is disabled by user toggle.' : 'El modo IA esta desactivado por el usuario.' });
+              setInsightMeta({ mode: 'heuristic', reason: isEn ? 'AI mode is disabled by user toggle.' : 'El modo IA está desactivado por el usuario.' });
             } else if (canUseGemini) {
               const fallbackReason = getLastAIFailureReason() || 'AI call failed or returned invalid JSON; fallback activated.';
               setInsightMeta({ mode: 'heuristic', reason: fallbackReason });
@@ -308,7 +309,7 @@ const Report = () => {
                 mode: 'heuristic',
                 reason: isEn
                   ? 'Edge-local output unavailable and Gemini not configured; heuristic fallback activated.'
-                  : 'Salida edge-local no disponible y Gemini no configurado; fallback heuristico activado.'
+                  : 'Salida edge-local no disponible y Gemini no configurado; fallback heurístico activado.'
               });
             }
           }
@@ -321,7 +322,7 @@ const Report = () => {
           const heuristicReport = generateHeuristicReport(reportData, language);
           setAiReport(heuristicReport);
           setAiDebugRows(getLastAIDebugTrace());
-          setInsightMeta({ mode: 'heuristic', reason: isEn ? 'Runtime error while generating AI report; fallback activated.' : 'Error de ejecucion al generar reporte IA; fallback activado.' });
+          setInsightMeta({ mode: 'heuristic', reason: isEn ? 'Runtime error while generating AI report; fallback activated.' : 'Error de ejecución al generar reporte IA; fallback activado.' });
           setIsAnalyzing(false);
         }
 
@@ -340,7 +341,7 @@ const Report = () => {
             setSessionSavedId(saveRes.sessionId);
             setBackendError(null);
           } catch (error) {
-            setBackendError('No se pudo guardar la sesion en backend');
+            setBackendError('No se pudo guardar la sesión en backend');
             console.error('Backend save failure', error);
           }
         }
@@ -372,8 +373,8 @@ const Report = () => {
   if (!hasRealData && !useDummyData) {
     return (
       <div className="flex-center glass-panel report-empty" style={{ margin: 'auto', marginTop: '100px', maxWidth: '600px', padding: '40px', textAlign: 'center' }}>
-        <h2>{isEn ? 'No Assessment Data Found' : 'No se encontraron datos de evaluacion'}</h2>
-        <p>{isEn ? 'Please complete the extended assessment to view the HR report.' : 'Completa la evaluacion extendida para ver el reporte final.'}</p>
+        <h2>{isEn ? 'No Assessment Data Found' : 'No se encontraron datos de evaluación'}</h2>
+        <p>{isEn ? 'Please complete the extended assessment to view the HR report.' : 'Completa la evaluación extendida para ver el reporte final.'}</p>
         <div className="report-inline-actions" style={{ display: 'flex', gap: '16px', marginTop: '20px' }}>
           <button className="btn" onClick={() => window.location.href = '/'}>{isEn ? 'Go to Start' : 'Ir al inicio'}</button>
           <button className="btn report-btn-muted" style={{ background: 'rgba(124, 58, 237, 0.1)', color: '#7c3aed', border: '1px solid #7c3aed' }} onClick={() => setUseDummyData(true)}>
@@ -398,11 +399,11 @@ const Report = () => {
             transition={{ duration: 2, repeat: Infinity, ease: 'linear' }}
             style={{ width: '60px', height: '60px', border: '4px solid rgba(59, 130, 246, 0.2)', borderTop: '4px solid #3b82f6', borderRadius: '50%' }}
           />
-          <h2 className="text-gradient">{isEn ? 'Analyzing Telemetry Data...' : 'Analizando telemetria...'}</h2>
+          <h2 className="text-gradient">{isEn ? 'Analyzing Telemetry Data...' : 'Analizando telemetría...'}</h2>
           <p style={{ color: '#374151', fontSize: '1.1rem', maxWidth: '400px', lineHeight: '1.6' }}>
             {useAI
               ? (isEn ? 'Calling AI model to interpret cognitive patterns...' : 'Consultando modelo IA para interpretar patrones cognitivos...')
-              : (isEn ? 'Processing behavioral metrics...' : 'Procesando metricas conductuales...')}
+                : (isEn ? 'Processing behavioral metrics...' : 'Procesando métricas conductuales...')}
           </p>
         </motion.div>
       </div>
@@ -428,17 +429,17 @@ const Report = () => {
       >
         <h1 className="text-gradient report-heading" style={{ fontSize: '2.5rem', marginBottom: '8px', textAlign: 'center' }}>
           {report.source === 'edge-local'
-            ? (isEn ? 'Edge-Local Skills Assessment' : 'Evaluacion de habilidades edge-local')
+            ? (isEn ? 'Edge-Local Skills Assessment' : 'Evaluación de habilidades edge-local')
             : report.source === 'gemini'
-            ? (isEn ? 'AI-Powered Skills Assessment' : 'Evaluacion de habilidades con IA')
-            : (isEn ? 'Skills Evaluation Matrix' : 'Matriz de evaluacion de habilidades')}
+            ? (isEn ? 'AI-Powered Skills Assessment' : 'Evaluación de habilidades con IA')
+            : (isEn ? 'Skills Evaluation Matrix' : 'Matriz de evaluación de habilidades')}
         </h1>
         <p className="report-subheading" style={{ textAlign: 'center', color: '#374151', marginBottom: '40px' }}>
           {report.source === 'edge-local'
-            ? (isEn ? 'Generated by local edge model in browser' : 'Generado por modelo edge local en navegador')
+            ? (isEn ? 'Generated by local edge model in browser' : 'Generado por modelo edge local en el navegador')
             : report.source === 'gemini'
             ? (isEn ? 'Generated by Google Gemini AI' : 'Generado por Google Gemini AI')
-            : (isEn ? 'Heuristic-Based Analysis' : 'Analisis basado en heuristicas')}
+            : (isEn ? 'Heuristic-Based Analysis' : 'Análisis basado en heurísticas')}
           {useDummyData && <span style={{ color: '#7c3aed', fontStyle: 'italic' }}>{isEn ? ' | Demo Data' : ' | Datos demo'}</span>}
         </p>
 
@@ -476,7 +477,7 @@ const Report = () => {
               <TelemetryStatCard label={isEn ? 'Telemetry coverage' : 'Cobertura telemetrica'} value={`${report.signalAudit.telemetryCoverageScore}%`} />
             )}
             {report.source === 'edge-local' && report.signalAudit?.biometricSignalQualityScore != null && (
-              <TelemetryStatCard label={isEn ? 'Biometric quality' : 'Calidad biometrica'} value={`${report.signalAudit.biometricSignalQualityScore}%`} />
+              <TelemetryStatCard label={isEn ? 'Biometric quality' : 'Calidad biométrica'} value={`${report.signalAudit.biometricSignalQualityScore}%`} />
             )}
           </div>
 
@@ -617,7 +618,7 @@ const Report = () => {
           )}
           {report.source === 'edge-local' && report.model?.calibrationVersion && (
             <div style={{ marginTop: '8px', color: '#475569', fontSize: '0.8rem' }}>
-              {isEn ? 'Calibration' : 'Calibracion'}: {report.model.calibrationVersion} | {isEn ? 'cohort' : 'cohorte'} {report.model.calibrationCohort || 'general'} | A/B {report.model.calibrationVariant || 'calibrated'}
+              {isEn ? 'Calibration' : 'Calibración'}: {report.model.calibrationVersion} | {isEn ? 'cohort' : 'cohorte'} {report.model.calibrationCohort || 'general'} | A/B {report.model.calibrationVariant || 'calibrated'}
               {report.model.rollbackToStable ? ` (${isEn ? 'rollback to stable' : 'rollback a estable'})` : ''}
             </div>
           )}
@@ -626,7 +627,7 @@ const Report = () => {
         <div className="glass-panel-light report-health" style={{ padding: '14px', marginBottom: '24px', border: `1px solid ${geminiHealth.ok ? 'rgba(16,185,129,0.35)' : 'rgba(245,158,11,0.4)'}` }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', gap: '12px', flexWrap: 'wrap', alignItems: 'center' }}>
             <strong style={{ color: geminiHealth.ok ? '#047857' : '#92400e' }}>
-              {isEn ? 'Gemini Health Check' : 'Chequeo de salud Gemini'}: {geminiHealth.ok ? 'OK' : (isEn ? 'Warning' : 'Advertencia')}
+              {isEn ? 'Gemini Health Check' : 'Chequeo de salud Gemini'}: {isGeminiProbeSkipped ? (isEn ? 'ON-DEMAND' : 'BAJO DEMANDA') : geminiHealth.ok ? 'OK' : (isEn ? 'Warning' : 'Advertencia')}
             </strong>
             <span style={{ color: '#64748b', fontSize: '0.86rem' }}>
               {geminiHealth.checked ? geminiHealth.message : (isEn ? 'Checking...' : 'Verificando...')}
@@ -643,10 +644,10 @@ const Report = () => {
           <div className="glass-panel-light report-health" style={{ padding: '14px', marginBottom: '24px', border: '1px solid rgba(2,132,199,0.35)' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', gap: '12px', flexWrap: 'wrap', alignItems: 'center' }}>
               <strong style={{ color: '#0c4a6e' }}>
-                {isEn ? 'Edge Telemetry/Biometric Audit' : 'Auditoria edge telemetrica/biometrica'}
+                {isEn ? 'Edge Telemetry/Biometric Audit' : 'Auditoría edge telemétrica/biométrica'}
               </strong>
               <span style={{ color: '#475569', fontSize: '0.86rem' }}>
-                {isEn ? 'Derived signals only, no raw video exfiltration.' : 'Solo senales derivadas, sin exfiltracion de video crudo.'}
+                {isEn ? 'Derived signals only, no raw video exfiltration.' : 'Solo señales derivadas, sin exfiltración de video crudo.'}
               </span>
             </div>
             <div style={{ marginTop: '10px', display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(160px, 1fr))', gap: '8px' }}>
@@ -655,7 +656,7 @@ const Report = () => {
               <TelemetryStatCard label={isEn ? 'Face presence' : 'Presencia facial'} value={`${report.signalAudit.facePresenceRatio}%`} />
               <TelemetryStatCard label={isEn ? 'Blink rate' : 'Tasa parpadeo'} value={report.signalAudit.avgBlinkRate} />
               <TelemetryStatCard label={isEn ? 'Webcam quality' : 'Calidad webcam'} value={report.signalAudit.avgWebcamQuality} />
-              <TelemetryStatCard label={isEn ? 'Quality flags' : 'Quality flags'} value={report.signalAudit.qualityFlags} />
+              <TelemetryStatCard label={isEn ? 'Quality flags' : 'Señales de calidad'} value={report.signalAudit.qualityFlags} />
             </div>
           </div>
         )}
@@ -695,13 +696,13 @@ const Report = () => {
         {experimentConfig.showTelemetryInsightPanel && (
           <div className="glass-panel-light" style={{ padding: '24px', marginBottom: '32px', border: '1px solid rgba(14,165,233,0.35)' }}>
             <h3 style={{ marginBottom: '14px', color: '#0c4a6e', fontWeight: '700' }}>
-              {isEn ? 'Behavioral Signal Insights (A/B Variant)' : 'Insights de senales conductuales (variante A/B)'}
+              {isEn ? 'Behavioral Signal Insights (A/B Variant)' : 'Insights de señales conductuales (variante A/B)'}
             </h3>
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '10px' }}>
               <TelemetryStatCard label={isEn ? 'Completion Rate' : 'Tasa de finalizacion'} value={`${telemetryAnalytics.completionRate}%`} />
               <TelemetryStatCard label={isEn ? 'Attention Stability' : 'Estabilidad atencional'} value={`${telemetryAnalytics.attentionStabilityScore}%`} />
-              <TelemetryStatCard label={isEn ? 'Telemetry Density' : 'Densidad de telemetria'} value={telemetryAnalytics.telemetryDensity} />
-              <TelemetryStatCard label={isEn ? 'Cursor Hesitation' : 'Hesitacion de cursor'} value={telemetryAnalytics.hesitationCount} />
+              <TelemetryStatCard label={isEn ? 'Telemetry Density' : 'Densidad de telemetría'} value={telemetryAnalytics.telemetryDensity} />
+              <TelemetryStatCard label={isEn ? 'Cursor Hesitation' : 'Hesitación de cursor'} value={telemetryAnalytics.hesitationCount} />
             </div>
             {telemetryRiskSignals.length > 0 && (
               <ul style={{ marginTop: '12px', color: '#334155', lineHeight: '1.6' }}>
@@ -715,14 +716,14 @@ const Report = () => {
 
         <div className="glass-panel-light report-section" style={{ padding: '24px', marginBottom: '32px' }}>
           <h3 className="report-section-title" style={{ marginBottom: '12px', color: '#1e1b4b', fontWeight: '700', borderBottom: '1px solid rgba(99,102,241,0.2)', paddingBottom: '8px' }}>
-            {isEn ? 'Future Modules (High-Priority Plan) - Beta Scoring' : 'Modulos futuros (plan prioritario) - scoring beta'}
+            {isEn ? 'Future Modules (High-Priority Plan) - Beta Scoring' : 'Módulos futuros (plan prioritario) - scoring beta'}
           </h3>
           {!hasFutureModulesData && (
             <div style={{ marginBottom: '12px', padding: '10px 12px', borderRadius: '8px', background: 'rgba(14, 165, 233, 0.1)', border: '1px solid rgba(14, 165, 233, 0.25)', color: '#075985', fontSize: '0.9rem' }}>
               <div>
                 {isEn
                   ? 'No future-module events were captured in this session yet. Scores stay as pending beta until telemetry is collected.'
-                  : 'Aun no se capturaron eventos de modulos futuros en esta sesion. Los puntajes quedan pendientes en beta hasta recolectar telemetria.'}
+                    : 'Aún no se capturaron eventos de módulos futuros en esta sesión. Los puntajes quedan pendientes en beta hasta recolectar telemetría.'}
               </div>
               <button
                 type="button"
@@ -735,7 +736,7 @@ const Report = () => {
           )}
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: '12px' }}>
             <div style={{ padding: '12px', borderRadius: '8px', border: '1px solid rgba(15,23,42,0.1)' }}>
-              <div style={{ fontWeight: 700, color: '#1e293b' }}>{isEn ? 'Metacognitive Calibration' : 'Calibracion metacognitiva'}</div>
+              <div style={{ fontWeight: 700, color: '#1e293b' }}>{isEn ? 'Metacognitive Calibration' : 'Calibración metacognitiva'}</div>
               <div style={{ color: '#334155', marginTop: 4 }}>{hasFutureModulesData ? futureAssessmentSummary.metacognitive.label : (isEn ? 'PENDING CAPTURE' : 'CAPTURA PENDIENTE')}</div>
               <div style={{ color: '#64748b', marginTop: 4 }}>{isEn ? 'Score' : 'Puntaje'}: {hasFutureModulesData ? futureAssessmentSummary.metacognitive.score : '--'}</div>
             </div>
@@ -855,7 +856,7 @@ const Report = () => {
               }}
               onClick={() => setUseAI(!useAI)}
             >
-              {useAI ? (isEn ? 'AI Mode' : 'Modo IA') : (isEn ? 'Heuristic Mode' : 'Modo heuristico')}
+              {useAI ? (isEn ? 'AI Mode' : 'Modo IA') : (isEn ? 'Heuristic Mode' : 'Modo heurístico')}
             </button>
             {isDevBuild && (
               <button
@@ -873,7 +874,7 @@ const Report = () => {
                 {isAiProbeRunning
                   ? (isEn ? 'Testing Gemini...' : 'Probando Gemini...')
                   : isCooldownActive
-                    ? (isEn ? `Cooldown ${cooldownSeconds}s` : `Cooldown ${cooldownSeconds}s`)
+                    ? (isEn ? 'Quota cooldown active' : 'Cooldown de cuota activo')
                     : (isEn ? 'Run Gemini Test' : 'Ejecutar prueba Gemini')}
               </button>
             )}
@@ -891,8 +892,8 @@ const Report = () => {
                 disabled={isCooldownActive}
               >
                 {isCooldownActive
-                  ? (isEn ? `Retry locked ${cooldownSeconds}s` : `Reintento bloqueado ${cooldownSeconds}s`)
-                  : (isEn ? 'Retry AI Generation' : 'Reintentar generacion IA')}
+                  ? (isEn ? 'Retry locked by quota cooldown' : 'Reintento bloqueado por cooldown de cuota')
+                  : (isEn ? 'Retry AI Generation' : 'Reintentar generación IA')}
               </button>
             )}
             {hasRealData && (
@@ -923,15 +924,15 @@ const Report = () => {
                 onClick={() => setShowDevTelemetry(prev => !prev)}
               >
                 {showDevTelemetry
-                  ? (isEn ? 'Dev Telemetry: ON' : 'Telemetria dev: ON')
-                  : (isEn ? 'Dev Telemetry: OFF' : 'Telemetria dev: OFF')}
+                  ? (isEn ? 'Dev Telemetry: ON' : 'Telemetría dev: ON')
+                  : (isEn ? 'Dev Telemetry: OFF' : 'Telemetría dev: OFF')}
               </button>
             )}
           </div>
           {isDevBuild && (isCooldownActive || lastProbeAt) && (
             <div style={{ marginTop: '10px', fontSize: '0.82rem', color: '#64748b' }}>
-              {isCooldownActive && (isEn ? `Quota cooldown active. Wait ${cooldownSeconds}s before the next probe.` : `Cooldown por cuota activo. Espera ${cooldownSeconds}s antes de la siguiente prueba.`)}
-              {!isCooldownActive && lastProbeAt && (isEn ? `Last Gemini probe: ${new Date(lastProbeAt).toLocaleTimeString()}` : `Ultima prueba Gemini: ${new Date(lastProbeAt).toLocaleTimeString()}`)}
+              {isCooldownActive && (isEn ? 'Quota cooldown active. Wait before the next Gemini probe.' : 'Cooldown por cuota activo. Espera antes del siguiente sondeo de Gemini.')}
+              {!isCooldownActive && lastProbeAt && (isEn ? `Last Gemini probe: ${new Date(lastProbeAt).toLocaleTimeString()}` : `Último sondeo de Gemini: ${new Date(lastProbeAt).toLocaleTimeString()}`)}
             </div>
           )}
         </div>
@@ -939,11 +940,11 @@ const Report = () => {
         {/* Development-only telemetry visualization */}
         {isDevBuild && showDevTelemetry && (
           <div className="glass-panel-light" style={{ padding: '24px', marginBottom: '32px', border: '1px dashed rgba(14,165,233,0.5)' }}>
-            <h3 style={{ marginBottom: '8px', color: '#0c4a6e', fontWeight: '700' }}>{isEn ? 'Development Telemetry Panel' : 'Panel de telemetria de desarrollo'}</h3>
+            <h3 style={{ marginBottom: '8px', color: '#0c4a6e', fontWeight: '700' }}>{isEn ? 'Development Telemetry Panel' : 'Panel de telemetría de desarrollo'}</h3>
             <p style={{ color: '#0f172a', fontSize: '0.9rem', marginBottom: '18px' }}>
               {isEn
                 ? 'Debug-only panel for cursor/webcam telemetry validation. Do not use for production decisions.'
-                : 'Panel solo de depuracion para validar telemetria de cursor/webcam. No usar para decisiones de produccion.'}
+                : 'Panel solo de depuración para validar telemetría de cursor/webcam. No usar para decisiones de producción.'}
             </p>
 
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(190px, 1fr))', gap: '12px', marginBottom: '18px' }}>
@@ -956,7 +957,7 @@ const Report = () => {
             </div>
 
             <div style={{ marginBottom: '14px' }}>
-              <h4 style={{ color: '#1e293b', margin: '0 0 10px 0' }}>{isEn ? 'Telemetry Coverage by Game' : 'Cobertura de telemetria por juego'}</h4>
+              <h4 style={{ color: '#1e293b', margin: '0 0 10px 0' }}>{isEn ? 'Telemetry Coverage by Game' : 'Cobertura de telemetría por juego'}</h4>
               {devTelemetryOverview.perGameCoverage.map((row) => (
                 <div key={row.id} style={{ marginBottom: '8px' }}>
                   <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.82rem', color: '#334155' }}>
@@ -971,7 +972,7 @@ const Report = () => {
             </div>
 
             <details>
-              <summary style={{ cursor: 'pointer', color: '#075985', fontWeight: 600 }}>{isEn ? 'View Raw Telemetry Snapshot' : 'Ver snapshot crudo de telemetria'}</summary>
+              <summary style={{ cursor: 'pointer', color: '#075985', fontWeight: 600 }}>{isEn ? 'View Raw Telemetry Snapshot' : 'Ver snapshot crudo de telemetría'}</summary>
               <pre style={{ marginTop: '10px', maxHeight: '260px', overflow: 'auto', background: '#0f172a', color: '#e2e8f0', padding: '12px', borderRadius: '8px', fontSize: '0.75rem' }}>
                 {JSON.stringify(devTelemetryOverview.rawSnapshot, null, 2)}
               </pre>
@@ -982,12 +983,12 @@ const Report = () => {
         <div className="report-footer" style={{ textAlign: 'center', marginTop: '40px' }}>
           <div style={{ marginBottom: '12px', color: '#475569' }}>
             {!useDummyData && backendError && <span style={{ color: '#dc2626' }}>[WARN] {backendError}</span>}
-            {!useDummyData && !backendError && sessionSavedId && <span style={{ color: '#16a34a' }}>{isEn ? `[OK] Session saved with ID ${sessionSavedId}` : `[OK] Sesion guardada con ID ${sessionSavedId}`}</span>}
-            {!useDummyData && !backendError && !sessionSavedId && <span style={{ color: '#0ea5e9' }}>{isEn ? 'Saving session to backend...' : 'Guardando sesion en backend...'}</span>}
+            {!useDummyData && !backendError && sessionSavedId && <span style={{ color: '#16a34a' }}>{isEn ? `[OK] Session saved with ID ${sessionSavedId}` : `[OK] Sesión guardada con ID ${sessionSavedId}`}</span>}
+            {!useDummyData && !backendError && !sessionSavedId && <span style={{ color: '#0ea5e9' }}>{isEn ? 'Saving session to backend...' : 'Guardando sesión en backend...'}</span>}
             {useDummyData && <span style={{ color: '#7c3aed' }}>{isEn ? '[INFO] Demo mode: backend save disabled' : '[INFO] Modo demo: guardado en backend desactivado'}</span>}
           </div>
           <button className="btn" style={{ padding: '16px 40px', fontSize: '1.2rem' }} onClick={() => window.location.href = '/'}>
-            {isEn ? 'Start Another Assessment' : 'Iniciar otra evaluacion'}
+            {isEn ? 'Start Another Assessment' : 'Iniciar otra evaluación'}
           </button>
         </div>
       </motion.div>
@@ -1018,26 +1019,26 @@ const TelemetryStatCard = ({ label, value }) => (
 
 const GAME_ROWS = [
   { id: 'ospan_game_1', legacyId: 'game1', name: { en: 'Game 1 - OSPAN', es: 'Juego 1 - OSPAN' }, construct: { en: 'Working Memory', es: 'Memoria de trabajo' } },
-  { id: 'sst_game_2', legacyId: 'game2', name: { en: 'Game 2 - Stop-Signal', es: 'Juego 2 - Stop-Signal' }, construct: { en: 'Response Inhibition', es: 'Inhibicion de respuesta' } },
+  { id: 'sst_game_2', legacyId: 'game2', name: { en: 'Game 2 - Stop-Signal', es: 'Juego 2 - Stop-Signal' }, construct: { en: 'Response Inhibition', es: 'Inhibición de respuesta' } },
   { id: 'tsw_game_3', legacyId: 'game3', name: { en: 'Game 3 - Task Switching', es: 'Juego 3 - Cambio de tareas' }, construct: { en: 'Cognitive Flexibility', es: 'Flexibilidad cognitiva' } },
-  { id: 'cpt_game_4', legacyId: 'game4', name: { en: 'Game 4 - CPT', es: 'Juego 4 - CPT' }, construct: { en: 'Sustained Attention', es: 'Atencion sostenida' } },
-  { id: 'dec_game_5', legacyId: 'game5', name: { en: 'Game 5 - Decision', es: 'Juego 5 - Decision' }, construct: { en: 'Decision Making', es: 'Toma de decisiones' } },
-  { id: 'rsh_game_6', legacyId: 'game6', name: { en: 'Game 6 - Rule Shift', es: 'Juego 6 - Cambio de reglas' }, construct: { en: 'Adaptation', es: 'Adaptacion' } },
+  { id: 'cpt_game_4', legacyId: 'game4', name: { en: 'Game 4 - CPT', es: 'Juego 4 - CPT' }, construct: { en: 'Sustained Attention', es: 'Atención sostenida' } },
+  { id: 'dec_game_5', legacyId: 'game5', name: { en: 'Game 5 - Decision', es: 'Juego 5 - Decisión' }, construct: { en: 'Decision Making', es: 'Toma de decisiones' } },
+  { id: 'rsh_game_6', legacyId: 'game6', name: { en: 'Game 6 - Rule Shift', es: 'Juego 6 - Cambio de reglas' }, construct: { en: 'Adaptation', es: 'Adaptación' } },
   { id: 'sjt_game_7', legacyId: 'game7', name: { en: 'Game 7 - SJT', es: 'Juego 7 - SJT' }, construct: { en: 'Situational Judgment', es: 'Juicio situacional' } },
-  { id: 'cmp_meta_8', legacyId: 'game8', name: { en: 'Game 8 - Metacognitive Calibration', es: 'Juego 8 - Calibracion metacognitiva' }, construct: { en: 'Metacognitive Accuracy', es: 'Precision metacognitiva' } },
-  { id: 'cmp_ops_9', legacyId: 'game9', name: { en: 'Game 9 - Operational Prioritization', es: 'Juego 9 - Priorizacion operativa' }, construct: { en: 'Operational Prioritization', es: 'Priorizacion operativa' } },
+  { id: 'cmp_meta_8', legacyId: 'game8', name: { en: 'Game 8 - Metacognitive Calibration', es: 'Juego 8 - Calibración metacognitiva' }, construct: { en: 'Metacognitive Accuracy', es: 'Precisión metacognitiva' } },
+  { id: 'cmp_ops_9', legacyId: 'game9', name: { en: 'Game 9 - Operational Prioritization', es: 'Juego 9 - Priorización operativa' }, construct: { en: 'Operational Prioritization', es: 'Priorización operativa' } },
   { id: 'cmp_agility_10', legacyId: 'game10', name: { en: 'Game 10 - Learning Agility', es: 'Juego 10 - Agilidad de aprendizaje' }, construct: { en: 'Adaptive Learning', es: 'Aprendizaje adaptativo' } },
-  { id: 'cmp_social_11', legacyId: 'game11', name: { en: 'Game 11 - Social Coordination', es: 'Juego 11 - Coordinacion social' }, construct: { en: 'Social Coordination', es: 'Coordinacion social' } },
+  { id: 'cmp_social_11', legacyId: 'game11', name: { en: 'Game 11 - Social Coordination', es: 'Juego 11 - Coordinación social' }, construct: { en: 'Social Coordination', es: 'Coordinación social' } },
   { id: 'cmp_resilience_12', legacyId: 'game12', name: { en: 'Game 12 - Cognitive Resilience', es: 'Juego 12 - Resiliencia cognitiva' }, construct: { en: 'Resilience Under Load', es: 'Resiliencia bajo carga' } },
-  { id: 'cmp_risk_13', legacyId: 'game13', name: { en: 'Game 13 - Risk Under Uncertainty', es: 'Juego 13 - Riesgo bajo incertidumbre' }, construct: { en: 'Risk Decision Framing', es: 'Marco de decision en riesgo' } },
+  { id: 'cmp_risk_13', legacyId: 'game13', name: { en: 'Game 13 - Risk Under Uncertainty', es: 'Juego 13 - Riesgo bajo incertidumbre' }, construct: { en: 'Risk Decision Framing', es: 'Marco de decisión en riesgo' } },
 ];
 
 const RADAR_DIMENSIONS = [
   { key: 'memory', axis: { en: 'Memory', es: 'Memoria' }, keys: ['ospan_game_1', 'game1', 'cmp_meta_8', 'game8', 'cmp_risk_13', 'game13'] },
   { key: 'control', axis: { en: 'Control', es: 'Control' }, keys: ['sst_game_2', 'game2', 'cmp_social_11', 'game11'] },
   { key: 'agility', axis: { en: 'Agility', es: 'Agilidad' }, keys: ['tsw_game_3', 'game3', 'rsh_game_6', 'game6', 'cmp_agility_10', 'game10'] },
-  { key: 'attention', axis: { en: 'Attention', es: 'Atencion' }, keys: ['cpt_game_4', 'game4', 'cmp_resilience_12', 'game12'] },
-  { key: 'decision', axis: { en: 'Decision', es: 'Decision' }, keys: ['dec_game_5', 'game5', 'cmp_ops_9', 'game9'] },
+  { key: 'attention', axis: { en: 'Attention', es: 'Atención' }, keys: ['cpt_game_4', 'game4', 'cmp_resilience_12', 'game12'] },
+  { key: 'decision', axis: { en: 'Decision', es: 'Decisión' }, keys: ['dec_game_5', 'game5', 'cmp_ops_9', 'game9'] },
   { key: 'judgment', axis: { en: 'Judgment', es: 'Juicio' }, keys: ['sjt_game_7', 'game7'] },
 ];
 
@@ -1055,16 +1056,16 @@ function getTargetRoleOptions(isEn) {
     { value: 'analyst', label: isEn ? 'Analyst / Data' : 'Analista / Datos' },
     { value: 'operations', label: isEn ? 'Operations / Process' : 'Operaciones / Procesos' },
     { value: 'sales', label: isEn ? 'Sales / Commercial' : 'Ventas / Comercial' },
-    { value: 'manager', label: isEn ? 'People Manager' : 'Lider de equipo' },
+    { value: 'manager', label: isEn ? 'People Manager' : 'Líder de equipo' },
   ];
 }
 
 function getRecommendationLabel(recommendation, isEn) {
   const labels = {
-    'STRONG ALIGNMENT': isEn ? 'Strong Alignment' : 'Alineacion fuerte',
-    'SOLID ALIGNMENT WITH COACHING': isEn ? 'Solid Alignment With Coaching' : 'Alineacion solida con coaching',
-    'CONDITIONAL ALIGNMENT': isEn ? 'Conditional Alignment' : 'Alineacion condicional',
-    'EXPLORATORY FIT - NEEDS MORE DATA': isEn ? 'Exploratory Fit - Needs More Data' : 'Encaje exploratorio - requiere mas datos',
+    'STRONG ALIGNMENT': isEn ? 'Strong Alignment' : 'Alineación fuerte',
+    'SOLID ALIGNMENT WITH COACHING': isEn ? 'Solid Alignment With Coaching' : 'Alineación sólida con coaching',
+    'CONDITIONAL ALIGNMENT': isEn ? 'Conditional Alignment' : 'Alineación condicional',
+    'EXPLORATORY FIT - NEEDS MORE DATA': isEn ? 'Exploratory Fit - Needs More Data' : 'Encaje exploratorio - requiere más datos',
   };
   return labels[recommendation] || recommendation;
 }
@@ -1102,7 +1103,7 @@ function getGeminiActionHint(code, isEn) {
 
   return hints[code] || (isEn
     ? 'Inspect Gemini debug attempts and use heuristic fallback while connectivity is unstable.'
-    : 'Inspecciona los intentos debug de Gemini y usa fallback heuristico mientras la conectividad sea inestable.');
+    : 'Inspecciona los intentos de depuración de Gemini y usa fallback heurístico mientras la conectividad sea inestable.');
 }
 
 function readEnvNumber(key, fallback) {
@@ -1144,7 +1145,7 @@ function evaluateEdgeGeminiEscalation(edgeReport, config) {
     reasons.push(
       config.isEn
         ? `telemetry coverage ${telemetryCoverage}% < ${config.minTelemetryCoverage}%`
-        : `cobertura telemetrica ${telemetryCoverage}% < ${config.minTelemetryCoverage}%`
+        : `cobertura telemétrica ${telemetryCoverage}% < ${config.minTelemetryCoverage}%`
     );
   }
 
@@ -1152,7 +1153,7 @@ function evaluateEdgeGeminiEscalation(edgeReport, config) {
     reasons.push(
       config.isEn
         ? `biometric quality ${biometricQuality}% < ${config.minBiometricQuality}%`
-        : `calidad biometrica ${biometricQuality}% < ${config.minBiometricQuality}%`
+        : `calidad biométrica ${biometricQuality}% < ${config.minBiometricQuality}%`
     );
   }
 
@@ -1161,7 +1162,7 @@ function evaluateEdgeGeminiEscalation(edgeReport, config) {
     reasons.push(
       config.isEn
         ? `borderline recommendation ${recommendation} within confidence band ${config.confidenceBandMin}-${config.confidenceBandMax}%`
-        : `recomendacion borderline ${recommendation} dentro de banda de confianza ${config.confidenceBandMin}-${config.confidenceBandMax}%`
+        : `recomendación borderline ${recommendation} dentro de banda de confianza ${config.confidenceBandMin}-${config.confidenceBandMax}%`
     );
   }
 
@@ -1174,11 +1175,11 @@ function evaluateEdgeGeminiEscalation(edgeReport, config) {
 function translateTelemetrySignal(signal, isEn) {
   if (isEn) return signal;
   const map = {
-    'Insufficient telemetry coverage for high-confidence behavioral inference': 'Cobertura de telemetria insuficiente para inferencias conductuales de alta confianza',
-    'Partial assessment completion may reduce predictive confidence': 'La evaluacion parcial puede reducir la confianza predictiva',
-    'Webcam signal quality was low; visual attention features should be interpreted cautiously': 'La calidad de webcam fue baja; interpretar con cautela las senales de atencion visual',
-    'Frequent hesitation markers detected in cursor behavior under time pressure': 'Se detectaron marcadores frecuentes de hesitacion en el cursor bajo presion temporal',
-    'Multiple telemetry quality flags suggest unstable capture conditions': 'Multiples alertas de calidad de telemetria sugieren condiciones de captura inestables',
+    'Insufficient telemetry coverage for high-confidence behavioral inference': 'Cobertura de telemetría insuficiente para inferencias conductuales de alta confianza',
+    'Partial assessment completion may reduce predictive confidence': 'La evaluación parcial puede reducir la confianza predictiva',
+    'Webcam signal quality was low; visual attention features should be interpreted cautiously': 'La calidad de webcam fue baja; interpretar con cautela las señales de atención visual',
+    'Frequent hesitation markers detected in cursor behavior under time pressure': 'Se detectaron marcadores frecuentes de hesitación en el cursor bajo presión temporal',
+    'Multiple telemetry quality flags suggest unstable capture conditions': 'Múltiples alertas de calidad de telemetría sugieren condiciones de captura inestables',
   };
   return map[signal] || signal;
 }
@@ -1204,16 +1205,16 @@ function buildEnhancedRows(data, isEn) {
     const details = snapshot?.details || {};
     const metric =
       details.operationAccuracy !== undefined ? `${isEn ? 'Operation accuracy' : 'Precision operacional'} ${details.operationAccuracy}%` :
-      details.accuracy !== undefined ? `${isEn ? 'Accuracy' : 'Precision'} ${details.accuracy}%` :
+      details.accuracy !== undefined ? `${isEn ? 'Accuracy' : 'Precisión'} ${details.accuracy}%` :
       details.nBackLevel !== undefined ? `${isEn ? 'N-back level' : 'Nivel N-back'} ${details.nBackLevel}` :
       details.efficiency !== undefined ? `${isEn ? 'Efficiency' : 'Eficiencia'} ${details.efficiency}` :
-      details.categoriesCompleted !== undefined ? `${isEn ? 'Categories' : 'Categorias'} ${details.categoriesCompleted}` :
-      details.noGoAccuracy !== undefined ? `${isEn ? 'No-Go accuracy' : 'Precision No-Go'} ${details.noGoAccuracy}%` :
+      details.categoriesCompleted !== undefined ? `${isEn ? 'Categories' : 'Categorías'} ${details.categoriesCompleted}` :
+      details.noGoAccuracy !== undefined ? `${isEn ? 'No-Go accuracy' : 'Precisión No-Go'} ${details.noGoAccuracy}%` :
       details.totalTime !== undefined ? `${isEn ? 'Total time' : 'Tiempo total'} ${Math.round(details.totalTime / 1000)}s` :
-      details.maxSequenceLength !== undefined ? `${isEn ? 'Max sequence' : 'Secuencia maxima'} ${details.maxSequenceLength}` :
+      details.maxSequenceLength !== undefined ? `${isEn ? 'Max sequence' : 'Secuencia máxima'} ${details.maxSequenceLength}` :
       details.blocksCompleted !== undefined ? `${isEn ? 'Blocks' : 'Bloques'} ${details.blocksCompleted}` :
       details.scenariosCompleted !== undefined ? `${isEn ? 'Scenarios' : 'Escenarios'} ${details.scenariosCompleted}` :
-      (isEn ? 'Telemetry captured' : 'Telemetria capturada');
+      (isEn ? 'Telemetry captured' : 'Telemetría capturada');
 
     return {
       id: game.id,
@@ -1316,22 +1317,22 @@ function buildActionPriorities(report, competencyHighlights, isEn) {
 
   return [
     {
-      title: top ? `${isEn ? 'Scale' : 'Escalar'} ${top.axis}` : (isEn ? 'Scale strongest capability' : 'Escalar capacidad mas fuerte'),
+      title: top ? `${isEn ? 'Scale' : 'Escalar'} ${top.axis}` : (isEn ? 'Scale strongest capability' : 'Escalar capacidad más fuerte'),
       detail: top
-        ? (isEn ? `Use ${top.axis} in high-impact tasks and mentoring flows to maximize current strengths.` : `Usa ${top.axis} en tareas de alto impacto y mentorias para maximizar fortalezas actuales.`)
-        : (isEn ? 'Assign stretch tasks aligned with the strongest demonstrated capability.' : 'Asigna retos alineados con la capacidad mas fuerte demostrada.'),
+        ? (isEn ? `Use ${top.axis} in high-impact tasks and mentoring flows to maximize current strengths.` : `Usa ${top.axis} en tareas de alto impacto y mentorías para maximizar fortalezas actuales.`)
+        : (isEn ? 'Assign stretch tasks aligned with the strongest demonstrated capability.' : 'Asigna retos alineados con la capacidad más fuerte demostrada.'),
     },
     {
       title: watch ? `${isEn ? 'Coach' : 'Entrenar'} ${watch.axis}` : (isEn ? 'Targeted development sprint' : 'Sprint de desarrollo focalizado'),
       detail: watch
         ? (isEn ? `Set a focused coaching cycle for ${watch.axis} with weekly measurable checkpoints.` : `Define un ciclo de coaching para ${watch.axis} con checkpoints semanales medibles.`)
-        : (isEn ? 'Run a 4-6 week development plan with practical rehearsal scenarios.' : 'Ejecuta un plan de 4-6 semanas con escenarios practicos de entrenamiento.'),
+        : (isEn ? 'Run a 4-6 week development plan with practical rehearsal scenarios.' : 'Ejecuta un plan de 4-6 semanas con escenarios prácticos de entrenamiento.'),
     },
     {
-      title: isEn ? 'Interview + manager alignment' : 'Alineacion entrevista + manager',
+      title: isEn ? 'Interview + manager alignment' : 'Alineación entrevista + manager',
       detail: monitor
-        ? (isEn ? `Probe this signal in interviews and onboarding plan: ${monitor}` : `Profundiza esta senal en entrevistas y plan de onboarding: ${monitor}`)
-        : (isEn ? 'Validate development hypotheses with structured behavioral interviews and manager rubric.' : 'Valida hipotesis de desarrollo con entrevistas conductuales estructuradas y rubrica del manager.'),
+        ? (isEn ? `Probe this signal in interviews and onboarding plan: ${monitor}` : `Profundiza esta señal en entrevistas y plan de onboarding: ${monitor}`)
+        : (isEn ? 'Validate development hypotheses with structured behavioral interviews and manager rubric.' : 'Valida hipótesis de desarrollo con entrevistas conductuales estructuradas y rúbrica del manager.'),
     },
   ];
 }

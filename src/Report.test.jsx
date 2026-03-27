@@ -61,7 +61,7 @@ describe('Report Component', () => {
 
     renderReport({ useDummyData: false });
 
-    expect(screen.getByRole('heading', { name: /no assessment data found|no se encontraron datos de evaluacion/i })).toBeDefined();
+    expect(screen.getByRole('heading', { name: /no assessment data found|no se encontraron datos de evaluaci[oó]n/i })).toBeDefined();
   });
 
   it('renders report when data is available', async () => {
