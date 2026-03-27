@@ -79,6 +79,11 @@ function spawnNpm(args, label, envOverrides = {}) {
   return proc;
 }
 
+function terminateProcess(proc) {
+  if (!proc || proc.killed) return;
+  proc.kill();
+}
+
 async function runScenarios(frontendUrl, backendUrl, backendHealthUrl) {
   const browser = await chromium.launch({ headless: true });
   const context = await browser.newContext();
@@ -138,6 +143,26 @@ async function runScenarios(frontendUrl, backendUrl, backendHealthUrl) {
   }
 }
 
+async function runBackendDownFallbackScenario(frontendUrl) {
+  const browser = await chromium.launch({ headless: true });
+  const context = await browser.newContext();
+  const page = await context.newPage();
+
+  try {
+    await page.goto(`${frontendUrl}/report?dummy=true`, { waitUntil: 'domcontentloaded' });
+
+    await page.getByText(/insight source\s*:\s*heuristic|fuente de insight\s*:\s*heuristic/i).waitFor({ timeout: 20_000 });
+
+    await page.getByText(/next step|siguiente paso/i).waitFor({ timeout: 20_000 });
+    await page.getByText(/npm run dev:server/i).waitFor({ timeout: 20_000 });
+
+    console.log('E2E backend-down fallback scenario passed');
+  } finally {
+    await context.close();
+    await browser.close();
+  }
+}
+
 async function main() {
   const frontendPort = await findAvailablePort(FRONTEND_PORT_BASE);
   const backendPort = await findAvailablePort(BACKEND_PORT_BASE);
@@ -148,13 +173,17 @@ async function main() {
   const frontendProc = spawnNpm(
     ['run', 'dev:frontend', '--', '--host', HOST, '--port', String(frontendPort), '--strictPort', '--open', 'false'],
     'frontend',
-    { VITE_API_BASE_URL: backendUrl }
+    {
+      VITE_API_BASE_URL: backendUrl,
+      VITE_PROXY_BASE_FALLBACK: 'false',
+      VITE_ALLOW_BROWSER_GEMINI_FALLBACK: 'false',
+    }
   );
   const backendProc = spawnNpm(['run', 'dev:server'], 'backend', { PORT: String(backendPort) });
 
   const cleanup = () => {
-    if (frontendProc && !frontendProc.killed) frontendProc.kill();
-    if (backendProc && !backendProc.killed) backendProc.kill();
+    terminateProcess(frontendProc);
+    terminateProcess(backendProc);
   };
 
   process.on('SIGINT', () => {
@@ -169,6 +198,9 @@ async function main() {
     ]);
 
     await runScenarios(frontendUrl, backendUrl, backendHealthUrl);
+    terminateProcess(backendProc);
+    await sleep(1200);
+    await runBackendDownFallbackScenario(frontendUrl);
     cleanup();
     process.exit(0);
   } catch (error) {

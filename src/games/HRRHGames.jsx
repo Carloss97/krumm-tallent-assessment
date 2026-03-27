@@ -18,6 +18,7 @@ export const StopSignalGame = ({ isActive, onEndGame, isDemo, timeLimit, languag
   const [correctStop, setCorrectStop] = useState(0);
   const [errors, setErrors] = useState(0);
   const [isStopTrial, setIsStopTrial] = useState(false);
+  const [tempoTag, setTempoTag] = useState('balanced');
   const hasEndedRef = useRef(false);
 
   const MAX_TRIALS = isDemo ? 30 : 80;
@@ -31,20 +32,28 @@ export const StopSignalGame = ({ isActive, onEndGame, isDemo, timeLimit, languag
       correctGo,
       correctStop,
       accuracy: Math.round(((correctGo + correctStop) / MAX_TRIALS) * 100),
+      tempoTag,
     });
     onEndGame(score, errors, { correctGo, correctStop });
-  }, [score, errors, correctGo, correctStop, stopTracking, onEndGame, MAX_TRIALS]);
+  }, [score, errors, correctGo, correctStop, stopTracking, onEndGame, MAX_TRIALS, tempoTag]);
 
   useGameTimer({ isActive, timeLimit, onEnd: endGame });
+
+  const rollTrial = useCallback((trialIndex) => {
+    const stopSignal = Math.random() < STOP_PROBABILITY;
+    setIsStopTrial(stopSignal);
+    setTempoTag(trialIndex % 5 === 0 ? 'burst' : stopSignal ? 'inhibit' : 'go-flow');
+  }, []);
 
   const nextTrial = useCallback(() => {
     if (trial >= MAX_TRIALS) {
       endGame();
       return;
     }
-    setTrial((prev) => prev + 1);
-    setIsStopTrial(Math.random() < STOP_PROBABILITY);
-  }, [trial, MAX_TRIALS, endGame]);
+    const next = trial + 1;
+    setTrial(next);
+    rollTrial(next);
+  }, [trial, MAX_TRIALS, endGame, rollTrial]);
 
   const beginGame = useCallback(() => {
     hasEndedRef.current = false;
@@ -53,10 +62,10 @@ export const StopSignalGame = ({ isActive, onEndGame, isDemo, timeLimit, languag
     setCorrectGo(0);
     setCorrectStop(0);
     setErrors(0);
-    setIsStopTrial(Math.random() < STOP_PROBABILITY);
+    rollTrial(1);
     setGameState('running');
     startTracking('sst_game_2');
-  }, [startTracking]);
+  }, [startTracking, rollTrial]);
 
   const handleGoClick = useCallback(() => {
     if (isStopTrial) {
@@ -111,7 +120,7 @@ export const StopSignalGame = ({ isActive, onEndGame, isDemo, timeLimit, languag
           {isStopTrial && <button onClick={handleStopClick} className="btn btn-stop">{isEn ? 'Inhibit' : 'Inhibir'}</button>}
           <button onClick={handleMiss} className="btn btn-error">{isEn ? 'Missed' : 'Falle'}</button>
         </div>
-        <p className="score">Score: {score} | {isEn ? 'Correct' : 'Correctos'}: {correctGo + correctStop}</p>
+        <p className="score">Score: {score} | {isEn ? 'Correct' : 'Correctos'}: {correctGo + correctStop} | {isEn ? 'Tempo' : 'Ritmo'}: {tempoTag}</p>
       </div>
     </div>
   );
@@ -146,8 +155,8 @@ export const TaskSwitchingGame = ({ isActive, onEndGame, isDemo, timeLimit, lang
 
   const generateStimulus = useCallback(() => {
     setStimulus({
-      color: pickRandom(['RED', 'BLUE']),
-      shape: pickRandom(['CIRCLE', 'SQUARE']),
+      color: pickRandom(['RED', 'BLUE', 'GREEN']),
+      shape: pickRandom(['CIRCLE', 'SQUARE', 'TRIANGLE']),
     });
   }, []);
 
@@ -189,7 +198,7 @@ export const TaskSwitchingGame = ({ isActive, onEndGame, isDemo, timeLimit, lang
         <div className="game-instruction-box">
           <h2>Task Switching</h2>
           <p>{isEn ? 'Alternate between classifying by ' : 'Alterna entre clasificar por '}<strong>{isEn ? 'COLOR' : 'COLOR'}</strong>{isEn ? ' and ' : ' y '}<strong>{isEn ? 'SHAPE' : 'FORMA'}</strong></p>
-          <p>{isEn ? 'Rule alternates every trial' : 'La regla alterna en cada trial'}</p>
+          <p>{isEn ? 'Rule alternates every trial and stimuli vary in 3x3 matrix' : 'La regla alterna cada trial y el estimulo varia en matriz 3x3'}</p>
           <button onClick={beginGame} className="btn-start">{isEn ? 'Start' : 'Comenzar'}</button>
         </div>
       </div>
@@ -207,8 +216,10 @@ export const TaskSwitchingGame = ({ isActive, onEndGame, isDemo, timeLimit, lang
         <div className="buttons-group">
           <button onClick={() => handleSelection('RED')} className="btn btn-option">{isEn ? 'RED' : 'ROJO'}</button>
           <button onClick={() => handleSelection('BLUE')} className="btn btn-option">{isEn ? 'BLUE' : 'AZUL'}</button>
+          <button onClick={() => handleSelection('GREEN')} className="btn btn-option">{isEn ? 'GREEN' : 'VERDE'}</button>
           <button onClick={() => handleSelection('CIRCLE')} className="btn btn-option">{isEn ? 'CIRCLE' : 'CIRCULO'}</button>
           <button onClick={() => handleSelection('SQUARE')} className="btn btn-option">{isEn ? 'SQUARE' : 'CUADRADO'}</button>
+          <button onClick={() => handleSelection('TRIANGLE')} className="btn btn-option">{isEn ? 'TRIANGLE' : 'TRIANGULO'}</button>
         </div>
         <p className="score">Score: {score}</p>
       </div>
@@ -227,10 +238,12 @@ export const CPTGame = ({ isActive, onEndGame, isDemo, timeLimit, language = 'es
   const [block, setBlock] = useState(1);
   const [errors, setErrors] = useState(0);
   const [currentLetter, setCurrentLetter] = useState('A');
+  const [targetLetter, setTargetLetter] = useState('X');
   const hasEndedRef = useRef(false);
 
   const MAX_BLOCKS = isDemo ? 3 : 5;
-  const LETTERS = ['A', 'B', 'X', 'C', 'D', 'X', 'E'];
+  const LETTERS = ['A', 'B', 'X', 'C', 'D', 'X', 'E', 'K', 'M'];
+  const TARGETS = ['X', 'K'];
 
   const endGame = useCallback(() => {
     if (hasEndedRef.current) return;
@@ -238,9 +251,10 @@ export const CPTGame = ({ isActive, onEndGame, isDemo, timeLimit, language = 'es
 
     stopTracking('cpt_game_4', score, errors, {
       blocksCompleted: block,
+      activeTarget: targetLetter,
     });
     onEndGame(score, errors, {});
-  }, [score, errors, block, stopTracking, onEndGame]);
+  }, [score, errors, block, stopTracking, onEndGame, targetLetter]);
 
   useGameTimer({ isActive, timeLimit, onEnd: endGame });
 
@@ -251,6 +265,7 @@ export const CPTGame = ({ isActive, onEndGame, isDemo, timeLimit, language = 'es
     }
     setBlock((prev) => prev + 1);
     setCurrentLetter(pickRandom(LETTERS));
+    setTargetLetter(pickRandom(TARGETS));
   }, [block, MAX_BLOCKS, endGame]);
 
   const beginGame = useCallback(() => {
@@ -259,37 +274,38 @@ export const CPTGame = ({ isActive, onEndGame, isDemo, timeLimit, language = 'es
     setScore(0);
     setErrors(0);
     setCurrentLetter(pickRandom(LETTERS));
+    setTargetLetter(pickRandom(TARGETS));
     setGameState('running');
     startTracking('cpt_game_4');
   }, [startTracking]);
 
   const handleSeeX = useCallback(() => {
-    if (currentLetter === 'X') {
+    if (currentLetter === targetLetter) {
       setScore((prev) => prev + 10);
     } else {
       setErrors((prev) => prev + 1);
       recordError();
     }
     nextBlock();
-  }, [currentLetter, recordError, nextBlock]);
+  }, [currentLetter, targetLetter, recordError, nextBlock]);
 
   const handleNotX = useCallback(() => {
-    if (currentLetter !== 'X') {
+    if (currentLetter !== targetLetter) {
       setScore((prev) => prev + 10);
     } else {
       setErrors((prev) => prev + 1);
       recordError();
     }
     nextBlock();
-  }, [currentLetter, recordError, nextBlock]);
+  }, [currentLetter, targetLetter, recordError, nextBlock]);
 
   if (gameState === 'instruction') {
     return (
       <div className="hrrh-game-container">
         <div className="game-instruction-box">
           <h2>Continuous Performance Test</h2>
-          <p>{isEn ? 'Press when you see the letter X' : 'Presiona cuando veas la letra X'}</p>
-          <p>{isEn ? 'Maintain attention throughout the task' : 'Manten la atencion durante toda la prueba'}</p>
+          <p>{isEn ? 'Press when you see the target letter' : 'Presiona cuando veas la letra objetivo'}</p>
+          <p>{isEn ? 'Target letter may shift by block' : 'La letra objetivo puede cambiar por bloque'}</p>
           <button onClick={beginGame} className="btn-start">{isEn ? 'Start' : 'Comenzar'}</button>
         </div>
       </div>
@@ -302,8 +318,8 @@ export const CPTGame = ({ isActive, onEndGame, isDemo, timeLimit, language = 'es
         <h3>{isEn ? 'Block' : 'Bloque'} {block} {isEn ? 'of' : 'de'} {MAX_BLOCKS}</h3>
         <div className="letter-stimulus">{currentLetter}</div>
         <div className="buttons-group">
-          <button onClick={handleSeeX} className="btn btn-correct">{isEn ? 'I see X' : 'Veo X'}</button>
-          <button onClick={handleNotX} className="btn btn-error">{isEn ? 'Not X' : 'No es X'}</button>
+          <button onClick={handleSeeX} className="btn btn-correct">{isEn ? `I see ${targetLetter}` : `Veo ${targetLetter}`}</button>
+          <button onClick={handleNotX} className="btn btn-error">{isEn ? `Not ${targetLetter}` : `No es ${targetLetter}`}</button>
         </div>
         <p className="score">Score: {score} | {isEn ? 'Errors' : 'Errores'}: {errors}</p>
       </div>
@@ -325,31 +341,35 @@ export const DecisionGameHTMX = ({ isActive, onEndGame, isDemo, timeLimit, langu
 
   const scenarios = [
     {
+      domain: isEn ? 'Coordination' : 'Coordinacion',
       textEn: 'A team member is not sharing key information before a deadline.',
       textEs: 'Un miembro del equipo no comparte informacion clave antes de una entrega.',
-      optionsEn: ['Escalate immediately', 'Clarify blockers first', 'Ignore and continue'],
-      optionsEs: ['Escalar de inmediato', 'Aclarar bloqueos primero', 'Ignorar y continuar'],
+      optionsEn: ['Escalate immediately', 'Clarify blockers first', 'Ignore and continue', 'Map impact and sequence owners'],
+      optionsEs: ['Escalar de inmediato', 'Aclarar bloqueos primero', 'Ignorar y continuar', 'Mapear impacto y secuencia de owners'],
       best: 1,
     },
     {
+      domain: isEn ? 'Prioritization' : 'Priorizacion',
       textEn: 'Two urgent requests arrive simultaneously.',
       textEs: 'Llegan dos solicitudes urgentes al mismo tiempo.',
-      optionsEn: ['Do both superficially', 'Prioritize by impact and deadline', 'Wait for more data'],
-      optionsEs: ['Hacer ambas superficialmente', 'Priorizar por impacto y fecha', 'Esperar mas datos'],
+      optionsEn: ['Do both superficially', 'Prioritize by impact and deadline', 'Wait for more data', 'Split ownership by critical path'],
+      optionsEs: ['Hacer ambas superficialmente', 'Priorizar por impacto y fecha', 'Esperar mas datos', 'Dividir ownership por ruta critica'],
       best: 1,
     },
     {
+      domain: isEn ? 'Risk' : 'Riesgo',
       textEn: 'A client asks for a risky shortcut.',
       textEs: 'Un cliente pide un atajo riesgoso.',
-      optionsEn: ['Accept without checks', 'Propose safe alternative with trade-off', 'Reject without explanation'],
-      optionsEs: ['Aceptar sin revisar', 'Proponer alternativa segura con trade-off', 'Rechazar sin explicar'],
+      optionsEn: ['Accept without checks', 'Propose safe alternative with trade-off', 'Reject without explanation', 'Pilot in controlled scope first'],
+      optionsEs: ['Aceptar sin revisar', 'Proponer alternativa segura con trade-off', 'Rechazar sin explicar', 'Pilotear en alcance controlado primero'],
       best: 1,
     },
     {
+      domain: isEn ? 'Incident' : 'Incidente',
       textEn: 'Critical bug appears minutes before release.',
       textEs: 'Aparece un bug critico minutos antes del release.',
-      optionsEn: ['Ship anyway', 'Contain scope and communicate plan', 'Delay indefinitely'],
-      optionsEs: ['Lanzar igual', 'Acotar alcance y comunicar plan', 'Retrasar indefinidamente'],
+      optionsEn: ['Ship anyway', 'Contain scope and communicate plan', 'Delay indefinitely', 'Roll back and shadow-test fix'],
+      optionsEs: ['Lanzar igual', 'Acotar alcance y comunicar plan', 'Retrasar indefinidamente', 'Rollback y prueba sombra del fix'],
       best: 1,
     },
   ];
@@ -400,7 +420,7 @@ export const DecisionGameHTMX = ({ isActive, onEndGame, isDemo, timeLimit, langu
         <div className="game-instruction-box">
           <h2>Decision Making Under Pressure</h2>
           <p>{isEn ? 'Make fast decisions in work scenarios' : 'Toma decisiones rapidas sobre escenarios laborales'}</p>
-          <p>{isEn ? 'Choose the best trade-off under uncertainty' : 'Elige el mejor trade-off bajo incertidumbre'}</p>
+          <p>{isEn ? 'Choose robust trade-offs with changing context' : 'Elige trade-offs robustos con contexto cambiante'}</p>
           <button onClick={beginGame} className="btn-start">{isEn ? 'Start' : 'Comenzar'}</button>
         </div>
       </div>
@@ -414,6 +434,7 @@ export const DecisionGameHTMX = ({ isActive, onEndGame, isDemo, timeLimit, langu
     <div className="hrrh-game-container">
       <div className="game-state-box">
         <h3>{isEn ? 'Scenario' : 'Escenario'} {scenario + 1} {isEn ? 'of' : 'de'} {MAX_SCENARIOS}</h3>
+        <p className="rule">{isEn ? 'Domain' : 'Dominio'}: {currentScenario.domain}</p>
         <div className="scenario-box">
           <p>{isEn ? currentScenario.textEn : currentScenario.textEs}</p>
         </div>
@@ -541,6 +562,7 @@ export const SJTGame = ({ isActive, onEndGame, isDemo, timeLimit, language = 'es
 
   const scenarioBank = [
     {
+      domain: isEn ? 'Leadership' : 'Liderazgo',
       promptEn: 'Your lead assigns a task with an unrealistic deadline.',
       promptEs: 'Tu lider asigna una tarea con un plazo poco realista.',
       optionsEn: ['Accept blindly', 'Discuss constraints and propose plan', 'Decline without context', 'Escalate emotionally'],
@@ -548,6 +570,7 @@ export const SJTGame = ({ isActive, onEndGame, isDemo, timeLimit, language = 'es
       best: 1,
     },
     {
+      domain: isEn ? 'Collaboration' : 'Colaboracion',
       promptEn: 'A peer repeatedly misses handoffs impacting your work.',
       promptEs: 'Un colega incumple handoffs y afecta tu trabajo.',
       optionsEn: ['Publicly blame', 'Set alignment meeting and clarify ownership', 'Ignore issue', 'Bypass peer without notice'],
@@ -555,6 +578,7 @@ export const SJTGame = ({ isActive, onEndGame, isDemo, timeLimit, language = 'es
       best: 1,
     },
     {
+      domain: isEn ? 'Quality' : 'Calidad',
       promptEn: 'You detect a quality risk near launch date.',
       promptEs: 'Detectas un riesgo de calidad cerca del lanzamiento.',
       optionsEn: ['Hide it to ship on time', 'Communicate risk and mitigation options', 'Stop all work immediately', 'Wait silently'],
@@ -562,6 +586,7 @@ export const SJTGame = ({ isActive, onEndGame, isDemo, timeLimit, language = 'es
       best: 1,
     },
     {
+      domain: isEn ? 'Prioritization' : 'Priorizacion',
       promptEn: 'Two stakeholders request conflicting priorities.',
       promptEs: 'Dos stakeholders piden prioridades conflictivas.',
       optionsEn: ['Choose randomly', 'Align criteria and agree sequence', 'Say yes to both without plan', 'Escalate without data'],
@@ -630,6 +655,7 @@ export const SJTGame = ({ isActive, onEndGame, isDemo, timeLimit, language = 'es
     <div className="hrrh-game-container">
       <div className="game-state-box">
         <h3>{isEn ? 'Scenario' : 'Escenario'} {scenario + 1} {isEn ? 'of' : 'de'} {MAX_SCENARIOS}</h3>
+        <p className="rule">{isEn ? 'Domain' : 'Dominio'}: {currentScenario.domain}</p>
         <div className="sjt-scenario">
           <p><strong>{isEn ? 'Situation:' : 'Situacion:'}</strong> {isEn ? currentScenario.promptEn : currentScenario.promptEs}</p>
         </div>
@@ -643,4 +669,3 @@ export const SJTGame = ({ isActive, onEndGame, isDemo, timeLimit, language = 'es
     </div>
   );
 };
-

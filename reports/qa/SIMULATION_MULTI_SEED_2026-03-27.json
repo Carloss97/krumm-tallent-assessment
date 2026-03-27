@@ -1,0 +1,553 @@
+{
+  "generatedAt": "2026-03-27T17:23:10.232Z",
+  "config": {
+    "seeds": [
+      101,
+      202,
+      303,
+      404,
+      505
+    ],
+    "iterationsPerProfile": 2500,
+    "totalIterationsPerSeed": 10000,
+    "profiles": [
+      {
+        "key": "base_normal",
+        "gt": 1,
+        "base": 0.62,
+        "spread": 0.09,
+        "runtimeErr": 0.002
+      },
+      {
+        "key": "alto_rendimiento",
+        "gt": 1,
+        "base": 0.78,
+        "spread": 0.07,
+        "runtimeErr": 0.0015
+      },
+      {
+        "key": "bajo_rendimiento",
+        "gt": 0,
+        "base": 0.42,
+        "spread": 0.1,
+        "runtimeErr": 0.003
+      },
+      {
+        "key": "inconsistente_ruidoso",
+        "gt": 0,
+        "base": 0.55,
+        "spread": 0.18,
+        "runtimeErr": 0.004
+      }
+    ],
+    "groundTruth": "Perfil sintetico: base_normal/alto_rendimiento=positivo; bajo_rendimiento/inconsistente=negativo",
+    "scoringThreshold": 0.5533,
+    "calibrationSource": {
+      "sessionCount": 8,
+      "gameCount": 14,
+      "outcomeSource": "deterministic-proxy",
+      "syntheticOutcomes": true,
+      "note": "Outcomes are deterministic proxy labels. Replace with data/calibration/outcomes.json for true HR outcome calibration."
+    }
+  },
+  "acceptance": {
+    "minF1": 0.85,
+    "minAccuracy": 0.88,
+    "maxFpr": 0.08,
+    "maxFnr": 0.1,
+    "maxRuntimeErr": 0.005,
+    "maxF1Drift": 0.03
+  },
+  "aggregate": {
+    "global": {
+      "accuracy": 0.92042,
+      "f1": 0.9175132603978643,
+      "fpr": 0.044399999999999995,
+      "fnr": 0.11476,
+      "runtimeErrorRate": 0.0025,
+      "f1Std": 0.0025608422876375442,
+      "f1Drift": 0.006048801248514146
+    },
+    "readiness": {
+      "minF1": true,
+      "minAccuracy": true,
+      "maxFpr": true,
+      "maxFnr": false,
+      "maxRuntimeErr": true,
+      "maxF1Drift": true
+    },
+    "readinessStatus": "casi-listo"
+  },
+  "seedRuns": [
+    {
+      "seed": 101,
+      "threshold": 0.5533,
+      "total": 10000,
+      "confusionMatrix": {
+        "tp": 4434,
+        "tn": 4798,
+        "fp": 202,
+        "fn": 566
+      },
+      "metrics": {
+        "accuracy": 0.9232,
+        "precision": 0.956427955133736,
+        "recall": 0.8868,
+        "f1": 0.9202988792029888,
+        "fpr": 0.0404,
+        "fnr": 0.1132,
+        "runtimeErrorRate": 0.0028
+      },
+      "byProfile": {
+        "base_normal": {
+          "total": 2500,
+          "confusionMatrix": {
+            "tp": 1934,
+            "tn": 0,
+            "fp": 0,
+            "fn": 566
+          },
+          "metrics": {
+            "accuracy": 0.7736,
+            "precision": 1,
+            "recall": 0.7736,
+            "f1": 0.8723500225529994,
+            "fpr": 0,
+            "fnr": 0.2264,
+            "runtimeErrorRate": 0.0028
+          }
+        },
+        "alto_rendimiento": {
+          "total": 2500,
+          "confusionMatrix": {
+            "tp": 2500,
+            "tn": 0,
+            "fp": 0,
+            "fn": 0
+          },
+          "metrics": {
+            "accuracy": 1,
+            "precision": 1,
+            "recall": 1,
+            "f1": 1,
+            "fpr": 0,
+            "fnr": 0,
+            "runtimeErrorRate": 0.002
+          }
+        },
+        "bajo_rendimiento": {
+          "total": 2500,
+          "confusionMatrix": {
+            "tp": 0,
+            "tn": 2499,
+            "fp": 1,
+            "fn": 0
+          },
+          "metrics": {
+            "accuracy": 0.9996,
+            "precision": 0,
+            "recall": 0,
+            "f1": 0,
+            "fpr": 0.0004,
+            "fnr": 0,
+            "runtimeErrorRate": 0.002
+          }
+        },
+        "inconsistente_ruidoso": {
+          "total": 2500,
+          "confusionMatrix": {
+            "tp": 0,
+            "tn": 2299,
+            "fp": 201,
+            "fn": 0
+          },
+          "metrics": {
+            "accuracy": 0.9196,
+            "precision": 0,
+            "recall": 0,
+            "f1": 0,
+            "fpr": 0.0804,
+            "fnr": 0,
+            "runtimeErrorRate": 0.0044
+          }
+        }
+      }
+    },
+    {
+      "seed": 202,
+      "threshold": 0.5533,
+      "total": 10000,
+      "confusionMatrix": {
+        "tp": 4457,
+        "tn": 4770,
+        "fp": 230,
+        "fn": 543
+      },
+      "metrics": {
+        "accuracy": 0.9227,
+        "precision": 0.9509280989972264,
+        "recall": 0.8914,
+        "f1": 0.9202023330236399,
+        "fpr": 0.046,
+        "fnr": 0.1086,
+        "runtimeErrorRate": 0.0024
+      },
+      "byProfile": {
+        "base_normal": {
+          "total": 2500,
+          "confusionMatrix": {
+            "tp": 1957,
+            "tn": 0,
+            "fp": 0,
+            "fn": 543
+          },
+          "metrics": {
+            "accuracy": 0.7828,
+            "precision": 1,
+            "recall": 0.7828,
+            "f1": 0.878169172088849,
+            "fpr": 0,
+            "fnr": 0.2172,
+            "runtimeErrorRate": 0.0016
+          }
+        },
+        "alto_rendimiento": {
+          "total": 2500,
+          "confusionMatrix": {
+            "tp": 2500,
+            "tn": 0,
+            "fp": 0,
+            "fn": 0
+          },
+          "metrics": {
+            "accuracy": 1,
+            "precision": 1,
+            "recall": 1,
+            "f1": 1,
+            "fpr": 0,
+            "fnr": 0,
+            "runtimeErrorRate": 0.0024
+          }
+        },
+        "bajo_rendimiento": {
+          "total": 2500,
+          "confusionMatrix": {
+            "tp": 0,
+            "tn": 2500,
+            "fp": 0,
+            "fn": 0
+          },
+          "metrics": {
+            "accuracy": 1,
+            "precision": 0,
+            "recall": 0,
+            "f1": 0,
+            "fpr": 0,
+            "fnr": 0,
+            "runtimeErrorRate": 0.0024
+          }
+        },
+        "inconsistente_ruidoso": {
+          "total": 2500,
+          "confusionMatrix": {
+            "tp": 0,
+            "tn": 2270,
+            "fp": 230,
+            "fn": 0
+          },
+          "metrics": {
+            "accuracy": 0.908,
+            "precision": 0,
+            "recall": 0,
+            "f1": 0,
+            "fpr": 0.092,
+            "fnr": 0,
+            "runtimeErrorRate": 0.0032
+          }
+        }
+      }
+    },
+    {
+      "seed": 303,
+      "threshold": 0.5533,
+      "total": 10000,
+      "confusionMatrix": {
+        "tp": 4398,
+        "tn": 4777,
+        "fp": 223,
+        "fn": 602
+      },
+      "metrics": {
+        "accuracy": 0.9175,
+        "precision": 0.9517420471759359,
+        "recall": 0.8796,
+        "f1": 0.9142500779544747,
+        "fpr": 0.0446,
+        "fnr": 0.1204,
+        "runtimeErrorRate": 0.0022
+      },
+      "byProfile": {
+        "base_normal": {
+          "total": 2500,
+          "confusionMatrix": {
+            "tp": 1898,
+            "tn": 0,
+            "fp": 0,
+            "fn": 602
+          },
+          "metrics": {
+            "accuracy": 0.7592,
+            "precision": 1,
+            "recall": 0.7592,
+            "f1": 0.8631195998180992,
+            "fpr": 0,
+            "fnr": 0.2408,
+            "runtimeErrorRate": 0.0012
+          }
+        },
+        "alto_rendimiento": {
+          "total": 2500,
+          "confusionMatrix": {
+            "tp": 2500,
+            "tn": 0,
+            "fp": 0,
+            "fn": 0
+          },
+          "metrics": {
+            "accuracy": 1,
+            "precision": 1,
+            "recall": 1,
+            "f1": 1,
+            "fpr": 0,
+            "fnr": 0,
+            "runtimeErrorRate": 0.0012
+          }
+        },
+        "bajo_rendimiento": {
+          "total": 2500,
+          "confusionMatrix": {
+            "tp": 0,
+            "tn": 2500,
+            "fp": 0,
+            "fn": 0
+          },
+          "metrics": {
+            "accuracy": 1,
+            "precision": 0,
+            "recall": 0,
+            "f1": 0,
+            "fpr": 0,
+            "fnr": 0,
+            "runtimeErrorRate": 0.0028
+          }
+        },
+        "inconsistente_ruidoso": {
+          "total": 2500,
+          "confusionMatrix": {
+            "tp": 0,
+            "tn": 2277,
+            "fp": 223,
+            "fn": 0
+          },
+          "metrics": {
+            "accuracy": 0.9108,
+            "precision": 0,
+            "recall": 0,
+            "f1": 0,
+            "fpr": 0.0892,
+            "fnr": 0,
+            "runtimeErrorRate": 0.0036
+          }
+        }
+      }
+    },
+    {
+      "seed": 404,
+      "threshold": 0.5533,
+      "total": 10000,
+      "confusionMatrix": {
+        "tp": 4441,
+        "tn": 4765,
+        "fp": 235,
+        "fn": 559
+      },
+      "metrics": {
+        "accuracy": 0.9206,
+        "precision": 0.949743370402053,
+        "recall": 0.8882,
+        "f1": 0.9179412980570483,
+        "fpr": 0.047,
+        "fnr": 0.1118,
+        "runtimeErrorRate": 0.0031
+      },
+      "byProfile": {
+        "base_normal": {
+          "total": 2500,
+          "confusionMatrix": {
+            "tp": 1941,
+            "tn": 0,
+            "fp": 0,
+            "fn": 559
+          },
+          "metrics": {
+            "accuracy": 0.7764,
+            "precision": 1,
+            "recall": 0.7764,
+            "f1": 0.8741274487727989,
+            "fpr": 0,
+            "fnr": 0.2236,
+            "runtimeErrorRate": 0.0052
+          }
+        },
+        "alto_rendimiento": {
+          "total": 2500,
+          "confusionMatrix": {
+            "tp": 2500,
+            "tn": 0,
+            "fp": 0,
+            "fn": 0
+          },
+          "metrics": {
+            "accuracy": 1,
+            "precision": 1,
+            "recall": 1,
+            "f1": 1,
+            "fpr": 0,
+            "fnr": 0,
+            "runtimeErrorRate": 0.0008
+          }
+        },
+        "bajo_rendimiento": {
+          "total": 2500,
+          "confusionMatrix": {
+            "tp": 0,
+            "tn": 2500,
+            "fp": 0,
+            "fn": 0
+          },
+          "metrics": {
+            "accuracy": 1,
+            "precision": 0,
+            "recall": 0,
+            "f1": 0,
+            "fpr": 0,
+            "fnr": 0,
+            "runtimeErrorRate": 0.002
+          }
+        },
+        "inconsistente_ruidoso": {
+          "total": 2500,
+          "confusionMatrix": {
+            "tp": 0,
+            "tn": 2265,
+            "fp": 235,
+            "fn": 0
+          },
+          "metrics": {
+            "accuracy": 0.906,
+            "precision": 0,
+            "recall": 0,
+            "f1": 0,
+            "fpr": 0.094,
+            "fnr": 0,
+            "runtimeErrorRate": 0.0044
+          }
+        }
+      }
+    },
+    {
+      "seed": 505,
+      "threshold": 0.5533,
+      "total": 10000,
+      "confusionMatrix": {
+        "tp": 4401,
+        "tn": 4780,
+        "fp": 220,
+        "fn": 599
+      },
+      "metrics": {
+        "accuracy": 0.9181,
+        "precision": 0.952391257303614,
+        "recall": 0.8802,
+        "f1": 0.9148737137511693,
+        "fpr": 0.044,
+        "fnr": 0.1198,
+        "runtimeErrorRate": 0.002
+      },
+      "byProfile": {
+        "base_normal": {
+          "total": 2500,
+          "confusionMatrix": {
+            "tp": 1901,
+            "tn": 0,
+            "fp": 0,
+            "fn": 599
+          },
+          "metrics": {
+            "accuracy": 0.7604,
+            "precision": 1,
+            "recall": 0.7604,
+            "f1": 0.8638945694160418,
+            "fpr": 0,
+            "fnr": 0.2396,
+            "runtimeErrorRate": 0.0008
+          }
+        },
+        "alto_rendimiento": {
+          "total": 2500,
+          "confusionMatrix": {
+            "tp": 2500,
+            "tn": 0,
+            "fp": 0,
+            "fn": 0
+          },
+          "metrics": {
+            "accuracy": 1,
+            "precision": 1,
+            "recall": 1,
+            "f1": 1,
+            "fpr": 0,
+            "fnr": 0,
+            "runtimeErrorRate": 0.0016
+          }
+        },
+        "bajo_rendimiento": {
+          "total": 2500,
+          "confusionMatrix": {
+            "tp": 0,
+            "tn": 2500,
+            "fp": 0,
+            "fn": 0
+          },
+          "metrics": {
+            "accuracy": 1,
+            "precision": 0,
+            "recall": 0,
+            "f1": 0,
+            "fpr": 0,
+            "fnr": 0,
+            "runtimeErrorRate": 0.0028
+          }
+        },
+        "inconsistente_ruidoso": {
+          "total": 2500,
+          "confusionMatrix": {
+            "tp": 0,
+            "tn": 2280,
+            "fp": 220,
+            "fn": 0
+          },
+          "metrics": {
+            "accuracy": 0.912,
+            "precision": 0,
+            "recall": 0,
+            "f1": 0,
+            "fpr": 0.088,
+            "fnr": 0,
+            "runtimeErrorRate": 0.0028
+          }
+        }
+      }
+    }
+  ]
+}

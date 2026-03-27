@@ -9,6 +9,7 @@ const IS_TEST_ENV = import.meta?.env?.MODE === 'test';
 const USE_BACKEND_GEMINI_PROXY = !IS_TEST_ENV && import.meta?.env?.VITE_USE_BACKEND_GEMINI_PROXY !== 'false';
 const ALLOW_BROWSER_GEMINI_FALLBACK = IS_TEST_ENV || import.meta?.env?.VITE_ALLOW_BROWSER_GEMINI_FALLBACK === 'true';
 const API_BASE_URL = import.meta?.env?.VITE_API_BASE_URL || '';
+const USE_PROXY_BASE_FALLBACKS = import.meta?.env?.VITE_PROXY_BASE_FALLBACK !== 'false';
 
 function normalizeBaseUrl(baseUrl) {
   const base = String(baseUrl || '').trim();
@@ -17,11 +18,11 @@ function normalizeBaseUrl(baseUrl) {
 }
 
 function getProxyBaseCandidates() {
-  return Array.from(new Set([
-    normalizeBaseUrl(API_BASE_URL),
-    '',
-    'http://localhost:4000',
-  ]));
+  const candidates = [normalizeBaseUrl(API_BASE_URL)];
+  if (USE_PROXY_BASE_FALLBACKS) {
+    candidates.push('', 'http://localhost:4000');
+  }
+  return Array.from(new Set(candidates));
 }
 
 function buildApiUrl(path, baseUrl) {

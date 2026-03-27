@@ -1,3 +1,19 @@
+const GAME_FLOW_ES_META = {
+  1: { mission: 'Sostener ritmo entre calculo y memoria de trabajo.', strategy: 'Evita apresurarte: primero exactitud, luego velocidad.', rewardHint: 'Insignia foco por rachas limpias.', varietyHint: 'La complejidad del estimulo escala por set.' },
+  2: { mission: 'Responder rapido sin perder control inhibitorio.', strategy: 'Micro-pausa despues de GO rapidos.', rewardHint: 'Escudo de impulso por inhibiciones limpias.', varietyHint: 'La cadencia GO/STOP cambia por tramo.' },
+  3: { mission: 'Cambiar regla sin perder contexto.', strategy: 'Confirma regla activa antes de responder.', rewardHint: 'Combo adaptativo por cambios consistentes.', varietyHint: 'Estimulos y reglas rotan por trial.' },
+  4: { mission: 'Mantener atencion selectiva sostenida.', strategy: 'No anticipar: responder solo con evidencia.', rewardHint: 'Racha de atencion por baja falsa alarma.', varietyHint: 'Objetivo y distractores varian por bloque.' },
+  5: { mission: 'Elegir trade-offs robustos bajo presion.', strategy: 'Prioriza impacto, urgencia y reversibilidad.', rewardHint: 'Insignia de decision de calidad.', varietyHint: 'Escenarios cambian por dominio operativo.' },
+  6: { mission: 'Dominar cambios de regla y excepciones.', strategy: 'Revalidar regla al cambiar bloque.', rewardHint: 'Emblema rule-master por precision.', varietyHint: 'Patrones de excepcion se alternan.' },
+  7: { mission: 'Balancear personas, riesgo y entrega.', strategy: 'Elegir opciones con alineacion y ejecucion.', rewardHint: 'Token de claridad de liderazgo.', varietyHint: 'Casos con contextos y tensiones diversas.' },
+  8: { mission: 'Alinear confianza con calidad de evidencia.', strategy: 'Cuando hay ambiguedad, calibrar certeza.', rewardHint: 'Medalla de calibracion.', varietyHint: 'Ambiguedad de evidencia cambia por item.' },
+  9: { mission: 'Secuenciar tareas para maximo impacto.', strategy: 'Resolver bloqueos antes de cascadas.', rewardHint: 'Insignia de comando operativo.', varietyHint: 'Dependencias y deadlines se remezclan.' },
+  10: { mission: 'Detectar deriva de reglas y adaptarte.', strategy: 'Probar hipotesis cortas por ronda.', rewardHint: 'Cadena de agilidad por pivotes exitosos.', varietyHint: 'Los cambios de regla no siguen patron fijo.' },
+  11: { mission: 'Orquestar coordinacion entre equipos.', strategy: 'Buscar compromisos verificables.', rewardHint: 'Escudo de coordinacion multi-equipo.', varietyHint: 'Roles y fricciones cambian por escenario.' },
+  12: { mission: 'Conservar calidad bajo interrupciones.', strategy: 'Recuperar contexto rapido tras cortes.', rewardHint: 'Nucleo de resiliencia por recuperacion estable.', varietyHint: 'Cadencia e intensidad de interrupcion varian.' },
+  13: { mission: 'Balancear upside y downside.', strategy: 'Preferir decision con cobertura explicita.', rewardHint: 'Insignia de navegacion de riesgo.', varietyHint: 'Volatilidad y confianza rotan por turno.' },
+};
+
 export const GAME_FLOW_EN = {
   1: {
     type: 'Working Memory',
@@ -121,14 +137,15 @@ export const GAME_FLOW_EN = {
 export const getLocalizedGameInstruction = (game, language = 'es') => {
   const source = game?.instruction || {};
   if (language === 'es') {
+    const metaEs = GAME_FLOW_ES_META[game?.id] || {};
     return {
       type: source.type || '',
       title: source.title || '',
       description: source.description || '',
-      mission: source.mission || '',
-      strategy: source.strategy || '',
-      rewardHint: source.rewardHint || '',
-      varietyHint: source.varietyHint || '',
+      mission: source.mission || metaEs.mission || '',
+      strategy: source.strategy || metaEs.strategy || '',
+      rewardHint: source.rewardHint || metaEs.rewardHint || '',
+      varietyHint: source.varietyHint || metaEs.varietyHint || '',
     };
   }
 
@@ -143,3 +160,4 @@ export const getLocalizedGameInstruction = (game, language = 'es') => {
     varietyHint: fallback.varietyHint || source.varietyHint || '',
   };
 };
+

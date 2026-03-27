@@ -6,37 +6,23 @@ import './OSPANGame.css';
 
 /**
  * OSPAN - Operation Span Task (Memoria de Trabajo Dual-Task)
- * v2.0 para Talent Assessment RRHH
- * 
- * Mide: Capacidad de mantener + actualizar información bajo multitarea
- * Constructo: Memoria de Trabajo
- * Duración: 6-7 min
- * 
- * Diseño:
- * - Trials alternados: Operación matemática → Letra a recordar
- * - Niveles: Set sizes 3, 4, 5, 6 (3 trials cada uno)
- * - Scoring: Recall accuracy + Operation accuracy + WM span final
  */
 const OSPANGame = ({ isActive, onEndGame, isDemo, timeLimit, language = 'es' }) => {
   const isEn = language === 'en';
   const { startTracking, stopTracking, recordError, recordTrialEvent } = useTelemetry();
 
-  const [gameState, setGameState] = useState('instruction'); // instruction, operationPhase, letterPhase, recallPhase, ended
+  const [gameState, setGameState] = useState('instruction');
   const [setSize, setSetSize] = useState(3);
   const [currentTrial, setCurrentTrial] = useState(0);
+  const [phaseVariant, setPhaseVariant] = useState('steady');
 
-  // Operación actual
   const [operation, setOperation] = useState('');
   const [operationIsCorrect, setOperationIsCorrect] = useState(null);
-
-  // Letra actual
   const [currentLetter, setCurrentLetter] = useState('');
 
-  // Almacenamiento para recall
   const [lettersToRecall, setLettersToRecall] = useState([]);
   const [recallSequence, setRecallSequence] = useState([]);
 
-  // Scoring
   const [score, setScore] = useState(0);
   const [correctOperations, setCorrectOperations] = useState(0);
   const [totalOperations, setTotalOperations] = useState(0);
@@ -48,10 +34,7 @@ const OSPANGame = ({ isActive, onEndGame, isDemo, timeLimit, language = 'es' }) 
   const hasEndedRef = useRef(false);
   const gameIdRef = useRef('ospan_game_1');
 
-  const MAX_SET_SIZE = 6;
-  const TRIALS_PER_SIZE = isDemo ? 2 : 3;
-  const OPERATION_TIME_LIMIT = 3000; // 3 seg
-  const LETTER_TIME_LIMIT = 1500; // 1.5 seg
+  const MAX_SET_SIZE = isDemo ? 4 : 6;
 
   const endGame = useCallback(() => {
     if (hasEndedRef.current) return;
@@ -59,7 +42,7 @@ const OSPANGame = ({ isActive, onEndGame, isDemo, timeLimit, language = 'es' }) 
 
     const operationAccuracy = totalOperations > 0 ? Math.round((correctOperations / totalOperations) * 100) : 0;
     const recallAccuracy = totalRecalls > 0 ? Math.round((correctRecalls / totalRecalls) * 100) : 0;
-    const workingMemorySpan = Math.max(...(lettersToRecall.map(arr => arr.length) || [0]));
+    const workingMemorySpan = Math.max(...(lettersToRecall.map((arr) => arr.length) || [0]));
 
     stopTracking(gameIdRef.current, score, totalOperations - correctOperations, {
       operationAccuracy,
@@ -67,28 +50,35 @@ const OSPANGame = ({ isActive, onEndGame, isDemo, timeLimit, language = 'es' }) 
       workingMemorySpan,
       totalTrials: totalOperations,
       correctOperations,
-      correctRecalls
+      correctRecalls,
+      phaseVariant,
     });
 
     onEndGame(score, totalOperations - correctOperations, {
       operationAccuracy,
       recallAccuracy,
-      workingMemorySpan
+      workingMemorySpan,
     });
-  }, [score, totalOperations, correctOperations, correctRecalls, totalRecalls, lettersToRecall, stopTracking, onEndGame]);
+  }, [score, totalOperations, correctOperations, correctRecalls, totalRecalls, lettersToRecall, stopTracking, onEndGame, phaseVariant]);
 
   const gameTimer = useGameTimer({ isActive, timeLimit, onEnd: endGame });
 
-  // Generar operación aleatorio
   const generateOperation = useCallback(() => {
     const a = Math.floor(Math.random() * 10) + 1;
     const b = Math.floor(Math.random() * 10) + 1;
-    const op = Math.random() > 0.5 ? '+' : '*';
-    const expression = `${a}${op}${b}`;
-    const result = op === '+' ? a + b : a * b;
-    const isCorrect = Math.random() > 0.3; // 70% de operaciones correctas
+    const opRoll = Math.random();
+    const op = opRoll > 0.66 ? '*' : opRoll > 0.33 ? '+' : '-';
+
+    const left = op === '-' ? Math.max(a, b) : a;
+    const right = op === '-' ? Math.min(a, b) : b;
+    const expression = `${left}${op}${right}`;
+    const result = op === '+' ? left + right : op === '-' ? left - right : left * right;
+
+    const isCorrect = Math.random() > 0.3;
     const displayResult = isCorrect ? result : result + Math.floor(Math.random() * 5) + 1;
 
+    const variant = setSize >= 5 ? 'surge' : setSize >= 4 ? 'switch' : 'steady';
+    setPhaseVariant(variant);
     setOperation(`${expression} = ${displayResult}?`);
     setOperationIsCorrect(isCorrect);
     operationStartTimeRef.current = Date.now();
@@ -98,109 +88,105 @@ const OSPANGame = ({ isActive, onEndGame, isDemo, timeLimit, language = 'es' }) 
       expression,
       actualResult: result,
       displayResult,
-      isCorrectAnswer: isCorrect
+      isCorrectAnswer: isCorrect,
+      variant,
     });
-  }, [recordTrialEvent]);
+  }, [recordTrialEvent, setSize]);
 
-  // Generar letra aleatoria
   const generateLetter = useCallback(() => {
-    const letters = 'BCDFGHJKLMNPRSTVWXYZ'; // Sin vocales
+    const letterPools = {
+      steady: 'BCDFGHJKLMNPRSTVWXYZ',
+      switch: 'BCDFGHJKLMNPRSTVWXYZQ',
+      surge: 'BCDFGHJKLMNPRSTVWXYZQZ',
+    };
+
+    const letters = letterPools[phaseVariant] || letterPools.steady;
     const letter = letters[Math.floor(Math.random() * letters.length)];
     setCurrentLetter(letter);
     letterStartTimeRef.current = Date.now();
 
-    recordTrialEvent({
-      phase: 'letter',
-      letter
-    });
-  }, [recordTrialEvent]);
+    recordTrialEvent({ phase: 'letter', letter, variant: phaseVariant });
+  }, [recordTrialEvent, phaseVariant]);
 
-  // Transición: Operation → Letter
   const nextPhase = useCallback(() => {
     if (gameState === 'operationPhase') {
       setGameState('letterPhase');
       generateLetter();
     } else if (gameState === 'letterPhase') {
-      // Siguiente trial o recall
       if (currentTrial < setSize - 1) {
-        setCurrentTrial(currentTrial + 1);
+        setCurrentTrial((prev) => prev + 1);
         setGameState('operationPhase');
         generateOperation();
       } else {
-        // Ir a recall
         setGameState('recallPhase');
       }
     }
   }, [gameState, currentTrial, setSize, generateLetter, generateOperation]);
 
-  // Manejar respuesta de operación
   const handleOperationResponse = useCallback((answer) => {
     const rt = Date.now() - operationStartTimeRef.current;
 
-    // Verificar si es correcto (lógica simplificada)
     const expectedTrue = operationIsCorrect === true;
     const answeredTrue = answer === 'true';
     const isCorrect = answeredTrue === expectedTrue;
 
     if (isCorrect) {
-      setCorrectOperations(prev => prev + 1);
-      setScore(prev => prev + 10);
+      setCorrectOperations((prev) => prev + 1);
+      setScore((prev) => prev + 10);
     } else {
       recordError();
     }
 
-    setTotalOperations(prev => prev + 1);
+    setTotalOperations((prev) => prev + 1);
 
     recordTrialEvent({
       type: 'operation_response',
       response: answer,
       isCorrect,
-      reactionTime: rt
+      reactionTime: rt,
+      variant: phaseVariant,
     });
 
-    // Pasar a siguiente fase
     setTimeout(() => {
       nextPhase();
     }, 500);
-  }, [nextPhase, recordError, recordTrialEvent, operationIsCorrect]);
+  }, [nextPhase, recordError, recordTrialEvent, operationIsCorrect, phaseVariant]);
 
-  // Manejar respuesta de letra
   const handleLetterConfirm = useCallback(() => {
     const rt = Date.now() - letterStartTimeRef.current;
 
-    setLettersToRecall(prev => [...prev, [...prev[prev.length - 1] || [], currentLetter]]);
-    setTotalRecalls(prev => prev + setSize);
+    setLettersToRecall((prev) => [...prev, [...prev[prev.length - 1] || [], currentLetter]]);
+    setTotalRecalls((prev) => prev + setSize);
 
     recordTrialEvent({
       type: 'letter_recorded',
       letter: currentLetter,
-      reactionTime: rt
+      reactionTime: rt,
+      variant: phaseVariant,
     });
 
-    // Siguiente trial
     setTimeout(() => {
       nextPhase();
     }, 500);
-  }, [currentLetter, setSize, nextPhase, recordTrialEvent]);
+  }, [currentLetter, setSize, nextPhase, recordTrialEvent, phaseVariant]);
 
-  // Manejar recall (usuario escribe las letras recordadas)
   const handleRecallResponse = useCallback((letters) => {
-    const correct = letters.length > 0 && letters.every((l, i) => lettersToRecall[lettersToRecall.length - 1]?.[i] === l);
+    const expected = lettersToRecall[lettersToRecall.length - 1] || [];
+    const correct = letters.length > 0 && letters.every((l, i) => expected[i] === l);
 
     if (correct) {
-      setCorrectRecalls(prev => prev + 1);
-      setScore(prev => prev + 50);
+      setCorrectRecalls((prev) => prev + 1);
+      setScore((prev) => prev + 50);
     } else {
       recordError();
     }
 
-    setRecallSequence([...recallSequence, { expected: lettersToRecall[lettersToRecall.length - 1], actual: letters, isCorrect: correct }]);
+    setRecallSequence([...recallSequence, { expected, actual: letters, isCorrect: correct }]);
 
-    // Siguiente set size
     if (setSize >= MAX_SET_SIZE) {
       endGame();
     } else {
-      setSetSize(prev => prev + 1);
+      setSetSize((prev) => prev + 1);
       setCurrentTrial(0);
       setGameState('operationPhase');
       setLettersToRecall([]);
@@ -208,7 +194,6 @@ const OSPANGame = ({ isActive, onEndGame, isDemo, timeLimit, language = 'es' }) 
     }
   }, [lettersToRecall, recallSequence, setSize, endGame, recordError, generateOperation]);
 
-  // Empezar primer trial
   const startFirstTrial = useCallback(() => {
     startTracking(gameIdRef.current);
     setGameState('operationPhase');
@@ -216,6 +201,12 @@ const OSPANGame = ({ isActive, onEndGame, isDemo, timeLimit, language = 'es' }) 
     setLettersToRecall([]);
     generateOperation();
   }, [generateOperation, startTracking]);
+
+  const modeLabel = phaseVariant === 'steady'
+    ? (isEn ? 'Steady' : 'Estable')
+    : phaseVariant === 'switch'
+      ? (isEn ? 'Switch' : 'Cambio')
+      : (isEn ? 'Surge' : 'Impulso');
 
   if (gameState === 'instruction') {
     return (
@@ -226,10 +217,10 @@ const OSPANGame = ({ isActive, onEndGame, isDemo, timeLimit, language = 'es' }) 
           <ol>
             <li>{isEn ? 'Answer ' : 'Responder '}<strong>{isEn ? 'True/False' : 'Verdadero/Falso'}</strong>{isEn ? ' to math operations' : ' a operaciones matematicas'}</li>
             <li>{isEn ? 'Then ' : 'Despues, '}<strong>{isEn ? 'memorize a letter' : 'memorizar una letra'}</strong></li>
-            <li>{isEn ? 'This cycle repeats with increasing complexity' : 'Este ciclo se repite, aumentando en complejidad'}</li>
-            <li>{isEn ? 'When cycles finish, ' : 'Cuando terminen los ciclos, '}<strong>{isEn ? 'recall all letters' : 'recuerda todas las letras'}</strong>{isEn ? ' in order' : ' en orden'}</li>
+            <li>{isEn ? 'The cycle gains variety as sets increase' : 'El ciclo gana variedad conforme suben los sets'}</li>
+            <li>{isEn ? 'Recall letters in order at each set end' : 'Recuerda letras en orden al final de cada set'}</li>
           </ol>
-          <p><strong>{isEn ? 'Goal:' : 'Objetivo:'}</strong> {isEn ? 'Balance speed and accuracy. You only have a few seconds for each phase.' : 'Equilibra velocidad y precision. Solo tienes pocos segundos para cada fase.'}</p>
+          <p><strong>{isEn ? 'Goal:' : 'Objetivo:'}</strong> {isEn ? 'Stable precision with adaptive rhythm.' : 'Precision estable con ritmo adaptativo.'}</p>
           <button onClick={startFirstTrial} className="btn-start">{isEn ? 'Start' : 'Comenzar'}</button>
         </div>
       </div>
@@ -241,7 +232,7 @@ const OSPANGame = ({ isActive, onEndGame, isDemo, timeLimit, language = 'es' }) 
       <div className="ospan-container">
         <div className="ospan-content">
           <div className="timer-bar">
-            <div className={`timer-progress ${gameTimer < 5 ? 'warning' : ''}`} style={{ width: `${(gameTimer / timeLimit) * 100}%` }}></div>
+            <div className={`timer-progress ${gameTimer < 5 ? 'warning' : ''}`} style={{ width: `${(gameTimer / timeLimit) * 100}%` }} />
           </div>
 
           <div className="operation-phase">
@@ -254,6 +245,7 @@ const OSPANGame = ({ isActive, onEndGame, isDemo, timeLimit, language = 'es' }) 
 
           <div className="progress-info">
             <span>Set {setSize} / Trial {currentTrial + 1} {isEn ? 'of' : 'de'} {setSize}</span>
+            <span style={{ marginLeft: 10, fontWeight: 700 }}>{isEn ? 'Mode' : 'Modo'}: {modeLabel}</span>
           </div>
         </div>
       </div>
@@ -265,16 +257,11 @@ const OSPANGame = ({ isActive, onEndGame, isDemo, timeLimit, language = 'es' }) 
       <div className="ospan-container">
         <div className="ospan-content">
           <div className="timer-bar">
-            <div className={`timer-progress ${gameTimer < 5 ? 'warning' : ''}`} style={{ width: `${(gameTimer / timeLimit) * 100}%` }}></div>
+            <div className={`timer-progress ${gameTimer < 5 ? 'warning' : ''}`} style={{ width: `${(gameTimer / timeLimit) * 100}%` }} />
           </div>
 
           <div className="letter-phase">
-            <motion.div
-              className="letter-display"
-              initial={{ scale: 0, opacity: 0 }}
-              animate={{ scale: 1, opacity: 1 }}
-              transition={{ duration: 0.3 }}
-            >
+            <motion.div className="letter-display" initial={{ scale: 0, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} transition={{ duration: 0.3 }}>
               {currentLetter}
             </motion.div>
             <p className="instruction">{isEn ? 'Memorize this letter' : 'Memoriza esta letra'}</p>
@@ -283,6 +270,7 @@ const OSPANGame = ({ isActive, onEndGame, isDemo, timeLimit, language = 'es' }) 
 
           <div className="progress-info">
             <span>{isEn ? 'Memorized' : 'Memorizadas'}: {lettersToRecall.length > 0 ? lettersToRecall[lettersToRecall.length - 1].length : 0}</span>
+            <span style={{ marginLeft: 10, fontWeight: 700 }}>{isEn ? 'Mode' : 'Modo'}: {modeLabel}</span>
           </div>
         </div>
       </div>
@@ -295,7 +283,7 @@ const OSPANGame = ({ isActive, onEndGame, isDemo, timeLimit, language = 'es' }) 
         <div className="recall-phase">
           <h3>{isEn ? 'Recall - Enter letters in order' : 'Recall - Escribe las letras en orden'}</h3>
           <div className="letter-grid">
-            {['B', 'C', 'D', 'F', 'G', 'H', 'J', 'K', 'L', 'M', 'N', 'P', 'R', 'S', 'T', 'V', 'W', 'X', 'Y', 'Z'].map(letter => (
+            {['B', 'C', 'D', 'F', 'G', 'H', 'J', 'K', 'L', 'M', 'N', 'P', 'R', 'S', 'T', 'V', 'W', 'X', 'Y', 'Z'].map((letter) => (
               <button key={letter} className="btn-recall" onClick={() => setRecallSequence([...recallSequence, letter])}>
                 {letter}
               </button>
@@ -317,8 +305,3 @@ const OSPANGame = ({ isActive, onEndGame, isDemo, timeLimit, language = 'es' }) 
 };
 
 export default OSPANGame;
-
-
-
-
-
