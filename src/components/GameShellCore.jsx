@@ -5,6 +5,7 @@ import { GAME_FLOW } from '../utils/gameFlow';
 import { getLocalizedGameInstruction } from '../utils/gameFlowI18n';
 import InstructionInterstitial from './InstructionInterstitial';
 import ConsentModal from './ConsentModal';
+import GameSessionHeader from './GameSessionHeader';
 import { useWebcamCapture } from '../hooks/useWebcamCapture';
 
 const GameShellCore = ({ gameId, children }) => {
@@ -62,6 +63,15 @@ const GameShellCore = ({ gameId, children }) => {
     window.location.href = gameConfig.nextPath;
   }, [isActive, gameConfig]);
 
+  const handleExitGame = useCallback(() => {
+    const exitConfirm = language === 'en'
+      ? 'Are you sure you want to exit? Your progress will not be saved.'
+      : '¿Estás seguro de que deseas salir? Tu progreso no será guardado.';
+    if (window.confirm(exitConfirm)) {
+      window.location.href = '/';
+    }
+  }, [language]);
+
   if (!gameConfig) {
     return <div>{language === 'en' ? `Error: Game configuration not found for ID ${gameId}` : `Error: configuracion de juego no encontrada para ID ${gameId}`}</div>;
   }
@@ -116,8 +126,24 @@ const GameShellCore = ({ gameId, children }) => {
     );
   }
 
+  const enableSessionHeader = featureFlags.enableSessionHeader !== false;
+
   return (
     <>
+      {enableSessionHeader && (
+        <GameSessionHeader
+          gameConfig={gameConfig}
+          gameId={gameId}
+          isActive={isActive}
+          timeLimit={timeLimit}
+          language={language}
+          telemetryStatus={{
+            webcam: consentState.webcam,
+            cursor: consentState.cursor,
+          }}
+          onExit={handleExitGame}
+        />
+      )}
       {React.cloneElement(children, {
         isActive,
         onEndGame: handleEndGame,

@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef, useMemo } from 'react';
-import { useSearchParams } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import {
   Radar,
@@ -11,7 +11,7 @@ import {
 } from 'recharts';
 import { useTelemetry } from './TelemetryContext';
 import { useLanguage } from './context/LanguageContext';
-import { generateAIReport, generateHeuristicReport } from './services/aiReportService';
+import { generateAIReport, generateHeuristicReport, getLastAIFailureReason } from './services/aiReportService';
 import { saveSessionToBackend } from './services/backendService';
 import { generateDummyReportData } from './utils/dummyDataGenerator';
 import { analyzeTelemetry, buildTelemetryRiskSignals } from './utils/telemetryAnalytics';
@@ -26,6 +26,7 @@ const Report = () => {
   const { sessionData, participantProfile, getSessionMetadata } = useTelemetry();
   const { language } = useLanguage();
   const isEn = language === 'en';
+  const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   
   // Initialize dummy mode from URL params
@@ -118,7 +119,8 @@ const Report = () => {
             if (!useAI) {
               setInsightMeta({ mode: 'heuristic', reason: 'AI mode is disabled by user toggle.' });
             } else if (hasGeminiKey) {
-              setInsightMeta({ mode: 'heuristic', reason: 'AI call failed or returned invalid JSON; fallback activated.' });
+              const fallbackReason = getLastAIFailureReason() || 'AI call failed or returned invalid JSON; fallback activated.';
+              setInsightMeta({ mode: 'heuristic', reason: fallbackReason });
             }
           }
 
@@ -391,24 +393,35 @@ const Report = () => {
           </h3>
           {!hasFutureModulesData && (
             <div style={{ marginBottom: '12px', padding: '10px 12px', borderRadius: '8px', background: 'rgba(14, 165, 233, 0.1)', border: '1px solid rgba(14, 165, 233, 0.25)', color: '#075985', fontSize: '0.9rem' }}>
-              No future-module events were captured in this session yet. Scores remain in beta and will update when module telemetry is available.
+              <div>
+                {isEn
+                  ? 'No future-module events were captured in this session yet. Scores stay as pending beta until telemetry is collected.'
+                  : 'Aun no se capturaron eventos de modulos futuros en esta sesion. Los puntajes quedan pendientes en beta hasta recolectar telemetria.'}
+              </div>
+              <button
+                type="button"
+                onClick={() => navigate('/future/lab')}
+                style={{ marginTop: '8px', padding: '8px 12px', borderRadius: '8px', border: '1px solid rgba(2,132,199,0.35)', background: 'rgba(255,255,255,0.65)', color: '#0c4a6e', fontWeight: 600, cursor: 'pointer' }}
+              >
+                {isEn ? 'Capture Future Modules Now' : 'Capturar Future Modules ahora'}
+              </button>
             </div>
           )}
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: '12px' }}>
             <div style={{ padding: '12px', borderRadius: '8px', border: '1px solid rgba(15,23,42,0.1)' }}>
               <div style={{ fontWeight: 700, color: '#1e293b' }}>Metacognitive Calibration</div>
-              <div style={{ color: '#334155', marginTop: 4 }}>{futureAssessmentSummary.metacognitive.label}</div>
-              <div style={{ color: '#64748b', marginTop: 4 }}>Score: {futureAssessmentSummary.metacognitive.score}</div>
+              <div style={{ color: '#334155', marginTop: 4 }}>{hasFutureModulesData ? futureAssessmentSummary.metacognitive.label : (isEn ? 'PENDING CAPTURE' : 'CAPTURA PENDIENTE')}</div>
+              <div style={{ color: '#64748b', marginTop: 4 }}>Score: {hasFutureModulesData ? futureAssessmentSummary.metacognitive.score : '--'}</div>
             </div>
             <div style={{ padding: '12px', borderRadius: '8px', border: '1px solid rgba(15,23,42,0.1)' }}>
               <div style={{ fontWeight: 700, color: '#1e293b' }}>Operational Prioritization</div>
-              <div style={{ color: '#334155', marginTop: 4 }}>{futureAssessmentSummary.prioritization.label}</div>
-              <div style={{ color: '#64748b', marginTop: 4 }}>Score: {futureAssessmentSummary.prioritization.score}</div>
+              <div style={{ color: '#334155', marginTop: 4 }}>{hasFutureModulesData ? futureAssessmentSummary.prioritization.label : (isEn ? 'PENDING CAPTURE' : 'CAPTURA PENDIENTE')}</div>
+              <div style={{ color: '#64748b', marginTop: 4 }}>Score: {hasFutureModulesData ? futureAssessmentSummary.prioritization.score : '--'}</div>
             </div>
             <div style={{ padding: '12px', borderRadius: '8px', border: '1px solid rgba(15,23,42,0.1)' }}>
               <div style={{ fontWeight: 700, color: '#1e293b' }}>Learning Agility</div>
-              <div style={{ color: '#334155', marginTop: 4 }}>{futureAssessmentSummary.learningAgility.label}</div>
-              <div style={{ color: '#64748b', marginTop: 4 }}>Score: {futureAssessmentSummary.learningAgility.score}</div>
+              <div style={{ color: '#334155', marginTop: 4 }}>{hasFutureModulesData ? futureAssessmentSummary.learningAgility.label : (isEn ? 'PENDING CAPTURE' : 'CAPTURA PENDIENTE')}</div>
+              <div style={{ color: '#64748b', marginTop: 4 }}>Score: {hasFutureModulesData ? futureAssessmentSummary.learningAgility.score : '--'}</div>
             </div>
           </div>
         </div>

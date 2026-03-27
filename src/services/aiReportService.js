@@ -2,6 +2,11 @@ import { GoogleGenerativeAI } from '@google/generative-ai';
 
 // Initialize Gemini client
 const genAI = new GoogleGenerativeAI(import.meta.env.VITE_GOOGLE_API_KEY);
+let lastAIFailureReason = '';
+
+export function getLastAIFailureReason() {
+  return lastAIFailureReason;
+}
 
 /**
  * Generate AI-powered assessment report using Gemini
@@ -9,6 +14,7 @@ const genAI = new GoogleGenerativeAI(import.meta.env.VITE_GOOGLE_API_KEY);
  * @returns {Promise<Object>} AI-generated report with summary, strengths, risks, and recommendation
  */
 export async function generateAIReport(sessionData, mode = 'recruitment') {
+  lastAIFailureReason = '';
   try {
     // Prepare input data for prompt
     const gameAnalysis = prepareGameAnalysis(sessionData);
@@ -21,24 +27,39 @@ export async function generateAIReport(sessionData, mode = 'recruitment') {
       ? import.meta.env.VITE_GEMINI_MODEL
       : null;
 
-    const preferredModel = viteModel || 'gemini-1.5-flash';
-    const fallbackModels = ['gemini-1.5-flash', 'gemini-2.0-flash', 'gemini-2.5-flash-lite', 'gemini-flash-latest'];
+    const preferredModel = viteModel || 'gemini-1.5-flash-latest';
+    const fallbackModels = [
+      'gemini-1.5-flash-latest',
+      'gemini-1.5-flash',
+      'gemini-1.5-flash-8b',
+      'gemini-2.0-flash',
+      'gemini-2.5-flash-lite',
+      'gemini-flash-latest'
+    ];
     const modelCandidates = Array.from(new Set([preferredModel, ...fallbackModels]));
 
     let lastError = null;
     let responseText = null;
+    let selectedModel = null;
 
     for (const modelName of modelCandidates) {
       try {
-        const model = genAI.getGenerativeModel({ model: modelName });
+        const model = genAI.getGenerativeModel({
+          model: modelName,
+          generationConfig: {
+            temperature: 0.2,
+            responseMimeType: 'application/json'
+          }
+        });
         const result = await model.generateContent(prompt);
         responseText = result.response.text();
+        selectedModel = modelName;
         // console.log('Using model', modelName);
         break;
       } catch (err) {
         lastError = err;
         const msg = err?.message?.toLowerCase() || '';
-        if (msg.includes('not found') || msg.includes('404') || msg.includes('too many requests') || msg.includes('quota')) {
+        if (msg.includes('not found') || msg.includes('404') || msg.includes('too many requests') || msg.includes('quota') || msg.includes('429')) {
           // try next model
           continue;
         }
@@ -49,18 +70,63 @@ export async function generateAIReport(sessionData, mode = 'recruitment') {
 
     if (!responseText) {
       console.warn('No successful model call, falling back to heuristic. lastError:', lastError);
+      const msg = lastError?.message?.toLowerCase() || '';
+      if (msg.includes('not found') || msg.includes('404')) {
+        lastAIFailureReason = 'Configured Gemini model is unavailable for this API version/project.';
+      } else if (msg.includes('quota') || msg.includes('429') || msg.includes('too many requests')) {
+        lastAIFailureReason = 'Gemini quota/rate limit reached for current key.';
+      } else {
+        lastAIFailureReason = 'Gemini request failed before receiving usable output.';
+      }
       return null;
     }
 
     // Parse and structure the response
-    const aiReport = parseAIResponse(responseText);
+    let aiReport = parseAIResponse(responseText);
+
+    // If the first response is malformed, request strict JSON repair once.
+    if (!aiReport && selectedModel) {
+      try {
+        const repairText = await requestJsonRepair(responseText, selectedModel);
+        aiReport = parseAIResponse(repairText);
+      } catch (repairError) {
+        console.warn('JSON repair attempt failed:', repairError);
+      }
+    }
+
+    if (!aiReport) {
+      lastAIFailureReason = 'AI returned malformed JSON that could not be repaired.';
+    }
     
     return aiReport;
   } catch (error) {
     console.error('Error calling Gemini API:', error);
+    const msg = error?.message?.toLowerCase() || '';
+    if (msg.includes('api key') || msg.includes('permission') || msg.includes('unauthorized') || msg.includes('403')) {
+      lastAIFailureReason = 'Gemini API key is invalid or lacks required permissions.';
+    } else if (msg.includes('quota') || msg.includes('429') || msg.includes('too many requests')) {
+      lastAIFailureReason = 'Gemini quota/rate limit reached for current key.';
+    } else {
+      lastAIFailureReason = 'Runtime error during AI report generation.';
+    }
     // Return null to trigger fallback to heuristic in Report.jsx
     return null;
   }
+}
+
+async function requestJsonRepair(rawResponse, modelName) {
+  const repairModel = genAI.getGenerativeModel({
+    model: modelName,
+    generationConfig: {
+      temperature: 0,
+      responseMimeType: 'application/json'
+    }
+  });
+
+  const repairPrompt = `You are a JSON repair assistant. Convert the following content into valid JSON using exactly this schema and no markdown:\n{\n  "summary": "string",\n  "strengths": ["string"],\n  "areasToMonitor": ["string"],\n  "careerRecommendations": [{"role": "string", "fit": "string"}],\n  "confidenceScore": number,\n  "recommendation": "STRONG ALIGNMENT | SOLID ALIGNMENT WITH COACHING | CONDITIONAL ALIGNMENT | EXPLORATORY FIT - NEEDS MORE DATA"\n}\n\nContent to repair:\n${rawResponse}`;
+
+  const repairResult = await repairModel.generateContent(repairPrompt);
+  return repairResult.response.text();
 }
 
 /**
@@ -318,8 +384,31 @@ Ensure the response is valid JSON only, no markdown or extra text.`;
  */
 function parseAIResponse(responseText) {
   try {
+    const cleaned = String(responseText || '')
+      .replace(/```json/gi, '')
+      .replace(/```/g, '')
+      .trim();
+
+    if (!cleaned) {
+      throw new Error('Empty AI response');
+    }
+
+    // Try direct parse first for strict JSON responses.
+    try {
+      const parsedDirect = JSON.parse(cleaned);
+      if (isValidAIReport(parsedDirect)) {
+        return {
+          ...parsedDirect,
+          source: 'gemini',
+          generatedAt: new Date().toISOString()
+        };
+      }
+    } catch {
+      // Fall through to greedy object extraction.
+    }
+
     // Extract JSON from response (in case Gemini adds any extra text)
-    const jsonMatch = responseText.match(/\{[\s\S]*\}/);
+    const jsonMatch = cleaned.match(/\{[\s\S]*\}/);
     if (!jsonMatch) {
       throw new Error('No JSON found in response');
     }
@@ -327,7 +416,7 @@ function parseAIResponse(responseText) {
     const aiReport = JSON.parse(jsonMatch[0]);
     
     // Validate required fields
-    if (!aiReport.summary || !aiReport.strengths || !aiReport.recommendation) {
+    if (!isValidAIReport(aiReport)) {
       throw new Error('Missing required fields in AI response');
     }
     
@@ -340,6 +429,17 @@ function parseAIResponse(responseText) {
     console.error('Error parsing AI response:', error);
     return null;
   }
+}
+
+function isValidAIReport(aiReport) {
+  return Boolean(
+    aiReport
+    && typeof aiReport.summary === 'string'
+    && Array.isArray(aiReport.strengths)
+    && Array.isArray(aiReport.areasToMonitor)
+    && Array.isArray(aiReport.careerRecommendations)
+    && typeof aiReport.recommendation === 'string'
+  );
 }
 
 /**
