@@ -1,10 +1,10 @@
-import React, { useMemo } from 'react';
-import { X, Zap } from 'lucide-react';
+import React, { useMemo, useState, useEffect } from 'react';
+import { X } from 'lucide-react';
 import './GameSessionHeader.css';
 
 /**
  * Pure UI component for game session header.
- * Displays: game info, progress, timer, telemetry status, exit button.
+ * Displays: game name, timer (live countdown), exit button.
  * No critical business logic; safe to disable via feature flag.
  */
 const GameSessionHeader = ({
@@ -13,64 +13,66 @@ const GameSessionHeader = ({
   isActive,
   timeLimit,
   language = 'es',
-  telemetryStatus = {},
+  errorMessage = '',
   onExit = null,
-  isDev = false,
 }) => {
   const t = useMemo(() => ({
-    progress: language === 'en' ? 'Progress' : 'Progreso',
-    of: language === 'en' ? 'of' : 'de',
     exit: language === 'en' ? 'Exit' : 'Salir',
-    webcamActive: language === 'en' ? 'Webcam On' : 'Cámara Activa',
-    webcamInactive: language === 'en' ? 'Webcam Off' : 'Cámara Inactiva',
-    cursorTracking: language === 'en' ? 'Cursor Tracking' : 'Seguimiento Cursor',
   }), [language]);
+
+  const [remainingTime, setRemainingTime] = useState(null);
+
+  useEffect(() => {
+    if (!isActive || !timeLimit || timeLimit === 'None' || timeLimit === 'Timed') {
+      return;
+    }
+
+    const initialTime = parseInt(timeLimit, 10);
+    if (isNaN(initialTime)) return;
+
+    setRemainingTime(initialTime);
+
+    const interval = setInterval(() => {
+      setRemainingTime((prev) => {
+        if (prev && prev > 0) return prev - 1;
+        return 0;
+      });
+    }, 1000);
+
+    return () => clearInterval(interval);
+  }, [isActive, timeLimit]);
 
   if (!gameConfig || !isActive) return null;
 
   const gameName = gameConfig.name || `Game ${gameId}`;
-  const progress = `${gameId}/13`;
-  const timeLimitDisplayed = (timeLimit && timeLimit !== 'None' && timeLimit !== 'Timed')
-    ? `${timeLimit}s`
-    : null;
+
+  const getTimerColor = () => {
+    if (!remainingTime) return 'normal';
+    if (remainingTime <= 5) return 'critical';
+    if (remainingTime <= 10) return 'warning';
+    return 'normal';
+  };
 
   return (
     <header className="game-session-header">
-      <div className="header-left">
+      <div className="header-content">
         <div className="header-game-info">
           <h3 className="header-game-name">{gameName}</h3>
-          <span className="header-progress">
-            {t.progress}: {progress}
-          </span>
         </div>
-      </div>
-
-      <div className="header-center">
-        {timeLimitDisplayed && (
-          <span className="header-timer">⏱️ {timeLimitDisplayed}</span>
+        {errorMessage && (
+          <span className="header-error-pill" role="status">
+            {errorMessage}
+          </span>
         )}
       </div>
 
-      <div className="header-right">
-        <div className="header-telemetry">
-          {telemetryStatus.webcam !== undefined && (
-            <span
-              className={`telemetry-badge ${telemetryStatus.webcam ? 'webcam-active' : 'webcam-inactive'}`}
-              title={telemetryStatus.webcam ? t.webcamActive : t.webcamInactive}
-            >
-              📷
-            </span>
-          )}
-          {telemetryStatus.cursor !== undefined && (
-            <span
-              className="telemetry-badge cursor-tracking"
-              title={t.cursorTracking}
-            >
-              <Zap size={14} />
-            </span>
-          )}
-        </div>
+      {remainingTime !== null && (
+        <span className={`header-timer timer-${getTimerColor()}`}>
+          {remainingTime}s
+        </span>
+      )}
 
+      <div className="header-right">
         {onExit && (
           <button
             type="button"

@@ -11,7 +11,13 @@ import {
 } from 'recharts';
 import { useTelemetry } from './TelemetryContext';
 import { useLanguage } from './context/LanguageContext';
-import { generateAIReport, generateHeuristicReport, getLastAIFailureReason } from './services/aiReportService';
+import {
+  generateAIReport,
+  generateHeuristicReport,
+  getLastAIFailureReason,
+  getLastAIDebugTrace,
+  checkGeminiHealth,
+} from './services/aiReportService';
 import { saveSessionToBackend } from './services/backendService';
 import { generateDummyReportData } from './utils/dummyDataGenerator';
 import { analyzeTelemetry, buildTelemetryRiskSignals } from './utils/telemetryAnalytics';
@@ -37,7 +43,15 @@ const Report = () => {
   const [useAI, setUseAI] = useState(true); // Toggle between AI and heuristic
   const [useDummyData, setUseDummyData] = useState(initialDummyMode);
   const [showDevTelemetry, setShowDevTelemetry] = useState(false);
+  const [isAiProbeRunning, setIsAiProbeRunning] = useState(false);
+  const [generationNonce, setGenerationNonce] = useState(0);
+  const [targetRole, setTargetRole] = useState('generalist');
   const [insightMeta, setInsightMeta] = useState({ mode: 'pending', reason: '' });
+  const [geminiHealth, setGeminiHealth] = useState({ checked: false, ok: false, message: '', code: 'UNKNOWN' });
+  const [cooldownUntil, setCooldownUntil] = useState(0);
+  const [cooldownTick, setCooldownTick] = useState(0);
+  const [lastProbeAt, setLastProbeAt] = useState(null);
+  const [aiDebugRows, setAiDebugRows] = useState([]);
   const [sessionSavedId, setSessionSavedId] = useState(null);
   const [backendError, setBackendError] = useState(null);
   const reportGeneratedRef = useRef(false);
@@ -61,6 +75,10 @@ const Report = () => {
 
   const telemetryAnalytics = useMemo(() => analyzeTelemetry(reportData), [reportData]);
   const telemetryRiskSignals = useMemo(() => buildTelemetryRiskSignals(telemetryAnalytics), [telemetryAnalytics]);
+  const telemetryRiskSignalsLocalized = useMemo(
+    () => telemetryRiskSignals.map((signal) => translateTelemetrySignal(signal, isEn)),
+    [telemetryRiskSignals, isEn]
+  );
 
   const futureAssessmentSummary = useMemo(() => {
     const modules = reportData?.futureModules || {};
@@ -76,10 +94,97 @@ const Report = () => {
     return Object.values(modules).some((collection) => Array.isArray(collection) && collection.length > 0);
   }, [reportData]);
 
-  const extendedGameRows = useMemo(() => buildEnhancedRows(reportData), [reportData]);
+  const extendedGameRows = useMemo(() => buildEnhancedRows(reportData, isEn), [reportData, isEn]);
   const devTelemetryOverview = useMemo(() => buildTelemetryOverview(reportData), [reportData]);
-  const radarProfile = useMemo(() => buildRadarProfile(reportData), [reportData]);
+  const radarProfile = useMemo(() => buildRadarProfile(reportData, isEn, targetRole), [reportData, isEn, targetRole]);
   const competencyHighlights = useMemo(() => buildCompetencyHighlights(radarProfile), [radarProfile]);
+  const roleOptions = useMemo(() => getTargetRoleOptions(isEn), [isEn]);
+  const isCooldownActive = cooldownUntil > Date.now();
+  const cooldownSeconds = Math.max(0, Math.ceil((cooldownUntil - Date.now()) / 1000));
+
+  const triggerAiRetry = () => {
+    if (isCooldownActive) return;
+    reportGeneratedRef.current = false;
+    setAiReport(null);
+    setIsAnalyzing(true);
+    setInsightMeta({ mode: 'pending', reason: '' });
+    setGenerationNonce((prev) => prev + 1);
+  };
+
+  const runDevAiProbe = async () => {
+    if (isAiProbeRunning) return;
+    setIsAiProbeRunning(true);
+    try {
+      const health = await checkGeminiHealth();
+      setGeminiHealth({
+        checked: true,
+        ok: Boolean(health?.ok),
+        message: health?.message || (isEn ? 'Unknown Gemini health state.' : 'Estado de Gemini desconocido.'),
+        code: health?.code || 'UNKNOWN',
+      });
+      setAiDebugRows(getLastAIDebugTrace());
+      setLastProbeAt(new Date().toISOString());
+    } finally {
+      setIsAiProbeRunning(false);
+    }
+  };
+
+  useEffect(() => {
+    if (!isCooldownActive) return;
+    const timer = setInterval(() => {
+      setCooldownTick((value) => value + 1);
+    }, 1000);
+    return () => clearInterval(timer);
+  }, [isCooldownActive]);
+
+  useEffect(() => {
+    const reason = `${geminiHealth?.code || ''} ${geminiHealth?.message || ''} ${insightMeta?.reason || ''}`.toLowerCase();
+    if (reason.includes('quota') || reason.includes('429') || reason.includes('rate limit')) {
+      setCooldownUntil((current) => Math.max(current, Date.now() + 30000));
+    }
+  }, [geminiHealth, insightMeta]);
+
+  useEffect(() => {
+    let cancelled = false;
+
+    const runHealthCheck = async () => {
+      if (isTestEnv) return;
+      if (!useAI) {
+        setGeminiHealth({
+          checked: true,
+          ok: false,
+          message: isEn ? 'AI mode disabled.' : 'Modo IA desactivado.',
+          code: 'DISABLED',
+        });
+        return;
+      }
+      if (!hasGeminiKey) {
+        setGeminiHealth({
+          checked: true,
+          ok: false,
+          message: 'Missing VITE_GOOGLE_API_KEY in environment.',
+          code: 'MISSING_KEY',
+        });
+        return;
+      }
+
+      const health = await checkGeminiHealth();
+      if (!cancelled) {
+        setGeminiHealth({
+          checked: true,
+          ok: Boolean(health?.ok),
+          message: health?.message || (isEn ? 'Unknown Gemini health state.' : 'Estado de Gemini desconocido.'),
+          code: health?.code || 'UNKNOWN',
+        });
+      }
+    };
+
+    runHealthCheck();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [isEn, isTestEnv, useAI, hasGeminiKey, cooldownTick]);
 
   // Reset generation state when switching AI/demo modes to avoid stale report output.
   useEffect(() => {
@@ -103,7 +208,7 @@ const Report = () => {
 
           if (useAI) {
             if (hasGeminiKey) {
-              const report = await generateAIReport(reportData, 'recruitment');
+              const report = await generateAIReport(reportData, 'recruitment', language);
               if (report) {
                 resolvedReport = report;
                 setInsightMeta({ mode: 'ai', reason: 'Gemini response parsed successfully.' });
@@ -115,9 +220,9 @@ const Report = () => {
 
           if (!resolvedReport) {
             // Fallback to heuristic if AI fails or is disabled
-            resolvedReport = generateHeuristicReport(reportData);
+            resolvedReport = generateHeuristicReport(reportData, language);
             if (!useAI) {
-              setInsightMeta({ mode: 'heuristic', reason: 'AI mode is disabled by user toggle.' });
+              setInsightMeta({ mode: 'heuristic', reason: isEn ? 'AI mode is disabled by user toggle.' : 'El modo IA esta desactivado por el usuario.' });
             } else if (hasGeminiKey) {
               const fallbackReason = getLastAIFailureReason() || 'AI call failed or returned invalid JSON; fallback activated.';
               setInsightMeta({ mode: 'heuristic', reason: fallbackReason });
@@ -125,12 +230,14 @@ const Report = () => {
           }
 
           setAiReport(resolvedReport);
+          setAiDebugRows(getLastAIDebugTrace());
           setIsAnalyzing(false);
         } catch (error) {
           console.error('Error generating AI report:', error);
-          const heuristicReport = generateHeuristicReport(reportData);
+          const heuristicReport = generateHeuristicReport(reportData, language);
           setAiReport(heuristicReport);
-          setInsightMeta({ mode: 'heuristic', reason: 'Runtime error while generating AI report; fallback activated.' });
+          setAiDebugRows(getLastAIDebugTrace());
+          setInsightMeta({ mode: 'heuristic', reason: isEn ? 'Runtime error while generating AI report; fallback activated.' : 'Error de ejecucion al generar reporte IA; fallback activado.' });
           setIsAnalyzing(false);
         }
 
@@ -160,11 +267,13 @@ const Report = () => {
     hasRealData,
     useDummyData,
     useAI,
+    language,
     reportData,
     participantProfile,
     getSessionMetadata,
     sessionSavedId,
-    hasGeminiKey
+    hasGeminiKey,
+    generationNonce
   ]);
 
   if (!hasRealData && !useDummyData) {
@@ -208,8 +317,13 @@ const Report = () => {
   }
 
   // Use AI report if available, otherwise fallback to heuristic
-  const report = aiReport || generateHeuristicReport(reportData, 'recruitment');
-  const actionPriorities = buildActionPriorities(report, competencyHighlights);
+  const report = aiReport || generateHeuristicReport(reportData, language);
+  const recommendationLabel = getRecommendationLabel(report.recommendation, isEn);
+  const actionPriorities = buildActionPriorities(report, competencyHighlights, isEn);
+  const participantRadarColor = '#D55E00';
+  const participantRadarFill = '#F4A261';
+  const targetRadarColor = '#0072B2';
+  const targetRadarFill = '#56B4E9';
 
   return (
     <div style={{ width: '100%', minHeight: '100%', padding: '40px', paddingBottom: '80px' }}>
@@ -254,9 +368,27 @@ const Report = () => {
           </h3>
 
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(170px, 1fr))', gap: '10px', marginBottom: '18px' }}>
-            <TelemetryStatCard label={isEn ? 'Profile Signal' : 'Senal de perfil'} value={report.recommendation || 'N/A'} />
+            <TelemetryStatCard label={isEn ? 'Profile Signal' : 'Senal de perfil'} value={recommendationLabel || 'N/A'} />
             <TelemetryStatCard label={isEn ? 'Confidence' : 'Confianza'} value={report.confidenceScore ? `${report.confidenceScore}%` : 'N/A'} />
             <TelemetryStatCard label={isEn ? 'Coverage' : 'Cobertura'} value={`${extendedGameRows.filter((row) => typeof row.score === 'number').length}/${GAME_ROWS.length} ${isEn ? 'games' : 'juegos'}`} />
+          </div>
+
+          <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '14px', flexWrap: 'wrap' }}>
+            <div style={{ fontSize: '0.88rem', color: '#475569', fontWeight: 600 }}>
+              {isEn ? 'Target Role Profile' : 'Perfil objetivo del puesto'}
+            </div>
+            <select
+              value={targetRole}
+              onChange={(event) => setTargetRole(event.target.value)}
+              style={{ borderRadius: '8px', border: '1px solid rgba(99,102,241,0.3)', padding: '6px 10px', color: '#1e293b', background: 'rgba(255,255,255,0.9)' }}
+            >
+              {roleOptions.map((option) => (
+                <option key={option.value} value={option.value}>{option.label}</option>
+              ))}
+            </select>
+            <div style={{ fontSize: '0.82rem', color: '#64748b' }}>
+              {isEn ? 'Radar compares participant score vs target skill profile.' : 'El radar compara el puntaje del postulante contra el perfil objetivo.'}
+            </div>
           </div>
 
           <div style={{ display: 'grid', gridTemplateColumns: 'minmax(320px, 1.2fr) minmax(240px, 1fr)', gap: '16px', alignItems: 'center' }}>
@@ -266,8 +398,8 @@ const Report = () => {
                   <PolarGrid stroke="rgba(99,102,241,0.28)" />
                   <PolarAngleAxis dataKey="axis" tick={{ fill: '#334155', fontSize: 12 }} />
                   <PolarRadiusAxis domain={[0, 100]} tick={{ fill: '#64748b', fontSize: 11 }} />
-                  <Radar name="Score" dataKey="value" stroke="#4338ca" fill="#6366f1" fillOpacity={0.42} />
-                  <Radar name="Benchmark" dataKey="baseline" stroke="#0ea5e9" fill="#7dd3fc" fillOpacity={0.2} />
+                  <Radar name={isEn ? 'Participant' : 'Postulante'} dataKey="value" stroke={participantRadarColor} fill={participantRadarFill} fillOpacity={0.33} strokeWidth={2.5} />
+                  <Radar name={isEn ? 'Target Profile' : 'Perfil objetivo'} dataKey="baseline" stroke={targetRadarColor} fill={targetRadarFill} fillOpacity={0.18} strokeWidth={2.5} />
                 </RadarChart>
               ) : (
                 <ResponsiveContainer width="100%" height="100%">
@@ -275,11 +407,22 @@ const Report = () => {
                     <PolarGrid stroke="rgba(99,102,241,0.28)" />
                     <PolarAngleAxis dataKey="axis" tick={{ fill: '#334155', fontSize: 12 }} />
                     <PolarRadiusAxis domain={[0, 100]} tick={{ fill: '#64748b', fontSize: 11 }} />
-                    <Radar name="Score" dataKey="value" stroke="#4338ca" fill="#6366f1" fillOpacity={0.42} />
-                    <Radar name="Benchmark" dataKey="baseline" stroke="#0ea5e9" fill="#7dd3fc" fillOpacity={0.2} />
+                    <Radar name={isEn ? 'Participant' : 'Postulante'} dataKey="value" stroke={participantRadarColor} fill={participantRadarFill} fillOpacity={0.33} strokeWidth={2.5} />
+                    <Radar name={isEn ? 'Target Profile' : 'Perfil objetivo'} dataKey="baseline" stroke={targetRadarColor} fill={targetRadarFill} fillOpacity={0.18} strokeWidth={2.5} />
                   </RadarChart>
                 </ResponsiveContainer>
               )}
+            </div>
+
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '10px', marginTop: '-4px', marginBottom: '6px', justifyContent: 'center' }}>
+              <div style={{ display: 'inline-flex', alignItems: 'center', gap: '8px', padding: '5px 10px', borderRadius: '999px', background: 'rgba(255,255,255,0.86)', border: '1px solid rgba(148,163,184,0.35)' }}>
+                <span style={{ width: 12, height: 12, borderRadius: 999, background: participantRadarColor, border: `2px solid ${participantRadarFill}` }} />
+                <span style={{ fontSize: '0.8rem', color: '#1e293b', fontWeight: 600 }}>{isEn ? 'Participant score' : 'Puntaje postulante'}</span>
+              </div>
+              <div style={{ display: 'inline-flex', alignItems: 'center', gap: '8px', padding: '5px 10px', borderRadius: '999px', background: 'rgba(255,255,255,0.86)', border: '1px solid rgba(148,163,184,0.35)' }}>
+                <span style={{ width: 12, height: 12, borderRadius: 999, background: targetRadarColor, border: `2px solid ${targetRadarFill}` }} />
+                <span style={{ fontSize: '0.8rem', color: '#1e293b', fontWeight: 600 }}>{isEn ? 'Target role profile' : 'Perfil objetivo del puesto'}</span>
+              </div>
             </div>
 
             <div style={{ display: 'grid', gap: '12px' }}>
@@ -366,20 +509,63 @@ const Report = () => {
           )}
         </div>
 
+        <div className="glass-panel-light" style={{ padding: '14px', marginBottom: '24px', border: `1px solid ${geminiHealth.ok ? 'rgba(16,185,129,0.35)' : 'rgba(245,158,11,0.4)'}` }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', gap: '12px', flexWrap: 'wrap', alignItems: 'center' }}>
+            <strong style={{ color: geminiHealth.ok ? '#047857' : '#92400e' }}>
+              {isEn ? 'Gemini Health Check' : 'Chequeo de salud Gemini'}: {geminiHealth.ok ? 'OK' : (isEn ? 'Warning' : 'Advertencia')}
+            </strong>
+            <span style={{ color: '#64748b', fontSize: '0.86rem' }}>
+              {geminiHealth.checked ? geminiHealth.message : (isEn ? 'Checking...' : 'Verificando...')}
+            </span>
+          </div>
+        </div>
+
+        {isDevBuild && aiDebugRows.length > 0 && (
+          <div className="glass-panel-light" style={{ padding: '14px', marginBottom: '24px', border: '1px dashed rgba(51,65,85,0.35)' }}>
+            <h4 style={{ margin: '0 0 10px 0', color: '#1e293b' }}>
+              {isEn ? 'Gemini Debug Attempts (Dev)' : 'Intentos debug Gemini (Dev)'}
+            </h4>
+            <div style={{ overflowX: 'auto' }}>
+              <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.82rem' }}>
+                <thead>
+                  <tr style={{ color: '#334155', textAlign: 'left' }}>
+                    <th style={{ padding: '6px', borderBottom: '1px solid rgba(148,163,184,0.3)' }}>{isEn ? 'Stage' : 'Etapa'}</th>
+                    <th style={{ padding: '6px', borderBottom: '1px solid rgba(148,163,184,0.3)' }}>{isEn ? 'Model' : 'Modelo'}</th>
+                    <th style={{ padding: '6px', borderBottom: '1px solid rgba(148,163,184,0.3)' }}>HTTP</th>
+                    <th style={{ padding: '6px', borderBottom: '1px solid rgba(148,163,184,0.3)' }}>Code</th>
+                    <th style={{ padding: '6px', borderBottom: '1px solid rgba(148,163,184,0.3)' }}>{isEn ? 'Message' : 'Mensaje'}</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {aiDebugRows.map((row, idx) => (
+                    <tr key={`${row.stage}-${row.model}-${idx}`}>
+                      <td style={{ padding: '6px', borderBottom: '1px solid rgba(148,163,184,0.15)' }}>{row.stage || '-'}</td>
+                      <td style={{ padding: '6px', borderBottom: '1px solid rgba(148,163,184,0.15)' }}>{row.model || '-'}</td>
+                      <td style={{ padding: '6px', borderBottom: '1px solid rgba(148,163,184,0.15)' }}>{row.status ?? '-'}</td>
+                      <td style={{ padding: '6px', borderBottom: '1px solid rgba(148,163,184,0.15)' }}>{row.code || '-'}</td>
+                      <td style={{ padding: '6px', borderBottom: '1px solid rgba(148,163,184,0.15)' }}>{row.message || '-'}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        )}
+
         {experimentConfig.showTelemetryInsightPanel && (
           <div className="glass-panel-light" style={{ padding: '24px', marginBottom: '32px', border: '1px solid rgba(14,165,233,0.35)' }}>
             <h3 style={{ marginBottom: '14px', color: '#0c4a6e', fontWeight: '700' }}>
-              Behavioral Signal Insights (A/B Variant)
+              {isEn ? 'Behavioral Signal Insights (A/B Variant)' : 'Insights de senales conductuales (variante A/B)'}
             </h3>
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '10px' }}>
-              <TelemetryStatCard label="Completion Rate" value={`${telemetryAnalytics.completionRate}%`} />
-              <TelemetryStatCard label="Attention Stability" value={`${telemetryAnalytics.attentionStabilityScore}%`} />
-              <TelemetryStatCard label="Telemetry Density" value={telemetryAnalytics.telemetryDensity} />
-              <TelemetryStatCard label="Cursor Hesitation" value={telemetryAnalytics.hesitationCount} />
+              <TelemetryStatCard label={isEn ? 'Completion Rate' : 'Tasa de finalizacion'} value={`${telemetryAnalytics.completionRate}%`} />
+              <TelemetryStatCard label={isEn ? 'Attention Stability' : 'Estabilidad atencional'} value={`${telemetryAnalytics.attentionStabilityScore}%`} />
+              <TelemetryStatCard label={isEn ? 'Telemetry Density' : 'Densidad de telemetria'} value={telemetryAnalytics.telemetryDensity} />
+              <TelemetryStatCard label={isEn ? 'Cursor Hesitation' : 'Hesitacion de cursor'} value={telemetryAnalytics.hesitationCount} />
             </div>
             {telemetryRiskSignals.length > 0 && (
               <ul style={{ marginTop: '12px', color: '#334155', lineHeight: '1.6' }}>
-                {telemetryRiskSignals.map((signal, idx) => (
+                {telemetryRiskSignalsLocalized.map((signal, idx) => (
                   <li key={idx}>{signal}</li>
                 ))}
               </ul>
@@ -389,7 +575,7 @@ const Report = () => {
 
         <div className="glass-panel-light" style={{ padding: '24px', marginBottom: '32px' }}>
           <h3 style={{ marginBottom: '12px', color: '#1e1b4b', fontWeight: '700', borderBottom: '1px solid rgba(99,102,241,0.2)', paddingBottom: '8px' }}>
-            Future Modules (High-Priority Plan) - Beta Scoring
+            {isEn ? 'Future Modules (High-Priority Plan) - Beta Scoring' : 'Modulos futuros (plan prioritario) - scoring beta'}
           </h3>
           {!hasFutureModulesData && (
             <div style={{ marginBottom: '12px', padding: '10px 12px', borderRadius: '8px', background: 'rgba(14, 165, 233, 0.1)', border: '1px solid rgba(14, 165, 233, 0.25)', color: '#075985', fontSize: '0.9rem' }}>
@@ -409,19 +595,19 @@ const Report = () => {
           )}
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: '12px' }}>
             <div style={{ padding: '12px', borderRadius: '8px', border: '1px solid rgba(15,23,42,0.1)' }}>
-              <div style={{ fontWeight: 700, color: '#1e293b' }}>Metacognitive Calibration</div>
+              <div style={{ fontWeight: 700, color: '#1e293b' }}>{isEn ? 'Metacognitive Calibration' : 'Calibracion metacognitiva'}</div>
               <div style={{ color: '#334155', marginTop: 4 }}>{hasFutureModulesData ? futureAssessmentSummary.metacognitive.label : (isEn ? 'PENDING CAPTURE' : 'CAPTURA PENDIENTE')}</div>
-              <div style={{ color: '#64748b', marginTop: 4 }}>Score: {hasFutureModulesData ? futureAssessmentSummary.metacognitive.score : '--'}</div>
+              <div style={{ color: '#64748b', marginTop: 4 }}>{isEn ? 'Score' : 'Puntaje'}: {hasFutureModulesData ? futureAssessmentSummary.metacognitive.score : '--'}</div>
             </div>
             <div style={{ padding: '12px', borderRadius: '8px', border: '1px solid rgba(15,23,42,0.1)' }}>
-              <div style={{ fontWeight: 700, color: '#1e293b' }}>Operational Prioritization</div>
+              <div style={{ fontWeight: 700, color: '#1e293b' }}>{isEn ? 'Operational Prioritization' : 'Priorizacion operativa'}</div>
               <div style={{ color: '#334155', marginTop: 4 }}>{hasFutureModulesData ? futureAssessmentSummary.prioritization.label : (isEn ? 'PENDING CAPTURE' : 'CAPTURA PENDIENTE')}</div>
-              <div style={{ color: '#64748b', marginTop: 4 }}>Score: {hasFutureModulesData ? futureAssessmentSummary.prioritization.score : '--'}</div>
+              <div style={{ color: '#64748b', marginTop: 4 }}>{isEn ? 'Score' : 'Puntaje'}: {hasFutureModulesData ? futureAssessmentSummary.prioritization.score : '--'}</div>
             </div>
             <div style={{ padding: '12px', borderRadius: '8px', border: '1px solid rgba(15,23,42,0.1)' }}>
-              <div style={{ fontWeight: 700, color: '#1e293b' }}>Learning Agility</div>
+              <div style={{ fontWeight: 700, color: '#1e293b' }}>{isEn ? 'Learning Agility' : 'Agilidad de aprendizaje'}</div>
               <div style={{ color: '#334155', marginTop: 4 }}>{hasFutureModulesData ? futureAssessmentSummary.learningAgility.label : (isEn ? 'PENDING CAPTURE' : 'CAPTURA PENDIENTE')}</div>
-              <div style={{ color: '#64748b', marginTop: 4 }}>Score: {hasFutureModulesData ? futureAssessmentSummary.learningAgility.score : '--'}</div>
+              <div style={{ color: '#64748b', marginTop: 4 }}>{isEn ? 'Score' : 'Puntaje'}: {hasFutureModulesData ? futureAssessmentSummary.learningAgility.score : '--'}</div>
             </div>
           </div>
         </div>
@@ -429,7 +615,7 @@ const Report = () => {
         {/* AI Summary */}
         <div className="glass-panel-light" style={{ padding: '24px', marginBottom: '32px' }}>
           <h3 style={{ marginBottom: '16px', color: '#1e1b4b', fontWeight: '700', borderBottom: '1px solid rgba(99,102,241,0.2)', paddingBottom: '8px' }}>
-            Executive Summary
+            {isEn ? 'Executive Summary' : 'Resumen ejecutivo'}
           </h3>
           <p style={{ color: '#374151', lineHeight: '1.8', fontSize: '1.05rem' }}>
             {report.summary}
@@ -441,7 +627,7 @@ const Report = () => {
           {/* Strengths */}
           <div className="glass-panel-light" style={{ padding: '24px' }}>
             <h3 style={{ marginBottom: '16px', color: '#10b981', fontWeight: '700', fontSize: '1.15rem' }}>
-              Key Strengths
+              {isEn ? 'Key Strengths' : 'Fortalezas clave'}
             </h3>
             <ul style={{ color: '#374151', lineHeight: '1.8', listStyle: 'none', padding: 0 }}>
               {report.strengths && report.strengths.map((strength, idx) => (
@@ -456,7 +642,7 @@ const Report = () => {
           {/* Areas to Monitor */}
           <div className="glass-panel-light" style={{ padding: '24px' }}>
             <h3 style={{ marginBottom: '16px', color: '#f59e0b', fontWeight: '700', fontSize: '1.15rem' }}>
-              Areas to Monitor
+              {isEn ? 'Areas to Monitor' : 'Areas a monitorear'}
             </h3>
             <ul style={{ color: '#374151', lineHeight: '1.8', listStyle: 'none', padding: 0 }}>
               {report.areasToMonitor && report.areasToMonitor.map((area, idx) => (
@@ -471,13 +657,13 @@ const Report = () => {
 
         <div className="glass-panel-light" style={{ padding: '24px', marginBottom: '32px' }}>
           <h3 style={{ marginBottom: '16px', color: '#1e1b4b', fontWeight: '700', borderBottom: '1px solid rgba(99,102,241,0.2)', paddingBottom: '8px' }}>
-            90-Day Action Priorities
+            {isEn ? '90-Day Action Priorities' : 'Prioridades de accion a 90 dias'}
           </h3>
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: '12px' }}>
             {actionPriorities.map((priority, idx) => (
               <div key={idx} style={{ padding: '14px', borderRadius: '10px', border: '1px solid rgba(148,163,184,0.28)', background: 'linear-gradient(145deg, rgba(255,255,255,0.96), rgba(244,247,255,0.9))' }}>
                 <div style={{ fontSize: '0.78rem', color: '#6366f1', fontWeight: 700, textTransform: 'uppercase', marginBottom: '4px' }}>
-                  Priority {idx + 1}
+                  {isEn ? `Priority ${idx + 1}` : `Prioridad ${idx + 1}`}
                 </div>
                 <div style={{ fontWeight: 700, color: '#0f172a', marginBottom: '4px' }}>{priority.title}</div>
                 <div style={{ color: '#334155', fontSize: '0.9rem', lineHeight: '1.55' }}>{priority.detail}</div>
@@ -490,7 +676,7 @@ const Report = () => {
         {report.careerRecommendations && report.careerRecommendations.length > 0 && (
           <div className="glass-panel-light" style={{ padding: '24px', marginBottom: '32px' }}>
             <h3 style={{ marginBottom: '16px', color: '#1e1b4b', fontWeight: '700', borderBottom: '1px solid rgba(99,102,241,0.2)', paddingBottom: '8px' }}>
-              Career Fit Recommendations
+              {isEn ? 'Career Fit Recommendations' : 'Recomendaciones de encaje de carrera'}
             </h3>
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))', gap: '16px' }}>
               {report.careerRecommendations.map((rec, idx) => (
@@ -529,8 +715,46 @@ const Report = () => {
               }}
               onClick={() => setUseAI(!useAI)}
             >
-              {useAI ? 'AI Mode' : 'Heuristic Mode'}
+              {useAI ? (isEn ? 'AI Mode' : 'Modo IA') : (isEn ? 'Heuristic Mode' : 'Modo heuristico')}
             </button>
+            {isDevBuild && (
+              <button
+                className="btn"
+                style={{
+                  padding: '8px 16px',
+                  fontSize: '0.9rem',
+                  background: 'rgba(217, 119, 6, 0.15)',
+                  color: '#92400e',
+                  border: '1px solid rgba(217, 119, 6, 0.45)'
+                }}
+                onClick={runDevAiProbe}
+                disabled={isAiProbeRunning || isCooldownActive}
+              >
+                {isAiProbeRunning
+                  ? (isEn ? 'Testing Gemini...' : 'Probando Gemini...')
+                  : isCooldownActive
+                    ? (isEn ? `Cooldown ${cooldownSeconds}s` : `Cooldown ${cooldownSeconds}s`)
+                    : (isEn ? 'Run Gemini Test' : 'Ejecutar prueba Gemini')}
+              </button>
+            )}
+            {isDevBuild && useAI && (
+              <button
+                className="btn"
+                style={{
+                  padding: '8px 16px',
+                  fontSize: '0.9rem',
+                  background: 'rgba(2, 132, 199, 0.15)',
+                  color: '#075985',
+                  border: '1px solid rgba(2, 132, 199, 0.45)'
+                }}
+                onClick={triggerAiRetry}
+                disabled={isCooldownActive}
+              >
+                {isCooldownActive
+                  ? (isEn ? `Retry locked ${cooldownSeconds}s` : `Reintento bloqueado ${cooldownSeconds}s`)
+                  : (isEn ? 'Retry AI Generation' : 'Reintentar generacion IA')}
+              </button>
+            )}
             {hasRealData && (
               <button
                 className="btn"
@@ -543,7 +767,7 @@ const Report = () => {
                 }}
                 onClick={() => setUseDummyData(!useDummyData)}
               >
-                {useDummyData ? 'Demo Data' : 'Real Data'}
+                {useDummyData ? (isEn ? 'Demo Data' : 'Datos demo') : (isEn ? 'Real Data' : 'Datos reales')}
               </button>
             )}
             {isDevBuild && (
@@ -558,31 +782,41 @@ const Report = () => {
                 }}
                 onClick={() => setShowDevTelemetry(prev => !prev)}
               >
-                {showDevTelemetry ? 'Dev Telemetry: ON' : 'Dev Telemetry: OFF'}
+                {showDevTelemetry
+                  ? (isEn ? 'Dev Telemetry: ON' : 'Telemetria dev: ON')
+                  : (isEn ? 'Dev Telemetry: OFF' : 'Telemetria dev: OFF')}
               </button>
             )}
           </div>
+          {isDevBuild && (isCooldownActive || lastProbeAt) && (
+            <div style={{ marginTop: '10px', fontSize: '0.82rem', color: '#64748b' }}>
+              {isCooldownActive && (isEn ? `Quota cooldown active. Wait ${cooldownSeconds}s before the next probe.` : `Cooldown por cuota activo. Espera ${cooldownSeconds}s antes de la siguiente prueba.`)}
+              {!isCooldownActive && lastProbeAt && (isEn ? `Last Gemini probe: ${new Date(lastProbeAt).toLocaleTimeString()}` : `Ultima prueba Gemini: ${new Date(lastProbeAt).toLocaleTimeString()}`)}
+            </div>
+          )}
         </div>
 
         {/* Development-only telemetry visualization */}
         {isDevBuild && showDevTelemetry && (
           <div className="glass-panel-light" style={{ padding: '24px', marginBottom: '32px', border: '1px dashed rgba(14,165,233,0.5)' }}>
-            <h3 style={{ marginBottom: '8px', color: '#0c4a6e', fontWeight: '700' }}>Development Telemetry Panel</h3>
+            <h3 style={{ marginBottom: '8px', color: '#0c4a6e', fontWeight: '700' }}>{isEn ? 'Development Telemetry Panel' : 'Panel de telemetria de desarrollo'}</h3>
             <p style={{ color: '#0f172a', fontSize: '0.9rem', marginBottom: '18px' }}>
-              Debug-only panel for cursor/webcam telemetry validation. Do not use for production decisions.
+              {isEn
+                ? 'Debug-only panel for cursor/webcam telemetry validation. Do not use for production decisions.'
+                : 'Panel solo de depuracion para validar telemetria de cursor/webcam. No usar para decisiones de produccion.'}
             </p>
 
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(190px, 1fr))', gap: '12px', marginBottom: '18px' }}>
-              <TelemetryStatCard label="Cursor Events" value={devTelemetryOverview.cursorEvents} />
-              <TelemetryStatCard label="Click Events" value={devTelemetryOverview.clickEvents} />
-              <TelemetryStatCard label="Trial Events" value={devTelemetryOverview.trialEvents} />
-              <TelemetryStatCard label="Webcam Frames" value={devTelemetryOverview.webcamFrames} />
-              <TelemetryStatCard label="Avg Webcam Quality" value={devTelemetryOverview.avgWebcamQuality} />
-              <TelemetryStatCard label="Quality Flags" value={devTelemetryOverview.qualityFlags} />
+              <TelemetryStatCard label={isEn ? 'Cursor Events' : 'Eventos de cursor'} value={devTelemetryOverview.cursorEvents} />
+              <TelemetryStatCard label={isEn ? 'Click Events' : 'Eventos de click'} value={devTelemetryOverview.clickEvents} />
+              <TelemetryStatCard label={isEn ? 'Trial Events' : 'Eventos de prueba'} value={devTelemetryOverview.trialEvents} />
+              <TelemetryStatCard label={isEn ? 'Webcam Frames' : 'Frames de webcam'} value={devTelemetryOverview.webcamFrames} />
+              <TelemetryStatCard label={isEn ? 'Avg Webcam Quality' : 'Calidad media webcam'} value={devTelemetryOverview.avgWebcamQuality} />
+              <TelemetryStatCard label={isEn ? 'Quality Flags' : 'Flags de calidad'} value={devTelemetryOverview.qualityFlags} />
             </div>
 
             <div style={{ marginBottom: '14px' }}>
-              <h4 style={{ color: '#1e293b', margin: '0 0 10px 0' }}>Telemetry Coverage by Game</h4>
+              <h4 style={{ color: '#1e293b', margin: '0 0 10px 0' }}>{isEn ? 'Telemetry Coverage by Game' : 'Cobertura de telemetria por juego'}</h4>
               {devTelemetryOverview.perGameCoverage.map((row) => (
                 <div key={row.id} style={{ marginBottom: '8px' }}>
                   <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.82rem', color: '#334155' }}>
@@ -597,7 +831,7 @@ const Report = () => {
             </div>
 
             <details>
-              <summary style={{ cursor: 'pointer', color: '#075985', fontWeight: 600 }}>View Raw Telemetry Snapshot</summary>
+              <summary style={{ cursor: 'pointer', color: '#075985', fontWeight: 600 }}>{isEn ? 'View Raw Telemetry Snapshot' : 'Ver snapshot crudo de telemetria'}</summary>
               <pre style={{ marginTop: '10px', maxHeight: '260px', overflow: 'auto', background: '#0f172a', color: '#e2e8f0', padding: '12px', borderRadius: '8px', fontSize: '0.75rem' }}>
                 {JSON.stringify(devTelemetryOverview.rawSnapshot, null, 2)}
               </pre>
@@ -608,12 +842,12 @@ const Report = () => {
         <div style={{ textAlign: 'center', marginTop: '40px' }}>
           <div style={{ marginBottom: '12px', color: '#475569' }}>
             {!useDummyData && backendError && <span style={{ color: '#dc2626' }}>[WARN] {backendError}</span>}
-            {!useDummyData && !backendError && sessionSavedId && <span style={{ color: '#16a34a' }}>[OK] Session saved with ID {sessionSavedId}</span>}
-            {!useDummyData && !backendError && !sessionSavedId && <span style={{ color: '#0ea5e9' }}>Saving session to backend...</span>}
-            {useDummyData && <span style={{ color: '#7c3aed' }}>[INFO] Demo mode: backend save disabled</span>}
+            {!useDummyData && !backendError && sessionSavedId && <span style={{ color: '#16a34a' }}>{isEn ? `[OK] Session saved with ID ${sessionSavedId}` : `[OK] Sesion guardada con ID ${sessionSavedId}`}</span>}
+            {!useDummyData && !backendError && !sessionSavedId && <span style={{ color: '#0ea5e9' }}>{isEn ? 'Saving session to backend...' : 'Guardando sesion en backend...'}</span>}
+            {useDummyData && <span style={{ color: '#7c3aed' }}>{isEn ? '[INFO] Demo mode: backend save disabled' : '[INFO] Modo demo: guardado en backend desactivado'}</span>}
           </div>
           <button className="btn" style={{ padding: '16px 40px', fontSize: '1.2rem' }} onClick={() => window.location.href = '/'}>
-            Start Another Assessment
+            {isEn ? 'Start Another Assessment' : 'Iniciar otra evaluacion'}
           </button>
         </div>
       </motion.div>
@@ -643,20 +877,69 @@ const TelemetryStatCard = ({ label, value }) => (
 );
 
 const GAME_ROWS = [
-  { id: 'ospan_game_1', legacyId: 'game1', name: 'Game 1 - OSPAN', construct: 'Working Memory' },
-  { id: 'sst_game_2', legacyId: 'game2', name: 'Game 2 - Stop-Signal', construct: 'Response Inhibition' },
-  { id: 'tsw_game_3', legacyId: 'game3', name: 'Game 3 - Task Switching', construct: 'Cognitive Flexibility' },
-  { id: 'cpt_game_4', legacyId: 'game4', name: 'Game 4 - CPT', construct: 'Sustained Attention' },
-  { id: 'dec_game_5', legacyId: 'game5', name: 'Game 5 - Decision', construct: 'Decision Making' },
-  { id: 'rsh_game_6', legacyId: 'game6', name: 'Game 6 - Rule Shift', construct: 'Adaptation' },
-  { id: 'sjt_game_7', legacyId: 'game7', name: 'Game 7 - SJT', construct: 'Situational Judgment' },
-  { id: 'cmp_meta_8', legacyId: 'game8', name: 'Game 8 - Metacognitive Calibration', construct: 'Metacognitive Accuracy' },
-  { id: 'cmp_ops_9', legacyId: 'game9', name: 'Game 9 - Operational Prioritization', construct: 'Operational Prioritization' },
-  { id: 'cmp_agility_10', legacyId: 'game10', name: 'Game 10 - Learning Agility', construct: 'Adaptive Learning' },
-  { id: 'cmp_social_11', legacyId: 'game11', name: 'Game 11 - Social Coordination', construct: 'Social Coordination' },
-  { id: 'cmp_resilience_12', legacyId: 'game12', name: 'Game 12 - Cognitive Resilience', construct: 'Resilience Under Load' },
-  { id: 'cmp_risk_13', legacyId: 'game13', name: 'Game 13 - Risk Under Uncertainty', construct: 'Risk Decision Framing' },
+  { id: 'ospan_game_1', legacyId: 'game1', name: { en: 'Game 1 - OSPAN', es: 'Juego 1 - OSPAN' }, construct: { en: 'Working Memory', es: 'Memoria de trabajo' } },
+  { id: 'sst_game_2', legacyId: 'game2', name: { en: 'Game 2 - Stop-Signal', es: 'Juego 2 - Stop-Signal' }, construct: { en: 'Response Inhibition', es: 'Inhibicion de respuesta' } },
+  { id: 'tsw_game_3', legacyId: 'game3', name: { en: 'Game 3 - Task Switching', es: 'Juego 3 - Cambio de tareas' }, construct: { en: 'Cognitive Flexibility', es: 'Flexibilidad cognitiva' } },
+  { id: 'cpt_game_4', legacyId: 'game4', name: { en: 'Game 4 - CPT', es: 'Juego 4 - CPT' }, construct: { en: 'Sustained Attention', es: 'Atencion sostenida' } },
+  { id: 'dec_game_5', legacyId: 'game5', name: { en: 'Game 5 - Decision', es: 'Juego 5 - Decision' }, construct: { en: 'Decision Making', es: 'Toma de decisiones' } },
+  { id: 'rsh_game_6', legacyId: 'game6', name: { en: 'Game 6 - Rule Shift', es: 'Juego 6 - Cambio de reglas' }, construct: { en: 'Adaptation', es: 'Adaptacion' } },
+  { id: 'sjt_game_7', legacyId: 'game7', name: { en: 'Game 7 - SJT', es: 'Juego 7 - SJT' }, construct: { en: 'Situational Judgment', es: 'Juicio situacional' } },
+  { id: 'cmp_meta_8', legacyId: 'game8', name: { en: 'Game 8 - Metacognitive Calibration', es: 'Juego 8 - Calibracion metacognitiva' }, construct: { en: 'Metacognitive Accuracy', es: 'Precision metacognitiva' } },
+  { id: 'cmp_ops_9', legacyId: 'game9', name: { en: 'Game 9 - Operational Prioritization', es: 'Juego 9 - Priorizacion operativa' }, construct: { en: 'Operational Prioritization', es: 'Priorizacion operativa' } },
+  { id: 'cmp_agility_10', legacyId: 'game10', name: { en: 'Game 10 - Learning Agility', es: 'Juego 10 - Agilidad de aprendizaje' }, construct: { en: 'Adaptive Learning', es: 'Aprendizaje adaptativo' } },
+  { id: 'cmp_social_11', legacyId: 'game11', name: { en: 'Game 11 - Social Coordination', es: 'Juego 11 - Coordinacion social' }, construct: { en: 'Social Coordination', es: 'Coordinacion social' } },
+  { id: 'cmp_resilience_12', legacyId: 'game12', name: { en: 'Game 12 - Cognitive Resilience', es: 'Juego 12 - Resiliencia cognitiva' }, construct: { en: 'Resilience Under Load', es: 'Resiliencia bajo carga' } },
+  { id: 'cmp_risk_13', legacyId: 'game13', name: { en: 'Game 13 - Risk Under Uncertainty', es: 'Juego 13 - Riesgo bajo incertidumbre' }, construct: { en: 'Risk Decision Framing', es: 'Marco de decision en riesgo' } },
 ];
+
+const RADAR_DIMENSIONS = [
+  { key: 'memory', axis: { en: 'Memory', es: 'Memoria' }, keys: ['ospan_game_1', 'game1', 'cmp_meta_8', 'game8', 'cmp_risk_13', 'game13'] },
+  { key: 'control', axis: { en: 'Control', es: 'Control' }, keys: ['sst_game_2', 'game2', 'cmp_social_11', 'game11'] },
+  { key: 'agility', axis: { en: 'Agility', es: 'Agilidad' }, keys: ['tsw_game_3', 'game3', 'rsh_game_6', 'game6', 'cmp_agility_10', 'game10'] },
+  { key: 'attention', axis: { en: 'Attention', es: 'Atencion' }, keys: ['cpt_game_4', 'game4', 'cmp_resilience_12', 'game12'] },
+  { key: 'decision', axis: { en: 'Decision', es: 'Decision' }, keys: ['dec_game_5', 'game5', 'cmp_ops_9', 'game9'] },
+  { key: 'judgment', axis: { en: 'Judgment', es: 'Juicio' }, keys: ['sjt_game_7', 'game7'] },
+];
+
+const TARGET_ROLE_PROFILES = {
+  generalist: { memory: 72, control: 72, agility: 72, attention: 72, decision: 72, judgment: 72 },
+  analyst: { memory: 82, control: 70, agility: 76, attention: 86, decision: 80, judgment: 72 },
+  operations: { memory: 74, control: 74, agility: 72, attention: 80, decision: 84, judgment: 78 },
+  sales: { memory: 68, control: 70, agility: 78, attention: 72, decision: 82, judgment: 84 },
+  manager: { memory: 74, control: 76, agility: 80, attention: 74, decision: 82, judgment: 88 },
+};
+
+function getTargetRoleOptions(isEn) {
+  return [
+    { value: 'generalist', label: isEn ? 'Generalist (Balanced)' : 'Generalista (balanceado)' },
+    { value: 'analyst', label: isEn ? 'Analyst / Data' : 'Analista / Datos' },
+    { value: 'operations', label: isEn ? 'Operations / Process' : 'Operaciones / Procesos' },
+    { value: 'sales', label: isEn ? 'Sales / Commercial' : 'Ventas / Comercial' },
+    { value: 'manager', label: isEn ? 'People Manager' : 'Lider de equipo' },
+  ];
+}
+
+function getRecommendationLabel(recommendation, isEn) {
+  const labels = {
+    'STRONG ALIGNMENT': isEn ? 'Strong Alignment' : 'Alineacion fuerte',
+    'SOLID ALIGNMENT WITH COACHING': isEn ? 'Solid Alignment With Coaching' : 'Alineacion solida con coaching',
+    'CONDITIONAL ALIGNMENT': isEn ? 'Conditional Alignment' : 'Alineacion condicional',
+    'EXPLORATORY FIT - NEEDS MORE DATA': isEn ? 'Exploratory Fit - Needs More Data' : 'Encaje exploratorio - requiere mas datos',
+  };
+  return labels[recommendation] || recommendation;
+}
+
+function translateTelemetrySignal(signal, isEn) {
+  if (isEn) return signal;
+  const map = {
+    'Insufficient telemetry coverage for high-confidence behavioral inference': 'Cobertura de telemetria insuficiente para inferencias conductuales de alta confianza',
+    'Partial assessment completion may reduce predictive confidence': 'La evaluacion parcial puede reducir la confianza predictiva',
+    'Webcam signal quality was low; visual attention features should be interpreted cautiously': 'La calidad de webcam fue baja; interpretar con cautela las senales de atencion visual',
+    'Frequent hesitation markers detected in cursor behavior under time pressure': 'Se detectaron marcadores frecuentes de hesitacion en el cursor bajo presion temporal',
+    'Multiple telemetry quality flags suggest unstable capture conditions': 'Multiples alertas de calidad de telemetria sugieren condiciones de captura inestables',
+  };
+  return map[signal] || signal;
+}
 
 function hasMinimumAssessmentData(data) {
   if (!data) return false;
@@ -673,27 +956,27 @@ function formatDuration(ms) {
   return `${Math.round(ms / 1000)}s`;
 }
 
-function buildEnhancedRows(data) {
+function buildEnhancedRows(data, isEn) {
   return GAME_ROWS.map((game) => {
     const snapshot = getGameSnapshot(data, game.id, game.legacyId);
     const details = snapshot?.details || {};
     const metric =
-      details.operationAccuracy !== undefined ? `Operation accuracy ${details.operationAccuracy}%` :
-      details.accuracy !== undefined ? `Accuracy ${details.accuracy}%` :
-      details.nBackLevel !== undefined ? `N-back level ${details.nBackLevel}` :
-      details.efficiency !== undefined ? `Efficiency ${details.efficiency}` :
-      details.categoriesCompleted !== undefined ? `Categories ${details.categoriesCompleted}` :
-      details.noGoAccuracy !== undefined ? `No-Go accuracy ${details.noGoAccuracy}%` :
-      details.totalTime !== undefined ? `Total time ${Math.round(details.totalTime / 1000)}s` :
-      details.maxSequenceLength !== undefined ? `Max sequence ${details.maxSequenceLength}` :
-      details.blocksCompleted !== undefined ? `Blocks ${details.blocksCompleted}` :
-      details.scenariosCompleted !== undefined ? `Scenarios ${details.scenariosCompleted}` :
-      'Telemetry captured';
+      details.operationAccuracy !== undefined ? `${isEn ? 'Operation accuracy' : 'Precision operacional'} ${details.operationAccuracy}%` :
+      details.accuracy !== undefined ? `${isEn ? 'Accuracy' : 'Precision'} ${details.accuracy}%` :
+      details.nBackLevel !== undefined ? `${isEn ? 'N-back level' : 'Nivel N-back'} ${details.nBackLevel}` :
+      details.efficiency !== undefined ? `${isEn ? 'Efficiency' : 'Eficiencia'} ${details.efficiency}` :
+      details.categoriesCompleted !== undefined ? `${isEn ? 'Categories' : 'Categorias'} ${details.categoriesCompleted}` :
+      details.noGoAccuracy !== undefined ? `${isEn ? 'No-Go accuracy' : 'Precision No-Go'} ${details.noGoAccuracy}%` :
+      details.totalTime !== undefined ? `${isEn ? 'Total time' : 'Tiempo total'} ${Math.round(details.totalTime / 1000)}s` :
+      details.maxSequenceLength !== undefined ? `${isEn ? 'Max sequence' : 'Secuencia maxima'} ${details.maxSequenceLength}` :
+      details.blocksCompleted !== undefined ? `${isEn ? 'Blocks' : 'Bloques'} ${details.blocksCompleted}` :
+      details.scenariosCompleted !== undefined ? `${isEn ? 'Scenarios' : 'Escenarios'} ${details.scenariosCompleted}` :
+      (isEn ? 'Telemetry captured' : 'Telemetria capturada');
 
     return {
       id: game.id,
-      name: game.name,
-      construct: game.construct,
+      name: isEn ? game.name.en : game.name.es,
+      construct: isEn ? game.construct.en : game.construct.es,
       score: snapshot?.score ?? 'N/A',
       errors: snapshot?.errors ?? 'N/A',
       duration: formatDuration(snapshot?.duration),
@@ -705,7 +988,7 @@ function buildEnhancedRows(data) {
 function buildTelemetryOverview(data) {
   const snapshots = GAME_ROWS.map((g) => ({
     id: g.id,
-    name: g.name,
+    name: g.name.en,
     snapshot: getGameSnapshot(data, g.id, g.legacyId),
   })).filter((item) => item.snapshot);
 
@@ -756,17 +1039,10 @@ function buildTelemetryOverview(data) {
   };
 }
 
-function buildRadarProfile(data) {
-  const dims = [
-    { axis: 'Memory', keys: ['ospan_game_1', 'game1', 'cmp_meta_8', 'game8', 'cmp_risk_13', 'game13'] },
-    { axis: 'Control', keys: ['sst_game_2', 'game2', 'cmp_social_11', 'game11'] },
-    { axis: 'Agility', keys: ['tsw_game_3', 'game3', 'rsh_game_6', 'game6', 'cmp_agility_10', 'game10'] },
-    { axis: 'Attention', keys: ['cpt_game_4', 'game4', 'cmp_resilience_12', 'game12'] },
-    { axis: 'Decision', keys: ['dec_game_5', 'game5', 'cmp_ops_9', 'game9'] },
-    { axis: 'Judgment', keys: ['sjt_game_7', 'game7'] },
-  ];
+function buildRadarProfile(data, isEn, targetRole) {
+  const targetProfile = TARGET_ROLE_PROFILES[targetRole] || TARGET_ROLE_PROFILES.generalist;
 
-  return dims.map((dim) => {
+  return RADAR_DIMENSIONS.map((dim) => {
     const values = dim.keys
       .map((k) => data?.[k]?.score)
       .filter((v) => typeof v === 'number' && !Number.isNaN(v));
@@ -776,9 +1052,9 @@ function buildRadarProfile(data) {
       : 0;
 
     return {
-      axis: dim.axis,
+      axis: isEn ? dim.axis.en : dim.axis.es,
       value,
-      baseline: 70,
+      baseline: targetProfile[dim.key] || 70,
     };
   });
 }
@@ -791,29 +1067,29 @@ function buildCompetencyHighlights(radarProfile) {
   };
 }
 
-function buildActionPriorities(report, competencyHighlights) {
+function buildActionPriorities(report, competencyHighlights, isEn) {
   const top = competencyHighlights.top[0];
   const watch = competencyHighlights.watch[0];
   const monitor = report?.areasToMonitor?.[0];
 
   return [
     {
-      title: top ? `Scale ${top.axis}` : 'Scale strongest capability',
+      title: top ? `${isEn ? 'Scale' : 'Escalar'} ${top.axis}` : (isEn ? 'Scale strongest capability' : 'Escalar capacidad mas fuerte'),
       detail: top
-        ? `Use ${top.axis} in high-impact tasks and mentoring flows to maximize current strengths.`
-        : 'Assign stretch tasks aligned with the strongest demonstrated capability.',
+        ? (isEn ? `Use ${top.axis} in high-impact tasks and mentoring flows to maximize current strengths.` : `Usa ${top.axis} en tareas de alto impacto y mentorias para maximizar fortalezas actuales.`)
+        : (isEn ? 'Assign stretch tasks aligned with the strongest demonstrated capability.' : 'Asigna retos alineados con la capacidad mas fuerte demostrada.'),
     },
     {
-      title: watch ? `Coach ${watch.axis}` : 'Targeted development sprint',
+      title: watch ? `${isEn ? 'Coach' : 'Entrenar'} ${watch.axis}` : (isEn ? 'Targeted development sprint' : 'Sprint de desarrollo focalizado'),
       detail: watch
-        ? `Set a focused coaching cycle for ${watch.axis} with weekly measurable checkpoints.`
-        : 'Run a 4-6 week development plan with practical rehearsal scenarios.',
+        ? (isEn ? `Set a focused coaching cycle for ${watch.axis} with weekly measurable checkpoints.` : `Define un ciclo de coaching para ${watch.axis} con checkpoints semanales medibles.`)
+        : (isEn ? 'Run a 4-6 week development plan with practical rehearsal scenarios.' : 'Ejecuta un plan de 4-6 semanas con escenarios practicos de entrenamiento.'),
     },
     {
-      title: 'Interview + manager alignment',
+      title: isEn ? 'Interview + manager alignment' : 'Alineacion entrevista + manager',
       detail: monitor
-        ? `Probe this signal in interviews and onboarding plan: ${monitor}`
-        : 'Validate development hypotheses with structured behavioral interviews and manager rubric.',
+        ? (isEn ? `Probe this signal in interviews and onboarding plan: ${monitor}` : `Profundiza esta senal en entrevistas y plan de onboarding: ${monitor}`)
+        : (isEn ? 'Validate development hypotheses with structured behavioral interviews and manager rubric.' : 'Valida hipotesis de desarrollo con entrevistas conductuales estructuradas y rubrica del manager.'),
     },
   ];
 }

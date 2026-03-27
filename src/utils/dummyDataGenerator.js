@@ -236,6 +236,25 @@ export const generateDummyReportData = () => {
       webcamFrames: 53,
       webcamQuality: 74,
     }),
+    futureModules: {
+      metacognitive: [
+        { confidence: 78, correct: true },
+        { confidence: 62, correct: true },
+        { confidence: 70, correct: false },
+        { confidence: 58, correct: true },
+      ],
+      prioritization: [
+        { expectedPriority: 'high', assignedPriority: 'high', completedWithinMs: 5100, deadlineMs: 6400 },
+        { expectedPriority: 'medium', assignedPriority: 'medium', completedWithinMs: 7000, deadlineMs: 8600 },
+        { expectedPriority: 'low', assignedPriority: 'medium', completedWithinMs: 5300, deadlineMs: 7200 },
+      ],
+      learningAgility: [
+        { accuracy: 58, adaptationMs: 2300 },
+        { accuracy: 64, adaptationMs: 2040 },
+        { accuracy: 71, adaptationMs: 1780 },
+        { accuracy: 77, adaptationMs: 1520 },
+      ],
+    },
   };
 };
 

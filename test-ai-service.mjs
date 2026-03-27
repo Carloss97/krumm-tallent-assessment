@@ -26,7 +26,7 @@ const mockSessionData = {
 async function testAIReportGeneration() {
   console.log('🧪 Testing AI Report Generation...\n');
   console.log('📋 Mock Session Data:', JSON.stringify(mockSessionData, null, 2));
-  console.log('\n⏳ Calling Google Gemini API (configurable model, default gemini-1.5-flash)...\n');
+  console.log('\n⏳ Calling Google Gemini API (configurable model, default gemini-1.5-flash-latest)...\n');
 
   try {
     const prompt = `Eres un experto en evaluación de talento y recursos humanos. 
@@ -51,8 +51,14 @@ Proporciona un análisis JSON con este formato exacto:
   "confidenceScore": 75
 }`;
 
-    const modelName = process.env.VITE_GEMINI_MODEL || 'gemini-1.5-flash';
-    const model = genAI.getGenerativeModel({ model: modelName });
+    const modelName = process.env.VITE_GEMINI_MODEL || 'gemini-1.5-flash-latest';
+    const model = genAI.getGenerativeModel({
+      model: modelName,
+      generationConfig: {
+        temperature: 0.2,
+        responseMimeType: 'application/json',
+      },
+    });
     const result = await model.generateContent(prompt);
     const responseText = result.response.text();
 

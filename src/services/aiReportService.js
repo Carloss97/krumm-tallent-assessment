@@ -3,9 +3,193 @@ import { GoogleGenerativeAI } from '@google/generative-ai';
 // Initialize Gemini client
 const genAI = new GoogleGenerativeAI(import.meta.env.VITE_GOOGLE_API_KEY);
 let lastAIFailureReason = '';
+let lastAIDebugTrace = [];
 
 export function getLastAIFailureReason() {
   return lastAIFailureReason;
+}
+
+export function getLastAIDebugTrace() {
+  return Array.isArray(lastAIDebugTrace) ? [...lastAIDebugTrace] : [];
+}
+
+export async function checkGeminiHealth(modelName) {
+  lastAIDebugTrace = [];
+  const key = import.meta?.env?.VITE_GOOGLE_API_KEY;
+  const preferredModel = modelName || import.meta?.env?.VITE_GEMINI_MODEL || 'gemini-1.5-flash-latest';
+  const modelCandidates = Array.from(new Set([
+    preferredModel,
+    'gemini-1.5-flash-latest',
+    'gemini-1.5-flash',
+    'gemini-1.5-flash-8b',
+    'gemini-2.0-flash',
+    'gemini-2.5-flash-lite',
+    'gemini-flash-latest'
+  ]));
+
+  if (!key) {
+    return {
+      ok: false,
+      code: 'MISSING_KEY',
+      message: 'Missing VITE_GOOGLE_API_KEY in environment.',
+      model: preferredModel,
+    };
+  }
+
+  try {
+    const listUrl = `https://generativelanguage.googleapis.com/v1beta/models?key=${key}`;
+    const listResponse = await fetch(listUrl);
+
+    if (!listResponse.ok) {
+      const text = await listResponse.text();
+      const mapped = mapGeminiFailure(text, listResponse.status);
+      lastAIDebugTrace.push({
+        stage: 'health:list-models',
+        model: preferredModel,
+        status: listResponse.status,
+        code: mapped.code,
+        message: mapped.message,
+      });
+      return {
+        ok: false,
+        code: mapped.code,
+        message: mapped.message,
+        model: preferredModel,
+        status: listResponse.status,
+      };
+    }
+
+    const failures = [];
+
+    for (const candidate of modelCandidates) {
+      const probeUrl = `https://generativelanguage.googleapis.com/v1beta/models/${candidate}:generateContent?key=${key}`;
+      const probeResponse = await fetch(probeUrl, {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({
+          contents: [{ parts: [{ text: 'Respond with valid JSON only: {"ok":true}' }] }],
+          generationConfig: {
+            temperature: 0,
+            responseMimeType: 'application/json',
+          },
+        }),
+      });
+
+      if (probeResponse.ok) {
+        lastAIDebugTrace.push({
+          stage: 'health:probe',
+          model: candidate,
+          status: 200,
+          code: 'OK',
+          message: 'Model probe succeeded.',
+        });
+        return {
+          ok: true,
+          code: 'OK',
+          message: `Gemini connection healthy (${candidate}).`,
+          model: candidate,
+          status: 200,
+        };
+      }
+
+      const text = await probeResponse.text();
+      const mapped = mapGeminiFailure(text, probeResponse.status);
+      lastAIDebugTrace.push({
+        stage: 'health:probe',
+        model: candidate,
+        status: probeResponse.status,
+        code: mapped.code,
+        message: mapped.message,
+      });
+
+      // Stop immediately for global failures that won't be solved by model switching.
+      if (mapped.code === 'KEY_INVALID' || mapped.code === 'KEY_LEAKED' || mapped.code === 'PERMISSION_DENIED' || mapped.code === 'QUOTA_EXCEEDED') {
+        return {
+          ok: false,
+          code: mapped.code,
+          message: mapped.message,
+          model: candidate,
+          status: probeResponse.status,
+        };
+      }
+
+      failures.push({ candidate, ...mapped, status: probeResponse.status });
+    }
+
+    const hasQuota = failures.some((f) => f.code === 'QUOTA_EXCEEDED');
+    const hasNotFound = failures.some((f) => f.code === 'MODEL_NOT_FOUND');
+
+    if (hasQuota && hasNotFound) {
+      return {
+        ok: false,
+        code: 'MODEL_AND_QUOTA_CONFLICT',
+        message: 'Selected model alias is unavailable and available fallbacks are currently quota-limited.',
+        model: preferredModel,
+        status: 429,
+      };
+    }
+
+    const primaryFailure = failures[0] || { code: 'UNKNOWN', message: 'Unknown Gemini API error during health check.' };
+    return {
+      ok: false,
+      code: primaryFailure.code,
+      message: primaryFailure.message,
+      model: primaryFailure.candidate || preferredModel,
+      status: primaryFailure.status,
+    };
+  } catch (error) {
+    return {
+      ok: false,
+      code: 'NETWORK_ERROR',
+      message: 'Network error while checking Gemini connectivity.',
+      model: preferredModel,
+      error: error?.message || String(error),
+    };
+  }
+}
+
+function mapGeminiFailure(responseText, statusCode) {
+  const raw = String(responseText || '').toLowerCase();
+  if (raw.includes('reported as leaked') || raw.includes('leaked')) {
+    return {
+      code: 'KEY_LEAKED',
+      message: 'Gemini API key was reported as leaked. Rotate to a new key.',
+    };
+  }
+  if (raw.includes('expired') || raw.includes('api_key_invalid')) {
+    return {
+      code: 'KEY_INVALID',
+      message: 'Gemini API key is invalid or expired.',
+    };
+  }
+  if (statusCode === 403 || raw.includes('permission_denied') || raw.includes('permission')) {
+    return {
+      code: 'PERMISSION_DENIED',
+      message: 'Gemini key lacks required permissions for this project.',
+    };
+  }
+  if (statusCode === 404 || raw.includes('not found') || raw.includes('not supported')) {
+    return {
+      code: 'MODEL_NOT_FOUND',
+      message: 'Selected Gemini model is not available for this endpoint/version.',
+    };
+  }
+  if (statusCode === 429 || raw.includes('quota') || raw.includes('rate limit')) {
+    return {
+      code: 'QUOTA_EXCEEDED',
+      message: 'Gemini quota/rate limit reached for this project.',
+    };
+  }
+  if (statusCode === 400) {
+    return {
+      code: 'BAD_REQUEST',
+      message: 'Gemini request was rejected (bad request/configuration).',
+    };
+  }
+  return {
+    code: 'UNKNOWN',
+    message: 'Unknown Gemini API error during health check.',
+  };
 }
 
 /**
@@ -13,14 +197,15 @@ export function getLastAIFailureReason() {
  * @param {Object} sessionData - Game scores, errors, and telemetry from all assessment games
  * @returns {Promise<Object>} AI-generated report with summary, strengths, risks, and recommendation
  */
-export async function generateAIReport(sessionData, mode = 'recruitment') {
+export async function generateAIReport(sessionData, mode = 'recruitment', language = 'en') {
   lastAIFailureReason = '';
+  lastAIDebugTrace = [];
   try {
     // Prepare input data for prompt
     const gameAnalysis = prepareGameAnalysis(sessionData);
 
     // Construct detailed prompt for Gemini
-    const prompt = buildPrompt(gameAnalysis, mode);
+    const prompt = buildPrompt(gameAnalysis, mode, language);
 
     // Call Gemini API with fallback chain
     const viteModel = (typeof window !== 'undefined' && import.meta && import.meta.env && import.meta.env.VITE_GEMINI_MODEL)
@@ -54,12 +239,31 @@ export async function generateAIReport(sessionData, mode = 'recruitment') {
         const result = await model.generateContent(prompt);
         responseText = result.response.text();
         selectedModel = modelName;
+        lastAIDebugTrace.push({
+          stage: 'generate:content',
+          model: modelName,
+          status: 200,
+          code: 'OK',
+          message: 'Generation succeeded.',
+        });
         // console.log('Using model', modelName);
         break;
       } catch (err) {
         lastError = err;
         const msg = err?.message?.toLowerCase() || '';
-        if (msg.includes('not found') || msg.includes('404') || msg.includes('too many requests') || msg.includes('quota') || msg.includes('429')) {
+        const mapped = mapGeminiFailure(msg, msg.includes('429') ? 429 : msg.includes('404') ? 404 : msg.includes('403') ? 403 : msg.includes('400') ? 400 : 0);
+        lastAIDebugTrace.push({
+          stage: 'generate:content',
+          model: modelName,
+          status: mapped.code === 'UNKNOWN' ? null : (mapped.code === 'QUOTA_EXCEEDED' ? 429 : mapped.code === 'MODEL_NOT_FOUND' ? 404 : mapped.code === 'PERMISSION_DENIED' ? 403 : mapped.code === 'KEY_INVALID' ? 400 : null),
+          code: mapped.code,
+          message: mapped.message,
+        });
+        if (msg.includes('too many requests') || msg.includes('quota') || msg.includes('429')) {
+          // Quota errors are global for this key/project in the current window.
+          break;
+        }
+        if (msg.includes('not found') || msg.includes('404')) {
           // try next model
           continue;
         }
@@ -89,8 +293,22 @@ export async function generateAIReport(sessionData, mode = 'recruitment') {
       try {
         const repairText = await requestJsonRepair(responseText, selectedModel);
         aiReport = parseAIResponse(repairText);
+        lastAIDebugTrace.push({
+          stage: 'generate:repair',
+          model: selectedModel,
+          status: aiReport ? 200 : null,
+          code: aiReport ? 'OK' : 'PARSE_FAILED',
+          message: aiReport ? 'Repair parse succeeded.' : 'Repair parse failed.',
+        });
       } catch (repairError) {
         console.warn('JSON repair attempt failed:', repairError);
+        lastAIDebugTrace.push({
+          stage: 'generate:repair',
+          model: selectedModel,
+          status: null,
+          code: 'REPAIR_ERROR',
+          message: 'JSON repair request failed.',
+        });
       }
     }
 
@@ -102,7 +320,9 @@ export async function generateAIReport(sessionData, mode = 'recruitment') {
   } catch (error) {
     console.error('Error calling Gemini API:', error);
     const msg = error?.message?.toLowerCase() || '';
-    if (msg.includes('api key') || msg.includes('permission') || msg.includes('unauthorized') || msg.includes('403')) {
+    if (msg.includes('reported as leaked') || msg.includes('leaked')) {
+      lastAIFailureReason = 'Gemini API key was reported as leaked. Rotate to a new key and update environment variables.';
+    } else if (msg.includes('api key') || msg.includes('permission') || msg.includes('unauthorized') || msg.includes('403')) {
       lastAIFailureReason = 'Gemini API key is invalid or lacks required permissions.';
     } else if (msg.includes('quota') || msg.includes('429') || msg.includes('too many requests')) {
       lastAIFailureReason = 'Gemini quota/rate limit reached for current key.';
@@ -338,10 +558,12 @@ function prepareGameAnalysis(sessionData) {
  * @param {string} mode - 'recruitment' or 'reassignment'
  * @returns {string} Formatted prompt for LLM
  */
-function buildPrompt(gameAnalysis, mode) {
+function buildPrompt(gameAnalysis, mode, language = 'en') {
   const gamesSummary = Object.values(gameAnalysis)
     .map(g => `${g.name}: ${g.metric} - Score: ${g.score || g.gridScore || g.efficiency || 'N/A'}, ${g.interpretation}`)
     .join('\n');
+
+  const outputLanguage = language === 'es' ? 'Spanish' : 'English';
 
   return `You are an expert in talent assessment and cognitive psychology. Analyze the following cognitive assessment results and provide a professional evaluation.
 
@@ -363,6 +585,7 @@ IMPORTANT:
 - Avoid deterministic hiring language and avoid "hire/do not hire" wording.
 - Keep conclusions probabilistic, contextual, and development-focused.
 - Emphasize that this is one input among multiple evaluation sources.
+- Write all natural language text in ${outputLanguage}.
 
 Format your response as valid JSON with these exact keys:
 {
@@ -447,7 +670,8 @@ function isValidAIReport(aiReport) {
  * @param {Object} sessionData - Game session data
  * @returns {Object} Heuristic report
  */
-export function generateHeuristicReport(sessionData) {
+export function generateHeuristicReport(sessionData, language = 'en') {
+  const isEn = language === 'en';
   const gameAnalysis = prepareGameAnalysis(sessionData);
   const normalized = normalizeGameScores(gameAnalysis);
   
@@ -458,26 +682,26 @@ export function generateHeuristicReport(sessionData) {
     .slice(0, 3);
   
   const gameNames = {
-    game1: 'Working memory and dual-task management',
-    game2: 'Response inhibition and impulse control',
-    game3: 'Cognitive flexibility and learning agility',
-    game4: 'Sustained attention and reliability',
-    game5: 'Decision quality under time pressure',
-    game6: 'Rule adaptation and exception handling',
-    game7: 'Workplace judgment and situational awareness',
-    game8: 'Updating and metacognitive calibration',
-    game9: 'Planning and operational sequencing',
-    game10: 'Learning agility and rule discovery',
-    game11: 'Inhibition consistency under repetition',
-    game12: 'Processing speed and cognitive switching',
-    game13: 'Visuospatial working memory capacity'
+    game1: isEn ? 'Working memory and dual-task management' : 'memoria de trabajo y gestion de doble tarea',
+    game2: isEn ? 'Response inhibition and impulse control' : 'inhibicion de respuesta y control de impulsos',
+    game3: isEn ? 'Cognitive flexibility and learning agility' : 'flexibilidad cognitiva y agilidad de aprendizaje',
+    game4: isEn ? 'Sustained attention and reliability' : 'atencion sostenida y confiabilidad',
+    game5: isEn ? 'Decision quality under time pressure' : 'calidad de decision bajo presion de tiempo',
+    game6: isEn ? 'Rule adaptation and exception handling' : 'adaptacion a reglas y manejo de excepciones',
+    game7: isEn ? 'Workplace judgment and situational awareness' : 'juicio laboral y conciencia situacional',
+    game8: isEn ? 'Updating and metacognitive calibration' : 'actualizacion y calibracion metacognitiva',
+    game9: isEn ? 'Planning and operational sequencing' : 'planificacion y secuenciacion operativa',
+    game10: isEn ? 'Learning agility and rule discovery' : 'agilidad de aprendizaje y descubrimiento de reglas',
+    game11: isEn ? 'Inhibition consistency under repetition' : 'consistencia inhibitoria bajo repeticion',
+    game12: isEn ? 'Processing speed and cognitive switching' : 'velocidad de procesamiento y cambio cognitivo',
+    game13: isEn ? 'Visuospatial working memory capacity' : 'capacidad de memoria de trabajo visoespacial'
   };
   
   sortedGames.forEach(([game, score]) => {
     if (score >= 7) {
-      strengths.push(`Strong ${gameNames[game]}`);
+      strengths.push(isEn ? `Strong ${gameNames[game]}` : `Fortaleza en ${gameNames[game]}`);
     } else if (score >= 5) {
-      strengths.push(`Solid ${gameNames[game]}`);
+      strengths.push(isEn ? `Solid ${gameNames[game]}` : `Nivel solido en ${gameNames[game]}`);
     }
   });
   
@@ -491,7 +715,7 @@ export function generateHeuristicReport(sessionData) {
     if (score < 5) {
       const gameKey = game;
       const baseName = gameNames[gameKey];
-      areasToMonitor.push(`Develop ${baseName} through targeted practice`);
+      areasToMonitor.push(isEn ? `Develop ${baseName} through targeted practice` : `Desarrollar ${baseName} mediante practica focalizada`);
     }
   });
   
@@ -499,30 +723,38 @@ export function generateHeuristicReport(sessionData) {
   const overallScore = calculateOverallScore(gameAnalysis);
   
   // Determine recommendation tier
-  let recommendation, profileTier;
+  let recommendation, profileTierEn, profileTierEs;
   if (overallScore >= 8) {
     recommendation = 'STRONG ALIGNMENT';
-    profileTier = 'demonstrates consistently strong performance';
+    profileTierEn = 'demonstrates consistently strong performance';
+    profileTierEs = 'muestra desempeno consistentemente fuerte';
   } else if (overallScore >= 6.5) {
     recommendation = 'SOLID ALIGNMENT WITH COACHING';
-    profileTier = 'shows solid fundamentals with specific growth areas';
+    profileTierEn = 'shows solid fundamentals with specific growth areas';
+    profileTierEs = 'muestra fundamentos solidos con areas especificas de mejora';
   } else if (overallScore >= 4.5) {
     recommendation = 'CONDITIONAL ALIGNMENT';
-    profileTier = 'indicates potential but requires targeted development';
+    profileTierEn = 'indicates potential but requires targeted development';
+    profileTierEs = 'indica potencial pero requiere desarrollo focalizado';
   } else {
     recommendation = 'EXPLORATORY FIT - NEEDS MORE DATA';
-    profileTier = 'may benefit from additional assessment or targeted development';
+    profileTierEn = 'may benefit from additional assessment or targeted development';
+    profileTierEs = 'podria beneficiarse de evaluacion adicional o desarrollo dirigido';
   }
+
+  const summary = isEn
+    ? `Executive summary: the profile ${profileTierEn} across core cognitive and workplace judgment domains. This is a developmental signal combining cognitive capacity, decision-making, learning agility, and workplace judgment. Interpret as one input among interviews, experience, and domain expertise for holistic talent decisions.`
+    : `Resumen ejecutivo: el perfil ${profileTierEs} en dominios nucleares de cognicion y juicio laboral. Esta es una senal de desarrollo que combina capacidad cognitiva, toma de decisiones, agilidad de aprendizaje y juicio situacional. Debe interpretarse como un insumo junto con entrevistas, experiencia y conocimiento del dominio para decisiones integrales.`;
   
   return {
-    summary: `Executive summary: the profile ${profileTier} across core cognitive and workplace judgment domains. This is a developmental signal combining cognitive capacity, decision-making, learning agility, and workplace judgment. Interpret as one input among interviews, experience, and domain expertise for holistic talent decisions.`,
+    summary,
     strengths: strengths.length > 0 
       ? strengths 
-      : ['Shows foundational cognitive engagement in assessments'],
+      : [isEn ? 'Shows foundational cognitive engagement in assessments' : 'Muestra involucramiento cognitivo base en las evaluaciones'],
     areasToMonitor: areasToMonitor.length > 0 
       ? areasToMonitor 
-      : ['Continue developing core cognitive skills'],
-    careerRecommendations: generateCareerRecommendations(normalized),
+      : [isEn ? 'Continue developing core cognitive skills' : 'Continuar desarrollando habilidades cognitivas centrales'],
+    careerRecommendations: generateCareerRecommendations(normalized, language),
     confidenceScore: Math.round(55 + (overallScore * 5)), // Heuristic: 55-105%, cap at 80
     recommendation,
     source: 'heuristic',
@@ -535,38 +767,55 @@ export function generateHeuristicReport(sessionData) {
  * @param {Object} normalized - Normalized game scores
  * @returns {Array} Career fit recommendations
  */
-function generateCareerRecommendations(normalized) {
+function generateCareerRecommendations(normalized, language = 'en') {
+  const isEn = language === 'en';
   const recommendations = [];
   
   // High learning agility + rule shift = strong strategic/innovation fit
   if ((normalized.game3 || 0) >= 7 && (normalized.game6 || 0) >= 7) {
     recommendations.push({
-      role: 'Strategic Analyst / Change Manager',
-      fit: 'Strong learning agility and adaptation make this profile valuable for rapidly changing environments and innovation roles'
+      role: isEn ? 'Strategic Analyst / Change Manager' : 'Analista estrategico / Gestor de cambio',
+      fit: isEn
+        ? 'Strong learning agility and adaptation make this profile valuable for rapidly changing environments and innovation roles'
+        : 'La agilidad de aprendizaje y adaptacion hacen valioso este perfil para entornos cambiantes y roles de innovacion'
     });
   }
   
   // High attention + decision-making = operations/coordination fit
   if ((normalized.game4 || 0) >= 7 && (normalized.game5 || 0) >= 6.5) {
     recommendations.push({
-      role: 'Operations / Process Coordination',
-      fit: 'Reliable attention and sound judgment under pressure suit execution-focused roles with complex workflows'
+      role: isEn ? 'Operations / Process Coordination' : 'Operaciones / Coordinacion de procesos',
+      fit: isEn
+        ? 'Reliable attention and sound judgment under pressure suit execution-focused roles with complex workflows'
+        : 'La atencion consistente y el buen juicio bajo presion encajan con roles de ejecucion y flujos complejos'
     });
   }
   
   // High SJT + working memory = leadership potential
   if ((normalized.game7 || 0) >= 7 && (normalized.game1 || 0) >= 6 && (normalized.game2 || 0) >= 6) {
     recommendations.push({
-      role: 'Team Lead / Middle Management',
-      fit: 'Strong workplace judgment combined with reliable executive function and impulse control suggest readiness for collaborative leadership'
+      role: isEn ? 'Team Lead / Middle Management' : 'Lider de equipo / Gestion media',
+      fit: isEn
+        ? 'Strong workplace judgment combined with reliable executive function and impulse control suggest readiness for collaborative leadership'
+        : 'El juicio laboral fuerte junto con funciones ejecutivas confiables sugieren preparacion para liderazgo colaborativo'
     });
   }
   
   // Default recommendations if no strong pattern emerges
   if (recommendations.length === 0) {
     recommendations.push(
-      { role: 'Analytical/Technical Specialist', fit: 'Profile suggests value in roles emphasizing focused analysis and technical depth' },
-      { role: 'Collaborative Team Member', fit: 'Adaptability and judgment align with team-based problem-solving environments' }
+      {
+        role: isEn ? 'Analytical/Technical Specialist' : 'Especialista analitico/tecnico',
+        fit: isEn
+          ? 'Profile suggests value in roles emphasizing focused analysis and technical depth'
+          : 'El perfil sugiere valor en roles que exigen analisis focalizado y profundidad tecnica'
+      },
+      {
+        role: isEn ? 'Collaborative Team Member' : 'Miembro colaborativo de equipo',
+        fit: isEn
+          ? 'Adaptability and judgment align with team-based problem-solving environments'
+          : 'La adaptabilidad y el juicio se alinean con entornos de resolucion colaborativa de problemas'
+      }
     );
   }
   

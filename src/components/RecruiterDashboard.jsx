@@ -1,7 +1,13 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { getCurrentToken, clearToken, getRecruiterSessions, getRecruiterAnalyticsV2 } from '../services/backendService';
 import { getQaMode } from '../utils/qaMode';
+import {
+  getGameShellHealthSnapshot,
+  getGameShellErrorTrend24h,
+  getGameShellRecoveryTrend24h,
+  resetGameShellHealth,
+} from '../utils/gameShellHealth';
 import './RecruiterDashboard.css';
 
 const buildQaMockSessions = () => {
@@ -81,6 +87,14 @@ const RecruiterDashboard = () => {
     kpiSnapshot: null,
   });
   const [isQaMode] = useState(() => getQaMode());
+  const [gameShellHealth, setGameShellHealth] = useState(() => getGameShellHealthSnapshot());
+  const errorTrend24h = useMemo(() => getGameShellErrorTrend24h(gameShellHealth), [gameShellHealth]);
+  const recoveryTrend24h = useMemo(() => getGameShellRecoveryTrend24h(gameShellHealth), [gameShellHealth]);
+  const errors24h = useMemo(() => errorTrend24h.reduce((sum, point) => sum + point.count, 0), [errorTrend24h]);
+  const recoveries24h = useMemo(() => recoveryTrend24h.reduce((sum, point) => sum + point.count, 0), [recoveryTrend24h]);
+  const recoveryRate24h = errors24h > 0
+    ? Math.round((recoveries24h / errors24h) * 100)
+    : null;
 
   useEffect(() => {
     const token = getCurrentToken();
@@ -99,6 +113,7 @@ const RecruiterDashboard = () => {
       if (isQaMode) {
         setSessions(buildQaMockSessions());
         setAnalytics(QA_ANALYTICS);
+        setGameShellHealth(getGameShellHealthSnapshot());
         setError(null);
         return;
       }
@@ -126,6 +141,11 @@ const RecruiterDashboard = () => {
 
   const handleRefresh = () => {
     fetchSessions();
+  };
+
+  const handleResetGameShellHealth = () => {
+    const next = resetGameShellHealth();
+    setGameShellHealth(next);
   };
 
   const getSessionStats = () => {
@@ -267,6 +287,58 @@ const RecruiterDashboard = () => {
             <p>Brier: <strong>{analytics.kpiSnapshot?.primary?.brier ?? 'n/a'}</strong></p>
             <p>Selection Rate Ratio: <strong>{analytics.kpiSnapshot?.fairness?.selectionRateRatio ?? 'n/a'}</strong></p>
           </section>
+
+          {isQaMode && (
+            <section className="analytics-card">
+              <h3>GameShell Health (QA)</h3>
+              <p>Runtime errors: <strong>{gameShellHealth.totalRuntimeErrors ?? 0}</strong></p>
+              <p>Recoveries: <strong>{gameShellHealth.totalRecoveries ?? 0}</strong></p>
+              <p>Total exits: <strong>{gameShellHealth.totalExits ?? 0}</strong></p>
+              <p>Recovery rate 24h: <strong>{recoveryRate24h === null ? 'n/a' : `${recoveryRate24h}%`}</strong></p>
+              <p>Top error game: <strong>{Object.entries(gameShellHealth.errorsByGameId || {}).sort((a, b) => b[1] - a[1])[0]?.[0] || 'n/a'}</strong></p>
+              <div style={{ marginTop: '10px' }}>
+                <button className="refresh-btn" type="button" onClick={handleResetGameShellHealth}>
+                  Reset Health Metrics
+                </button>
+              </div>
+              <div style={{ marginTop: '12px' }}>
+                <p style={{ margin: '0 0 6px 0', color: '#334155', fontWeight: 600 }}>Runtime Errors Trend (24h)</p>
+                <div style={{ display: 'grid', gap: '4px' }}>
+                  {errorTrend24h.slice(-8).map((point) => {
+                    const maxCount = Math.max(1, ...errorTrend24h.map((entry) => entry.count));
+                    const width = Math.round((point.count / maxCount) * 100);
+                    return (
+                      <div key={point.hourLabel} style={{ display: 'grid', gridTemplateColumns: '52px 1fr 28px', gap: '8px', alignItems: 'center' }}>
+                        <span style={{ fontSize: '11px', color: '#64748b' }}>{point.hourLabel}</span>
+                        <div style={{ height: '6px', background: '#e2e8f0', borderRadius: '99px', overflow: 'hidden' }}>
+                          <div style={{ width: `${width}%`, height: '100%', background: '#0ea5e9' }} />
+                        </div>
+                        <span style={{ fontSize: '11px', color: '#0f172a', textAlign: 'right' }}>{point.count}</span>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+              <div style={{ marginTop: '12px' }}>
+                <p style={{ margin: '0 0 6px 0', color: '#334155', fontWeight: 600 }}>Recoveries Trend (24h)</p>
+                <div style={{ display: 'grid', gap: '4px' }}>
+                  {recoveryTrend24h.slice(-8).map((point) => {
+                    const maxCount = Math.max(1, ...recoveryTrend24h.map((entry) => entry.count));
+                    const width = Math.round((point.count / maxCount) * 100);
+                    return (
+                      <div key={point.hourLabel} style={{ display: 'grid', gridTemplateColumns: '52px 1fr 28px', gap: '8px', alignItems: 'center' }}>
+                        <span style={{ fontSize: '11px', color: '#64748b' }}>{point.hourLabel}</span>
+                        <div style={{ height: '6px', background: '#e2e8f0', borderRadius: '99px', overflow: 'hidden' }}>
+                          <div style={{ width: `${width}%`, height: '100%', background: '#16a34a' }} />
+                        </div>
+                        <span style={{ fontSize: '11px', color: '#0f172a', textAlign: 'right' }}>{point.count}</span>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            </section>
+          )}
         </div>
 
         {/* Filter Buttons */}

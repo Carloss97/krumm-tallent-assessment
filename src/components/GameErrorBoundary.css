@@ -1,0 +1,41 @@
+.game-error-boundary {
+  margin: 1rem;
+  border: 1px solid rgba(220, 38, 38, 0.35);
+  background: linear-gradient(145deg, #fff1f2, #ffe4e6);
+  border-radius: 12px;
+  padding: 1rem;
+  color: #7f1d1d;
+}
+
+.game-error-boundary h3 {
+  margin: 0;
+  font-size: 1rem;
+}
+
+.game-error-boundary p {
+  margin: 0.5rem 0 0;
+  font-size: 0.9rem;
+}
+
+.game-error-boundary-actions {
+  margin-top: 0.85rem;
+  display: flex;
+  gap: 0.5rem;
+}
+
+.game-error-boundary-actions button {
+  border: 1px solid rgba(127, 29, 29, 0.28);
+  background: #ffffff;
+  color: #7f1d1d;
+  border-radius: 8px;
+  padding: 0.45rem 0.7rem;
+  font-size: 0.82rem;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.game-error-boundary-actions button.danger {
+  background: #dc2626;
+  color: #ffffff;
+  border-color: #dc2626;
+}

@@ -6,7 +6,14 @@ import { getLocalizedGameInstruction } from '../utils/gameFlowI18n';
 import InstructionInterstitial from './InstructionInterstitial';
 import ConsentModal from './ConsentModal';
 import GameSessionHeader from './GameSessionHeader';
+import GameErrorBoundary from './GameErrorBoundary';
+import GameExitModal from './GameExitModal';
 import { useWebcamCapture } from '../hooks/useWebcamCapture';
+import {
+  recordGameShellRuntimeError,
+  recordGameShellRecovery,
+  recordGameShellExit,
+} from '../utils/gameShellHealth';
 
 const GameShellCore = ({ gameId, children }) => {
   const {
@@ -20,6 +27,16 @@ const GameShellCore = ({ gameId, children }) => {
   const [showInstructions, setShowInstructions] = useState(true);
   const [isActive, setIsActive] = useState(false);
   const [webcamFallbackNotice, setWebcamFallbackNotice] = useState('');
+  const [showExitModal, setShowExitModal] = useState(false);
+  const [runtimeError, setRuntimeError] = useState('');
+  const [boundaryKey, setBoundaryKey] = useState(0);
+  const errorGateRef = React.useRef({
+    lastSignature: '',
+    lastTimestamp: 0,
+    uiTimer: null,
+  });
+
+  const isGameplayVisible = isActive && !showInstructions;
 
   const gameConfig = GAME_FLOW.find(g => g.id === gameId);
   const localizedInstruction = useMemo(() => getLocalizedGameInstruction(gameConfig, language), [gameConfig, language]);
@@ -63,14 +80,119 @@ const GameShellCore = ({ gameId, children }) => {
     window.location.href = gameConfig.nextPath;
   }, [isActive, gameConfig]);
 
+  const navigateHome = useCallback((source = 'unknown') => {
+    recordGameShellExit({ gameId, source });
+    setIsActive(false);
+    setShowExitModal(false);
+    window.location.href = '/';
+  }, [gameId]);
+
   const handleExitGame = useCallback(() => {
+    if (featureFlags.enableSessionExitModal !== false) {
+      setShowExitModal(true);
+      return;
+    }
+
     const exitConfirm = language === 'en'
       ? 'Are you sure you want to exit? Your progress will not be saved.'
       : '¿Estás seguro de que deseas salir? Tu progreso no será guardado.';
     if (window.confirm(exitConfirm)) {
-      window.location.href = '/';
+      navigateHome('native-confirm');
     }
-  }, [language]);
+  }, [featureFlags.enableSessionExitModal, language, navigateHome]);
+
+  const handleCancelExit = useCallback(() => {
+    setShowExitModal(false);
+  }, []);
+
+  const handleGameError = useCallback((error) => {
+    const fallback = language === 'en'
+      ? 'A runtime error occurred in this game.'
+      : 'Ocurrio un error de ejecucion en este juego.';
+    const message = error?.message ? `${fallback} ${error.message}` : fallback;
+    const signature = `${gameId}:${message}`;
+    const now = Date.now();
+    const isDuplicateBurst = (
+      errorGateRef.current.lastSignature === signature
+      && (now - errorGateRef.current.lastTimestamp) < 2500
+    );
+
+    recordGameShellRuntimeError({
+      gameId,
+      message,
+      deduped: isDuplicateBurst,
+    });
+
+    if (isDuplicateBurst) {
+      return;
+    }
+
+    errorGateRef.current.lastSignature = signature;
+    errorGateRef.current.lastTimestamp = now;
+
+    if (errorGateRef.current.uiTimer) {
+      clearTimeout(errorGateRef.current.uiTimer);
+    }
+
+    errorGateRef.current.uiTimer = setTimeout(() => {
+      setRuntimeError(message);
+      errorGateRef.current.uiTimer = null;
+    }, 120);
+
+    console.error('[GameShellCore] runtime_error', {
+      gameId,
+      message,
+      original: error?.message || null,
+      timestamp: new Date().toISOString(),
+    });
+  }, [language, gameId]);
+
+  const handleRetryAfterError = useCallback(() => {
+    recordGameShellRecovery({ gameId });
+    setRuntimeError('');
+    setBoundaryKey((prev) => prev + 1);
+  }, [gameId]);
+
+  useEffect(() => {
+    setRuntimeError('');
+    setBoundaryKey(0);
+    setShowExitModal(false);
+  }, [gameId]);
+
+  useEffect(() => {
+    return () => {
+      if (errorGateRef.current.uiTimer) {
+        clearTimeout(errorGateRef.current.uiTimer);
+        errorGateRef.current.uiTimer = null;
+      }
+    };
+  }, []);
+
+  useEffect(() => {
+    if (!isGameplayVisible) return undefined;
+
+    const onWindowError = (event) => {
+      handleGameError(event?.error || new Error(event?.message || 'Unhandled window error'));
+    };
+
+    const onUnhandledRejection = (event) => {
+      const reason = event?.reason;
+      if (reason instanceof Error) {
+        handleGameError(reason);
+        return;
+      }
+      const normalized = typeof reason === 'string' ? reason : 'Unhandled promise rejection';
+      handleGameError(new Error(normalized));
+    };
+
+    window.addEventListener('error', onWindowError);
+    window.addEventListener('unhandledrejection', onUnhandledRejection);
+
+    return () => {
+      window.removeEventListener('error', onWindowError);
+      window.removeEventListener('unhandledrejection', onUnhandledRejection);
+    };
+  }, [isGameplayVisible, handleGameError]);
 
   if (!gameConfig) {
     return <div>{language === 'en' ? `Error: Game configuration not found for ID ${gameId}` : `Error: configuracion de juego no encontrada para ID ${gameId}`}</div>;
@@ -127,6 +249,15 @@ const GameShellCore = ({ gameId, children }) => {
   }
 
   const enableSessionHeader = featureFlags.enableSessionHeader !== false;
+  const enableGameErrorBoundary = featureFlags.enableGameErrorBoundary !== false;
+
+  const gameChild = React.cloneElement(children, {
+    isActive,
+    onEndGame: handleEndGame,
+    isDemo,
+    timeLimit,
+    language,
+  });
 
   return (
     <>
@@ -137,20 +268,27 @@ const GameShellCore = ({ gameId, children }) => {
           isActive={isActive}
           timeLimit={timeLimit}
           language={language}
-          telemetryStatus={{
-            webcam: consentState.webcam,
-            cursor: consentState.cursor,
-          }}
+          errorMessage={runtimeError}
           onExit={handleExitGame}
         />
       )}
-      {React.cloneElement(children, {
-        isActive,
-        onEndGame: handleEndGame,
-        isDemo,
-        timeLimit,
-        language,
-      })}
+      {enableGameErrorBoundary ? (
+        <GameErrorBoundary
+          key={boundaryKey}
+          language={language}
+          onErrorCapture={handleGameError}
+          onRetry={handleRetryAfterError}
+          onExit={() => navigateHome('error-fallback')}
+        >
+          {gameChild}
+        </GameErrorBoundary>
+      ) : gameChild}
+      <GameExitModal
+        isOpen={showExitModal}
+        language={language}
+        onConfirm={() => navigateHome('modal-confirm')}
+        onCancel={handleCancelExit}
+      />
       <video ref={videoRef} style={{ display: 'none' }} playsInline muted />
     </>
   );

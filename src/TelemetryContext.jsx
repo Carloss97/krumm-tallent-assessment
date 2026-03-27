@@ -29,6 +29,9 @@ export const TelemetryProvider = ({ children }) => {
     enableCursorTracking: true,
     enableWebcamTracking: true,
     enableQualityGates: true,
+    enableSessionHeader: true,
+    enableSessionExitModal: true,
+    enableGameErrorBoundary: true,
   });
 
   const activeTrackingRef = useRef(false);

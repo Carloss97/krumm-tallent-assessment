@@ -17,6 +17,8 @@ vi.mock('./TelemetryContext', () => ({
 vi.mock('./services/aiReportService', () => ({
   generateAIReport: vi.fn(() => Promise.resolve(null)),
   getLastAIFailureReason: vi.fn(() => 'mocked-ai-failure'),
+  getLastAIDebugTrace: vi.fn(() => []),
+  checkGeminiHealth: vi.fn(() => Promise.resolve({ ok: true, message: 'mock-health-ok' })),
   generateHeuristicReport: vi.fn(() => ({
     summary: 'Test heuristic summary for cognitive assessment',
     strengths: ['Strong cognitive flexibility', 'Good working memory'],
