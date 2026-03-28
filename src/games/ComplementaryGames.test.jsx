@@ -61,7 +61,7 @@ describe('Complementary battery games', () => {
     wrap(<SocialCoordinationGame />);
     clickStart();
     for (let i = 0; i < 4; i += 1) {
-      fireEvent.click(screen.getByRole('button', { name: /align stakeholders|alinear stakeholders/i }));
+      fireEvent.click(screen.getByRole('button', { name: /align teams|alinear equipos/i }));
     }
     expect(navigateMock).toHaveBeenCalledWith('/game/12');
   });
@@ -84,3 +84,4 @@ describe('Complementary battery games', () => {
     expect(navigateMock).toHaveBeenCalledWith('/report');
   });
 });
+

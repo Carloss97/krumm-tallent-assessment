@@ -81,6 +81,64 @@ describe('HRRHGames scoring and transitions', () => {
     expect(onEndGame).toHaveBeenCalledWith(10, 0, expect.any(Object));
   });
 
+  it('StopSignal auto-advances on STOP and does not freeze the trial flow', () => {
+    vi.useFakeTimers();
+    sequenceRandom([0.1, 0.9]); // STOP first, then GO
+
+    render(
+      <StopSignalGame
+        isActive
+        onEndGame={() => {}}
+        isDemo
+        timeLimit={120}
+        language="es"
+      />,
+    );
+
+    fireEvent.click(screen.getByRole('button', { name: /start|comenzar/i }));
+
+    act(() => {
+      vi.advanceTimersByTime(950);
+    });
+
+    expect(screen.getByRole('heading', { name: /trial\s*2\s*de\s*30|trial\s*2\s*of\s*30/i })).toBeInTheDocument();
+    vi.useRealTimers();
+  });
+
+  it('StopSignal allows failing on STOP when pressing anyway', () => {
+    sequenceRandom([0.1, 0.9]); // STOP first, then GO
+    const onEndGame = vi.fn();
+
+    render(
+      <StopSignalGame
+        isActive
+        onEndGame={onEndGame}
+        isDemo
+        timeLimit={120}
+        language="es"
+      />,
+    );
+
+    fireEvent.click(screen.getByRole('button', { name: /start|comenzar/i }));
+    fireEvent.click(screen.getByRole('button', { name: /press|presionar/i }));
+
+    act(() => {
+      timerEnd();
+    });
+
+    expect(telemetry.recordError).toHaveBeenCalled();
+    expect(telemetry.stopTracking).toHaveBeenCalledWith(
+      'sst_game_2',
+      0,
+      1,
+      expect.objectContaining({
+        correctGo: 0,
+        correctStop: 0,
+      }),
+    );
+    expect(onEndGame).toHaveBeenCalledWith(0, 1, expect.any(Object));
+  });
+
   it('Decision game penalizes wrong choices and propagates error count to final scoring', () => {
     const onEndGame = vi.fn();
 
@@ -134,3 +192,4 @@ describe('HRRHGames scoring and transitions', () => {
     expect(screen.getByText(/bloque\s*2\s*de\s*3|block\s*2\s*of\s*3/i)).toBeInTheDocument();
   });
 });
+

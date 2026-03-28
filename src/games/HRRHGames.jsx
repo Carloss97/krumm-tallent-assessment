@@ -1,9 +1,24 @@
-import React, { useState, useRef, useCallback } from 'react';
+import React, { useState, useRef, useCallback, useEffect } from 'react';
 import { useTelemetry } from '../TelemetryContext';
 import { useGameTimer } from '../hooks/useGameTimer';
 import './HRRHGames.css';
 
 const pickRandom = (items) => items[Math.floor(Math.random() * items.length)];
+
+const COLOR_LABELS = {
+  RED: { en: 'RED', es: 'ROJO' },
+  BLUE: { en: 'BLUE', es: 'AZUL' },
+  GREEN: { en: 'GREEN', es: 'VERDE' },
+};
+
+const SHAPE_LABELS = {
+  CIRCLE: { en: 'CIRCLE', es: 'CIRCULO' },
+  SQUARE: { en: 'SQUARE', es: 'CUADRADO' },
+  TRIANGLE: { en: 'TRIANGLE', es: 'TRIANGULO' },
+};
+
+const displayColor = (value, isEn) => (isEn ? value : (COLOR_LABELS[value]?.es ?? value));
+const displayShape = (value, isEn) => (isEn ? value : (SHAPE_LABELS[value]?.es ?? value));
 
 /**
  * Stop-Signal Task (SST) - Inhibicion
@@ -19,14 +34,24 @@ export const StopSignalGame = ({ isActive, onEndGame, isDemo, timeLimit, languag
   const [errors, setErrors] = useState(0);
   const [isStopTrial, setIsStopTrial] = useState(false);
   const [tempoTag, setTempoTag] = useState('balanced');
+  const stopAutoAdvanceRef = useRef(null);
   const hasEndedRef = useRef(false);
 
   const MAX_TRIALS = isDemo ? 30 : 80;
   const STOP_PROBABILITY = 0.4;
+  const STOP_AUTO_ADVANCE_MS = 900;
+
+  const clearStopTimer = useCallback(() => {
+    if (stopAutoAdvanceRef.current) {
+      clearTimeout(stopAutoAdvanceRef.current);
+      stopAutoAdvanceRef.current = null;
+    }
+  }, []);
 
   const endGame = useCallback(() => {
     if (hasEndedRef.current) return;
     hasEndedRef.current = true;
+    clearStopTimer();
 
     stopTracking('sst_game_2', score, errors, {
       correctGo,
@@ -35,7 +60,7 @@ export const StopSignalGame = ({ isActive, onEndGame, isDemo, timeLimit, languag
       tempoTag,
     });
     onEndGame(score, errors, { correctGo, correctStop });
-  }, [score, errors, correctGo, correctStop, stopTracking, onEndGame, MAX_TRIALS, tempoTag]);
+  }, [score, errors, correctGo, correctStop, stopTracking, onEndGame, MAX_TRIALS, tempoTag, clearStopTimer]);
 
   useGameTimer({ isActive, timeLimit, onEnd: endGame });
 
@@ -46,6 +71,7 @@ export const StopSignalGame = ({ isActive, onEndGame, isDemo, timeLimit, languag
   }, []);
 
   const nextTrial = useCallback(() => {
+    clearStopTimer();
     if (trial >= MAX_TRIALS) {
       endGame();
       return;
@@ -53,10 +79,11 @@ export const StopSignalGame = ({ isActive, onEndGame, isDemo, timeLimit, languag
     const next = trial + 1;
     setTrial(next);
     rollTrial(next);
-  }, [trial, MAX_TRIALS, endGame, rollTrial]);
+  }, [trial, MAX_TRIALS, endGame, rollTrial, clearStopTimer]);
 
   const beginGame = useCallback(() => {
     hasEndedRef.current = false;
+    clearStopTimer();
     setTrial(1);
     setScore(0);
     setCorrectGo(0);
@@ -65,7 +92,7 @@ export const StopSignalGame = ({ isActive, onEndGame, isDemo, timeLimit, languag
     rollTrial(1);
     setGameState('running');
     startTracking('sst_game_2');
-  }, [startTracking, rollTrial]);
+  }, [startTracking, rollTrial, clearStopTimer]);
 
   const handleGoClick = useCallback(() => {
     if (isStopTrial) {
@@ -78,33 +105,43 @@ export const StopSignalGame = ({ isActive, onEndGame, isDemo, timeLimit, languag
     nextTrial();
   }, [isStopTrial, nextTrial, recordError]);
 
-  const handleStopClick = useCallback(() => {
-    if (isStopTrial) {
-      setCorrectStop((prev) => prev + 1);
-      setScore((prev) => prev + 10);
-    } else {
-      setErrors((prev) => prev + 1);
-      recordError();
-    }
-    nextTrial();
-  }, [isStopTrial, nextTrial, recordError]);
-
   const handleMiss = useCallback(() => {
     setErrors((prev) => prev + 1);
     recordError();
     nextTrial();
   }, [recordError, nextTrial]);
 
+  useEffect(() => {
+    if (gameState !== 'running' || !isStopTrial) return undefined;
+
+    clearStopTimer();
+    stopAutoAdvanceRef.current = setTimeout(() => {
+      setCorrectStop((prev) => prev + 1);
+      setScore((prev) => prev + 10);
+      setTrial((currentTrial) => {
+        if (currentTrial >= MAX_TRIALS) {
+          endGame();
+          return currentTrial;
+        }
+        const next = currentTrial + 1;
+        rollTrial(next);
+        return next;
+      });
+    }, STOP_AUTO_ADVANCE_MS);
+
+    return clearStopTimer;
+  }, [gameState, isStopTrial, clearStopTimer, endGame, MAX_TRIALS, STOP_AUTO_ADVANCE_MS, rollTrial]);
+
   if (gameState === 'instruction') {
     return (
       <div className="hrrh-game-container">
         <div className="game-instruction-box">
-          <h2>{isEn ? 'Impulse Control (SST)' : 'Control de Impulso (SST)'}</h2>
+          <h2>{isEn ? 'Impulse Control (SST)' : 'Control de impulso (SST)'}</h2>
           <p>
             {isEn ? 'When you see ' : 'Cuando veas '}<strong>GO</strong>{isEn ? ', press quickly.' : ', presiona rapido.'}
           </p>
           <p>
-            {isEn ? 'When you see ' : 'Cuando veas '}<strong>STOP</strong>{isEn ? ', do not press and continue to next trial.' : ', no presiones y continua al siguiente trial.'}
+            {isEn ? 'When you see ' : 'Cuando veas '}<strong>STOP</strong>{isEn ? ', do not press. The game advances automatically.' : ', no presiones. El juego avanza automaticamente.'}
           </p>
           <p style={{ fontSize: '0.9rem', color: '#64748b' }}>
             {isEn ? 'Tip: focus on accuracy first, then speed.' : 'Tip: prioriza precision primero y luego velocidad.'}
@@ -122,12 +159,12 @@ export const StopSignalGame = ({ isActive, onEndGame, isDemo, timeLimit, languag
         <div className={`signal ${isStopTrial ? 'stop' : 'go'}`}>
           {isStopTrial ? 'STOP' : 'GO'}
         </div>
-            <div className="buttons-group">
-              {!isStopTrial && <button onClick={handleGoClick} className="btn btn-go">{isEn ? 'Press' : 'Presionar'}</button>}
-              {isStopTrial && <button onClick={handleStopClick} className="btn btn-stop">{isEn ? 'Continue (no press)' : 'Continuar (sin presionar)'}</button>}
-              <button onClick={handleMiss} className="btn btn-error">{isEn ? 'I missed it' : 'No alcance'}</button>
-            </div>
-            <p className="score">Score: {score} | {isEn ? 'Correct' : 'Correctos'}: {correctGo + correctStop} | {isEn ? 'Tempo' : 'Ritmo'}: {tempoTag}</p>
+        <div className="buttons-group">
+          <button onClick={handleGoClick} className="btn btn-go">{isEn ? 'Press' : 'Presionar'}</button>
+          {!isStopTrial && <button onClick={handleMiss} className="btn btn-error">{isEn ? 'Missed GO' : 'No llegue a GO'}</button>}
+        </div>
+        {isStopTrial && <p className="rule" style={{ marginTop: '10px' }}>{isEn ? 'STOP active: do not press.' : 'STOP activo: no presiones.'}</p>}
+        <p className="score">Score: {score} | {isEn ? 'Correct' : 'Correctos'}: {correctGo + correctStop} | {isEn ? 'Tempo' : 'Ritmo'}: {tempoTag}</p>
       </div>
     </div>
   );
@@ -203,7 +240,7 @@ export const TaskSwitchingGame = ({ isActive, onEndGame, isDemo, timeLimit, lang
     return (
       <div className="hrrh-game-container">
         <div className="game-instruction-box">
-          <h2>Task Switching</h2>
+          <h2>{isEn ? 'Task Switching' : 'Cambio de tarea'}</h2>
           <p>{isEn ? 'Each trial tells you the active rule. Follow ONLY that rule.' : 'Cada trial te indica la regla activa. Sigue SOLO esa regla.'}</p>
           <p><strong>{isEn ? 'COLOR' : 'COLOR'}:</strong> {isEn ? 'choose RED/BLUE/GREEN.' : 'elige ROJO/AZUL/VERDE.'} <strong>{isEn ? 'SHAPE' : 'FORMA'}:</strong> {isEn ? 'choose CIRCLE/SQUARE/TRIANGLE.' : 'elige CIRCULO/CUADRADO/TRIANGULO.'}</p>
           <button onClick={beginGame} className="btn-start">{isEn ? 'Start' : 'Comenzar'}</button>
@@ -218,7 +255,7 @@ export const TaskSwitchingGame = ({ isActive, onEndGame, isDemo, timeLimit, lang
         <h3>{isEn ? 'Trial' : 'Trial'} {trial} {isEn ? 'of' : 'de'} {MAX_TRIALS}</h3>
         <div className="task-display">
           <p className="rule">{currentRule === 'COLOR' ? (isEn ? 'RULE: COLOR' : 'REGLA: COLOR') : (isEn ? 'RULE: SHAPE' : 'REGLA: FORMA')}</p>
-          <div className="stimulus">{stimulus.shape} - {stimulus.color}</div>
+          <div className="stimulus">{displayShape(stimulus.shape, isEn)} - {displayColor(stimulus.color, isEn)}</div>
           <p className="rule" style={{ marginTop: '8px', opacity: 0.9 }}>
             {isEn ? 'Answer only by the current rule shown above.' : 'Responde solo segun la regla actual mostrada arriba.'}
           </p>
@@ -356,7 +393,7 @@ export const DecisionGameHTMX = ({ isActive, onEndGame, isDemo, timeLimit, langu
       textEn: 'A team member is not sharing key information before a deadline.',
       textEs: 'Un miembro del equipo no comparte informacion clave antes de una entrega.',
       optionsEn: ['Escalate immediately', 'Clarify blockers first', 'Ignore and continue', 'Map impact and sequence owners'],
-      optionsEs: ['Escalar de inmediato', 'Aclarar bloqueos primero', 'Ignorar y continuar', 'Mapear impacto y secuencia de owners'],
+      optionsEs: ['Escalar de inmediato', 'Aclarar bloqueos y proponer plan', 'Ignorar el problema', 'Mapear impacto y definir responsables'],
       best: 1,
     },
     {
@@ -364,7 +401,7 @@ export const DecisionGameHTMX = ({ isActive, onEndGame, isDemo, timeLimit, langu
       textEn: 'Two urgent requests arrive simultaneously.',
       textEs: 'Llegan dos solicitudes urgentes al mismo tiempo.',
       optionsEn: ['Do both superficially', 'Prioritize by impact and deadline', 'Wait for more data', 'Split ownership by critical path'],
-      optionsEs: ['Hacer ambas superficialmente', 'Priorizar por impacto y fecha', 'Esperar mas datos', 'Dividir ownership por ruta critica'],
+      optionsEs: ['Hacer ambas superficialmente', 'Priorizar por impacto y fecha limite', 'Esperar mas datos sin actuar', 'Dividir responsables segun ruta critica'],
       best: 1,
     },
     {
@@ -372,7 +409,7 @@ export const DecisionGameHTMX = ({ isActive, onEndGame, isDemo, timeLimit, langu
       textEn: 'A client asks for a risky shortcut.',
       textEs: 'Un cliente pide un atajo riesgoso.',
       optionsEn: ['Accept without checks', 'Propose safe alternative with trade-off', 'Reject without explanation', 'Pilot in controlled scope first'],
-      optionsEs: ['Aceptar sin revisar', 'Proponer alternativa segura con trade-off', 'Rechazar sin explicar', 'Pilotear en alcance controlado primero'],
+      optionsEs: ['Aceptar sin revisar', 'Proponer alternativa segura con compensaciones claras', 'Rechazar sin explicar', 'Probar primero en un alcance controlado'],
       best: 1,
     },
     {
@@ -380,7 +417,7 @@ export const DecisionGameHTMX = ({ isActive, onEndGame, isDemo, timeLimit, langu
       textEn: 'Critical bug appears minutes before release.',
       textEs: 'Aparece un bug critico minutos antes del release.',
       optionsEn: ['Ship anyway', 'Contain scope and communicate plan', 'Delay indefinitely', 'Roll back and shadow-test fix'],
-      optionsEs: ['Lanzar igual', 'Acotar alcance y comunicar plan', 'Retrasar indefinidamente', 'Rollback y prueba sombra del fix'],
+      optionsEs: ['Lanzar igual', 'Acotar alcance y comunicar plan de accion', 'Retrasar indefinidamente', 'Hacer rollback y validar el fix en paralelo'],
       best: 1,
     },
   ];
@@ -429,7 +466,7 @@ export const DecisionGameHTMX = ({ isActive, onEndGame, isDemo, timeLimit, langu
     return (
       <div className="hrrh-game-container">
         <div className="game-instruction-box">
-          <h2>Decision Making Under Pressure</h2>
+          <h2>{isEn ? 'Decision Making Under Pressure' : 'Toma de decisiones bajo presion'}</h2>
           <p>{isEn ? 'Read the situation and choose the BEST action.' : 'Lee la situacion y elige la MEJOR accion.'}</p>
           <p>{isEn ? 'Prioritize impact, feasibility and communication quality.' : 'Prioriza impacto, factibilidad y calidad de comunicacion.'}</p>
           <button onClick={beginGame} className="btn-start">{isEn ? 'Start' : 'Comenzar'}</button>
@@ -450,7 +487,7 @@ export const DecisionGameHTMX = ({ isActive, onEndGame, isDemo, timeLimit, langu
           <p>{isEn ? currentScenario.textEn : currentScenario.textEs}</p>
         </div>
         <p className="rule" style={{ marginTop: '10px' }}>
-          {isEn ? 'Question: What should you do first?' : 'Pregunta: ?Que deberias hacer primero?'}
+          {isEn ? 'Question: What should you do first?' : 'Pregunta: ¿Qué deberias hacer primero?'}
         </p>
         <div className="buttons-group">
           {options.map((label, idx) => (
@@ -530,7 +567,7 @@ export const RuleShiftGame = ({ isActive, onEndGame, timeLimit, language = 'es' 
     return (
       <div className="hrrh-game-container">
         <div className="game-instruction-box">
-          <h2>Rule Shift + Exceptions</h2>
+          <h2>{isEn ? 'Rule shift + exceptions' : 'Cambio de regla + excepciones'}</h2>
           <p>{isEn ? 'Rules change by block. Read the active rule before answering.' : 'Las reglas cambian por bloque. Lee la regla activa antes de responder.'}</p>
           <p><strong>{isEn ? 'Block 1:' : 'Bloque 1:'}</strong> {isEn ? 'classify by COLOR.' : 'clasifica por COLOR.'}</p>
           <p><strong>{isEn ? 'Block 2:' : 'Bloque 2:'}</strong> {isEn ? 'classify by SHAPE.' : 'clasifica por FORMA.'}</p>
@@ -550,7 +587,7 @@ export const RuleShiftGame = ({ isActive, onEndGame, timeLimit, language = 'es' 
           {block === 2 && <p>{isEn ? 'Rule: SHAPE' : 'Regla: FORMA'}</p>}
           {block === 3 && <p>{isEn ? 'Rule: if RED -> RED, else SHAPE' : 'Regla: si ROJO -> ROJO, si no -> FORMA'}</p>}
         </div>
-        <div className="stimulus">{stimulus.shape} - {stimulus.color}</div>
+        <div className="stimulus">{displayShape(stimulus.shape, isEn)} - {displayColor(stimulus.color, isEn)}</div>
           <p className="rule" style={{ marginTop: '8px', opacity: 0.9 }}>
             {isEn ? 'Answer only by the current rule shown above.' : 'Responde solo segun la regla actual mostrada arriba.'}
           </p>
@@ -584,7 +621,7 @@ export const SJTGame = ({ isActive, onEndGame, isDemo, timeLimit, language = 'es
       promptEn: 'Your lead assigns a task with an unrealistic deadline.',
       promptEs: 'Tu lider asigna una tarea con un plazo poco realista.',
       optionsEn: ['Accept blindly', 'Discuss constraints and propose plan', 'Decline without context', 'Escalate emotionally'],
-      optionsEs: ['Aceptar sin analizar', 'Discutir restricciones y proponer plan', 'Rechazar sin contexto', 'Escalar con reaccion emocional'],
+      optionsEs: ['Aceptar sin analizar', 'Conversar restricciones y proponer plan viable', 'Rechazar sin contexto', 'Escalar con reaccion emocional'],
       best: 1,
     },
     {
@@ -592,7 +629,7 @@ export const SJTGame = ({ isActive, onEndGame, isDemo, timeLimit, language = 'es
       promptEn: 'A peer repeatedly misses handoffs impacting your work.',
       promptEs: 'Un colega incumple handoffs y afecta tu trabajo.',
       optionsEn: ['Publicly blame', 'Set alignment meeting and clarify ownership', 'Ignore issue', 'Bypass peer without notice'],
-      optionsEs: ['Culpar publicamente', 'Alinear en reunion y clarificar ownership', 'Ignorar el problema', 'Evitar al colega sin avisar'],
+      optionsEs: ['Culpar publicamente', 'Alinear en reunion y clarificar responsables', 'Ignorar el problema', 'Evitar al colega sin avisar'],
       best: 1,
     },
     {
@@ -600,7 +637,7 @@ export const SJTGame = ({ isActive, onEndGame, isDemo, timeLimit, language = 'es
       promptEn: 'You detect a quality risk near launch date.',
       promptEs: 'Detectas un riesgo de calidad cerca del lanzamiento.',
       optionsEn: ['Hide it to ship on time', 'Communicate risk and mitigation options', 'Stop all work immediately', 'Wait silently'],
-      optionsEs: ['Ocultarlo para lanzar', 'Comunicar riesgo y opciones de mitigacion', 'Detener todo de inmediato', 'Esperar en silencio'],
+      optionsEs: ['Ocultarlo para lanzar', 'Comunicar riesgo y opciones de mitigacion', 'Detener todo sin evaluar impacto', 'Esperar en silencio'],
       best: 1,
     },
     {
@@ -608,7 +645,7 @@ export const SJTGame = ({ isActive, onEndGame, isDemo, timeLimit, language = 'es
       promptEn: 'Two stakeholders request conflicting priorities.',
       promptEs: 'Dos stakeholders piden prioridades conflictivas.',
       optionsEn: ['Choose randomly', 'Align criteria and agree sequence', 'Say yes to both without plan', 'Escalate without data'],
-      optionsEs: ['Elegir al azar', 'Alinear criterios y acordar secuencia', 'Decir que si a ambos sin plan', 'Escalar sin datos'],
+      optionsEs: ['Elegir al azar', 'Alinear criterios y acordar una secuencia', 'Decir que si a ambos sin plan', 'Escalar sin datos'],
       best: 1,
     },
   ];
@@ -657,7 +694,7 @@ export const SJTGame = ({ isActive, onEndGame, isDemo, timeLimit, language = 'es
     return (
       <div className="hrrh-game-container">
         <div className="game-instruction-box">
-          <h2>Situational Judgment Test</h2>
+          <h2>{isEn ? 'Situational Judgment Test' : 'Juicio situacional'}</h2>
           <p>{isEn ? 'Read each workplace scenario and choose the BEST first response.' : 'Lee cada escenario laboral y elige la MEJOR primera respuesta.'}</p>
           <p>{isEn ? 'Prioritize collaboration, clarity and responsible execution.' : 'Prioriza colaboracion, claridad y ejecucion responsable.'}</p>
           <button onClick={beginGame} className="btn-start">{isEn ? 'Start' : 'Comenzar'}</button>
@@ -678,7 +715,7 @@ export const SJTGame = ({ isActive, onEndGame, isDemo, timeLimit, language = 'es
           <p><strong>{isEn ? 'Situation:' : 'Situacion:'}</strong> {isEn ? currentScenario.promptEn : currentScenario.promptEs}</p>
         </div>
         <p className="rule" style={{ marginTop: '10px' }}>
-          {isEn ? 'Question: What should you do first?' : 'Pregunta: ?Que deberias hacer primero?'}
+          {isEn ? 'Question: What should you do first?' : 'Pregunta: ¿Qué deberias hacer primero?'}
         </p>
         <div className="buttons-group">
           {options.map((label, idx) => (
