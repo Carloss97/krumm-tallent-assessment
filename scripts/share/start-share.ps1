@@ -23,8 +23,29 @@ function Ensure-Command {
   }
 }
 
+function Install-CloudflaredWithWinget {
+  $winget = Get-Command 'winget' -ErrorAction SilentlyContinue
+  if (-not $winget) {
+    throw 'No se encontro cloudflared y winget no esta disponible para instalarlo automaticamente.'
+  }
+
+  Write-Host 'cloudflared no encontrado. Intentando instalacion automatica con winget...'
+  $null = & $winget.Source install --id Cloudflare.cloudflared -e --accept-package-agreements --accept-source-agreements
+  if ($LASTEXITCODE -ne 0) {
+    throw 'Fallo la instalacion automatica de cloudflared. Ejecuta manualmente: winget install --id Cloudflare.cloudflared -e --accept-package-agreements --accept-source-agreements'
+  }
+
+  # Refresh PATH for current process so new commands can be resolved without reopening shell.
+  $machinePath = [Environment]::GetEnvironmentVariable('Path', 'Machine')
+  $userPath = [Environment]::GetEnvironmentVariable('Path', 'User')
+  $env:Path = "$machinePath;$userPath"
+}
+
 function Resolve-CloudflaredPath {
-  $cmd = Get-Command 'cloudflared' -ErrorAction SilentlyContinue
+  $cmd = Get-Command 'cloudflared' -CommandType Application -ErrorAction SilentlyContinue | Select-Object -First 1
+  if (-not $cmd) {
+    $cmd = Get-Command 'cloudflared' -ErrorAction SilentlyContinue | Select-Object -First 1
+  }
   if ($cmd) {
     return $cmd.Source
   }
@@ -57,7 +78,16 @@ function Resolve-CloudflaredPath {
     }
   }
 
-  throw 'No se encontro cloudflared. Instala con: winget install --id Cloudflare.cloudflared -e --accept-package-agreements --accept-source-agreements'
+  throw 'No se encontro cloudflared.'
+}
+
+function Get-OrInstall-CloudflaredPath {
+  try {
+    return Resolve-CloudflaredPath
+  } catch {
+    Install-CloudflaredWithWinget
+    return Resolve-CloudflaredPath
+  }
 }
 
 function Test-HttpReady {
@@ -99,7 +129,7 @@ function Assert-NotRunning {
 }
 
 Ensure-Command -Name 'npm'
-$cloudflaredPath = Resolve-CloudflaredPath
+$cloudflaredPath = Get-OrInstall-CloudflaredPath
 
 New-Item -ItemType Directory -Path $stateDir -Force | Out-Null
 Assert-NotRunning -Name 'Servidor de desarrollo' -PidPath $devPidFile
