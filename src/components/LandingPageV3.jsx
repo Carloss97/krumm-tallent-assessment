@@ -359,7 +359,7 @@ const copy = {
 
 const LandingPageV3 = () => {
   const navigate = useNavigate();
-  const { setIsDemo, setParticipantProfile, recordTrialEvent } = useTelemetry();
+  const { setIsDemo, setParticipantProfile, recordTrialEvent, featureFlags } = useTelemetry();
 
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [authError, setAuthError] = useState('');
@@ -574,7 +574,12 @@ const LandingPageV3 = () => {
           transition={{ duration: 0.45, delay: 0.15 }}
         >
           <div className="lv3-action-buttons">
-            <button className="lv3-primary lv3-action-btn lv3-action-start" onClick={() => { recordTrialEvent && recordTrialEvent({ event: 'cta_quick_modal_opened' }); setShowQuickModal(true); }}>
+            <button className="lv3-primary lv3-action-btn lv3-action-start" onClick={() => {
+              recordTrialEvent && recordTrialEvent({ event: 'cta_quick_modal_opened' });
+              // If hero demo feature is disabled, fall back to the original form overlay
+              if (featureFlags?.enableHeroDemo) setShowQuickModal(true);
+              else setShowForm(true);
+            }}>
               <Sparkles size={18} aria-hidden="true" />
               <span>{language === 'es' ? 'Hacer test ya' : 'Start test now'}</span>
               <ChevronRight size={16} aria-hidden="true" />
@@ -603,18 +608,20 @@ const LandingPageV3 = () => {
         />
       )}
 
-        <motion.div
-          className="lv3-hero-demo-wrap"
-          initial={{ opacity: 0, y: 8 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.45, delay: 0.18 }}
-        >
-          <div className="lv3-container">
-            <div className="lv3-panel">
-              <HeroDemo />
-            </div>
-          </div>
-        </motion.div>
+          {featureFlags?.enableHeroDemo && (
+            <motion.div
+              className="lv3-hero-demo-wrap"
+              initial={{ opacity: 0, y: 8 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.45, delay: 0.18 }}
+            >
+              <div className="lv3-container">
+                <div className="lv3-panel">
+                  <HeroDemo />
+                </div>
+              </div>
+            </motion.div>
+          )}
       </header>
 
       {showForm && (
