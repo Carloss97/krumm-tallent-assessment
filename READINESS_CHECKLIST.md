@@ -171,6 +171,16 @@ NODE_ENV=production PORT=4000 node server/index.js
 # Configure CORS for your domain
 ```
 
+### Feature flag / Rollout (staging)
+
+- Use the sample file `.env.staging.sample` included in the repo as a starting point.
+- To run a progressive rollout of the Hero demo, set:
+  - `ENABLE_HERO_DEMO=false`
+  - `HERO_DEMO_PERCENTAGE=10`  # start at 10% canary
+- Copy `.env.staging.sample` to `.env.staging` and update values before deploying to staging.
+- The backend exposes a runtime endpoint `GET /api/feature-flags` (no auth) which reads these env vars. The frontend `TelemetryProvider` will fetch runtime flags and apply percentage-based assignment.
+
+
 ### Pre-Deployment Checklist
 - [x] Tests passing (34/34)
 - [x] Build clean (451 modules)
