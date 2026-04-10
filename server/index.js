@@ -707,6 +707,15 @@ app.listen(PORT, () => {
   console.log(`✓ Authentication: POST /api/auth/participant`);
   console.log(`✓ Recruiter auth: POST /api/auth/recruiter`);
   console.log(`✓ Environment: ${process.env.NODE_ENV || 'development'}`);
+  try {
+    const routes = (app._router && app._router.stack) ? app._router.stack.filter(r => r.route).map(r => {
+      const methods = Object.keys(r.route.methods || {}).join(',').toUpperCase();
+      return `${methods} ${r.route.path}`;
+    }) : [];
+    console.log('Registered routes:\n' + routes.join('\n'));
+  } catch (err) {
+    // ignore
+  }
 });
 
 
