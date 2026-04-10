@@ -250,13 +250,38 @@ export const TelemetryProvider = ({ children }) => {
   }, []);
 
   const recordTrialEvent = useCallback((event) => {
+    const enriched = { ...event, timestamp: Date.now() };
+
     if (activeTrackingRef.current) {
-      currentDataRef.current.trialEvents.push({
-        ...event,
-        timestamp: Date.now()
-      });
+      currentDataRef.current.trialEvents.push(enriched);
     }
-  }, []);
+
+    // Send lightweight demo-related events to the backend for monitoring (fire-and-forget).
+    try {
+      const evName = String(event?.event || '').toLowerCase();
+      if (evName.includes('demo') || evName.includes('cta_demo')) {
+        (async () => {
+          try {
+            await fetch('/api/telemetry', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                event: evName,
+                payload: enriched,
+                demo: isDemo,
+                participantId: participantProfile?.participantId || null,
+                timestamp: Date.now()
+              })
+            });
+          } catch (err) {
+            // intentionally silent for non-blocking telemetry
+          }
+        })();
+      }
+    } catch (err) {
+      // swallow any unexpected error to avoid breaking the app
+    }
+  }, [isDemo, participantProfile]);
 
   const handleMouseMove = useCallback((e) => {
     if (activeTrackingRef.current && featureFlags.enableCursorTracking && consentState.cursor) {

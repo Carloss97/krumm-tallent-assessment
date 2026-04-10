@@ -270,6 +270,23 @@ app.get('/api/feature-flags', (req, res) => {
   });
 });
 
+// Lightweight telemetry collector for demo monitoring (no auth)
+app.post('/api/telemetry', (req, res) => {
+  try {
+    const payload = req.body || {};
+    const logDir = path.join(__dirname, '..', '.runtime', 'share');
+    fs.mkdirSync(logDir, { recursive: true });
+    const logPath = path.join(logDir, 'telemetry.log');
+    const entry = JSON.stringify({ receivedAt: new Date().toISOString(), payload }) + '\n';
+    fs.appendFileSync(logPath, entry, 'utf8');
+    console.log('Telemetry event:', payload.event || payload);
+    return res.json({ ok: true, saved: true });
+  } catch (err) {
+    console.error('Failed to save telemetry:', err?.message || err);
+    return res.status(500).json({ ok: false, error: 'failed_to_save' });
+  }
+});
+
 // Tighten AI endpoint rate to reduce bursty retries hitting Gemini quotas.
 app.use('/api/ai', rateLimiter(serverConfig.rateLimit.ai));
 
