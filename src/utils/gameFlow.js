@@ -187,3 +187,7 @@ export const GAME_FLOW = [
     timeLimit: { full: 180, demo: 75 },
   },
 ];
+
+// DEMO_GAME_IDS defines a short sequence of game ids used for the public demo
+// Choose a compact subset that results in ~4-5 minutes in demo mode
+export const DEMO_GAME_IDS = [4, 10, 13];

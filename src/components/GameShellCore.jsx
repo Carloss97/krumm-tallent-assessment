@@ -1,7 +1,7 @@
 import React, { useState, useCallback, useMemo, useEffect } from 'react';
 import { useTelemetry } from '../TelemetryContext';
 import { useLanguage } from '../context/LanguageContext';
-import { GAME_FLOW } from '../utils/gameFlow';
+import { GAME_FLOW, DEMO_GAME_IDS } from '../utils/gameFlow';
 import { assignVariant } from '../utils/abTesting';
 import { getLocalizedGameInstruction } from '../utils/gameFlowI18n';
 import InstructionInterstitial from './InstructionInterstitial';
@@ -99,7 +99,23 @@ const GameShellCore = ({ gameId, children }) => {
     if (!isActive || !gameConfig) return;
     setIsActive(false);
 
-    // Keep current full-page navigation behavior to avoid regressions.
+    // When in demo mode, navigate through a compact demo flow defined in DEMO_GAME_IDS
+    if (isDemo && Array.isArray(DEMO_GAME_IDS) && DEMO_GAME_IDS.length > 0) {
+      const idx = DEMO_GAME_IDS.indexOf(gameId);
+      if (idx >= 0 && idx < DEMO_GAME_IDS.length - 1) {
+        const nextId = DEMO_GAME_IDS[idx + 1];
+        const nextGame = GAME_FLOW.find(g => g.id === nextId);
+        const nextPath = nextGame ? nextGame.path : '/report';
+        window.location.href = nextPath;
+        return;
+      }
+
+      // Last demo game -> go to report
+      window.location.href = '/report?demo=true';
+      return;
+    }
+
+    // Default full flow navigation
     window.location.href = gameConfig.nextPath;
   }, [isActive, gameConfig]);
 

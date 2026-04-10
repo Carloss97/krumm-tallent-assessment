@@ -22,11 +22,13 @@ import {
 import { useTelemetry } from '../TelemetryContext';
 import { useLanguage } from '../context/LanguageContext';
 import { authenticateParticipant } from '../services/backendService';
-import { GAME_FLOW } from '../utils/gameFlow';
+import { GAME_FLOW, DEMO_GAME_IDS } from '../utils/gameFlow';
 import { getLocalizedGameInstruction } from '../utils/gameFlowI18n';
 import { getQaMode, setQaMode, qaModeLabel } from '../utils/qaMode';
 import logo from '../assets/logo.jpg';
 import './LandingPageV3.css';
+import TestAccessModal from './TestAccessModal';
+import HeroDemo from './HeroDemo';
 
 const capabilityAreas = [
   {
@@ -357,11 +359,12 @@ const copy = {
 
 const LandingPageV3 = () => {
   const navigate = useNavigate();
-  const { setIsDemo, setParticipantProfile } = useTelemetry();
+  const { setIsDemo, setParticipantProfile, recordTrialEvent, featureFlags } = useTelemetry();
 
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [authError, setAuthError] = useState('');
   const [showForm, setShowForm] = useState(false);
+  const [showQuickModal, setShowQuickModal] = useState(false);
   const { language, setLanguage } = useLanguage();
   const [isQaMode, setIsQaMode] = useState(() => getQaMode());
   const [formData, setFormData] = useState({
@@ -448,7 +451,9 @@ const LandingPageV3 = () => {
       preferredLanguage: language,
       source: 'demo'
     });
-    navigate(`/game/1?lang=${language}`);
+    // Navigate to first demo game defined in DEMO_GAME_IDS
+    const firstDemo = (Array.isArray(DEMO_GAME_IDS) && DEMO_GAME_IDS.length > 0) ? DEMO_GAME_IDS[0] : 1;
+    navigate(`/game/${firstDemo}?lang=${language}`);
   };
 
   const handleContinueLocal = () => {
@@ -569,19 +574,24 @@ const LandingPageV3 = () => {
           transition={{ duration: 0.45, delay: 0.15 }}
         >
           <div className="lv3-action-buttons">
-            <button className="lv3-primary lv3-action-btn lv3-action-start" onClick={() => setShowForm(true)}>
+            <button className="lv3-primary lv3-action-btn lv3-action-start" onClick={() => {
+              recordTrialEvent && recordTrialEvent({ event: 'cta_quick_modal_opened' });
+              // If hero demo feature is disabled, fall back to the original form overlay
+              if (featureFlags?.enableHeroDemo) setShowQuickModal(true);
+              else setShowForm(true);
+            }}>
               <Sparkles size={18} aria-hidden="true" />
-              <span>{t.actionStart}</span>
+              <span>{language === 'es' ? 'Hacer test ya' : 'Start test now'}</span>
               <ChevronRight size={16} aria-hidden="true" />
             </button>
-            <button className="lv3-ghost lv3-action-btn lv3-action-demo" onClick={handleStartDemo}>
+            <button className="lv3-ghost lv3-action-btn lv3-action-demo" onClick={() => { recordTrialEvent && recordTrialEvent({ event: 'cta_demo_clicked' }); handleStartDemo(); }}>
               <FlaskConical size={18} aria-hidden="true" />
               <span>{t.actionDemo}</span>
               <ChevronRight size={16} aria-hidden="true" />
             </button>
             <button
               className="lv3-recruiter-btn lv3-action-btn lv3-action-recruiter"
-              onClick={() => navigate('/recruiter/login')}
+              onClick={() => { recordTrialEvent && recordTrialEvent({ event: 'cta_recruiter_clicked' }); navigate('/recruiter/login'); }}
             >
               <Globe size={18} aria-hidden="true" />
               <span>{t.actionRecruiter}</span>
@@ -589,6 +599,29 @@ const LandingPageV3 = () => {
             </button>
           </div>
         </motion.div>
+
+      {/* Quick access modal for direct credential login */}
+      {showQuickModal && (
+        <TestAccessModal
+          isOpen={showQuickModal}
+          onClose={() => setShowQuickModal(false)}
+        />
+      )}
+
+          {featureFlags?.enableHeroDemo && (
+            <motion.div
+              className="lv3-hero-demo-wrap"
+              initial={{ opacity: 0, y: 8 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.45, delay: 0.18 }}
+            >
+              <div className="lv3-container">
+                <div className="lv3-panel">
+                  <HeroDemo />
+                </div>
+              </div>
+            </motion.div>
+          )}
       </header>
 
       {showForm && (

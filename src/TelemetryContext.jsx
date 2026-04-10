@@ -34,6 +34,8 @@ export const TelemetryProvider = ({ children }) => {
     enableSessionExitModal: true,
     enableGameErrorBoundary: true,
     enableEngagementPulse: true,
+    // Controlled via env VITE_ENABLE_HERO_DEMO ("true" to enable)
+    enableHeroDemo: (typeof import.meta !== 'undefined' && import.meta.env?.VITE_ENABLE_HERO_DEMO === 'true') || false,
   });
 
   const activeTrackingRef = useRef(false);

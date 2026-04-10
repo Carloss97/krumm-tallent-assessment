@@ -1,0 +1,54 @@
+.hero-demo {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.hd-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 8px;
+}
+
+.hd-header strong {
+  font-size: 1.05rem;
+  color: #1f334f;
+}
+
+.hd-sub {
+  font-size: 0.86rem;
+  color: #4b627f;
+}
+
+.hd-body {
+  display: flex;
+  padding: 0.8rem;
+  background: linear-gradient(180deg, rgba(255,255,255,0.9), rgba(246,249,255,0.9));
+  border-radius: 12px;
+  min-height: 120px;
+  align-items: center;
+  justify-content: center;
+}
+
+.hd-activity { width: 100%; max-width: 520px; }
+.hd-activity h3 { margin: 0 0 8px 0; color: #12324a; }
+
+.hd-options { display: flex; gap: 8px; flex-wrap: wrap; }
+.hd-option { padding: 10px 12px; border-radius: 10px; border: 1px solid rgba(35,55,100,0.08); background: white; cursor: pointer; }
+.hd-option.selected { outline: 3px solid rgba(37, 99, 235, 0.12); transform: translateY(-2px); }
+
+.hd-priority-list { display:flex; gap:8px; }
+.hd-priority-item { display:flex; gap:8px; align-items:center; padding:8px 10px; border-radius:10px; background:white; border:1px solid rgba(30,40,60,0.06); cursor:pointer; }
+.hd-pill { display:inline-flex; width:28px; height:28px; align-items:center; justify-content:center; border-radius:6px; background:#f2f6ff; color:#1f3a67; font-weight:700; }
+.hd-priority-item.picked { box-shadow: 0 8px 18px rgba(16,40,90,0.06); }
+
+.hd-reaction-target { width: 220px; height: 80px; display:flex; align-items:center; justify-content:center; border-radius:10px; background:#eef3ff; color:#12345a; font-weight:700; }
+.hd-reaction-target.go { background: linear-gradient(120deg,#dff2e6,#cceef0); color:#063; }
+
+.hd-controls { margin-top: 10px; display:flex; justify-content:flex-end; }
+.hd-next { padding:8px 12px; border-radius:8px; border:none; background:linear-gradient(135deg,#2f59d1,#6b8bff); color:white; cursor:pointer; font-weight:700; }
+.hd-next:disabled { opacity:0.5; cursor:not-allowed; }
+
+.hd-footer { display:flex; justify-content:flex-end; }
+.hd-progress { font-size:0.86rem; color:#4b627f; }
