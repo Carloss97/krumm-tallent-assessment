@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useRef, useCallback } from 'react';
+import React, { createContext, useContext, useState, useRef, useCallback, useEffect } from 'react';
 
 const TelemetryContext = createContext(null);
 
@@ -72,6 +72,48 @@ export const TelemetryProvider = ({ children }) => {
   const setFeatureFlag = useCallback((flag, value) => {
     setFeatureFlags(prev => ({ ...prev, [flag]: value }));
   }, []);
+
+  // Fetch runtime feature flags and apply a percentage-based rollout for hero demo.
+  useEffect(() => {
+    let mounted = true;
+
+    const simpleHash = (s) => {
+      let h = 0;
+      if (!s) return 0;
+      for (let i = 0; i < s.length; i++) {
+        h = (h << 5) - h + s.charCodeAt(i);
+        h |= 0; // force 32bit
+      }
+      return Math.abs(h);
+    };
+
+    const applyRuntimeFlags = async () => {
+      try {
+        const res = await fetch('/api/feature-flags', { cache: 'no-store' });
+        if (!mounted) return;
+        if (!res.ok) return;
+        const data = await res.json();
+        if (!mounted || !data) return;
+
+        const enableHero = !!data.enableHeroDemo;
+        const percent = Number(data.heroDemoPercentage || 0) || 0;
+
+        if (enableHero) {
+          setFeatureFlags((prev) => ({ ...prev, enableHeroDemo: true }));
+        } else if (percent > 0) {
+          // assign based on participantId if available, otherwise random per session
+          const seed = (participantProfile && participantProfile.participantId) ? participantProfile.participantId : `${Date.now()}-${Math.random()}`;
+          const assigned = (simpleHash(seed) % 100) < percent;
+          setFeatureFlags((prev) => ({ ...prev, enableHeroDemo: assigned }));
+        }
+      } catch (err) {
+        // noop: keep defaults if fetch fails
+      }
+    };
+
+    applyRuntimeFlags();
+    return () => { mounted = false; };
+  }, [participantProfile]);
 
   const setExperimentAssignment = useCallback((experimentKey, variant) => {
     if (!experimentKey || !variant) return;

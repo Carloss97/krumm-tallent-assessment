@@ -258,6 +258,18 @@ app.get('/health', (req, res) => {
   });
 });
 
+// Runtime feature flags endpoint (no auth) - return simple rollout controls
+app.get('/api/feature-flags', (req, res) => {
+  const enableHeroDemo = String(process.env.ENABLE_HERO_DEMO || process.env.VITE_ENABLE_HERO_DEMO || 'false').toLowerCase() === 'true';
+  const heroDemoPercentage = Number(process.env.HERO_DEMO_PERCENTAGE || process.env.VITE_HERO_DEMO_PERCENTAGE || process.env.HERO_DEMO_PERCENT || 0) || 0;
+
+  return res.json({
+    ok: true,
+    enableHeroDemo,
+    heroDemoPercentage
+  });
+});
+
 // Tighten AI endpoint rate to reduce bursty retries hitting Gemini quotas.
 app.use('/api/ai', rateLimiter(serverConfig.rateLimit.ai));
 
