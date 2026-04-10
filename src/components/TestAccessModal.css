@@ -1,0 +1,34 @@
+.tam-overlay {
+  position: fixed;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(8,12,24,0.45);
+  z-index: 2000;
+}
+.tam-card {
+  width: 100%;
+  max-width: 520px;
+  background: #fff;
+  border-radius: 12px;
+  padding: 18px;
+  box-shadow: 0 20px 40px rgba(11, 22, 55, 0.18);
+  position: relative;
+}
+.tam-close {
+  position: absolute;
+  right: 12px;
+  top: 10px;
+  border: none;
+  background: transparent;
+  font-size: 18px;
+  cursor: pointer;
+}
+.tam-form { display:flex; flex-direction:column; gap:10px; margin-top:6px; }
+.tam-form input { padding:10px 12px; border-radius:8px; border:1px solid rgba(20,30,60,0.08); }
+.tam-actions { display:flex; gap:8px; justify-content:flex-end; margin-top:8px; }
+.tam-submit { padding:10px 14px; border-radius:8px; background:linear-gradient(135deg,#2f59d1,#6b8bff); color:white; border:none; font-weight:700; }
+.tam-ghost { padding:10px 14px; border-radius:8px; border:1px solid rgba(40,50,80,0.08); background:white; }
+.tam-error { color:#9b1c1c; background:#fff5f5; border-radius:6px; padding:8px; border:1px solid #fecaca; }
+.tam-desc { color:#4b627f; margin-top:6px; }
