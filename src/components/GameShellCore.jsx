@@ -72,7 +72,8 @@ const GameShellCore = ({ gameId, children }) => {
   useEffect(() => {
     if (needsConsent) return;
     if (!showInstructions && !isActive) {
-      setIsActive(true);
+      const t = setTimeout(() => setIsActive(true), 0);
+      return () => clearTimeout(t);
     }
   }, [needsConsent, showInstructions, isActive]);
 
@@ -117,7 +118,7 @@ const GameShellCore = ({ gameId, children }) => {
 
     // Default full flow navigation
     window.location.href = gameConfig.nextPath;
-  }, [isActive, gameConfig]);
+  }, [isActive, gameConfig, isDemo, gameId]);
 
   const navigateHome = useCallback((source = 'unknown') => {
     recordGameShellExit({ gameId, source });
