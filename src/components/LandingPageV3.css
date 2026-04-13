@@ -252,6 +252,13 @@
   transform: translateY(-1px);
 }
 
+/* Accessibility: strong focus styles for hero action buttons */
+.lv3-action-btn:focus-visible {
+  outline: 3px solid rgba(124, 58, 237, 0.9);
+  outline-offset: 4px;
+  box-shadow: 0 8px 20px rgba(124, 58, 237, 0.08);
+}
+
 .lv3-brand-stage {
   position: relative;
   overflow: hidden;

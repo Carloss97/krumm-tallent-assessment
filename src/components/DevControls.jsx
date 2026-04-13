@@ -18,7 +18,6 @@ if (import.meta.env && import.meta.env.PROD) {
 
       const host = (window.location.hostname || '').toLowerCase();
       const port = window.location.port || '';
-      const viteDev = Boolean(import.meta.env && import.meta.env.DEV);
 
       // Allow-list of dev hosts can be configured via Vite env VITE_ALLOWED_DEV_HOSTS
       const raw = import.meta.env.VITE_ALLOWED_DEV_HOSTS || 'localhost,127.0.0.1,::1,dev.krumm.cl';
@@ -27,8 +26,8 @@ if (import.meta.env && import.meta.env.PROD) {
       const matchesAllowed = allowed.includes(host) || allowed.some(p => p.startsWith('*.') && host.endsWith(p.replace('*.', '')));
       const isLocalSuffix = host.endsWith('.local');
 
-      // Only show when explicitly allowed or running Vite dev server
-      setVisible(matchesAllowed || isLocalSuffix || port === '5173' || viteDev);
+      // Only show when explicitly allowed (dev hosts) or running local vite port
+      setVisible(matchesAllowed || isLocalSuffix || port === '5173');
     }, []);
 
     if (!visible) return null;
