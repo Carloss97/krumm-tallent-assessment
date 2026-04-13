@@ -1,4 +1,4 @@
-# Cognitive Assessment Platform
+# Krumm: Tallent Assessment
 
 A comprehensive, scientifically-validated cognitive assessment platform featuring 14 games designed to evaluate working memory, planning, cognitive flexibility, response inhibition, processing speed, spatial memory, and spatial reasoning.
 
@@ -65,7 +65,7 @@ A comprehensive, scientifically-validated cognitive assessment platform featurin
 1. **Clone and install dependencies:**
    ```bash
    git clone <repository-url>
-   cd cognitive-assessment-platform
+   cd krumm-tallent-assessment
    npm install
    ```
 
