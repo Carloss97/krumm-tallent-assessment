@@ -9,6 +9,7 @@
     "dev:server": "node server/index.js",
     "start": "node server/index.js",
     "dev:full": "concurrently \"npm run dev:frontend\" \"npm run dev:server\"",
+    "generate:favicons": "node scripts/generate-favicons.mjs",
     "build": "vite build",
     "lint": "eslint .",
     "preview": "vite preview",
@@ -74,6 +75,8 @@
     "playwright": "^1.49.1",
     "vite": "^8.0.0",
     "vitest": "^4.1.0"
+    ,"sharp": "^0.32.4",
+    "png-to-ico": "^1.0.0"
   }
 }
 
