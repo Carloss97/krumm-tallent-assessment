@@ -4,13 +4,14 @@ import cors from 'cors';
 import dotenv from 'dotenv';
 import helmet from 'helmet';
 import compression from 'compression';
-import { collectDefaultMetrics, Histogram, register } from 'prom-client';
+import { collectDefaultMetrics, Histogram, Gauge, Counter, register } from 'prom-client';
 import { v4 as uuidv4 } from 'uuid';
 import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { GoogleGenerativeAI } from '@google/generative-ai';
 import { saveSession, getSession, getAllSessions, upsertParticipant, getParticipantById, checkDb } from './db.js';
+import { validateSession } from './validators.js';
 import {
   generateParticipantToken,
   generateRecruiterToken,
@@ -97,6 +98,27 @@ const httpRequestDurationSeconds = new Histogram({
   help: 'Duration of HTTP requests in seconds',
   labelNames: ['method', 'route', 'status_code'],
   buckets: [0.005, 0.01, 0.025, 0.05, 0.1, 0.3, 0.5, 1, 2.5, 5]
+});
+
+// AI circuit metrics
+const aiCircuitOpenGauge = new Gauge({
+  name: 'ai_circuit_open',
+  help: '1 if AI circuit is open (blocking requests), 0 otherwise',
+});
+
+const aiCircuitFailuresGauge = new Gauge({
+  name: 'ai_circuit_failures',
+  help: 'Number of recent AI failures counted by the circuit',
+});
+
+const aiCircuitRetryAfterSecondsGauge = new Gauge({
+  name: 'ai_circuit_retry_after_seconds',
+  help: 'Seconds remaining until the AI circuit may close (0 when closed)',
+});
+
+const aiCircuitTriggersTotal = new Counter({
+  name: 'ai_circuit_triggers_total',
+  help: 'Total times the AI circuit has opened',
 });
 
 app.use((req, res, next) => {
@@ -451,14 +473,36 @@ const aiCircuit = {
       this.failures += 1;
     }
     this.lastFailureAt = now;
+
+    const wasOpen = this.isOpen();
     if (this.failures >= this.failureThreshold) {
       this.openUntil = now + this.openMs;
+    }
+
+    // Update Prometheus metrics
+    try {
+      aiCircuitFailuresGauge.set(this.failures);
+      const isOpenNow = this.isOpen();
+      aiCircuitOpenGauge.set(isOpenNow ? 1 : 0);
+      aiCircuitRetryAfterSecondsGauge.set(isOpenNow ? this.timeLeftSec() : 0);
+      if (!wasOpen && this.isOpen()) {
+        aiCircuitTriggersTotal.inc();
+      }
+    } catch (err) {
+      // ignore metric failures
     }
   },
   recordSuccess() {
     this.failures = 0;
     this.firstFailureAt = 0;
     this.openUntil = 0;
+    try {
+      aiCircuitFailuresGauge.set(0);
+      aiCircuitOpenGauge.set(0);
+      aiCircuitRetryAfterSecondsGauge.set(0);
+    } catch (err) {
+      // ignore
+    }
   }
 };
 
@@ -699,6 +743,16 @@ app.post('/api/session', authenticateToken, requireParticipant, (req, res) => {
 
   if (!payload || Object.keys(payload).length === 0) {
     return res.status(400).json({ error: 'Empty session payload' });
+  }
+
+  // Validate session payload shape
+  try {
+    const valid = validateSession(payload);
+    if (!valid) {
+      return res.status(400).json({ error: 'Invalid session payload', details: validateSession.errors });
+    }
+  } catch (err) {
+    return res.status(400).json({ error: 'Invalid session payload', details: String(err) });
   }
 
   // Verify participant owns this session
