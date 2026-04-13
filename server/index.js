@@ -5,11 +5,12 @@ import dotenv from 'dotenv';
 import helmet from 'helmet';
 import compression from 'compression';
 import { collectDefaultMetrics, Histogram, register } from 'prom-client';
+import { v4 as uuidv4 } from 'uuid';
 import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { GoogleGenerativeAI } from '@google/generative-ai';
-import { saveSession, getSession, getAllSessions, upsertParticipant, getParticipantById } from './db.js';
+import { saveSession, getSession, getAllSessions, upsertParticipant, getParticipantById, checkDb } from './db.js';
 import {
   generateParticipantToken,
   generateRecruiterToken,
@@ -61,6 +62,19 @@ app.use(express.json());
 app.use('/api', (req, res, next) => {
   res.setHeader('Cache-Control', 'no-store, private, must-revalidate');
   next();
+});
+
+// Assign or propagate a request id for tracing
+app.use((req, res, next) => {
+  try {
+    const incoming = req.get('X-Request-ID') || req.get('x-request-id');
+    const rid = incoming || uuidv4();
+    req.requestId = rid;
+    res.setHeader('X-Request-ID', rid);
+  } catch (err) {
+    // ignore
+  }
+  return next();
 });
 
 app.use((error, req, res, next) => {
@@ -345,6 +359,36 @@ app.get('/health', (req, res) => {
     timestamp: new Date().toISOString(),
     uptime: process.uptime()
   });
+});
+
+// Readiness probe: checks DB, Gemini key presence and disk writability
+app.get('/ready', async (req, res) => {
+  const checks = {};
+  try {
+    checks.db = checkDb() ? 'ok' : 'fail';
+  } catch (err) {
+    checks.db = 'fail';
+  }
+
+  try {
+    checks.gemini_key = getGeminiApiKey() ? 'ok' : 'missing';
+  } catch (err) {
+    checks.gemini_key = 'fail';
+  }
+
+  try {
+    const testDir = path.join(__dirname, '..', '.runtime', 'health');
+    fs.mkdirSync(testDir, { recursive: true });
+    const tmp = path.join(testDir, `probe-${Date.now()}.tmp`);
+    fs.writeFileSync(tmp, 'ok');
+    fs.unlinkSync(tmp);
+    checks.disk = 'ok';
+  } catch (err) {
+    checks.disk = 'fail';
+  }
+
+  const healthy = Object.values(checks).every(v => v === 'ok');
+  return res.status(healthy ? 200 : 503).json({ ok: healthy, checks });
 });
 
 // Prometheus metrics endpoint (no auth)
@@ -801,9 +845,11 @@ app.use((req, res) => {
 });
 
 // ===== SERVER STARTUP =====
-app.listen(PORT, () => {
+const server = app.listen(PORT, () => {
   console.log(`✓ Backend API server running at http://localhost:${PORT}`);
   console.log(`✓ Health check: GET /health`);
+  console.log(`✓ Readiness: GET /ready`);
+  console.log(`✓ Metrics: GET /metrics`);
   console.log(`✓ Authentication: POST /api/auth/participant`);
   console.log(`✓ Recruiter auth: POST /api/auth/recruiter`);
   console.log(`✓ Environment: ${process.env.NODE_ENV || 'development'}`);
@@ -817,5 +863,21 @@ app.listen(PORT, () => {
     // ignore
   }
 });
+
+const shutdown = (signal) => {
+  console.log(`Received ${signal}. Shutting down gracefully...`);
+  server.close(() => {
+    console.log('Server closed.');
+    process.exit(0);
+  });
+  // force exit after timeout
+  setTimeout(() => {
+    console.error('Forcing shutdown after timeout.');
+    process.exit(1);
+  }, 10000).unref();
+};
+
+process.on('SIGINT', () => shutdown('SIGINT'));
+process.on('SIGTERM', () => shutdown('SIGTERM'));
 
 

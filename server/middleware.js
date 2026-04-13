@@ -4,8 +4,9 @@ export const requestLogger = (req, res, next) => {
   const start = Date.now();
   res.on('finish', () => {
     const durationMs = Date.now() - start;
-    // Lightweight structured log for local observability.
-    console.log(`[api] ${req.method} ${req.originalUrl} ${res.statusCode} ${durationMs}ms`);
+    // Lightweight structured log for local observability. Include request id when available.
+    const rid = req.requestId ? `${req.requestId} ` : '';
+    console.log(`[api] ${rid}${req.method} ${req.originalUrl} ${res.statusCode} ${durationMs}ms`);
   });
   next();
 };

@@ -137,3 +137,14 @@ export const getAllSessions = () => {
   const sessions = db.prepare(`SELECT * FROM sessions ORDER BY created_at DESC`).all();
   return sessions.map(s => ({ ...s, payload: JSON.parse(s.payload) }));
 };
+
+// Simple DB health check: run a lightweight query to ensure DB is responsive
+export const checkDb = () => {
+  try {
+    // run a trivial query; if this throws, DB is not healthy
+    const row = db.prepare('SELECT 1 as ok').get();
+    return row && row.ok === 1;
+  } catch (err) {
+    return false;
+  }
+};
