@@ -26,7 +26,7 @@ export const sendToCollector = (logObject) => {
         logger.debug({ err: String(err) }, 'log_collector_error');
       }
     });
-  } catch (err) {
+  } catch {
     // ignore
   }
 };

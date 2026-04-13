@@ -4,7 +4,7 @@ import HeroDemo from './HeroDemo';
 import { TelemetryProvider } from '../TelemetryContext';
 
 describe('HeroDemo', () => {
-  test('renders and advances after quiz selection', async () => {
+  it('renders and advances after quiz selection', async () => {
     render(
       <TelemetryProvider>
         <HeroDemo />

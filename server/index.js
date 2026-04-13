@@ -72,7 +72,7 @@ app.use((req, res, next) => {
     const rid = incoming || uuidv4();
     req.requestId = rid;
     res.setHeader('X-Request-ID', rid);
-  } catch (err) {
+  } catch {
     // ignore
   }
   return next();
@@ -140,7 +140,7 @@ app.use((req, res, next) => {
       const durationInSeconds = diff[0] + diff[1] / 1e9;
       const route = (req.route && req.route.path) ? req.route.path : req.path;
       httpRequestDurationSeconds.labels(req.method, route, String(res.statusCode)).observe(durationInSeconds);
-    } catch (err) {
+    } catch {
       // don't let metrics failures break the request
     }
   });
@@ -399,13 +399,13 @@ app.get('/ready', async (req, res) => {
   const checks = {};
   try {
     checks.db = checkDb() ? 'ok' : 'fail';
-  } catch (err) {
+  } catch {
     checks.db = 'fail';
   }
 
   try {
     checks.gemini_key = getGeminiApiKey() ? 'ok' : 'missing';
-  } catch (err) {
+  } catch {
     checks.gemini_key = 'fail';
   }
 
@@ -416,7 +416,7 @@ app.get('/ready', async (req, res) => {
     fs.writeFileSync(tmp, 'ok');
     fs.unlinkSync(tmp);
     checks.disk = 'ok';
-  } catch (err) {
+  } catch {
     checks.disk = 'fail';
   }
 
@@ -430,7 +430,7 @@ app.get('/metrics', async (req, res) => {
     res.set('Content-Type', register.contentType);
     const metrics = await register.metrics();
     return res.send(metrics);
-  } catch (err) {
+  } catch {
     return res.status(500).send('failed_to_collect_metrics');
   }
 });
@@ -476,6 +476,7 @@ const aiCircuit = {
   isOpen() { return Date.now() < this.openUntil; },
   timeLeftSec() { return Math.max(0, Math.ceil((this.openUntil - Date.now()) / 1000)); },
   recordFailure(code) {
+    this.lastFailureCode = code;
     const now = Date.now();
     if (!this.firstFailureAt || now - this.firstFailureAt > this.failureWindowMs) {
       this.firstFailureAt = now;
@@ -499,7 +500,7 @@ const aiCircuit = {
       if (!wasOpen && this.isOpen()) {
         aiCircuitTriggersTotal.inc();
       }
-    } catch (err) {
+    } catch {
       // ignore metric failures
     }
   },
@@ -511,7 +512,7 @@ const aiCircuit = {
       aiCircuitFailuresGauge.set(0);
       aiCircuitOpenGauge.set(0);
       aiCircuitRetryAfterSecondsGauge.set(0);
-    } catch (err) {
+    } catch {
       // ignore
     }
   }
@@ -796,11 +797,11 @@ app.post('/api/session', authenticateToken, requireParticipant, (req, res) => {
   try {
     const valid = validateSession(payload);
     if (!valid) {
-      try { sessionValidationErrorsTotal.inc(); } catch (e) {}
+      try { sessionValidationErrorsTotal.inc(); } catch { void 0; }
       return res.status(400).json({ error: 'Invalid session payload', details: validateSession.errors });
     }
   } catch (err) {
-    try { sessionValidationErrorsTotal.inc(); } catch (e) {}
+    try { sessionValidationErrorsTotal.inc(); } catch { void 0; }
     return res.status(400).json({ error: 'Invalid session payload', details: String(err) });
   }
 
@@ -811,7 +812,7 @@ app.post('/api/session', authenticateToken, requireParticipant, (req, res) => {
 
   try {
     const sessionId = saveSession(payload);
-    try { sessionsSavedTotal.inc(); } catch (e) {}
+    try { sessionsSavedTotal.inc(); } catch { void 0; }
     return res.status(201).json({
       sessionId,
       message: 'Session saved securely',
@@ -1055,7 +1056,7 @@ const server = app.listen(PORT, () => {
       return `${methods} ${r.route.path}`;
     }) : [];
     console.log('Registered routes:\n' + routes.join('\n'));
-  } catch (err) {
+  } catch {
     // ignore
   }
 });

@@ -110,7 +110,7 @@ const HeroDemo = () => {
     try {
       telemetry.startTracking && telemetry.startTracking('hero-demo');
       telemetry.recordTrialEvent && telemetry.recordTrialEvent({ event: 'demo_started', timestamp: Date.now() });
-    } catch (e) {
+    } catch {
       // swallow
     }
 
@@ -118,7 +118,9 @@ const HeroDemo = () => {
       try {
         telemetry.recordTrialEvent && telemetry.recordTrialEvent({ event: 'demo_unmounted', timestamp: Date.now() });
         telemetry.stopTracking && telemetry.stopTracking('hero-demo', 0, null, { completed: step >= total - 1 });
-      } catch (e) {}
+      } catch {
+        // swallow
+      }
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);

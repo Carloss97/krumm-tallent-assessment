@@ -144,7 +144,8 @@ export const checkDb = () => {
     // run a trivial query; if this throws, DB is not healthy
     const row = db.prepare('SELECT 1 as ok').get();
     return row && row.ok === 1;
-  } catch (err) {
+  } catch (e) {
+    console.error('DB health check failed', e);
     return false;
   }
 };

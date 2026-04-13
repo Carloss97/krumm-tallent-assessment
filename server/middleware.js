@@ -20,7 +20,7 @@ export const requestLogger = (req, res, next) => {
     };
 
     logger.info(log, 'request_finished');
-    try { sendToCollector(log); } catch (err) { /* don't fail requests on logging errors */ }
+    try { sendToCollector(log); } catch { /* don't fail requests on logging errors */ }
   });
   next();
 };

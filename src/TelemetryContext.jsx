@@ -106,7 +106,7 @@ export const TelemetryProvider = ({ children }) => {
           const assigned = (simpleHash(seed) % 100) < percent;
           setFeatureFlags((prev) => ({ ...prev, enableHeroDemo: assigned }));
         }
-      } catch (err) {
+      } catch {
         // noop: keep defaults if fetch fails
       }
     };
@@ -273,12 +273,12 @@ export const TelemetryProvider = ({ children }) => {
                 timestamp: Date.now()
               })
             });
-          } catch (err) {
+          } catch {
             // intentionally silent for non-blocking telemetry
           }
         })();
       }
-    } catch (err) {
+    } catch {
       // swallow any unexpected error to avoid breaking the app
     }
   }, [isDemo, participantProfile]);
