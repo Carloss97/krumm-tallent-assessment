@@ -15,13 +15,16 @@ export default ({ mode }) => {
     strictPort: true,
     allowedHosts: ['.trycloudflare.com', 'localhost', '127.0.0.1'],
     open: true,
-    proxy: {
+    // Only enable API proxy during local development. This prevents the
+    // preview server from attempting to proxy requests when the backend
+    // is not running (which caused ECONNREFUSED errors).
+    proxy: mode === 'development' ? {
       '/api': {
         target: 'http://localhost:4000',
         changeOrigin: true,
         secure: false,
       }
-    }
+    } : undefined
   },
   test: {
     globals: true,
