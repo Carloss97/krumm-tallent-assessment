@@ -374,7 +374,7 @@ const Report = () => {
     return (
       <>
         <a href="#report-main" className="skip-link">{isEn ? 'Skip to report' : 'Saltar al reporte'}</a>
-        <main id="report-main" className="flex-center glass-panel report-empty report-page" role="main" tabIndex={-1} style={{ margin: 'auto', marginTop: '100px', maxWidth: '600px', padding: '40px', textAlign: 'center' }}>
+        <main id="report-main" className="flex-center glass-panel report-empty report-page report-empty-main" role="main" tabIndex={-1}>
           <h2>{isEn ? 'No Assessment Data Found' : 'No se encontraron datos de evaluación'}</h2>
           <p>{isEn ? 'Please complete the extended assessment to view the HR report.' : 'Completa la evaluación extendida para ver el reporte final.'}</p>
           <div className="report-inline-actions" style={{ display: 'flex', gap: '16px', marginTop: '20px' }}>
@@ -392,20 +392,19 @@ const Report = () => {
     return (
       <>
         <a href="#report-main" className="skip-link">{isEn ? 'Skip to report' : 'Saltar al reporte'}</a>
-        <main id="report-main" className="flex-center report-loading report-page" role="main" tabIndex={-1} style={{ width: '100%', minHeight: '100vh', flexDirection: 'column', padding: '40px' }}>
+        <main id="report-main" className="flex-center report-loading report-page" role="main" tabIndex={-1}>
           <motion.div
              initial={{ opacity: 0, scale: 0.9 }}
              animate={{ opacity: 1, scale: 1 }}
              className="glass-panel report-loading-card"
-             style={{ padding: '60px', textAlign: 'center', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '20px' }}
           >
             <motion.div
               animate={{ rotate: 360 }}
               transition={{ duration: 2, repeat: Infinity, ease: 'linear' }}
-              style={{ width: '60px', height: '60px', border: '4px solid rgba(59, 130, 246, 0.2)', borderTop: '4px solid #3b82f6', borderRadius: '50%' }}
+              className="spinner"
             />
             <h2 className="text-gradient">{isEn ? 'Analyzing Telemetry Data...' : 'Analizando telemetría...'}</h2>
-            <p style={{ color: '#374151', fontSize: '1.1rem', maxWidth: '400px', lineHeight: '1.6' }}>
+            <p className="loading-text">
               {useAI
                 ? (isEn ? 'Calling AI model to interpret cognitive patterns...' : 'Consultando modelo IA para interpretar patrones cognitivos...')
                   : (isEn ? 'Processing behavioral metrics...' : 'Procesando métricas conductuales...')}
@@ -426,14 +425,14 @@ const Report = () => {
   const targetRadarFill = '#56B4E9';
 
   return (
-    <>
+      <>
       <a href="#report-main" className="skip-link">{isEn ? 'Skip to report' : 'Saltar al reporte'}</a>
-      <main id="report-main" className="report-page" role="main" tabIndex={-1} style={{ width: '100%', minHeight: '100%', padding: '40px', paddingBottom: '80px' }}>
+      <main id="report-main" className="report-page" role="main" tabIndex={-1}>
         <motion.div 
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           className="glass-panel report-shell"
-          style={{ maxWidth: '900px', margin: '0 auto', padding: '40px' }}
+        
         >
         <h1 className="text-gradient report-heading" style={{ fontSize: '2.5rem', marginBottom: '8px', textAlign: 'center' }}>
           {report.source === 'edge-local'
@@ -509,8 +508,8 @@ const Report = () => {
             </div>
           </div>
 
-          <div style={{ display: 'grid', gridTemplateColumns: 'minmax(320px, 1.2fr) minmax(240px, 1fr)', gap: '16px', alignItems: 'start' }}>
-            <div style={{ width: '100%', height: 300, background: 'linear-gradient(150deg, rgba(239,246,255,0.75), rgba(250,245,255,0.78))', borderRadius: '14px', border: '1px solid rgba(129,140,248,0.2)', padding: '8px' }}>
+          <div className="radar-grid">
+            <div className="radar-panel">
               {isTestEnv ? (
                 <RadarChart width={520} height={280} data={radarProfile} outerRadius="72%">
                   <PolarGrid stroke="rgba(99,102,241,0.28)" />
@@ -531,7 +530,7 @@ const Report = () => {
                 </ResponsiveContainer>
               )}
             </div>
-            <div style={{ display: 'grid', gap: '12px' }}>
+            <div className="stats-grid">
               <div style={{ padding: '12px', borderRadius: '10px', background: 'rgba(16, 185, 129, 0.1)', border: '1px solid rgba(16, 185, 129, 0.25)' }}>
                 <div style={{ fontWeight: 700, color: '#065f46', marginBottom: '6px' }}>{isEn ? 'Top Strengths' : 'Fortalezas principales'}</div>
                 <ul style={{ margin: 0, paddingLeft: '18px', color: '#065f46', lineHeight: '1.55' }}>
