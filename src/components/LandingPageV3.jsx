@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useMemo, useState, lazy, Suspense } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import {
@@ -375,6 +375,7 @@ const LandingPageV3 = () => {
   });
 
   const isDev = (typeof import.meta !== 'undefined' && import.meta.env?.DEV) === true;
+  const DevQuickAccess = import.meta.env && import.meta.env.DEV ? lazy(() => import('./DevQuickAccess')) : null;
   const t = copy[language] || copy.es;
 
   const totalGames = useMemo(() => GAME_FLOW.length, []);
@@ -828,27 +829,10 @@ const LandingPageV3 = () => {
         </div>
       </section>
 
-      {isDev && (
-        <section className="lv3-section lv3-dev" aria-label="Accesos de desarrollo">
-          <div className="lv3-container">
-            <h2>{t.devTitle}</h2>
-            <p className="lv3-intro">{t.devIntro}</p>
-            <div className="lv3-dev-grid">
-              {GAME_FLOW.map((game) => (
-                <button
-                  key={game.id}
-                  className="lv3-dev-btn"
-                  onClick={() => handleQuickGoToGame(game.path)}
-                >
-                  {`${t.gameLabel} ${game.id}: ${getLocalizedGameInstruction(game, language).title || t.fallbackEval}`}
-                </button>
-              ))}
-              <button className="lv3-dev-btn lv3-dev-report" onClick={handleQuickGoToReport}>
-                {t.finalReport}
-              </button>
-            </div>
-          </div>
-        </section>
+      {DevQuickAccess && (
+        <Suspense fallback={null}>
+          <DevQuickAccess t={t} language={language} />
+        </Suspense>
       )}
     </div>
   );
