@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { authenticateRecruiter, setQaAuthToken } from '../services/backendService';
 import { getQaMode } from '../utils/qaMode';
@@ -11,15 +11,25 @@ const RecruiterLogin = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
   const [isQaMode] = useState(() => getQaMode());
-  const isDev = (typeof import.meta !== 'undefined' && import.meta.env?.DEV) === true;
+  const [showDevQuickAccess, setShowDevQuickAccess] = useState(false);
+
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    const host = (window.location.hostname || '').toLowerCase();
+    const raw = import.meta.env.VITE_ALLOWED_DEV_HOSTS || 'localhost,127.0.0.1,::1,dev.krumm.cl';
+    const allowed = raw.split(',').map(s => s.trim().toLowerCase()).filter(Boolean);
+    const matchesAllowed = allowed.includes(host) || allowed.some(p => p.startsWith('*.') && host.endsWith(p.replace('*.', '')));
+    const isLocalSuffix = host.endsWith('.local');
+    setShowDevQuickAccess(matchesAllowed || isLocalSuffix || window.location.port === '5173');
+  }, []);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError('');
     setIsLoading(true);
 
-    // Quick QA/demo access in development
-    if (isDev && String(email).trim().toLowerCase() === 'recruiter@krumm.io' && password === 'demo-password') {
+    // Quick QA/demo access only when the host is allowed for dev access
+    if (showDevQuickAccess && String(email).trim().toLowerCase() === 'recruiter@krumm.io' && password === 'demo-password') {
       setQaAuthToken();
       setIsLoading(false);
       navigate('/recruiter/dashboard?qa=1');
@@ -54,6 +64,14 @@ const RecruiterLogin = () => {
     setQaAuthToken();
     navigate('/recruiter/dashboard?qa=1');
   };
+
+  useEffect(() => {
+    // If this page is opened in production/non-dev host, redirect to home
+    if (typeof window === 'undefined') return;
+    if (!showDevQuickAccess) {
+      navigate('/');
+    }
+  }, [showDevQuickAccess, navigate]);
 
   return (
     <div className="recruiter-login-page">

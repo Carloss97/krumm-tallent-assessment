@@ -586,7 +586,7 @@ const LandingPageV3 = () => {
               <span>{t.actionDemo}</span>
               <ChevronRight size={16} aria-hidden="true" />
             </button>
-            {isDev && (
+            {showDevQuickAccess && (
               <button
                 className="lv3-recruiter-btn lv3-action-btn lv3-action-recruiter"
                 onClick={() => { recordTrialEvent && recordTrialEvent({ event: 'cta_recruiter_clicked' }); navigate('/recruiter/login'); }}
