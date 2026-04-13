@@ -1,4 +1,4 @@
-import { useMemo, useState, lazy, Suspense } from 'react';
+import { useMemo, useState, useEffect, lazy, Suspense } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import {
@@ -375,8 +375,19 @@ const LandingPageV3 = () => {
   });
 
   const isDev = (typeof import.meta !== 'undefined' && import.meta.env?.DEV) === true;
-  const DevQuickAccess = import.meta.env && import.meta.env.DEV ? lazy(() => import('./DevQuickAccess')) : null;
+  const DevQuickAccess = lazy(() => import('./DevQuickAccess'));
+  const [showDevQuickAccess, setShowDevQuickAccess] = useState(false);
   const t = copy[language] || copy.es;
+
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    const host = (window.location.hostname || '').toLowerCase();
+    const raw = import.meta.env.VITE_ALLOWED_DEV_HOSTS || 'localhost,127.0.0.1,::1,dev.krumm.cl';
+    const allowed = raw.split(',').map(s => s.trim().toLowerCase()).filter(Boolean);
+    const matchesAllowed = allowed.includes(host) || allowed.some(p => p.startsWith('*.') && host.endsWith(p.replace('*.', '')));
+    const isLocalSuffix = host.endsWith('.local');
+    setShowDevQuickAccess(matchesAllowed || isLocalSuffix || window.location.port === '5173');
+  }, []);
 
   const totalGames = useMemo(() => GAME_FLOW.length, []);
 
@@ -829,7 +840,7 @@ const LandingPageV3 = () => {
         </div>
       </section>
 
-      {DevQuickAccess && (
+      {showDevQuickAccess && DevQuickAccess && (
         <Suspense fallback={null}>
           <DevQuickAccess t={t} language={language} />
         </Suspense>
