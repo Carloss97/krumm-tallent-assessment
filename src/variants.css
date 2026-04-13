@@ -53,34 +53,7 @@ html.ui-variant-c .lv3-section { background: #ffffff; }
   html.ui-variant-c .lv3-primary { width: 100%; font-size: 1rem; }
 }
 
-/* Quick visual badge to surface the currently applied variant */
-html.ui-variant-a body::before,
-html.ui-variant-b body::before,
-html.ui-variant-c body::before {
-  position: fixed;
-  top: 12px;
-  right: 12px;
-  z-index: 9999;
-  padding: 6px 10px;
-  border-radius: 8px;
-  font-weight: 700;
-  font-size: 12px;
-  color: #fff;
-  box-shadow: 0 6px 20px rgba(2,6,23,0.12);
-}
-
-html.ui-variant-a body::before {
-  content: 'Variant A — Palette';
-  background: var(--ui-accent);
-}
-html.ui-variant-b body::before {
-  content: 'Variant B — Panels';
-  background: var(--ui-accent-2);
-}
-html.ui-variant-c body::before {
-  content: 'Variant C — Big CTA';
-  background: var(--ui-accent);
-}
+/* Variant visual badge removed — indicator hidden per request */
 
 /* Make differences more noticeable */
 html.ui-variant-a .lv3-hero {
@@ -134,12 +107,31 @@ html.ui-variant-b .lv3-copy h1 { color: #06202a; font-weight: 800; }
 html.ui-variant-b .lv3-stage-logo { transform: translateX(-6px) scale(1.02); }
 html.ui-variant-b .lv3-hero-grid { grid-template-columns: 1.5fr 1fr; gap: 28px; }
 
+/* Variant B: collapse toggle styles */
+.variant-collapse-toggle {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  z-index: 60;
+  border: none;
+  background: rgba(255,255,255,0.96);
+  padding: 6px 8px;
+  border-radius: 8px;
+  cursor: pointer;
+  box-shadow: 0 8px 20px rgba(10,20,40,0.08);
+  font-weight: 800;
+}
+.variant-collapse-toggle .vc-icon { font-size: 14px; line-height: 1; }
+.lv3-panel.variant-collapsed { max-height: 84px; overflow: hidden; position: relative; transition: max-height 260ms ease; }
+.lv3-panel.variant-collapsed::after { content: ''; position: absolute; left: 0; right: 0; bottom: 0; height: 52px; background: linear-gradient(180deg, transparent, rgba(255,255,255,0.95)); pointer-events: none; }
+
+
 /* Variant C: ultra-focused single-page hero, big centered CTA */
 html.ui-variant-c body { background: #ffffff; }
 html.ui-variant-c .lv3-hero { padding: 64px 0; display:flex; align-items:center; }
-html.ui-variant-c .lv3-hero-grid { display:flex; flex-direction:column; align-items:center; text-align:center; }
+html.ui-variant-c .lv3-hero-grid { display:flex !important; flex-direction:column !important; align-items:center !important; text-align:center !important; gap: 18px !important; grid-template-columns: none !important; }
 html.ui-variant-c .lv3-copy { max-width: 760px; }
-html.ui-variant-c .lv3-stage-logo { display:none; }
+html.ui-variant-c .lv3-stage-logo { display:block; transform: scale(0.94); opacity: 0.98; margin: 0 auto 8px; }
 html.ui-variant-c .lv3-action-dock { margin-top: 18px; }
 html.ui-variant-c .lv3-primary { font-size: 1.26rem; padding: 18px 30px; border-radius: 999px; box-shadow: 0 20px 60px rgba(16,185,129,0.08); }
 html.ui-variant-c .lv3-hero-demo-wrap { transform: scale(1.04); border-radius: 14px; box-shadow: 0 30px 80px rgba(12,34,56,0.06); }

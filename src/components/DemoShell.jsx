@@ -17,6 +17,7 @@ const DemoShell = () => {
   const [step, setStep] = useState(0);
   const [timeLeft, setTimeLeft] = useState(TOTAL_TIME);
   const [completed, setCompleted] = useState({});
+  const [toast, setToast] = useState(null);
   const { setIsDemo, startTracking, stopTracking, recordTrialEvent } = useTelemetry();
 
   const startedAtRef = useRef(Date.now());
@@ -39,6 +40,12 @@ const DemoShell = () => {
     // keep a ref to the latest completed state for cleanup callbacks
     completedRef.current = completed;
   }, [completed]);
+
+  useEffect(() => {
+    if (!toast) return undefined;
+    const t = setTimeout(() => setToast(null), 1400);
+    return () => clearTimeout(t);
+  }, [toast]);
 
   useEffect(() => {
     // mark this session as demo and start tracking
@@ -81,6 +88,14 @@ const DemoShell = () => {
   };
 
   const onComplete = (id) => {
+    try {
+      recordTrialEvent && recordTrialEvent({ event: 'demo_activity_complete', payload: { id, step } });
+    } catch (e) {
+      // noop
+    }
+
+    setToast('Actividad completada');
+
     setCompleted((c) => {
       const next = { ...c, [id]: true };
       const doneCount = Object.keys(next).length;
@@ -91,6 +106,14 @@ const DemoShell = () => {
       }
       return next;
     });
+  };
+
+  const skipActivity = () => {
+    setStep((s) => Math.min(ACTIVITIES.length - 1, s + 1));
+  };
+
+  const prevActivity = () => {
+    setStep((s) => Math.max(0, s - 1));
   };
 
   const restart = () => {
@@ -113,7 +136,9 @@ const DemoShell = () => {
 
       <main className="demo-main">
         <section className="demo-activity">
+          {toast && <div className="demo-toast">{toast}</div>}
           <h3>{ACTIVITIES[step].title}</h3>
+          <div className="demo-activity-meta">Est. {Math.floor(ACTIVITIES[step].est / 60)}:{String(ACTIVITIES[step].est % 60).padStart(2, '0')}</div>
           <ActivityComponent onComplete={() => onComplete(ACTIVITIES[step].id)} timeLeft={timeLeft} />
         </section>
 
@@ -121,11 +146,27 @@ const DemoShell = () => {
           <h4>Progreso</h4>
           <ol>
             {ACTIVITIES.map((a, i) => (
-              <li key={a.id} className={completed[a.id] ? 'done' : i === step ? 'active' : ''}>{a.title} {completed[a.id] ? '✓' : ''}</li>
+              <li
+                key={a.id}
+                className={completed[a.id] ? 'done' : i === step ? 'active' : ''}
+                onClick={() => setStep(i)}
+                role="button"
+                tabIndex={0}
+                onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') setStep(i); }}
+              >
+                {a.title} {completed[a.id] ? '✓' : ''}
+              </li>
             ))}
           </ol>
           <div className="demo-controls">
-            <button className="btn" onClick={restart}>Reiniciar demo</button>
+            <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+              <button className="btn" onClick={prevActivity} disabled={step === 0}>Anterior</button>
+              <button className="btn" onClick={skipActivity} disabled={step >= ACTIVITIES.length - 1}>Saltar</button>
+              <button className="btn" onClick={() => { setStep((s) => Math.min(ACTIVITIES.length - 1, s + 1)); }} disabled={step >= ACTIVITIES.length - 1}>Siguiente</button>
+            </div>
+            <div style={{ marginTop: 10 }}>
+              <button className="btn" onClick={restart}>Reiniciar demo</button>
+            </div>
           </div>
         </aside>
       </main>

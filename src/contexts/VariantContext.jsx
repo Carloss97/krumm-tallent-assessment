@@ -34,6 +34,59 @@ export const VariantProvider = ({ children }) => {
     }
   }, [variant]);
 
+  // Decorate panels with collapse toggles when Variant B is active.
+  useEffect(() => {
+    if (typeof document === 'undefined') return undefined;
+
+    const addCollapses = () => {
+      const panels = Array.from(document.querySelectorAll('.lv3-panel'));
+      panels.forEach((panel) => {
+        if (panel.dataset.vbToggle === '1') return;
+        panel.dataset.vbToggle = '1';
+        panel.style.position = panel.style.position || 'relative';
+
+        const btn = document.createElement('button');
+        btn.type = 'button';
+        btn.className = 'variant-collapse-toggle';
+        btn.setAttribute('aria-expanded', 'true');
+        btn.innerHTML = '<span class="vc-icon">▾</span>';
+
+        btn.addEventListener('click', () => {
+          const isCollapsed = panel.classList.toggle('variant-collapsed');
+          btn.setAttribute('aria-expanded', String(!isCollapsed));
+          const icon = btn.querySelector('.vc-icon');
+          if (icon) icon.textContent = isCollapsed ? '▸' : '▾';
+        });
+
+        panel.prepend(btn);
+      });
+    };
+
+    const removeCollapses = () => {
+      const panels = Array.from(document.querySelectorAll('.lv3-panel'));
+      panels.forEach((panel) => {
+        if (panel.dataset.vbToggle !== '1') return;
+        const btn = panel.querySelector('.variant-collapse-toggle');
+        if (btn) btn.remove();
+        panel.classList.remove('variant-collapsed');
+        delete panel.dataset.vbToggle;
+      });
+    };
+
+    if (variant === 'b') {
+      // small delay to allow lazy-loaded content to mount
+      const t = setTimeout(addCollapses, 120);
+      return () => {
+        clearTimeout(t);
+        removeCollapses();
+      };
+    }
+
+    // ensure cleanup when leaving variant B
+    removeCollapses();
+    return undefined;
+  }, [variant]);
+
   const setVariant = (v) => {
     if (!v) return;
     setVariantState(v);
