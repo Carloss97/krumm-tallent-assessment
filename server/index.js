@@ -2,6 +2,8 @@
 import express from 'express';
 import cors from 'cors';
 import dotenv from 'dotenv';
+import helmet from 'helmet';
+import compression from 'compression';
 import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -32,9 +34,34 @@ const GEMINI_FALLBACK_MODELS = [
   'gemini-2.0-flash-lite'
 ];
 
-// Middleware
-app.use(cors());
+// Middleware / security
+app.set('trust proxy', true);
+app.use(helmet());
+app.use(compression());
+
+// Configure CORS with optional whitelist from env var `CORS_ORIGINS`
+const corsOriginsEnv = process.env.CORS_ORIGINS || '';
+const allowedCorsOrigins = corsOriginsEnv.split(',').map(s => s.trim()).filter(Boolean);
+if (allowedCorsOrigins.length > 0) {
+  app.use(cors({
+    origin: (origin, callback) => {
+      if (!origin) return callback(null, true);
+      if (allowedCorsOrigins.includes(origin)) return callback(null, true);
+      return callback(new Error('CORS not allowed'), false);
+    }
+  }));
+} else {
+  app.use(cors());
+}
+
 app.use(express.json());
+
+// Prevent intermediaries (including Cloudflare) from caching API responses
+app.use('/api', (req, res, next) => {
+  res.setHeader('Cache-Control', 'no-store, private, must-revalidate');
+  next();
+});
+
 app.use((error, req, res, next) => {
   if (error?.type === 'entity.parse.failed' || error instanceof SyntaxError) {
     return res.status(400).json({
@@ -44,6 +71,7 @@ app.use((error, req, res, next) => {
   }
   return next(error);
 });
+
 app.use(requestLogger);
 const globalLimiter = rateLimiter(serverConfig.rateLimit.global);
 const bypassedRateLimitPaths = new Set(serverConfig.rateLimit.bypassPaths);
@@ -54,6 +82,41 @@ app.use((req, res, next) => {
   }
   return globalLimiter(req, res, next);
 });
+
+// Serve static build (if present) with sensible cache headers for hashed assets.
+const buildDir = path.join(__dirname, '..', 'dist');
+if (fs.existsSync(buildDir)) {
+  app.use(express.static(buildDir, {
+    index: false,
+    setHeaders: (res, filePath) => {
+      const lower = String(filePath || '').toLowerCase();
+      const hashedAsset = /\.[0-9a-f]{8,}\.[^.]+$/i.test(filePath);
+
+      if (lower.endsWith('.html')) {
+        res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
+        return;
+      }
+
+      if (hashedAsset || lower.includes(`${path.sep}assets${path.sep}`)) {
+        res.setHeader('Cache-Control', 'public, max-age=31536000, immutable');
+        return;
+      }
+
+      // default: 1 day for other static assets
+      res.setHeader('Cache-Control', 'public, max-age=86400');
+    }
+  }));
+
+  app.get(/.*/, (req, res, next) => {
+    if (req.path.startsWith('/api')) return next();
+    const indexPath = path.join(buildDir, 'index.html');
+    if (fs.existsSync(indexPath)) {
+      res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
+      return res.sendFile(indexPath);
+    }
+    return next();
+  });
+}
 
 // ===== UTILITIES =====
 const isEmail = (value) => {

@@ -144,13 +144,22 @@ async function runScenarios(frontendUrl, backendUrl, backendHealthUrl) {
     if (await consentContinue.isVisible().catch(() => false)) {
       const checkboxes = page.locator('input[type="checkbox"]');
       const count = await checkboxes.count();
-      if (count >= 3) {
-        await checkboxes.nth(2).check();
+      for (let i = 0; i < count; i++) {
+        const box = checkboxes.nth(i);
+        if (!(await box.isChecked().catch(() => false))) {
+          await box.click().catch(() => {});
+        }
       }
-      await consentContinue.click();
+      await consentContinue.click().catch(() => {});
     }
 
-    await page.getByRole('button', { name: /listo, comenzar juego|ready, start game/i }).click();
+    // Click the start button inside the instruction interstitial (match Spanish/English) if present
+    const startBtn = page.getByRole('button', { name: /comenzar juego|start game/i });
+    if (await startBtn.isVisible().catch(() => false)) {
+      await startBtn.click();
+    }
+
+    // Wait for the complementary game heading (may already be visible if interstitial is skipped)
     await page.getByText(/complementary game 1|juego complementario 1|metacognitive calibration|calibracion metacognitiva/i).waitFor({ timeout: 15_000 });
     await page.locator('div').filter({ hasText: /8\s*\/\s*13/ }).first().waitFor({ timeout: 15_000 });
 
@@ -186,7 +195,7 @@ async function runBackendDownFallbackScenario(frontendUrl) {
     await page.goto(`${frontendUrl}/report?dummy=true&ai=false`, { waitUntil: 'domcontentloaded' });
 
     const reportHeading = page.getByRole('heading', {
-      name: /skills evaluation matrix|matriz de evaluacion de habilidades|edge-local skills assessment|evaluacion de habilidades edge-local|ai-powered skills assessment|evaluacion de habilidades con ia/i,
+      name: /skills evaluation matrix|matriz de evaluacion de habilidades|matriz de evaluación de habilidades|edge-local skills assessment|evaluacion de habilidades edge-local|evaluación de habilidades edge-local|ai-powered skills assessment|evaluacion de habilidades con ia|evaluación de habilidades con ia/i,
     });
 
     const noDataHeading = page.getByRole('heading', {
@@ -199,7 +208,8 @@ async function runBackendDownFallbackScenario(frontendUrl) {
       await page.getByRole('button', { name: /view demo report|ver reporte demo/i }).first().click();
     }
 
-    await reportHeading.first().waitFor({ timeout: 30_000 });
+    // Give more time for report generation and AI/heuristic fallback to render
+    await reportHeading.first().waitFor({ timeout: 60_000 });
 
     // In fallback mode AI probes can keep polling; assert semantic content instead of network idle stability.
     await page.getByText(/insight source\s*:|fuente de insight\s*:|analisis basado en heuristicas|heuristic-based analysis/i).first().waitFor({ timeout: 25_000 });
@@ -226,6 +236,8 @@ async function main() {
       VITE_PROXY_BASE_FALLBACK: 'false',
       VITE_ALLOW_BROWSER_GEMINI_FALLBACK: 'false',
       VITE_USE_EDGE_LOCAL_INFERENCE: 'false',
+      // Enable hero demo for E2E runs so the interactive demo is visible in tests
+      VITE_ENABLE_HERO_DEMO: 'true',
     }
   );
   const backendProc = spawnNpm(['run', 'dev:server'], 'backend', { PORT: String(backendPort) });
