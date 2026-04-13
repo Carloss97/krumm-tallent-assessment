@@ -1,0 +1,30 @@
+Summary
+
+This PR hardens backend behaviour, improves observability and adds validation/sanitization for session payloads.
+
+Changes included
+
+- Security & infra
+  - Structured logging, metrics and readiness endpoints (already in branch)
+- Observability
+  - Prometheus metrics for AI circuit (ai_circuit_*), HTTP durations and new session counters
+  - Added alert rules: monitoring/prometheus/ai_circuit_alerts.yml
+- Validation & data handling
+  - AJV-based `validateSession` with stricter `participant` schema and formal `sessionData`
+  - Normalization before validation: lowercase emails, trim IDs, add `startedAt` and cap `sessionData.events`
+  - PII minimal redaction (remove obvious fields like ssn, nationalId)
+- Tests
+  - All unit tests pass locally: `npm run test` -> 66 tests passed
+
+How to test locally
+
+1. Install deps: `npm ci`
+2. Run tests: `npm run test`
+3. Start server: `npm start`
+4. Exercise endpoints: POST /api/session (requires participant JWT). Metrics available at `/metrics`.
+
+Notes & follow-ups
+
+- Alert rules are suggestions; adjust `for` durations and thresholds to match traffic.
+- Consider adding CI checks that run tests, lint and build (recommended next task).
+
