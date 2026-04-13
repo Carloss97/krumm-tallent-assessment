@@ -366,7 +366,7 @@ const LandingPageV3 = () => {
   const [showForm, setShowForm] = useState(false);
   const [showQuickModal, setShowQuickModal] = useState(false);
   const { language, setLanguage } = useLanguage();
-  const [isQaMode, setIsQaMode] = useState(() => getQaMode());
+  const [isQaMode] = useState(() => getQaMode());
   const [formData, setFormData] = useState({
     fullName: '',
     participantId: '',
@@ -463,9 +463,8 @@ const LandingPageV3 = () => {
       preferredLanguage: language,
       source: 'demo'
     });
-    // Navigate to first demo game defined in DEMO_GAME_IDS
-    const firstDemo = (Array.isArray(DEMO_GAME_IDS) && DEMO_GAME_IDS.length > 0) ? DEMO_GAME_IDS[0] : 1;
-    navigate(`/game/${firstDemo}?lang=${language}`);
+    // Navigate to demo shell
+    navigate(`/demo?lang=${language}`);
   };
 
   const handleContinueLocal = () => {

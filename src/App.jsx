@@ -18,6 +18,7 @@ const Intro = lazy(() => import('./components/Intro'));
 const LandingPage = lazy(() => import('./components/LandingPageV3'));
 const FutureAssessmentLab = lazy(() => import('./components/FutureAssessmentLab'));
 const ComplementaryIntro = lazy(() => import('./components/ComplementaryIntro'));
+const DemoShell = lazy(() => import('./components/DemoShell'));
 
 // Main App Router and State
 function AppContent() {
@@ -60,6 +61,7 @@ function AppContent() {
             <Route path="/complementary/intro" element={<ComplementaryIntro />} />
             <Route path="/future/lab" element={<FutureAssessmentLab />} />
             <Route path="/report" element={<Report />} />
+            <Route path="/demo" element={<DemoShell />} />
           </Routes>
         </Suspense>
       </div>

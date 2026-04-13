@@ -1,0 +1,18 @@
+.demo-shell {
+  max-width: 980px;
+  margin: 24px auto;
+  padding: 16px;
+}
+.demo-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12px;
+}
+.demo-main { display: flex; gap: 16px; }
+.demo-activity { flex: 1; background: #ffffff; padding: 14px; border-radius: 10px; border: 1px solid rgba(15,23,42,0.04); }
+.demo-sidebar { width: 220px; background: #f8fafc; padding: 12px; border-radius: 10px; border: 1px solid rgba(15,23,42,0.03); }
+.demo-sidebar ol { padding-left: 18px; }
+.demo-sidebar li.done { text-decoration: line-through; color: #64748b; }
+.demo-sidebar li.active { font-weight: 700; }
+.demo-controls { margin-top: 12px; }

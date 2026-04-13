@@ -10,7 +10,7 @@ const RecruiterLogin = () => {
   const [password, setPassword] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
-  const [isQaMode, setIsQaMode] = useState(() => getQaMode());
+  const [isQaMode] = useState(() => getQaMode());
 
   const handleSubmit = async (e) => {
     e.preventDefault();
