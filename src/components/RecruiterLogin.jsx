@@ -11,14 +11,24 @@ const RecruiterLogin = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
   const [isQaMode] = useState(() => getQaMode());
+  const isDev = (typeof import.meta !== 'undefined' && import.meta.env?.DEV) === true;
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError('');
     setIsLoading(true);
 
+    // Quick QA/demo access in development
+    if (isDev && String(email).trim().toLowerCase() === 'recruiter@krumm.io' && password === 'demo-password') {
+      setQaAuthToken();
+      setIsLoading(false);
+      navigate('/recruiter/dashboard?qa=1');
+      return;
+    }
+
     if (isQaMode) {
       setQaAuthToken();
+      setIsLoading(false);
       navigate('/recruiter/dashboard?qa=1');
       return;
     }

@@ -573,6 +573,12 @@ const LandingPageV3 = () => {
           <div className="lv3-action-buttons">
             <button className="lv3-primary lv3-action-btn lv3-action-start" onClick={() => {
               recordTrialEvent && recordTrialEvent({ event: 'cta_quick_modal_opened' });
+              // In development allow quick start (bypass form) for demo purposes
+              if (isDev) {
+                ensureQuickAccessProfile();
+                navigate(`/game/1?lang=${language}`);
+                return;
+              }
               // If hero demo feature is disabled, fall back to the original form overlay
               if (featureFlags?.enableHeroDemo) setShowQuickModal(true);
               else setShowForm(true);
@@ -586,14 +592,16 @@ const LandingPageV3 = () => {
               <span>{t.actionDemo}</span>
               <ChevronRight size={16} aria-hidden="true" />
             </button>
-            <button
-              className="lv3-recruiter-btn lv3-action-btn lv3-action-recruiter"
-              onClick={() => { recordTrialEvent && recordTrialEvent({ event: 'cta_recruiter_clicked' }); navigate('/recruiter/login'); }}
-            >
-              <Globe size={18} aria-hidden="true" />
-              <span>{t.actionRecruiter}</span>
-              <ChevronRight size={16} aria-hidden="true" />
-            </button>
+            {isDev && (
+              <button
+                className="lv3-recruiter-btn lv3-action-btn lv3-action-recruiter"
+                onClick={() => { recordTrialEvent && recordTrialEvent({ event: 'cta_recruiter_clicked' }); navigate('/recruiter/login'); }}
+              >
+                <Globe size={18} aria-hidden="true" />
+                <span>{t.actionRecruiter}</span>
+                <ChevronRight size={16} aria-hidden="true" />
+              </button>
+            )}
           </div>
         </motion.div>
 
