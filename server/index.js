@@ -432,16 +432,94 @@ app.post('/api/telemetry', (req, res) => {
 });
 
 // Tighten AI endpoint rate to reduce bursty retries hitting Gemini quotas.
-app.use('/api/ai', rateLimiter(serverConfig.rateLimit.ai));
+// Simple in-memory circuit breaker for AI backend to avoid repeated failing calls
+const aiCircuit = {
+  failures: 0,
+  firstFailureAt: 0,
+  openUntil: 0,
+  failureWindowMs: Number(process.env.AI_CIRCUIT_WINDOW_MS) || 60_000,
+  failureThreshold: Number(process.env.AI_CIRCUIT_THRESHOLD) || 5,
+  openMs: Number(process.env.AI_CIRCUIT_OPEN_MS) || 5 * 60_000,
+  isOpen() { return Date.now() < this.openUntil; },
+  timeLeftSec() { return Math.max(0, Math.ceil((this.openUntil - Date.now()) / 1000)); },
+  recordFailure(code) {
+    const now = Date.now();
+    if (!this.firstFailureAt || now - this.firstFailureAt > this.failureWindowMs) {
+      this.firstFailureAt = now;
+      this.failures = 1;
+    } else {
+      this.failures += 1;
+    }
+    this.lastFailureAt = now;
+    if (this.failures >= this.failureThreshold) {
+      this.openUntil = now + this.openMs;
+    }
+  },
+  recordSuccess() {
+    this.failures = 0;
+    this.firstFailureAt = 0;
+    this.openUntil = 0;
+  }
+};
+
+const aiCircuitMiddleware = (req, res, next) => {
+  if (aiCircuit.isOpen()) {
+    const retryAfter = aiCircuit.timeLeftSec();
+    res.setHeader('Retry-After', String(retryAfter));
+    return res.status(503).json({
+      ok: false,
+      code: 'AI_CIRCUIT_OPEN',
+      message: 'AI backend temporarily disabled due to repeated failures',
+      retryAfterSeconds: retryAfter
+    });
+  }
+  return next();
+};
+
+app.use('/api/ai', aiCircuitMiddleware, rateLimiter(serverConfig.rateLimit.ai));
+
+// Helper: attempt generation with simple exponential backoff retries for transient failures
+async function attemptGeminiWithRetries({ prompt, preferredModel, generationConfig = {} }, maxRetries = 2, baseDelayMs = 200) {
+  const nonRetryable = new Set(['KEY_LEAKED', 'KEY_INVALID', 'PERMISSION_DENIED', 'MODEL_NOT_FOUND', 'BAD_REQUEST']);
+  let attempt = 0;
+  while (true) {
+    attempt += 1;
+    try {
+      const result = await runGeminiGeneration({ prompt, preferredModel, generationConfig });
+      if (result.ok) return result;
+      if (nonRetryable.has(result.code) || attempt > maxRetries) return result;
+      const delay = baseDelayMs * Math.pow(2, attempt - 1);
+      await new Promise((r) => setTimeout(r, delay));
+      continue;
+    } catch (err) {
+      if (attempt > maxRetries) {
+        return { ok: false, code: 'SERVER_ERROR', message: String(err), attempts: [] };
+      }
+      const delay = baseDelayMs * Math.pow(2, attempt - 1);
+      await new Promise((r) => setTimeout(r, delay));
+      continue;
+    }
+  }
+}
 
 app.get('/api/ai/health', async (req, res) => {
   try {
     const preferredModel = typeof req.query.model === 'string' ? req.query.model : undefined;
-    const result = await runGeminiGeneration({
+    const result = await attemptGeminiWithRetries({
       prompt: 'Respond with valid JSON only: {"ok":true}',
       preferredModel,
       generationConfig: { temperature: 0 },
     });
+
+    if (result.ok) {
+      aiCircuit.recordSuccess();
+    } else {
+      aiCircuit.recordFailure(result.code || 'unknown');
+    }
+
+    if (aiCircuit.isOpen()) {
+      return res.status(503).json({ ok: false, code: 'AI_CIRCUIT_OPEN', message: 'AI backend temporarily disabled', retryAfterSeconds: aiCircuit.timeLeftSec() });
+    }
 
     return res.status(result.ok ? 200 : getHttpStatusFromGeminiCode(result.code)).json({
       ok: result.ok,
@@ -451,6 +529,10 @@ app.get('/api/ai/health', async (req, res) => {
       attempts: result.attempts || [],
     });
   } catch (error) {
+    aiCircuit.recordFailure('SERVER_ERROR');
+    if (aiCircuit.isOpen()) {
+      return res.status(503).json({ ok: false, code: 'AI_CIRCUIT_OPEN', message: 'AI backend temporarily disabled', retryAfterSeconds: aiCircuit.timeLeftSec() });
+    }
     return res.status(500).json({
       ok: false,
       code: 'SERVER_ERROR',
@@ -475,31 +557,41 @@ app.post('/api/ai/generate', async (req, res) => {
   }
 
   try {
-    const result = await runGeminiGeneration({
+    const result = await attemptGeminiWithRetries({
       prompt,
       preferredModel,
       generationConfig: { temperature: 0.2, responseMimeType: 'application/json' },
     });
 
-    if (!result.ok) {
-      return res.status(getHttpStatusFromGeminiCode(result.code)).json({
-        ok: false,
-        code: result.code,
-        message: result.message,
+    if (result.ok) {
+      aiCircuit.recordSuccess();
+      return res.status(200).json({
+        ok: true,
+        code: 'OK',
+        message: 'Generation succeeded.',
         model: result.model,
+        text: result.text,
         attempts: result.attempts || [],
       });
     }
 
-    return res.status(200).json({
-      ok: true,
-      code: 'OK',
-      message: 'Generation succeeded.',
+    aiCircuit.recordFailure(result.code || 'unknown');
+    if (aiCircuit.isOpen()) {
+      return res.status(503).json({ ok: false, code: 'AI_CIRCUIT_OPEN', message: 'AI backend temporarily disabled', retryAfterSeconds: aiCircuit.timeLeftSec() });
+    }
+
+    return res.status(getHttpStatusFromGeminiCode(result.code)).json({
+      ok: false,
+      code: result.code,
+      message: result.message,
       model: result.model,
-      text: result.text,
       attempts: result.attempts || [],
     });
   } catch (error) {
+    aiCircuit.recordFailure('SERVER_ERROR');
+    if (aiCircuit.isOpen()) {
+      return res.status(503).json({ ok: false, code: 'AI_CIRCUIT_OPEN', message: 'AI backend temporarily disabled', retryAfterSeconds: aiCircuit.timeLeftSec() });
+    }
     return res.status(500).json({
       ok: false,
       code: 'SERVER_ERROR',
