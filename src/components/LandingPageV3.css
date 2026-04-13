@@ -199,7 +199,7 @@
 .lv3-action-buttons .lv3-primary,
 .lv3-action-buttons .lv3-ghost,
 .lv3-action-buttons .lv3-recruiter-btn {
-  min-height: 54px;
+  min-height: 72px;
 }
 
 .lv3-action-btn {
@@ -207,18 +207,21 @@
   align-items: center;
   justify-content: center;
   gap: 0.45rem;
-  padding: 0.95rem 1.45rem;
-  font-size: 0.98rem;
+  padding: 1.12rem 1.8rem;
+  font-size: 1.06rem;
   letter-spacing: 0.01em;
   border-radius: 12px;
   font-weight: 800;
 }
 
 .lv3-action-start {
-  background: linear-gradient(135deg, #ffffff, #f4f7fb);
-  color: #1e355f;
-  border: 1px solid rgba(67, 90, 128, 0.28);
-  box-shadow: 0 10px 20px rgba(18, 33, 58, 0.12);
+  background: linear-gradient(135deg, #ffffff, #eef6ff);
+  color: #0f2b4d;
+  border: 1px solid rgba(48, 78, 156, 0.28);
+  box-shadow: 0 16px 36px rgba(34, 64, 140, 0.18);
+  padding: 1.2rem 2rem;
+  font-size: 1.12rem;
+  border-radius: 14px;
 }
 
 .lv3-action-start:hover {
@@ -396,6 +399,18 @@
   font-size: clamp(1.6rem, 2.6vw, 2.3rem);
   color: #13223a;
   margin-bottom: 0.8rem;
+}
+
+/* Larger hero demo panel to make it more visible in the hero */
+.lv3-hero-demo-wrap {
+  margin-top: 1rem;
+}
+.lv3-hero-demo-wrap .lv3-panel {
+  padding: 1.5rem;
+  min-height: 240px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .lv3-intro {

@@ -1,4 +1,5 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
+import { useTelemetry } from '../TelemetryContext';
 import BalloonGame from './demo/BalloonGame';
 import CollectPeopleGame from './demo/CollectPeopleGame';
 import LaserReflectGame from './demo/LaserReflectGame';
@@ -16,6 +17,11 @@ const DemoShell = () => {
   const [step, setStep] = useState(0);
   const [timeLeft, setTimeLeft] = useState(TOTAL_TIME);
   const [completed, setCompleted] = useState({});
+  const { setIsDemo, startTracking, stopTracking, recordTrialEvent } = useTelemetry();
+
+  const startedAtRef = useRef(Date.now());
+  const finishedRef = useRef(false);
+  const completedRef = useRef(completed);
 
   useEffect(() => {
     const t = setInterval(() => setTimeLeft((s) => Math.max(0, s - 1)), 1000);
@@ -25,12 +31,66 @@ const DemoShell = () => {
   useEffect(() => {
     if (timeLeft === 0) {
       // finished by time
+      handleDemoComplete(completedRef.current);
     }
   }, [timeLeft]);
 
+  useEffect(() => {
+    // keep a ref to the latest completed state for cleanup callbacks
+    completedRef.current = completed;
+  }, [completed]);
+
+  useEffect(() => {
+    // mark this session as demo and start tracking
+    try {
+      setIsDemo(true);
+      startTracking('demo');
+      startedAtRef.current = Date.now();
+    } catch (e) {
+      // noop
+    }
+
+    return () => {
+      setIsDemo(false);
+      if (!finishedRef.current) {
+        // user left before finishing
+        const completedCount = Object.keys(completedRef.current || {}).length;
+        const timeUsedSec = Math.round((Date.now() - startedAtRef.current) / 1000);
+        try {
+          stopTracking('demo', 0, null, { reason: 'unmount', completedCount, timeUsedSec });
+          recordTrialEvent({ event: 'demo_abandon', payload: { completedCount, timeUsedSec } });
+        } catch (e) {
+          // silent
+        }
+        finishedRef.current = true;
+      }
+    };
+  }, []);
+
+  const handleDemoComplete = (completedObj) => {
+    if (finishedRef.current) return;
+    finishedRef.current = true;
+    const completedIds = Object.keys(completedObj || {});
+    const timeUsedSec = Math.round((Date.now() - startedAtRef.current) / 1000);
+    try {
+      stopTracking('demo', 0, null, { completedIds, timeUsedSec });
+      recordTrialEvent({ event: 'demo_complete', payload: { completedIds, timeUsedSec, completedCount: completedIds.length } });
+    } catch (e) {
+      // swallow telemetry errors
+    }
+  };
+
   const onComplete = (id) => {
-    setCompleted((c) => ({ ...c, [id]: true }));
-    setStep((s) => Math.min(ACTIVITIES.length - 1, s + 1));
+    setCompleted((c) => {
+      const next = { ...c, [id]: true };
+      const doneCount = Object.keys(next).length;
+      if (doneCount >= ACTIVITIES.length) {
+        handleDemoComplete(next);
+      } else {
+        setStep((s) => Math.min(ACTIVITIES.length - 1, s + 1));
+      }
+      return next;
+    });
   };
 
   const restart = () => {
