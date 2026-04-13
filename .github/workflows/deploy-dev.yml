@@ -89,4 +89,6 @@ jobs:
             echo "Skipping Cloudflare Pages deploy: CLOUDFLARE_API_TOKEN or CLOUDFLARE_PROJECT_NAME secret not provided.";
             exit 0;
           fi
+          # Use npx to ensure a compatible wrangler binary is used in CI
+          npx --yes @cloudflare/wrangler pages publish ./dist --project-name "$CLOUDFLARE_PROJECT_NAME" || \
           wrangler pages publish dist --project-name "$CLOUDFLARE_PROJECT_NAME"
