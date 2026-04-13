@@ -46,16 +46,21 @@
 /* Dev controls floating */
 .dev-controls {
   position: fixed;
-  right: 18px;
-  bottom: 120px;
+  right: 16px;
+  bottom: 96px;
   z-index: 3000;
+  pointer-events: auto;
 }
 .dev-controls-inner {
   display: flex;
   flex-direction: column;
   gap: 8px;
-  background: rgba(255,255,255,0.95);
-  padding: 10px;
-  border-radius: 12px;
+  background: rgba(255,255,255,0.92);
+  padding: 8px;
+  border-radius: 10px;
   box-shadow: var(--elevation-3);
+  min-width: 160px;
+  transition: transform 120ms ease, box-shadow 120ms ease;
 }
+
+.dev-controls[aria-hidden="true"] { display: none; }

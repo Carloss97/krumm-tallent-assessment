@@ -8,7 +8,8 @@ import { GAME_FLOW } from './utils/gameFlow';
 import RecruiterLogin from './components/RecruiterLogin';
 import RecruiterDashboard from './components/RecruiterDashboard';
 import './App.css';
-import DevControls from './components/DevControls';
+// Load DevControls only in dev mode so it's not bundled into production builds
+const DevControls = import.meta.env.DEV ? lazy(() => import('./components/DevControls')) : null;
 import Footer from './components/Footer';
 
 // Lazy load components for code splitting
@@ -34,7 +35,11 @@ function AppContent() {
 
       <GlobalProgressBar />
 
-      <DevControls />
+      {DevControls && (
+        <Suspense fallback={null}>
+          <DevControls />
+        </Suspense>
+      )}
 
       <div style={{ flex: 1, position: 'relative', overflowY: 'auto', overflowX: 'hidden' }}>
         <Suspense fallback={<div className="loading-spinner">Loading...</div>}>
