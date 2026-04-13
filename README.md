@@ -187,6 +187,24 @@ VITE_GEMINI_MODEL=gemini-1.5-flash
 PORT=3001
 ```
 
+### Developer / Demo Mode
+
+You can enable a developer toolbar with quick navigation controls (useful during local development and demos) by setting the Vite env flag `VITE_DEV_VERSION=true` in your environment. Example:
+
+```bash
+# in a .env file at project root
+VITE_DEV_VERSION=true
+
+# then start
+npm run dev:full
+```
+
+When enabled a small floating panel will appear with shortcuts to games, the report page and recruiter dashboard. This is only shown in the frontend build when `VITE_DEV_VERSION` is set to `true`.
+
+### Footer / Contact
+
+The public site includes a footer with contact information: `info@krumm.cl` and `contacto@krumm.cl`.
+
 ### Vite Configuration
 - **React 19** with SWC compiler
 - **Code splitting** enabled

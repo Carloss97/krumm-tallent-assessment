@@ -8,6 +8,8 @@ import { GAME_FLOW } from './utils/gameFlow';
 import RecruiterLogin from './components/RecruiterLogin';
 import RecruiterDashboard from './components/RecruiterDashboard';
 import './App.css';
+import DevControls from './components/DevControls';
+import Footer from './components/Footer';
 
 // Lazy load components for code splitting
 const Report = lazy(() => import('./Report'));
@@ -32,6 +34,8 @@ function AppContent() {
 
       <GlobalProgressBar />
 
+      {import.meta.env.VITE_DEV_VERSION === 'true' && <DevControls />}
+
       <div style={{ flex: 1, position: 'relative', overflowY: 'auto', overflowX: 'hidden' }}>
         <Suspense fallback={<div className="loading-spinner">Loading...</div>}>
           <Routes>
@@ -54,6 +58,8 @@ function AppContent() {
           </Routes>
         </Suspense>
       </div>
+
+      <Footer />
     </div>
   );
 }
