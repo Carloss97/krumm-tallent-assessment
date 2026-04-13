@@ -4,6 +4,7 @@ import cors from 'cors';
 import dotenv from 'dotenv';
 import helmet from 'helmet';
 import compression from 'compression';
+import { collectDefaultMetrics, Histogram, register } from 'prom-client';
 import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -73,6 +74,31 @@ app.use((error, req, res, next) => {
 });
 
 app.use(requestLogger);
+
+// Prometheus metrics: collect defaults and track HTTP request durations
+collectDefaultMetrics({ timeout: 5000 });
+
+const httpRequestDurationSeconds = new Histogram({
+  name: 'http_request_duration_seconds',
+  help: 'Duration of HTTP requests in seconds',
+  labelNames: ['method', 'route', 'status_code'],
+  buckets: [0.005, 0.01, 0.025, 0.05, 0.1, 0.3, 0.5, 1, 2.5, 5]
+});
+
+app.use((req, res, next) => {
+  const start = process.hrtime();
+  res.on('finish', () => {
+    try {
+      const diff = process.hrtime(start);
+      const durationInSeconds = diff[0] + diff[1] / 1e9;
+      const route = (req.route && req.route.path) ? req.route.path : req.path;
+      httpRequestDurationSeconds.labels(req.method, route, String(res.statusCode)).observe(durationInSeconds);
+    } catch (err) {
+      // don't let metrics failures break the request
+    }
+  });
+  next();
+});
 const globalLimiter = rateLimiter(serverConfig.rateLimit.global);
 const bypassedRateLimitPaths = new Set(serverConfig.rateLimit.bypassPaths);
 app.use((req, res, next) => {
@@ -319,6 +345,17 @@ app.get('/health', (req, res) => {
     timestamp: new Date().toISOString(),
     uptime: process.uptime()
   });
+});
+
+// Prometheus metrics endpoint (no auth)
+app.get('/metrics', async (req, res) => {
+  try {
+    res.set('Content-Type', register.contentType);
+    const metrics = await register.metrics();
+    return res.send(metrics);
+  } catch (err) {
+    return res.status(500).send('failed_to_collect_metrics');
+  }
 });
 
 // Runtime feature flags endpoint (no auth) - return simple rollout controls
