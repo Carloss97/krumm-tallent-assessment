@@ -24,7 +24,7 @@ import { useLanguage } from '../context/LanguageContext';
 import { authenticateParticipant } from '../services/backendService';
 import { GAME_FLOW, DEMO_GAME_IDS } from '../utils/gameFlow';
 import { getLocalizedGameInstruction } from '../utils/gameFlowI18n';
-import { getQaMode, setQaMode, qaModeLabel } from '../utils/qaMode';
+import { getQaMode } from '../utils/qaMode';
 import logo from '../assets/logo.jpg';
 import './LandingPageV3.css';
 import TestAccessModal from './TestAccessModal';
@@ -470,11 +470,7 @@ const LandingPageV3 = () => {
     navigate(`/game/1?lang=${language}`);
   };
 
-  const handleToggleQaMode = () => {
-    const next = !isQaMode;
-    setIsQaMode(next);
-    setQaMode(next);
-  };
+  // QA toggle removed from UI — QA mode can still be controlled via localStorage if needed
 
   const ensureQuickAccessProfile = () => {
     setIsDemo(true);
@@ -516,17 +512,7 @@ const LandingPageV3 = () => {
         >
           EN
         </button>
-        {isDev && (
-          <button
-            type="button"
-            className={`lv3-lang-btn lv3-qa-toggle ${isQaMode ? 'active' : ''}`}
-            onClick={handleToggleQaMode}
-            aria-label={qaModeLabel(language)}
-            title={qaModeLabel(language)}
-          >
-            QA {isQaMode ? 'ON' : 'OFF'}
-          </button>
-        )}
+        {/* QA toggle removed from header */}
       </div>
 
       <header className="lv3-hero">
@@ -641,11 +627,7 @@ const LandingPageV3 = () => {
             <p>{t.formDescription}</p>
 
             <form className="lv3-form" onSubmit={handleStartAssessment}>
-              {isDev && (
-                <div className="lv3-divider" style={{ marginBottom: '8px' }}>
-                  {qaModeLabel(language)}: {isQaMode ? 'ON' : 'OFF'}
-                </div>
-              )}
+              {/* QA status indicator removed from form overlay */}
 
               {isDev && isQaMode && (
                 <div className="lv3-divider" style={{ marginBottom: '14px', color: '#0369a1', borderColor: 'rgba(2,132,199,0.35)' }}>

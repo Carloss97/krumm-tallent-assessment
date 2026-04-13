@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { authenticateRecruiter, setQaAuthToken } from '../services/backendService';
-import { getQaMode, setQaMode } from '../utils/qaMode';
+import { getQaMode } from '../utils/qaMode';
 import './RecruiterLogin.css';
 
 const RecruiterLogin = () => {
@@ -38,12 +38,7 @@ const RecruiterLogin = () => {
     }
   };
 
-  const handleToggleQa = () => {
-    const next = !isQaMode;
-    setIsQaMode(next);
-    setQaMode(next);
-    setError('');
-  };
+  // QA toggle removed from UI; QA mode persists via localStorage if previously set
 
   const handleQaDirectAccess = () => {
     setQaAuthToken();
@@ -59,14 +54,7 @@ const RecruiterLogin = () => {
           <div className="login-header">
             <h1>👥 Recruiter Access</h1>
             <p>View assessment analytics and insights</p>
-            <button
-              type="button"
-              className="submit-btn"
-              style={{ marginTop: '12px', background: isQaMode ? '#0369a1' : '#334155' }}
-              onClick={handleToggleQa}
-            >
-              QA Mode: {isQaMode ? 'ON' : 'OFF'}
-            </button>
+            {/* QA toggle removed from Login UI */}
           </div>
 
           <form onSubmit={handleSubmit} className="login-form">

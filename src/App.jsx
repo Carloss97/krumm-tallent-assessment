@@ -34,7 +34,7 @@ function AppContent() {
 
       <GlobalProgressBar />
 
-      {import.meta.env.VITE_DEV_VERSION === 'true' && <DevControls />}
+      <DevControls />
 
       <div style={{ flex: 1, position: 'relative', overflowY: 'auto', overflowX: 'hidden' }}>
         <Suspense fallback={<div className="loading-spinner">Loading...</div>}>
