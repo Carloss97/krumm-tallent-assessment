@@ -29,6 +29,7 @@ import logo from '../assets/logo.jpg';
 import './LandingPageV3.css';
 import TestAccessModal from './TestAccessModal';
 import HeroDemo from './HeroDemo';
+import DesignVariants from './DesignVariants';
 
 const capabilityAreas = [
   {
@@ -712,6 +713,10 @@ const LandingPageV3 = () => {
             </form>
           </motion.div>
         </motion.section>
+      )}
+
+      {showDevQuickAccess && (
+        <DesignVariants />
       )}
 
       <section className="lv3-section lv3-categories">

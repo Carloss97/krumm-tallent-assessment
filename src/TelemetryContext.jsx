@@ -74,7 +74,14 @@ export const TelemetryProvider = ({ children }) => {
   }, []);
 
   // Fetch runtime feature flags and apply a percentage-based rollout for hero demo.
+  // NOTE: avoid calling runtime backend flags in preview/production static serve
+  // when the API may not be available (e.g. `vite preview`). Only fetch
+  // runtime flags during local development to prevent proxy/ECONNREFUSED
+  // logs when backend is not running.
   useEffect(() => {
+    if (!(typeof import.meta !== 'undefined' && import.meta.env?.DEV)) {
+      return undefined;
+    }
     let mounted = true;
 
     const simpleHash = (s) => {
