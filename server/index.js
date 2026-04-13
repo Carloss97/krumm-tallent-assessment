@@ -121,6 +121,28 @@ const aiCircuitTriggersTotal = new Counter({
   help: 'Total times the AI circuit has opened',
 });
 
+// Session metrics
+const sessionValidationErrorsTotal = new Counter({
+  name: 'session_validation_errors_total',
+  help: 'Total invalid session payloads received',
+});
+
+const sessionsSavedTotal = new Counter({
+  name: 'sessions_saved_total',
+  help: 'Total sessions successfully saved',
+});
+
+// Session metrics
+const sessionValidationErrorsTotal = new Counter({
+  name: 'session_validation_errors_total',
+  help: 'Total invalid session payloads received',
+});
+
+const sessionsSavedTotal = new Counter({
+  name: 'sessions_saved_total',
+  help: 'Total sessions successfully saved',
+});
+
 app.use((req, res, next) => {
   const start = process.hrtime();
   res.on('finish', () => {
@@ -745,13 +767,51 @@ app.post('/api/session', authenticateToken, requireParticipant, (req, res) => {
     return res.status(400).json({ error: 'Empty session payload' });
   }
 
+  // Normalizations / enrichments (prevent PII leaking to storage, enforce shapes)
+  try {
+    if (payload.participant && typeof payload.participant === 'object') {
+      if (payload.participant.email) {
+        payload.participant.email = String(payload.participant.email).trim().toLowerCase();
+      }
+      if (payload.participant.participantId) {
+        payload.participant.participantId = String(payload.participant.participantId).trim();
+      }
+      if (payload.participant.fullName) {
+        payload.participant.fullName = String(payload.participant.fullName).trim();
+      }
+      // Remove obvious sensitive fields if accidentally present
+      ['ssn', 'nationalId', 'creditCard', 'cardNumber'].forEach((f) => {
+        if (f in payload.participant) delete payload.participant[f];
+      });
+    }
+
+    if (!payload.sessionData || typeof payload.sessionData !== 'object') {
+      payload.sessionData = {};
+    }
+    if (!payload.sessionData.startedAt) {
+      payload.sessionData.startedAt = new Date().toISOString();
+    }
+    if (!Array.isArray(payload.sessionData.events)) {
+      payload.sessionData.events = [];
+    }
+    const MAX_EVENTS = Number(process.env.SESSION_MAX_EVENTS) || 5000;
+    if (payload.sessionData.events.length > MAX_EVENTS) {
+      payload.sessionData.events = payload.sessionData.events.slice(0, MAX_EVENTS);
+    }
+  } catch (err) {
+    // normalization errors should not block saving; log and continue
+    console.warn('Session normalization failed:', err?.message || err);
+  }
+
   // Validate session payload shape
   try {
     const valid = validateSession(payload);
     if (!valid) {
+      try { sessionValidationErrorsTotal.inc(); } catch (e) {}
       return res.status(400).json({ error: 'Invalid session payload', details: validateSession.errors });
     }
   } catch (err) {
+    try { sessionValidationErrorsTotal.inc(); } catch (e) {}
     return res.status(400).json({ error: 'Invalid session payload', details: String(err) });
   }
 
@@ -762,6 +822,7 @@ app.post('/api/session', authenticateToken, requireParticipant, (req, res) => {
 
   try {
     const sessionId = saveSession(payload);
+    try { sessionsSavedTotal.inc(); } catch (e) {}
     return res.status(201).json({
       sessionId,
       message: 'Session saved securely',

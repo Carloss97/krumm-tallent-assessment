@@ -15,9 +15,17 @@ const sessionSchema = {
         fullName: { type: 'string' }
       },
       required: ['participantId', 'email'],
-      additionalProperties: true
+        additionalProperties: false
     },
-    sessionData: { type: 'object' }
+      sessionData: {
+        type: 'object',
+        properties: {
+          startedAt: { type: 'string', format: 'date-time' },
+          events: { type: 'array' }
+        },
+        required: ['startedAt'],
+        additionalProperties: true
+      }
   },
   required: ['participant', 'sessionData'],
   additionalProperties: true
