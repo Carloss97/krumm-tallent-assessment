@@ -1,12 +1,26 @@
 const requestBuckets = new Map();
 
+import { logger, sendToCollector } from './logger.js';
+
 export const requestLogger = (req, res, next) => {
   const start = Date.now();
   res.on('finish', () => {
     const durationMs = Date.now() - start;
-    // Lightweight structured log for local observability. Include request id when available.
-    const rid = req.requestId ? `${req.requestId} ` : '';
-    console.log(`[api] ${rid}${req.method} ${req.originalUrl} ${res.statusCode} ${durationMs}ms`);
+    const rid = req.requestId || null;
+
+    const log = {
+      event: 'http_request',
+      requestId: rid,
+      method: req.method,
+      url: req.originalUrl,
+      status: res.statusCode,
+      durationMs,
+      ip: req.ip || req.connection?.remoteAddress || 'unknown',
+      userAgent: req.get('user-agent') || '',
+    };
+
+    logger.info(log, 'request_finished');
+    try { sendToCollector(log); } catch (err) { /* don't fail requests on logging errors */ }
   });
   next();
 };

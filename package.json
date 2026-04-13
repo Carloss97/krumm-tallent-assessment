@@ -40,6 +40,7 @@
     "cors": "^2.8.6",
     "compression": "^1.7.4",
     "prom-client": "^14.1.0",
+    "pino": "^8.18.0",
     "crypto-js": "^4.2.0",
     "dotenv": "^17.3.1",
     "express": "^5.2.1",
