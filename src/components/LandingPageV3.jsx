@@ -486,13 +486,13 @@ const LandingPageV3 = () => {
   const ensureQuickAccessProfile = () => {
     setIsDemo(true);
     setParticipantProfile({
-      fullName: 'Acceso rapido dev',
-      participantId: `DEV-${Date.now()}`,
-      email: 'dev@krumm.local',
+      fullName: language === 'en' ? 'Quick access demo' : 'Acceso rápido (demo)',
+      participantId: `DEMO-${Date.now()}`,
+      email: '',
       authenticatedAt: new Date().toISOString(),
       participantToken: null,
       preferredLanguage: language,
-      source: 'dev_quick_access'
+      source: 'quick_access_demo'
     });
   };
 
@@ -573,15 +573,9 @@ const LandingPageV3 = () => {
           <div className="lv3-action-buttons">
             <button className="lv3-primary lv3-action-btn lv3-action-start" onClick={() => {
               recordTrialEvent && recordTrialEvent({ event: 'cta_quick_modal_opened' });
-              // In development allow quick start (bypass form) for demo purposes
-              if (isDev) {
-                ensureQuickAccessProfile();
-                navigate(`/game/1?lang=${language}`);
-                return;
-              }
-              // If hero demo feature is disabled, fall back to the original form overlay
-              if (featureFlags?.enableHeroDemo) setShowQuickModal(true);
-              else setShowForm(true);
+              // Quick-start demo: create a demo profile and navigate to the first game
+              ensureQuickAccessProfile();
+              navigate(`/game/1?lang=${language}`);
             }}>
               <Sparkles size={18} aria-hidden="true" />
               <span>{language === 'es' ? 'Hacer test ya' : 'Start test now'}</span>
