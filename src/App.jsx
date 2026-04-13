@@ -1,6 +1,7 @@
 import React, { lazy, Suspense } from 'react';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import { TelemetryProvider } from './TelemetryContext';
+import { VariantProvider } from './contexts/VariantContext';
 import { LanguageProvider } from './context/LanguageContext';
 import GlobalProgressBar from './components/GlobalProgressBar';
 import GameShell from './components/GameShell';
@@ -75,8 +76,9 @@ function App() {
   const basename = import.meta.env.VITE_BASE_PATH || '/';
 
   return (
-    <LanguageProvider>
-      <Router basename={basename}>
+    <VariantProvider>
+      <LanguageProvider>
+        <Router basename={basename}>
         <Routes>
           {/* Recruiter routes (separate from telemetry) */}
           <Route path="/recruiter/login" element={<RecruiterLogin />} />
@@ -93,7 +95,8 @@ function App() {
           />
         </Routes>
       </Router>
-    </LanguageProvider>
+      </LanguageProvider>
+    </VariantProvider>
   );
 }
 

@@ -1,0 +1,150 @@
+/* Global UI variant styles. Variants attach classes to <html>:
+   - ui-variant-a
+   - ui-variant-b
+   - ui-variant-c
+   This file defines gentle visual differences to iterate quickly.
+*/
+
+:root {
+  --accent-1: #7c3aed;
+  --accent-2: #06b6d4;
+  --accent-3: #10b981;
+  --text-contrast: #0f172a;
+}
+
+.ui-variant-a { --ui-accent: var(--accent-1); --ui-accent-2: var(--accent-2); }
+.ui-variant-b { --ui-accent: var(--accent-2); --ui-accent-2: var(--accent-3); }
+.ui-variant-c { --ui-accent: var(--accent-3); --ui-accent-2: var(--accent-1); }
+
+html.ui-variant-a, html.ui-variant-b, html.ui-variant-c {
+  transition: background-color 220ms ease, color 220ms ease;
+}
+
+/* Variant A: Palette per section — subtle accent on pill and hero */
+html.ui-variant-a .lv3-hero {
+  background: linear-gradient(135deg, rgba(124,58,237,0.08), rgba(6,182,212,0.04));
+}
+html.ui-variant-a .lv3-pill { background: var(--ui-accent); color: #fff; }
+
+/* Variant B: Collapsible / panel-focused — left accent stripe on panels */
+html.ui-variant-b .lv3-panel { border-left: 6px solid var(--ui-accent); padding-left: 14px; }
+html.ui-variant-b .lv3-hero { background: linear-gradient(180deg,#f8fafc,#ffffff); }
+
+/* Variant C: Single page + big CTA — center CTA and larger button */
+html.ui-variant-c .lv3-action-dock { display:flex; justify-content:center; }
+html.ui-variant-c .lv3-primary { padding: 14px 22px; font-size: 1.15rem; border-radius: 14px; }
+html.ui-variant-c .lv3-hero { background: linear-gradient(90deg,#fff7ed,#f0f9ff); }
+
+/* CTA color variations */
+html.ui-variant-a .lv3-primary { background: var(--ui-accent); color: #fff; border: none; }
+html.ui-variant-b .lv3-primary { background: var(--ui-accent-2); color: #06202a; border: none; }
+html.ui-variant-c .lv3-primary { background: var(--ui-accent); color: #06202a; box-shadow: 0 8px 24px rgba(16,185,129,0.06); }
+
+/* Gentle section tone adjustments */
+html.ui-variant-b .lv3-section { background: #fbfdff; }
+html.ui-variant-c .lv3-section { background: #ffffff; }
+
+/* DesignVariants component extras */
+.dv-actions { margin-top: 10px; display:flex; gap:10px; justify-content:flex-end; }
+.dv-apply { padding:6px 10px; border-radius:8px; border:1px solid rgba(20,40,80,0.06); background:#fff; cursor:pointer; }
+.dv-apply.applied { background: linear-gradient(90deg,#ecfccb,#bbf7d0); border-color: rgba(16,185,129,0.14); }
+
+@media (max-width: 800px) {
+  html.ui-variant-c .lv3-primary { width: 100%; font-size: 1rem; }
+}
+
+/* Quick visual badge to surface the currently applied variant */
+html.ui-variant-a body::before,
+html.ui-variant-b body::before,
+html.ui-variant-c body::before {
+  position: fixed;
+  top: 12px;
+  right: 12px;
+  z-index: 9999;
+  padding: 6px 10px;
+  border-radius: 8px;
+  font-weight: 700;
+  font-size: 12px;
+  color: #fff;
+  box-shadow: 0 6px 20px rgba(2,6,23,0.12);
+}
+
+html.ui-variant-a body::before {
+  content: 'Variant A — Palette';
+  background: var(--ui-accent);
+}
+html.ui-variant-b body::before {
+  content: 'Variant B — Panels';
+  background: var(--ui-accent-2);
+}
+html.ui-variant-c body::before {
+  content: 'Variant C — Big CTA';
+  background: var(--ui-accent);
+}
+
+/* Make differences more noticeable */
+html.ui-variant-a .lv3-hero {
+  background: linear-gradient(135deg, rgba(124,58,237,0.16), rgba(6,182,212,0.08));
+  transition: background 220ms ease, box-shadow 220ms ease;
+}
+html.ui-variant-a .lv3-pill { box-shadow: 0 6px 18px rgba(124,58,237,0.08); }
+
+html.ui-variant-b .lv3-panel { border-left: 12px solid var(--ui-accent); padding-left: 18px; box-shadow: 0 8px 28px rgba(2,6,23,0.04); }
+html.ui-variant-b .lv3-section { background: linear-gradient(180deg,#fbfffe,#ffffff); }
+
+html.ui-variant-c .lv3-action-dock { display:flex; justify-content:center; }
+html.ui-variant-c .lv3-hero { background: linear-gradient(90deg,#fff7ed,#f0f9ff); }
+html.ui-variant-c .lv3-primary { padding: 16px 28px; font-size: 1.18rem; border-radius: 16px; }
+html.ui-variant-c .lv3-copy h1 { font-size: 2.05rem; }
+
+/* Extra strong visual deltas to make variants unmistakable */
+
+/* Variant A: bold colorful hero, warm background */
+html.ui-variant-a body {
+  background: linear-gradient(180deg,#fbf7ff 0%, #ffffff 60%);
+}
+html.ui-variant-a .lv3-hero {
+  padding: 48px 0;
+  border-radius: 14px;
+}
+html.ui-variant-a .lv3-copy h1 {
+  color: var(--ui-accent);
+  font-weight: 900;
+  letter-spacing: -0.6px;
+}
+html.ui-variant-a .lv3-stage-logo { transform: scale(1.12); }
+html.ui-variant-a .lv3-hero::after {
+  content: '';
+  position: absolute;
+  right: 6%;
+  top: 10%;
+  width: 340px;
+  height: 340px;
+  border-radius: 50%;
+  filter: blur(28px);
+  background: radial-gradient(circle at 30% 30%, rgba(124,58,237,0.14), rgba(6,182,212,0.06));
+  pointer-events: none;
+}
+
+/* Variant B: heavy panels, card UI and denser layout */
+html.ui-variant-b body { background: #f7fbfd; }
+html.ui-variant-b .lv3-panel { background: #ffffff; border-radius: 12px; box-shadow: 0 18px 48px rgba(2,6,23,0.06); }
+html.ui-variant-b .lv3-cat-card, html.ui-variant-b .lv3-cap-card, html.ui-variant-b .lv3-process-card { background: linear-gradient(180deg,#ffffff,#fbfeff); box-shadow: 0 8px 30px rgba(3,10,30,0.04); border-radius: 10px; }
+html.ui-variant-b .lv3-copy h1 { color: #06202a; font-weight: 800; }
+html.ui-variant-b .lv3-stage-logo { transform: translateX(-6px) scale(1.02); }
+html.ui-variant-b .lv3-hero-grid { grid-template-columns: 1.5fr 1fr; gap: 28px; }
+
+/* Variant C: ultra-focused single-page hero, big centered CTA */
+html.ui-variant-c body { background: #ffffff; }
+html.ui-variant-c .lv3-hero { padding: 64px 0; display:flex; align-items:center; }
+html.ui-variant-c .lv3-hero-grid { display:flex; flex-direction:column; align-items:center; text-align:center; }
+html.ui-variant-c .lv3-copy { max-width: 760px; }
+html.ui-variant-c .lv3-stage-logo { display:none; }
+html.ui-variant-c .lv3-action-dock { margin-top: 18px; }
+html.ui-variant-c .lv3-primary { font-size: 1.26rem; padding: 18px 30px; border-radius: 999px; box-shadow: 0 20px 60px rgba(16,185,129,0.08); }
+html.ui-variant-c .lv3-hero-demo-wrap { transform: scale(1.04); border-radius: 14px; box-shadow: 0 30px 80px rgba(12,34,56,0.06); }
+
+/* Make hero demo very visible in variant C */
+html.ui-variant-c .lv3-hero-demo-wrap .lv3-panel { padding: 18px; }
+
+
