@@ -12,14 +12,19 @@ const DevControls = () => {
       return;
     }
 
-    const host = window.location.hostname || '';
+    const host = (window.location.hostname || '').toLowerCase();
     const port = window.location.port || '';
-    const isLocalhost = host === 'localhost' || host === '127.0.0.1' || host === '::1';
-    const isDevSubdomain = host.startsWith('dev.');
-    const isLocalSuffix = host.endsWith('.local');
     const viteDev = Boolean(import.meta.env && import.meta.env.DEV);
 
-    setVisible(isLocalhost || isDevSubdomain || isLocalSuffix || port === '5173' || viteDev);
+    // Allow-list of dev hosts can be configured via Vite env VITE_ALLOWED_DEV_HOSTS
+    // Default includes local dev and the known dev subdomain.
+    const raw = import.meta.env.VITE_ALLOWED_DEV_HOSTS || 'localhost,127.0.0.1,::1,dev.krumm.cl';
+    const allowed = raw.split(',').map(s => s.trim().toLowerCase()).filter(Boolean);
+
+    const matchesAllowed = allowed.includes(host) || allowed.some(p => p.startsWith('*.') && host.endsWith(p.replace('*.', '')));
+    const isLocalSuffix = host.endsWith('.local');
+
+    setVisible(matchesAllowed || isLocalSuffix || port === '5173' || viteDev);
   }, []);
 
   if (!visible) return null;
