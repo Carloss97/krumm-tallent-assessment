@@ -32,13 +32,13 @@ GitHub API payload used:
 How to inspect protection via CLI:
 
 ```bash
-gh api /repos/Carloss97/krumm-tallent-assessment/branches/main/protection
+gh api /repos/Carloss97/krumm-talent-assessment/branches/main/protection
 ```
 
 How to remove protection (use with caution):
 
 ```bash
-gh api --method DELETE /repos/Carloss97/krumm-tallent-assessment/branches/main/protection
+gh api --method DELETE /repos/Carloss97/krumm-talent-assessment/branches/main/protection
 ```
 
 Notes and recommendations:
