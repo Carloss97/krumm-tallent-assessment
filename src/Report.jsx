@@ -372,41 +372,47 @@ const Report = () => {
 
   if (!hasRealData && !useDummyData) {
     return (
-      <div className="flex-center glass-panel report-empty" style={{ margin: 'auto', marginTop: '100px', maxWidth: '600px', padding: '40px', textAlign: 'center' }}>
-        <h2>{isEn ? 'No Assessment Data Found' : 'No se encontraron datos de evaluación'}</h2>
-        <p>{isEn ? 'Please complete the extended assessment to view the HR report.' : 'Completa la evaluación extendida para ver el reporte final.'}</p>
-        <div className="report-inline-actions" style={{ display: 'flex', gap: '16px', marginTop: '20px' }}>
-          <button className="btn" onClick={() => window.location.href = '/'}>{isEn ? 'Go to Start' : 'Ir al inicio'}</button>
-          <button className="btn report-btn-muted" style={{ background: 'rgba(124, 58, 237, 0.1)', color: '#7c3aed', border: '1px solid #7c3aed' }} onClick={() => setUseDummyData(true)}>
-            {isEn ? 'View Demo Report' : 'Ver reporte demo'}
-          </button>
-        </div>
-      </div>
+      <>
+        <a href="#report-main" className="skip-link">{isEn ? 'Skip to report' : 'Saltar al reporte'}</a>
+        <main id="report-main" className="flex-center glass-panel report-empty report-page" role="main" tabIndex={-1} style={{ margin: 'auto', marginTop: '100px', maxWidth: '600px', padding: '40px', textAlign: 'center' }}>
+          <h2>{isEn ? 'No Assessment Data Found' : 'No se encontraron datos de evaluación'}</h2>
+          <p>{isEn ? 'Please complete the extended assessment to view the HR report.' : 'Completa la evaluación extendida para ver el reporte final.'}</p>
+          <div className="report-inline-actions" style={{ display: 'flex', gap: '16px', marginTop: '20px' }}>
+            <button className="btn" onClick={() => window.location.href = '/'}>{isEn ? 'Go to Start' : 'Ir al inicio'}</button>
+            <button className="btn report-btn-muted" style={{ background: 'rgba(124, 58, 237, 0.1)', color: '#7c3aed', border: '1px solid #7c3aed' }} onClick={() => setUseDummyData(true)} aria-pressed={useDummyData}>
+              {isEn ? 'View Demo Report' : 'Ver reporte demo'}
+            </button>
+          </div>
+        </main>
+      </>
     );
   }
 
   if (isAnalyzing) {
     return (
-      <div className="flex-center report-loading" style={{ width: '100%', minHeight: '100vh', flexDirection: 'column', padding: '40px' }}>
-        <motion.div
-           initial={{ opacity: 0, scale: 0.9 }}
-           animate={{ opacity: 1, scale: 1 }}
-           className="glass-panel report-loading-card"
-           style={{ padding: '60px', textAlign: 'center', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '20px' }}
-        >
+      <>
+        <a href="#report-main" className="skip-link">{isEn ? 'Skip to report' : 'Saltar al reporte'}</a>
+        <main id="report-main" className="flex-center report-loading report-page" role="main" tabIndex={-1} style={{ width: '100%', minHeight: '100vh', flexDirection: 'column', padding: '40px' }}>
           <motion.div
-            animate={{ rotate: 360 }}
-            transition={{ duration: 2, repeat: Infinity, ease: 'linear' }}
-            style={{ width: '60px', height: '60px', border: '4px solid rgba(59, 130, 246, 0.2)', borderTop: '4px solid #3b82f6', borderRadius: '50%' }}
-          />
-          <h2 className="text-gradient">{isEn ? 'Analyzing Telemetry Data...' : 'Analizando telemetría...'}</h2>
-          <p style={{ color: '#374151', fontSize: '1.1rem', maxWidth: '400px', lineHeight: '1.6' }}>
-            {useAI
-              ? (isEn ? 'Calling AI model to interpret cognitive patterns...' : 'Consultando modelo IA para interpretar patrones cognitivos...')
-                : (isEn ? 'Processing behavioral metrics...' : 'Procesando métricas conductuales...')}
-          </p>
-        </motion.div>
-      </div>
+             initial={{ opacity: 0, scale: 0.9 }}
+             animate={{ opacity: 1, scale: 1 }}
+             className="glass-panel report-loading-card"
+             style={{ padding: '60px', textAlign: 'center', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '20px' }}
+          >
+            <motion.div
+              animate={{ rotate: 360 }}
+              transition={{ duration: 2, repeat: Infinity, ease: 'linear' }}
+              style={{ width: '60px', height: '60px', border: '4px solid rgba(59, 130, 246, 0.2)', borderTop: '4px solid #3b82f6', borderRadius: '50%' }}
+            />
+            <h2 className="text-gradient">{isEn ? 'Analyzing Telemetry Data...' : 'Analizando telemetría...'}</h2>
+            <p style={{ color: '#374151', fontSize: '1.1rem', maxWidth: '400px', lineHeight: '1.6' }}>
+              {useAI
+                ? (isEn ? 'Calling AI model to interpret cognitive patterns...' : 'Consultando modelo IA para interpretar patrones cognitivos...')
+                  : (isEn ? 'Processing behavioral metrics...' : 'Procesando métricas conductuales...')}
+            </p>
+          </motion.div>
+        </main>
+      </>
     );
   }
 
@@ -420,13 +426,15 @@ const Report = () => {
   const targetRadarFill = '#56B4E9';
 
   return (
-    <div className="report-page" style={{ width: '100%', minHeight: '100%', padding: '40px', paddingBottom: '80px' }}>
-      <motion.div 
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        className="glass-panel report-shell"
-        style={{ maxWidth: '900px', margin: '0 auto', padding: '40px' }}
-      >
+    <>
+      <a href="#report-main" className="skip-link">{isEn ? 'Skip to report' : 'Saltar al reporte'}</a>
+      <main id="report-main" className="report-page" role="main" tabIndex={-1} style={{ width: '100%', minHeight: '100%', padding: '40px', paddingBottom: '80px' }}>
+        <motion.div 
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="glass-panel report-shell"
+          style={{ maxWidth: '900px', margin: '0 auto', padding: '40px' }}
+        >
         <h1 className="text-gradient report-heading" style={{ fontSize: '2.5rem', marginBottom: '8px', textAlign: 'center' }}>
           {report.source === 'edge-local'
             ? (isEn ? 'Edge-Local Skills Assessment' : 'Evaluación de habilidades edge-local')
@@ -482,12 +490,14 @@ const Report = () => {
           </div>
 
           <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '14px', flexWrap: 'wrap' }}>
-            <div style={{ fontSize: '0.88rem', color: '#475569', fontWeight: 600 }}>
+            <label htmlFor="target-role-select" style={{ fontSize: '0.88rem', color: '#475569', fontWeight: 600 }}>
               {isEn ? 'Target Role Profile' : 'Perfil objetivo del puesto'}
-            </div>
+            </label>
             <select
+              id="target-role-select"
               value={targetRole}
               onChange={(event) => setTargetRole(event.target.value)}
+              aria-label={isEn ? 'Target role profile' : 'Perfil objetivo del puesto'}
               style={{ borderRadius: '8px', border: '1px solid rgba(99,102,241,0.3)', padding: '6px 10px', color: '#1e293b', background: 'rgba(255,255,255,0.9)' }}
             >
               {roleOptions.map((option) => (
@@ -563,18 +573,18 @@ const Report = () => {
             <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.92rem' }}>
               <thead>
                 <tr style={{ color: '#374151', textAlign: 'left' }}>
-                  <th style={{ padding: '8px', borderBottom: '1px solid rgba(99,102,241,0.2)' }}>{isEn ? 'Game' : 'Juego'}</th>
-                  <th style={{ padding: '8px', borderBottom: '1px solid rgba(99,102,241,0.2)' }}>{isEn ? 'Construct' : 'Constructo'}</th>
-                  <th style={{ padding: '8px', borderBottom: '1px solid rgba(99,102,241,0.2)' }}>Score</th>
-                  <th style={{ padding: '8px', borderBottom: '1px solid rgba(99,102,241,0.2)' }}>{isEn ? 'Errors' : 'Errores'}</th>
-                  <th style={{ padding: '8px', borderBottom: '1px solid rgba(99,102,241,0.2)' }}>{isEn ? 'Duration' : 'Duracion'}</th>
-                  <th style={{ padding: '8px', borderBottom: '1px solid rgba(99,102,241,0.2)' }}>{isEn ? 'Key Metric' : 'Metrica clave'}</th>
+                  <th scope="col" style={{ padding: '8px', borderBottom: '1px solid rgba(99,102,241,0.2)' }}>{isEn ? 'Game' : 'Juego'}</th>
+                  <th scope="col" style={{ padding: '8px', borderBottom: '1px solid rgba(99,102,241,0.2)' }}>{isEn ? 'Construct' : 'Constructo'}</th>
+                  <th scope="col" style={{ padding: '8px', borderBottom: '1px solid rgba(99,102,241,0.2)' }}>Score</th>
+                  <th scope="col" style={{ padding: '8px', borderBottom: '1px solid rgba(99,102,241,0.2)' }}>{isEn ? 'Errors' : 'Errores'}</th>
+                  <th scope="col" style={{ padding: '8px', borderBottom: '1px solid rgba(99,102,241,0.2)' }}>{isEn ? 'Duration' : 'Duracion'}</th>
+                  <th scope="col" style={{ padding: '8px', borderBottom: '1px solid rgba(99,102,241,0.2)' }}>{isEn ? 'Key Metric' : 'Metrica clave'}</th>
                 </tr>
               </thead>
               <tbody>
                 {extendedGameRows.map((row) => (
                   <tr key={row.id} style={{ color: '#374151' }}>
-                    <td style={{ padding: '8px', borderBottom: '1px solid rgba(148,163,184,0.15)' }}>{row.name}</td>
+                    <th scope="row" style={{ padding: '8px', borderBottom: '1px solid rgba(148,163,184,0.15)', textAlign: 'left' }}>{row.name}</th>
                     <td style={{ padding: '8px', borderBottom: '1px solid rgba(148,163,184,0.15)' }}>{row.construct}</td>
                     <td style={{ padding: '8px', borderBottom: '1px solid rgba(148,163,184,0.15)' }}>{row.score}</td>
                     <td style={{ padding: '8px', borderBottom: '1px solid rgba(148,163,184,0.15)' }}>{row.errors}</td>
@@ -612,7 +622,7 @@ const Report = () => {
             {isEn ? 'Insight Source' : 'Fuente de insight'}: {insightMeta.mode === 'edge-local' ? 'edge-local' : insightMeta.mode === 'ai' ? 'ai' : 'heuristic'}
           </div>
           {insightMeta.reason && (
-            <div style={{ marginTop: '8px', color: '#64748b', fontSize: '0.82rem', maxWidth: '760px', marginLeft: 'auto', marginRight: 'auto' }}>
+            <div role="status" aria-live="polite" aria-atomic="true" style={{ marginTop: '8px', color: '#64748b', fontSize: '0.82rem', maxWidth: '760px', marginLeft: 'auto', marginRight: 'auto' }}>
               {insightMeta.reason}
             </div>
           )}
@@ -624,7 +634,7 @@ const Report = () => {
           )}
         </div>
 
-        <div className="glass-panel-light report-health" style={{ padding: '14px', marginBottom: '24px', border: `1px solid ${geminiHealth.ok ? 'rgba(16,185,129,0.35)' : 'rgba(245,158,11,0.4)'}` }}>
+        <div className="glass-panel-light report-health" style={{ padding: '14px', marginBottom: '24px', border: geminiHealth.ok ? '1px solid rgba(16,185,129,0.35)' : '1px solid rgba(245,158,11,0.4)' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', gap: '12px', flexWrap: 'wrap', alignItems: 'center' }}>
             <strong style={{ color: geminiHealth.ok ? '#047857' : '#92400e' }}>
               {isEn ? 'Gemini Health Check' : 'Chequeo de salud Gemini'}: {isGeminiProbeSkipped ? (isEn ? 'ON-DEMAND' : 'BAJO DEMANDA') : geminiHealth.ok ? 'OK' : (isEn ? 'Warning' : 'Advertencia')}
@@ -847,12 +857,13 @@ const Report = () => {
           <div className="report-toggle-actions" style={{ display: 'flex', gap: '12px', justifyContent: 'center', flexWrap: 'wrap' }}>
             <button
               className="btn"
+              aria-pressed={useAI}
               style={{
                 padding: '8px 16px',
                 fontSize: '0.9rem',
                 background: useAI ? '#7c3aed' : 'rgba(124, 58, 237, 0.2)',
                 color: useAI ? 'white' : '#7c3aed',
-                border: `1px solid ${useAI ? '#7c3aed' : 'rgba(124, 58, 237, 0.5)'}`
+                border: useAI ? '1px solid #7c3aed' : '1px solid rgba(124, 58, 237, 0.5)'
               }}
               onClick={() => setUseAI(!useAI)}
             >
@@ -899,12 +910,13 @@ const Report = () => {
             {hasRealData && (
               <button
                 className="btn"
+                aria-pressed={useDummyData}
                 style={{
                   padding: '8px 16px',
                   fontSize: '0.9rem',
                   background: useDummyData ? '#059669' : 'rgba(5, 150, 105, 0.2)',
                   color: useDummyData ? 'white' : '#059669',
-                  border: `1px solid ${useDummyData ? '#059669' : 'rgba(5, 150, 105, 0.5)'}`
+                  border: useDummyData ? '1px solid #059669' : '1px solid rgba(5, 150, 105, 0.5)'
                 }}
                 onClick={() => setUseDummyData(!useDummyData)}
               >
@@ -914,12 +926,13 @@ const Report = () => {
             {isDevBuild && (
               <button
                 className="btn"
+                aria-pressed={showDevTelemetry}
                 style={{
                   padding: '8px 16px',
                   fontSize: '0.9rem',
                   background: showDevTelemetry ? '#0ea5e9' : 'rgba(14, 165, 233, 0.2)',
                   color: showDevTelemetry ? 'white' : '#0369a1',
-                  border: `1px solid ${showDevTelemetry ? '#0ea5e9' : 'rgba(14, 165, 233, 0.5)'}`
+                  border: showDevTelemetry ? '1px solid #0ea5e9' : '1px solid rgba(14, 165, 233, 0.5)'
                 }}
                 onClick={() => setShowDevTelemetry(prev => !prev)}
               >
@@ -981,7 +994,7 @@ const Report = () => {
         )}
 
         <div className="report-footer" style={{ textAlign: 'center', marginTop: '40px' }}>
-          <div style={{ marginBottom: '12px', color: '#475569' }}>
+          <div role="status" aria-live="polite" aria-atomic="true" style={{ marginBottom: '12px', color: '#475569' }}>
             {!useDummyData && backendError && <span style={{ color: '#dc2626' }}>[WARN] {backendError}</span>}
             {!useDummyData && !backendError && sessionSavedId && <span style={{ color: '#16a34a' }}>{isEn ? `[OK] Session saved with ID ${sessionSavedId}` : `[OK] Sesión guardada con ID ${sessionSavedId}`}</span>}
             {!useDummyData && !backendError && !sessionSavedId && <span style={{ color: '#0ea5e9' }}>{isEn ? 'Saving session to backend...' : 'Guardando sesión en backend...'}</span>}
@@ -991,8 +1004,9 @@ const Report = () => {
             {isEn ? 'Start Another Assessment' : 'Iniciar otra evaluación'}
           </button>
         </div>
-      </motion.div>
-    </div>
+        </motion.div>
+      </main>
+    </>
   );
 };
 

@@ -3,6 +3,32 @@
   font-family: var(--font-main);
 }
 
+/* Skip link for keyboard users */
+.skip-link {
+  position: absolute;
+  left: -9999px;
+  top: auto;
+  background: transparent;
+  padding: 0;
+  height: 1px;
+  width: 1px;
+  overflow: hidden;
+}
+.skip-link:focus,
+.skip-link:focus-visible {
+  left: 16px;
+  top: 12px;
+  width: auto;
+  height: auto;
+  padding: 8px 12px;
+  background: var(--surface-card);
+  border-radius: 8px;
+  box-shadow: var(--elevation-2);
+  z-index: 9999;
+  color: var(--text-color);
+  text-decoration: none;
+}
+
 .report-shell {
   border: 1px solid var(--line-soft);
   box-shadow: var(--elevation-2);

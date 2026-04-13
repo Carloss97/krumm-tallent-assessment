@@ -72,6 +72,12 @@ html, body {
   box-shadow: 0 14px 24px rgba(15, 29, 51, 0.18);
 }
 
+.btn:focus-visible {
+  outline: 3px solid rgba(124, 58, 237, 0.95);
+  outline-offset: 3px;
+  box-shadow: 0 6px 18px rgba(124, 58, 237, 0.12);
+}
+
 .btn:active {
   transform: translateY(1px);
 }

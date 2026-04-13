@@ -132,17 +132,6 @@ const sessionsSavedTotal = new Counter({
   help: 'Total sessions successfully saved',
 });
 
-// Session metrics
-const sessionValidationErrorsTotal = new Counter({
-  name: 'session_validation_errors_total',
-  help: 'Total invalid session payloads received',
-});
-
-const sessionsSavedTotal = new Counter({
-  name: 'sessions_saved_total',
-  help: 'Total sessions successfully saved',
-});
-
 app.use((req, res, next) => {
   const start = process.hrtime();
   res.on('finish', () => {
