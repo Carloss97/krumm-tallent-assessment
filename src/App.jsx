@@ -65,9 +65,11 @@ function AppContent() {
 }
 
 function App() {
+  const basename = import.meta.env.VITE_BASE_PATH || '/';
+
   return (
     <LanguageProvider>
-      <Router>
+      <Router basename={basename}>
         <Routes>
           {/* Recruiter routes (separate from telemetry) */}
           <Route path="/recruiter/login" element={<RecruiterLogin />} />
