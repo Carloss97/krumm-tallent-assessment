@@ -642,6 +642,18 @@
   color: rgba(255,255,255,0.95) !important;
 }
 
+/* Force the panel in the signals section to be transparent so headings sit on the dark background */
+.lv3-project-signals.section--brand-dark .lv3-panel {
+  background: transparent !important;
+  border-color: rgba(255,255,255,0.06) !important;
+  box-shadow: none !important;
+}
+
+.lv3-project-signals.section--brand-dark .lv3-section-title svg {
+  background: rgba(255,255,255,0.06) !important;
+  color: #ffffff !important;
+}
+
 .lv3-process {
   padding-top: 1.2rem;
 }
