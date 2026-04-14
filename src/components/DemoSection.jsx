@@ -24,6 +24,7 @@ export default function DemoSection() {
 
   return (
     <section className="demo-section section--brand-dark" aria-label="Demo Section">
+      <div id="demo-live-announcer" aria-live="polite" style={{position:'absolute',left:-9999,width:1,height:1,overflow:'hidden'}} />
       <div className="demo-section__inner">
         <div className="demo-mockup" aria-hidden="false">
           <div className="mockup-frame">

@@ -50,3 +50,8 @@
 {"receivedAt":"2026-04-14T06:06:01.305Z","payload":{"event":"cta_demo_clicked","payload":{"event":"cta_demo_clicked","timestamp":1776146761305},"demo":true,"participantId":"DEMO-LOCAL","timestamp":1776146761305}}
 {"receivedAt":"2026-04-14T06:06:15.743Z","payload":{"event":"cta_demo_clicked","payload":{"event":"cta_demo_clicked","timestamp":1776146775744},"demo":false,"participantId":"QA-1776146766357","timestamp":1776146775744}}
 {"receivedAt":"2026-04-14T06:13:17.236Z","payload":{"event":"demo_abandon","payload":{"event":"demo_abandon","payload":{"completedCount":0,"timeUsedSec":0},"timestamp":1776147197231},"demo":false,"participantId":null,"timestamp":1776147197231}}
+{"receivedAt":"2026-04-14T06:31:47.251Z","payload":{"event":"cta_demo_clicked","payload":{"event":"cta_demo_clicked","timestamp":1776148307243},"demo":false,"participantId":null,"timestamp":1776148307243}}
+{"receivedAt":"2026-04-14T06:31:48.698Z","payload":{"event":"cta_demo_clicked","payload":{"event":"cta_demo_clicked","timestamp":1776148308695},"demo":true,"participantId":"DEMO-LOCAL","timestamp":1776148308695}}
+{"receivedAt":"2026-04-14T06:31:49.151Z","payload":{"event":"cta_demo_clicked","payload":{"event":"cta_demo_clicked","timestamp":1776148309148},"demo":true,"participantId":"DEMO-LOCAL","timestamp":1776148309148}}
+{"receivedAt":"2026-04-14T06:52:29.189Z","payload":{"event":"cta_demo_clicked","payload":{"event":"cta_demo_clicked","timestamp":1776149549175},"demo":false,"participantId":null,"timestamp":1776149549175}}
+{"receivedAt":"2026-04-14T06:55:05.855Z","payload":{"event":"cta_demo_clicked","payload":{"event":"cta_demo_clicked","timestamp":1776149705851},"demo":false,"participantId":null,"timestamp":1776149705851}}

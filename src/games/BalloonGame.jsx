@@ -56,6 +56,26 @@ const BalloonGame = ({ isActive, onEndGame, isDemo }) => {
     }
   }, [isActive, initRound, startTracking]);
 
+  // Keyboard shortcuts for demo accessibility: Space = pump, Enter = bank
+  useEffect(() => {
+    const onKeyDown = (e) => {
+      if (!isActive || hasEndedRef.current) return;
+      // prefer semantic button clicks to reuse existing logic
+      const pumpBtn = document.querySelector('.balloon-pump-btn');
+      const bankBtn = document.querySelector('.balloon-bank-btn');
+      if ((e.code === 'Space' || e.key === ' ') && pumpBtn) {
+        e.preventDefault();
+        pumpBtn.click();
+      }
+      if (e.code === 'Enter' && bankBtn) {
+        e.preventDefault();
+        bankBtn.click();
+      }
+    };
+    window.addEventListener('keydown', onKeyDown);
+    return () => window.removeEventListener('keydown', onKeyDown);
+  }, [isActive]);
+
   const handlePump = () => {
     if (gameState !== 'playing' || hasEndedRef.current) return;
 
@@ -184,22 +204,24 @@ const BalloonGame = ({ isActive, onEndGame, isDemo }) => {
         {showConfetti && <Confetti count={18} spread={70} duration={1.1} />}
       </div>
 
-      <div style={{ display: 'flex', gap: '24px', marginBottom: '80px', zIndex: 10 }}>
-        <button 
-          className="btn" 
+        <div style={{ display: 'flex', gap: '24px', marginBottom: '80px', zIndex: 10 }}>
+        <button
+          className="btn balloon-pump-btn"
+          aria-label="Expandir globo (Barra espaciadora)"
           onClick={handlePump}
           disabled={gameState !== 'playing'}
           style={{ width: 'auto', minWidth: '160px', padding: '12px 18px', textAlign: 'center', backgroundColor: 'rgba(59, 130, 246, 0.1)', border: '1px solid #3b82f6', color: '#3b82f6', backgroundImage: 'none', boxShadow: gameState === 'playing' ? '0 0 15px rgba(59, 130, 246, 0.2)' : 'none', whiteSpace: 'nowrap' }}
         >
-          EXPAND GLOBE
+          EXPANDIR GLOBO
         </button>
-        <button 
-          className="btn" 
+        <button
+          className="btn balloon-bank-btn"
+          aria-label="Asegurar puntos (Enter)"
           onClick={handleBank}
           disabled={gameState !== 'playing' || currentBalloonSize === 1}
           style={{ width: 'auto', minWidth: '160px', padding: '12px 18px', textAlign: 'center', backgroundColor: 'rgba(16, 185, 129, 0.1)', border: '1px solid #10b981', color: '#10b981', backgroundImage: 'none', boxShadow: (gameState === 'playing' && currentBalloonSize > 1) ? '0 0 15px rgba(16, 185, 129, 0.2)' : 'none', whiteSpace: 'nowrap' }}
         >
-          SECURE POINTS
+          ASEGURAR PUNTOS
         </button>
       </div>
     </div>

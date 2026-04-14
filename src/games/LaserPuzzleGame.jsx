@@ -313,7 +313,15 @@ const LaserPuzzleGame = ({ isActive, onEndGame, isDemo, timeLimit }) => {
     if (cell?.movable && !isSel) cursor = 'pointer';
 
     return (
-      <div key={key} onClick={() => handleCellClick(x, y)} style={{ width: CELL, height: CELL, background: bg, border, cursor, display: 'flex', alignItems: 'center', justifyContent: 'center', position: 'relative', boxShadow: isSel ? '0 0 0 3px rgba(99,102,241,0.5)' : 'none', transition: 'background 0.1s, box-shadow 0.1s' }}>
+      <div
+        key={key}
+        role="button"
+        tabIndex={0}
+        aria-label={`${type ? type : 'empty'} cell ${x} ${y}`}
+        onClick={() => handleCellClick(x, y)}
+        onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); handleCellClick(x, y); } }}
+        style={{ width: CELL, height: CELL, background: bg, border, cursor, display: 'flex', alignItems: 'center', justifyContent: 'center', position: 'relative', boxShadow: isSel ? '0 0 0 3px rgba(99,102,241,0.5)' : 'none', transition: 'background 0.1s, box-shadow 0.1s' }}
+      >
         {isBeam && type !== 'rock' && type !== 'ship' && <div style={{ position:'absolute', inset:0, background:'rgba(251,191,36,0.28)', pointerEvents:'none', zIndex:0 }} />}
         {isBeam && !type && <div style={{ position:'absolute', width:10, height:10, borderRadius:'50%', background:'rgba(251,191,36,0.75)', zIndex:1, pointerEvents:'none' }} />}
         <div style={{ position:'relative', zIndex:2 }}>{content}</div>

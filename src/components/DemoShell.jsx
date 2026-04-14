@@ -105,6 +105,9 @@ const DemoShell = () => {
     } catch (e) {
       // noop
     }
+    // brief success toast with accessible announcer
+    const a = document.getElementById('demo-live-announcer');
+    if (a) a.textContent = `Actividad ${id} completada`;
 
     setToast('Actividad completada');
 

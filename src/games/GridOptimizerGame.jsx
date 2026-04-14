@@ -320,6 +320,8 @@ const GridOptimizerGame = ({ isActive, onEndGame, isDemo }) => {
   const ArrowBtn = ({ dir, label }) => (
     <button
       onPointerDown={(e) => { e.preventDefault(); const now = Date.now(); if (now - lastMoveRef.current < 120) return; lastMoveRef.current = now; setFlashDir(dir); setTimeout(() => setFlashDir(null), 200); move(dir); }}
+      aria-label={`Mover ${dir}`}
+      title={`Mover ${dir}`}
       style={{ width:46, height:46, background: flashDir === dir ? 'rgba(79,70,229,0.55)' : 'rgba(79,70,229,0.12)', border: `1px solid ${flashDir === dir ? '#6366f1' : 'rgba(79,70,229,0.3)'}`, borderRadius:'10px', fontSize:'1.1rem', cursor:'pointer', display:'flex', alignItems:'center', justifyContent:'center', userSelect:'none', touchAction:'none', transition:'background 0.1s, border 0.1s', boxShadow: flashDir === dir ? '0 0 12px rgba(99,102,241,0.7)' : 'none' }}
     >{label}</button>
   );

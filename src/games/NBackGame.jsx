@@ -3,6 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { useTelemetry } from '../TelemetryContext';
 import { useGameTimer } from '../hooks/useGameTimer';
 import { playMemoryClick, playMemoryFlash } from '../utils/audio';
+import Confetti from '../components/Confetti';
 
 const NBackGame = ({ isActive, onEndGame, isDemo, timeLimit }) => {
   const { recordError, startTracking, stopTracking } = useTelemetry();
@@ -23,6 +24,8 @@ const NBackGame = ({ isActive, onEndGame, isDemo, timeLimit }) => {
   const isActiveRef = useRef(false);
   const hasEndedRef = useRef(false);
   const gameStateRef = useRef('waiting');
+  const [showConfetti, setShowConfetti] = useState(false);
+  const confettiTimeoutRef = useRef(null);
 
   const MAX_ROUNDS = isDemo ? 3 : 5;
   const STIMULUS_DURATION = 500;
@@ -52,6 +55,14 @@ const NBackGame = ({ isActive, onEndGame, isDemo, timeLimit }) => {
       if (!isDemo && nextRound > 2) setNBack(3);
     }
   }, [round, MAX_ROUNDS, endGame, isDemo]);
+
+  useEffect(() => {
+    if (round > 1) {
+      setShowConfetti(true);
+      if (confettiTimeoutRef.current) clearTimeout(confettiTimeoutRef.current);
+      confettiTimeoutRef.current = setTimeout(() => setShowConfetti(false), 1200);
+    }
+  }, [round]);
   
   const generateRound = useCallback(() => {
     const length = 8 + round * 2;
@@ -127,6 +138,10 @@ const NBackGame = ({ isActive, onEndGame, isDemo, timeLimit }) => {
   }, [isActive, round, generateRound])
 
   useEffect(() => {
+    return () => { if (confettiTimeoutRef.current) clearTimeout(confettiTimeoutRef.current); };
+  }, []);
+
+  useEffect(() => {
     if (isActive && sequence.length > 0) {
        
       playRound();
@@ -144,6 +159,23 @@ const NBackGame = ({ isActive, onEndGame, isDemo, timeLimit }) => {
     try { if (isMatch === isActualMatch) playMemoryClick(); else playMemoryFlash(); } catch(e) {}
   };
 
+  // Keyboard shortcuts for accessibility: M = match, N = no-match
+  useEffect(() => {
+    const onKey = (e) => {
+      if (!isActive || gameState !== 'responding') return;
+      if (e.key.toLowerCase() === 'm') {
+        e.preventDefault();
+        handleResponse(true);
+      }
+      if (e.key.toLowerCase() === 'n') {
+        e.preventDefault();
+        handleResponse(false);
+      }
+    };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, [isActive, gameState, handleResponse]);
+
   if (!isActive) {
       return (
           <motion.div initial={{ opacity:0 }} animate={{ opacity:1 }} className="glass-panel" style={{ padding:'40px', textAlign:'center', border:'1px solid #10b981' }}>
@@ -157,6 +189,7 @@ const NBackGame = ({ isActive, onEndGame, isDemo, timeLimit }) => {
 
   return (
     <div className="flex-center" style={{ width: '100%', height: '100vh', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', fontFamily: '"Courier New", Courier, monospace' }}>
+      {showConfetti && <Confetti count={12} spread={80} duration={1.1} />}
       <div style={{ position: 'absolute', top: '30px', left: '40px', fontSize: '1.5rem', color: '#374151', zIndex: 50, background: 'rgba(255,255,255,0.82)', backdropFilter:'blur(8px)', padding: '8px 18px', borderRadius: '8px', border: '1px solid rgba(99,102,241,0.2)', fontWeight:'600' }}>ROUND: <span style={{color: '#4f46e5', fontWeight: 'bold'}}>{round}</span> / {MAX_ROUNDS}</div>
       <div style={{ position: 'absolute', top: '30px', right: '40px', fontSize: '1.5rem', color: '#374151', zIndex: 50, background: 'rgba(255,255,255,0.82)', backdropFilter:'blur(8px)', padding: '8px 18px', borderRadius: '8px', border: '1px solid rgba(99,102,241,0.2)', fontWeight:'600' }}>SCORE: <span style={{ color: '#059669', fontWeight: 'bold' }}>{score}</span></div>
       {isDemo && <div style={{ position: 'absolute', top: '80px', right: '40px', fontSize: '1.2rem', color: '#374151', zIndex: 50, background: 'rgba(255,255,255,0.82)', backdropFilter:'blur(8px)', padding: '6px 12px', borderRadius: '6px', border: '1px solid rgba(99,102,241,0.2)', fontWeight:'600' }}>T-<span style={{ color: timeLeft < 10 ? '#dc2626' : '#059669', fontWeight: 'bold' }}>{timeLeft}s</span></div>}
