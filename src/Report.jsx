@@ -460,6 +460,31 @@ const Report = () => {
           {useDummyData && <span style={{ color: '#7c3aed', fontStyle: 'italic' }}>{isEn ? ' | Demo Data' : ' | Datos demo'}</span>}
         </p>
 
+        {useDummyData && (
+          <div className="demo-cta-panel" role="region" aria-label={isEn ? 'Demo information' : 'Información demo'} style={{ marginBottom: 18 }}>
+            <div className="demo-cta-inner">
+              <h3 className="demo-cta-title" style={{ margin: '0 0 8px 0' }}>{isEn ? 'From this short demo we can estimate your skills in:' : 'A partir de este pequeño demo podemos medir tus capacidades en:'}</h3>
+              <ul className="demo-skills" style={{ display: 'flex', gap: 10, flexWrap: 'wrap', padding: 0, margin: '8px 0', listStyle: 'none' }}>
+                {(
+                  isEn
+                    ? ['Attention', 'Working memory', 'Processing speed', 'Cognitive flexibility', 'Impulse control']
+                    : ['Atención', 'Memoria de trabajo', 'Velocidad de procesamiento', 'Flexibilidad cognitiva', 'Control de impulsos']
+                ).map((s) => <li key={s} style={{ background: 'rgba(99,102,241,0.06)', padding: '8px 12px', borderRadius: 8, fontWeight: 600 }}>{s}</li>)}
+              </ul>
+
+              <p className="demo-muted" style={{ marginTop: 8, color: '#6b7280' }}>{isEn ? 'We are currently in development. If you are interested in this system for your organization, contact us.' : 'Actualmente estamos en fase de desarrollo. Si te interesa este sistema para tu empresa, contáctanos.'}</p>
+
+              <div className="demo-contact-box" style={{ marginTop: 12 }}>
+                <label style={{ display: 'block', marginBottom: 6, fontWeight: 700 }}>{isEn ? 'Contact emails' : 'Correos de contacto'}</label>
+                <div style={{ display: 'flex', gap: 12, alignItems: 'center' }}>
+                  <a className="report-contact-link" href={`mailto:info@krumm.cl?subject=${encodeURIComponent(isEn ? 'Interest in demo system' : 'Interés en sistema de demo')}&body=${encodeURIComponent(isEn ? 'I am interested in the demo system. Please contact me.' : 'Me interesa el sistema. Por favor contáctenme.')}`}>info@krumm.cl</a>
+                  <a className="report-contact-link" href={`mailto:contacto@krumm.cl?subject=${encodeURIComponent(isEn ? 'Interest in demo system' : 'Interés en sistema de demo')}&body=${encodeURIComponent(isEn ? 'I am interested in the demo system. Please contact me.' : 'Me interesa el sistema. Por favor contáctenme.')}`}>contacto@krumm.cl</a>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
         {participantProfile?.participantId && (
           <div
             className="report-meta-pill"

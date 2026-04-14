@@ -208,3 +208,37 @@
     padding: 9px 10px !important;
   }
 }
+
+/* Demo-only CTA panel shown on /report?dummy=true */
+.demo-cta-panel {
+  border-radius: 12px;
+  padding: 18px;
+  background: linear-gradient(180deg, rgba(247,250,255,0.85), rgba(255,255,255,0.95));
+  border: 1px solid rgba(99,102,241,0.06);
+  box-shadow: var(--elevation-1);
+}
+.demo-cta-inner {
+  max-width: 880px;
+}
+.demo-cta-title {
+  color: var(--brand-700);
+  font-weight: 700;
+  margin-bottom: 8px;
+}
+.demo-skills {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+  padding: 0;
+  margin: 8px 0;
+  list-style: none;
+}
+.demo-skills li {
+  background: rgba(99,102,241,0.06);
+  padding: 8px 12px;
+  border-radius: 8px;
+  font-weight: 600;
+}
+.demo-muted { color: #6b7280; }
+.demo-contact-box { margin-top: 12px; }
+.report-contact-link { color: var(--brand-700); text-decoration: underline; }
