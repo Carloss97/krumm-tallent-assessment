@@ -68,7 +68,7 @@ export default function PortalButton() {
   return (
     <a
       href={portalUrl}
-      className="btn-portal"
+      className="btn-portal pulse"
       onClick={handleClick}
       aria-label="Portal de Postulantes"
       {...(isExternalUrl(portalUrl) ? { target: '_blank', rel: 'noopener noreferrer' } : {})}
