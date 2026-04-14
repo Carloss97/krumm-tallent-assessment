@@ -16,3 +16,6 @@
 {"receivedAt":"2026-04-14T02:40:01.264Z","payload":{"event":"demo_started","payload":{"event":"demo_started","timestamp":1776134401261},"demo":false,"participantId":null,"timestamp":1776134401261}}
 {"receivedAt":"2026-04-14T02:40:01.266Z","payload":{"event":"demo_unmounted","payload":{"event":"demo_unmounted","timestamp":1776134401262},"demo":false,"participantId":null,"timestamp":1776134401262}}
 {"receivedAt":"2026-04-14T02:40:01.267Z","payload":{"event":"demo_started","payload":{"event":"demo_started","timestamp":1776134401263},"demo":false,"participantId":null,"timestamp":1776134401263}}
+{"receivedAt":"2026-04-14T03:16:27.881Z","payload":{"event":"demo_started","payload":{"event":"demo_started","timestamp":1776136587877},"demo":false,"participantId":null,"timestamp":1776136587877}}
+{"receivedAt":"2026-04-14T03:16:27.882Z","payload":{"event":"demo_unmounted","payload":{"event":"demo_unmounted","timestamp":1776136587878},"demo":false,"participantId":null,"timestamp":1776136587878}}
+{"receivedAt":"2026-04-14T03:16:27.883Z","payload":{"event":"demo_started","payload":{"event":"demo_started","timestamp":1776136587879},"demo":false,"participantId":null,"timestamp":1776136587879}}
