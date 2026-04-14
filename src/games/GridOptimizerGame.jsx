@@ -5,7 +5,7 @@ import { playMemoryClick, playMemoryFlash } from '../utils/audio';
 import Confetti from '../components/Confetti';
 
 const GRID = 10;
-const MAX_ROUNDS = 3;
+const MAX_ROUNDS = 4;
 const SAT_DECAY = 2; // % per second
 
 const WALLS_L1 = [
@@ -15,11 +15,13 @@ const WALLS_L1 = [
 ];
 const WALLS_L2 = [...WALLS_L1, '3,1', '6,5','6,6', '3,8','4,8'];
 const WALLS_L3 = [...WALLS_L2, '2,3', '7,3','8,3', '5,6'];
+const WALLS_L4 = [...WALLS_L3, '3,3', '4,3', '5,2', '6,4'];
 
 const LEVELS = [
   { walls: WALLS_L1, targets: [{ id:1, x:2, y:0, color:'#ef4444', points:150, dropZone:{x:7,y:9} }, { id:2, x:0, y:4, color:'#3b82f6', points:100, dropZone:{x:9,y:7} }, { id:3, x:9, y:1, color:'#10b981', points: 50, dropZone:{x:0,y:8} }], stations: [], energyDrain: 0, timeLimit: 90, startPos: { x:0, y:0 } },
   { walls: WALLS_L2, targets: [{ id:4, x:6, y:0, color:'#ef4444', points:150, dropZone:{x:3,y:9} }, { id:5, x:3, y:4, color:'#10b981', points: 50, dropZone:{x:6,y:3} }, { id:6, x:0, y:7, color:'#3b82f6', points:100, dropZone:{x:9,y:4} }], stations: [{ x:3, y:3 }, { x:6, y:6 }], energyDrain: 3, timeLimit: 90, startPos: { x:0, y:0 } },
   { walls: WALLS_L3, targets: [], stations: [{ x:6, y:3 }], energyDrain: 4, timeLimit: 60, startPos: { x:0, y:0 } },
+  { walls: WALLS_L4, targets: [{ id:7, x:1, y:2, color:'#ef4444', points:150, dropZone:{x:8,y:8} }, { id:8, x:4, y:5, color:'#3b82f6', points:100, dropZone:{x:2,y:7} }], stations: [{ x:5, y:5 }], energyDrain: 2, timeLimit: 80, startPos: { x:0, y:0 } },
 ];
 
 const QUIZ = [
@@ -344,17 +346,17 @@ const GridOptimizerGame = ({ isActive, onEndGame, isDemo }) => {
     <div style={{ width:'100%', minHeight:'100vh', display:'flex', flexDirection:'column', alignItems:'center', justifyContent:'center', padding:'16px', gap:'10px' }}>
       {gameState === 'playing' && (
         <motion.div initial={{ opacity:0 }} animate={{ opacity:1 }} className="glass-panel" style={{ padding:'16px', display:'flex', flexDirection:'column', alignItems:'center', gap:'8px' }}>
-          {fuelEmpty && <motion.div initial={{ opacity:0 }} animate={{ opacity:1 }} style={{ padding:'6px 20px', background:'#dc2626', color:'white', borderRadius:'8px', fontWeight:'700', fontSize:'0.9rem' }}>âš¡ ENERGY DEPLETED â€” GAME OVER</motion.div>}
+          {fuelEmpty && <motion.div initial={{ opacity:0 }} animate={{ opacity:1 }} style={{ padding:'6px 20px', background:'#dc2626', color:'white', borderRadius:'8px', fontWeight:'700', fontSize:'0.9rem' }}>⚡ ENERGY DEPLETED — GAME OVER</motion.div>}
           <div style={{ display:'flex', justifyContent:'space-between', width:'100%', color:'#1e1b4b', textTransform:'uppercase', letterSpacing:'1px', fontSize:'0.78rem', fontWeight:'600', gap:'14px' }}>
             <span>STAGE {round+1}/{effectiveMaxRounds}</span>
-            <span style={{ color: levelTimeLeft<10?'#dc2626':'#059669' }}>â± {levelTimeLeft}s</span>
-            {lvlData.energyDrain>0 && <span style={{ color: energy<30?'#dc2626':'#374151' }}>âš¡ {energy}%</span>}
-            <span style={{ color:satColor }}>ðŸ˜Š {avgSat}%</span>
-            <span style={{ color:'#4f46e5' }}>â¬¡ {score}pts</span>
+            <span style={{ color: levelTimeLeft<10?'#dc2626':'#059669' }}>⏱ {levelTimeLeft}s</span>
+            {lvlData.energyDrain>0 && <span style={{ color: energy<30?'#dc2626':'#374151' }}>⚡ {energy}%</span>}
+            <span style={{ color:satColor }}>★ {avgSat}%</span>
+            <span style={{ color:'#4f46e5' }}>Score: {score} pts</span>
           </div>
           <div style={{ display:'flex', gap:'15px', fontSize:'0.68rem', color:'#64748b', flexWrap:'wrap', justifyContent:'center' }}>
             <span><span style={{display:'inline-block',width:'8px',height:'8px',background:'#ef4444',borderRadius:'2px',marginRight:'4px'}}/><span style={{display:'inline-block',width:'8px',height:'8px',background:'#3b82f6',borderRadius:'2px',marginRight:'4px'}}/><span style={{display:'inline-block',width:'8px',height:'8px',background:'#10b981',borderRadius:'2px',marginRight:'4px'}}/> Targets</span>
-            {lvlData.stations.length>0 && <span>âš¡ Energy Station</span>}
+            {lvlData.stations.length>0 && <span>⚡ Energy Station</span>}
             <span>% = Target Satisfaction</span>
           </div>
           <div style={{ position:'relative', padding:'6px', border:'1px solid rgba(99,102,241,0.2)', borderRadius:'10px', background:'rgba(220,225,255,0.5)' }}>
@@ -368,12 +370,12 @@ const GridOptimizerGame = ({ isActive, onEndGame, isDemo }) => {
           </div>
           <div style={{ display:'flex', alignItems:'center', gap:'10px', padding:'6px 14px', background:'rgba(99,102,241,0.07)', borderRadius:'8px', border:'1px solid rgba(99,102,241,0.18)', fontSize:'0.78rem' }}>
             <span style={{ color:'#64748b', textTransform:'uppercase', fontSize:'0.68rem' }}>Carrying:</span>
-            {inventory ? <><div style={{ width:'11px', height:'11px', background:inventory.color, borderRadius:'2px' }}/><span style={{ color:'#1e1b4b' }}>Deliver to <strong>pulsing zone</strong> â€” sat: <span style={{color:satColor}}>{sats[inventory.id]??100}%</span></span></> : <span style={{ color:'#94a3b8', fontStyle:'italic' }}>Empty â€” pick up a passenger</span>}
+            {inventory ? <><div style={{ width:'11px', height:'11px', background:inventory.color, borderRadius:'2px' }}/><span style={{ color:'#1e1b4b' }}>Deliver to <strong>pulsing zone</strong> — sat: <span style={{color:satColor}}>{sats[inventory.id]??100}%</span></span></> : <span style={{ color:'#94a3b8', fontStyle:'italic' }}>Empty — pick up a passenger</span>}
           </div>
           <div style={{ display:'flex', flexDirection:'column', alignItems:'center', gap:'4px' }}>
-            <div><ArrowBtn dir="up" label="â–²" /></div>
+            <div><ArrowBtn dir="up" label="↑" /></div>
             <div style={{ display:'flex', gap:'4px' }}>
-              <ArrowBtn dir="left" label="â—€" /><ArrowBtn dir="down" label="â–¼" /><ArrowBtn dir="right" label="â–¶" />
+              <ArrowBtn dir="left" label="←" /><ArrowBtn dir="down" label="↓" /><ArrowBtn dir="right" label="→" />
             </div>
           </div>
         </motion.div>

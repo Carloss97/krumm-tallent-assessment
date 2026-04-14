@@ -128,7 +128,7 @@ const BalloonGame = ({ isActive, onEndGame, isDemo }) => {
   const visualScale = Math.min(rawScale, maxScale);
 
   return (
-    <div className="flex-center" style={{ width: '100%', height: '100vh', display: 'flex', flexDirection: 'column', alignItems: 'center', backgroundColor: 'transparent', fontFamily: '"Courier New", Courier, monospace' }}>
+    <div className="flex-center" style={{ width: '100%', height: '100vh', display: 'flex', flexDirection: 'column', alignItems: 'center', backgroundColor: 'transparent', fontFamily: '"Courier New", Courier, monospace', position: 'relative', overflow: 'hidden' }}>
       <div style={{ position: 'absolute', top: '30px', left: '40px', fontSize: '1.5rem', color: '#374151', zIndex: 50, background: 'rgba(255,255,255,0.82)', backdropFilter:'blur(8px)', padding: '8px 18px', borderRadius: '8px', border: '1px solid rgba(99,102,241,0.2)', fontWeight:'600' }}>
         TRIAL: <span style={{color: '#4f46e5', fontWeight: 'bold'}}>{round}</span> / {MAX_ROUNDS}
       </div>
@@ -204,7 +204,7 @@ const BalloonGame = ({ isActive, onEndGame, isDemo }) => {
         {showConfetti && <Confetti count={18} spread={70} duration={1.1} />}
       </div>
 
-        <div style={{ display: 'flex', gap: '24px', marginBottom: '80px', zIndex: 10 }}>
+        <div style={{ position: 'absolute', bottom: '36px', left: '50%', transform: 'translateX(-50%)', display: 'flex', gap: '24px', zIndex: 200 }}>
         <button
           className="btn balloon-pump-btn"
           aria-label="Expandir globo (Barra espaciadora)"

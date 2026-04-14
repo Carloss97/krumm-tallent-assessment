@@ -208,10 +208,10 @@ const LaserPuzzleGame = ({ isActive, onEndGame, isDemo, timeLimit }) => {
 
   useEffect(() => {
     if (isActive) {
-        hasEndedRef.current = false;
-        startTracking();
-        quizScore.current = 0;
-        const levels = isDemo ? [generateLevel(0)] : [generateLevel(0), generateLevel(1), generateLevel(2)];
+      hasEndedRef.current = false;
+      startTracking();
+      quizScore.current = 0;
+      const levels = isDemo ? [generateLevel(0)] : [generateLevel(0), generateLevel(1), generateLevel(2), generateLevel(3)];
         setProcLevels(levels);
         setLevelIdx(0);
         setGrid(buildGrid(levels[0]));
@@ -371,7 +371,7 @@ const LaserPuzzleGame = ({ isActive, onEndGame, isDemo, timeLimit }) => {
               <span style={{ fontSize:'0.75rem', color:'#64748b', fontStyle:'italic' }}>Hint: {level.hint}</span>
               <button onClick={handleReset} style={{ background:'rgba(99,102,241,0.1)', border:'1px solid rgba(99,102,241,0.3)', color:'#4f46e5', borderRadius:'8px', padding:'6px 14px', cursor:'pointer', fontSize:'0.8rem', fontWeight:'600', whiteSpace:'nowrap' }}>Reset Level</button>
             </div>
-            {gamePhase === 'levelComplete' && <motion.div initial={{ opacity:0 }} animate={{ opacity:1 }} style={{ padding:'10px 24px', background:'rgba(16,185,129,0.15)', border:'2px solid #10b981', borderRadius:'10px', color:'#059669', fontWeight:'800', fontSize:'0.95rem', textTransform:'uppercase', letterSpacing:'2px' }}>âœ“ Level Complete!</motion.div>}
+            {gamePhase === 'levelComplete' && <motion.div initial={{ opacity:0 }} animate={{ opacity:1 }} style={{ padding:'10px 24px', background:'rgba(16,185,129,0.15)', border:'2px solid #10b981', borderRadius:'10px', color:'#059669', fontWeight:'800', fontSize:'0.95rem', textTransform:'uppercase', letterSpacing:'2px' }}>✔ Level Complete!</motion.div>}
           </motion.div>
         )}
         {gamePhase === 'quiz' && (

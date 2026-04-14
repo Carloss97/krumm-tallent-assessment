@@ -57,3 +57,6 @@
 {"receivedAt":"2026-04-14T06:55:05.855Z","payload":{"event":"cta_demo_clicked","payload":{"event":"cta_demo_clicked","timestamp":1776149705851},"demo":false,"participantId":null,"timestamp":1776149705851}}
 {"receivedAt":"2026-04-14T13:35:22.879Z","payload":{"event":"cta_demo_clicked","payload":{"event":"cta_demo_clicked","timestamp":1776173722867},"demo":false,"participantId":null,"timestamp":1776173722867}}
 {"receivedAt":"2026-04-14T13:35:22.933Z","payload":{"event":"demo_abandon","payload":{"event":"demo_abandon","payload":{"completedCount":0,"timeUsedSec":0},"timestamp":1776173722930},"demo":true,"participantId":"DEMO-LOCAL","timestamp":1776173722930}}
+{"receivedAt":"2026-04-14T13:36:36.925Z","payload":{"event":"demo_abandon","payload":{"event":"demo_abandon","payload":{"completedCount":0,"timeUsedSec":0},"timestamp":1776173796920},"demo":false,"participantId":null,"timestamp":1776173796920}}
+{"receivedAt":"2026-04-14T13:47:16.404Z","payload":{"event":"cta_demo_clicked","payload":{"event":"cta_demo_clicked","timestamp":1776174436386},"demo":false,"participantId":null,"timestamp":1776174436386}}
+{"receivedAt":"2026-04-14T13:47:16.460Z","payload":{"event":"demo_abandon","payload":{"event":"demo_abandon","payload":{"completedCount":0,"timeUsedSec":0},"timestamp":1776174436456},"demo":true,"participantId":"DEMO-LOCAL","timestamp":1776174436456}}
