@@ -18,6 +18,20 @@ const FRONTEND = process.env.FRONTEND_URL || 'http://127.0.0.1:5174';
     // click 'Siguiente' or 'Saltar' multiple times
     for (let i = 0; i < 7; i++) {
       console.log('Iteration', i+1);
+      // handle permission modal if present
+      const continuePerm = page.locator('button', { hasText: 'Continuar sin permisos' }).first();
+      if ((await continuePerm.count()) > 0 && await continuePerm.isVisible()) {
+        await continuePerm.click();
+        await page.waitForTimeout(200);
+      }
+
+      // dismiss instructions overlay if present
+      const startInstr = page.locator('button', { hasText: 'Comenzar actividad' }).first();
+      if ((await startInstr.count()) > 0 && await startInstr.isVisible()) {
+        await startInstr.click();
+        await page.waitForTimeout(200);
+      }
+
       const nextBtn = page.locator('button', { hasText: 'Siguiente' }).first();
       const skipBtn = page.locator('button', { hasText: 'Saltar' }).first();
       if ((await nextBtn.count()) > 0 && await nextBtn.isEnabled()) {

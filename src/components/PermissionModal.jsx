@@ -8,8 +8,8 @@ const PermissionModal = ({ open, onClose, onRequest }) => {
         <h3>Permisos de cámara y micrófono</h3>
         <p>Para mejorar la experiencia, solicitamos permiso para usar la cámara y el micrófono (no se usarán aquí realmente).</p>
         <div style={{ display: 'flex', gap: 10, marginTop: 12 }}>
-          <button className="btn" onClick={onRequest}>Solicitar permisos</button>
           <button className="btn btn-ghost" onClick={onClose}>Continuar sin permisos</button>
+          <button className="btn" onClick={onRequest}>Solicitar permisos</button>
         </div>
         <p style={{ marginTop: 10, color: '#6b7280' }}>Puedes rechazar y seguir con la demo.</p>
       </div>
