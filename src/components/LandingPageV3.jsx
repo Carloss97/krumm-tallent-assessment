@@ -390,6 +390,13 @@ const LandingPageV3 = () => {
     setShowDevQuickAccess(matchesAllowed || isLocalSuffix || window.location.port === '5173');
   }, []);
 
+  // Listen for external triggers (PortalButton) to open the start form in-place
+  useEffect(() => {
+    const onOpen = () => setShowForm(true);
+    document.addEventListener('krumm:open-start-form', onOpen);
+    return () => document.removeEventListener('krumm:open-start-form', onOpen);
+  }, []);
+
   const totalGames = useMemo(() => GAME_FLOW.length, []);
 
   const handleChange = (event) => {
@@ -464,8 +471,8 @@ const LandingPageV3 = () => {
       preferredLanguage: language,
       source: 'demo'
     });
-    // Navigate to demo shell
-    navigate(`/demo?lang=${language}`);
+    // Open demo overlay within the landing page instead of navigating away
+    try { document.dispatchEvent(new CustomEvent('krumm:open-demo', { detail: { lang: language } })); } catch (e) { /* noop */ }
   };
 
   const handleContinueLocal = () => {
@@ -572,15 +579,6 @@ const LandingPageV3 = () => {
           transition={{ duration: 0.45, delay: 0.15 }}
         >
           <div className="lv3-action-buttons">
-            <button className="lv3-primary lv3-action-btn lv3-action-start" onClick={() => {
-              recordTrialEvent && recordTrialEvent({ event: 'cta_start_clicked' });
-              // Open credentials form so user can start the real assessment
-              setShowForm(true);
-            }}>
-              <Sparkles size={18} aria-hidden="true" />
-              <span>{language === 'es' ? 'Dar mi test' : 'Take my test'}</span>
-              <ChevronRight size={16} aria-hidden="true" />
-            </button>
             <button className="lv3-ghost lv3-action-btn lv3-action-demo" onClick={() => { recordTrialEvent && recordTrialEvent({ event: 'cta_demo_clicked' }); handleStartDemo(); }}>
               <FlaskConical size={18} aria-hidden="true" />
               <span>{t.actionDemo}</span>

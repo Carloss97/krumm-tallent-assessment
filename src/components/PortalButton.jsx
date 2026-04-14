@@ -50,8 +50,18 @@ export default function PortalButton() {
       return;
     }
 
-    // internal route: use SPA navigation
+    // internal route: if we're on the landing page, open the landing's start form
+    // via a custom event so the landing can present the credentials modal in-place.
     e && e.preventDefault();
+    try {
+      if ((location?.pathname || '') === '/' || (location?.pathname || '') === '') {
+        document.dispatchEvent(new CustomEvent('krumm:open-start-form'));
+        return;
+      }
+    } catch (err) {
+      // fallback to SPA navigation if event dispatch fails
+    }
+
     try { navigate(portalUrl); } catch (err) { window.location.assign(portalUrl); }
   };
 
