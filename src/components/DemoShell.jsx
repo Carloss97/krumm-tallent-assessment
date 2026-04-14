@@ -3,12 +3,16 @@ import { useTelemetry } from '../TelemetryContext';
 import BalloonGame from './demo/BalloonGame';
 import CollectPeopleGame from './demo/CollectPeopleGame';
 import LaserReflectGame from './demo/LaserReflectGame';
+import DemoGoNoGo from './demo/DemoGoNoGo';
+import DemoNBack from './demo/DemoNBack';
 import './DemoShell.css';
 
 const ACTIVITIES = [
-  { id: 'balloon', title: 'Inflar el globo', component: BalloonGame, est: 60 },
-  { id: 'collect', title: 'Recoger personas', component: CollectPeopleGame, est: 120 },
-  { id: 'laser', title: 'Reflejar láser', component: LaserReflectGame, est: 90 }
+  { id: 'balloon', title: 'Inflar el globo', component: BalloonGame, est: 45 },
+  { id: 'collect', title: 'Recoger personas', component: CollectPeopleGame, est: 60 },
+  { id: 'laser', title: 'Reflejar láser', component: LaserReflectGame, est: 60 },
+  { id: 'gng', title: 'Go / No-Go', component: DemoGoNoGo, est: 60 },
+  { id: 'nback', title: '1-Back (memoria)', component: DemoNBack, est: 60 }
 ];
 
 const TOTAL_TIME = 300; // 5 minutes

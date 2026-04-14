@@ -1,0 +1,31 @@
+.balloon-game { display: grid; gap: 12px; font-family: 'Manrope', system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial; }
+.bg-card { background: linear-gradient(180deg,#fff,#fbfcff); padding: 14px; border-radius: 12px; border: 1px solid rgba(15,23,42,0.04); box-shadow: 0 10px 30px rgba(2,6,23,0.04); }
+.balloon-stage { height: 300px; display:flex; justify-content:center; align-items:center; position:relative; }
+.inflation-ring { position: absolute; border-radius: 999px; pointer-events: none; border: 4px dashed rgba(255,99,99,0.08); box-shadow: inset 0 6px 18px rgba(0,0,0,0.03); }
+.balloon { border-radius: 50%; background: radial-gradient(circle at 30% 30%, #ffb3b3, #ff5e5e); display:flex; align-items:center; justify-content:center; color: white; font-weight: 900; box-shadow: 0 12px 38px rgba(0,0,0,0.12); transform-origin: center center; transition: transform 160ms ease, box-shadow 160ms ease; }
+.balloon.pulse { transform: scale(1.06); box-shadow: 0 24px 56px rgba(0,0,0,0.18); }
+.balloon.done { transform: scale(1.12); box-shadow: 0 30px 80px rgba(16,185,129,0.08); }
+.balloon-emoji { font-size: 2.6rem; text-shadow: 0 2px 6px rgba(0,0,0,0.18); }
+.progress { height: 12px; background:#eef2ff; border-radius: 999px; overflow:hidden; margin: 12px auto; width: 82%; border: 1px solid rgba(15,23,42,0.02); }
+.progress > i { display:block; height:100%; background: linear-gradient(90deg,#ff9b9b,#ff5e5e); width: 0%; transition: width 160ms linear; }
+.controls { display:flex; gap:10px; justify-content:center; align-items:center; margin-top: 8px; }
+.btn { font-weight:700; cursor:pointer; border-radius: 999px; padding: 10px 14px; border: 1px solid rgba(15,23,42,0.06); background: linear-gradient(180deg,#fff,#fff); }
+.btn:active { transform: translateY(1px); }
+.btn.inflator { min-width: 220px; background: linear-gradient(90deg,#fff,#fff0f0); box-shadow: 0 6px 18px rgba(0,0,0,0.06); }
+.btn.inflator.active { background: linear-gradient(90deg,#fff8f8,#fff); box-shadow: 0 10px 26px rgba(0,0,0,0.08); }
+.btn.pump { min-width: 120px; border-radius: 10px; }
+.meta { text-align:center; color:#475569; margin-top: 8px; font-size: 0.94rem; }
+.meta .target { font-weight:800; color:#0f172a; }
+.confetti { position:absolute; left:0; right:0; top:0; bottom:0; pointer-events:none; overflow:visible; }
+.confetti .particle { position:absolute; width:10px; height:18px; border-radius:2px; transform-origin:center center; opacity:1; }
+@keyframes confettiFall {
+  0% { transform: translateY(-20vh) rotate(0deg); opacity:1; }
+  30% { opacity:1; }
+  100% { transform: translateY(110vh) rotate(540deg); opacity:0.02; }
+}
+.confetti .particle { animation-name: confettiFall; animation-timing-function: cubic-bezier(.2,.9,.2,1); }
+
+@media (max-width: 720px) {
+  .balloon-stage { height: 240px; }
+  .btn.inflator { min-width: 160px; }
+}
