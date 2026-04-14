@@ -20,7 +20,7 @@ export default function PortalButton() {
   };
 
   const { language } = useLanguage();
-  const labels = { es: 'Dar mi Test', en: 'Take my Test' };
+  const labels = { es: 'Dar Test', en: 'Take Test' };
   const ariaLabels = { es: 'Portal de Postulantes', en: 'Recruiter portal' };
 
   const handleClick = (e) => {
