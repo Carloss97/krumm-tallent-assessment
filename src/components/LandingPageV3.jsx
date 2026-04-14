@@ -245,34 +245,34 @@ const processSteps = [
 const useCases = [
   {
     icon: Target,
-    title: { es: 'Selección técnica', en: 'Technical selection' },
+    title: { es: 'Minería: Reduce rotación temprana y evita accidentes', en: 'Mining: Reduce early turnover and prevent incidents' },
     bullets: {
-      es: ['Reduce tiempo de preselección a 1 semana', 'Mejora la objetividad en la decisión de contratación'],
-      en: ['Reduce pre-screen time to 1 week', 'Improve objectivity in hiring decisions']
+      es: ['Reduce rotación temprana por ajuste de perfil', 'Mejora la seguridad al detectar estrés y fatiga'],
+      en: ['Reduce early turnover from poor fit', 'Improve safety by detecting stress and fatigue']
     }
   },
   {
     icon: TrendingUp,
-    title: { es: 'Desarrollo profesional', en: 'Professional development' },
+    title: { es: 'Desarrollo: Acelera upskilling con evidencia', en: 'Development: Accelerate upskilling with evidence' },
     bullets: {
-      es: ['Detecta brechas de talento accionables', 'Genera rutas de entrenamiento focalizadas'],
+      es: ['Detecta brechas accionables en habilidades', 'Genera rutas de entrenamiento focalizadas'],
       en: ['Detect actionable skill gaps', 'Generate focused training pathways']
     }
   },
   {
     icon: Users,
-    title: { es: 'Movilidad interna', en: 'Internal mobility' },
+    title: { es: 'Movilidad interna: Coloca al talento correcto', en: 'Internal mobility: Put the right talent in role' },
     bullets: {
-      es: ['Identifica candidatos para promoción con evidencia', 'Reduce fricción en procesos de rotación'],
-      en: ['Identify promotion-ready candidates with evidence', 'Reduce friction in rotation processes']
+      es: ['Identifica candidatos promovibles con evidencia', 'Reduce fricción y malas asignaciones'],
+      en: ['Identify promotion-ready candidates with evidence', 'Reduce friction and mismatches']
     }
   },
   {
     icon: LineChart,
-    title: { es: 'Benchmarking', en: 'Benchmarking' },
+    title: { es: 'Benchmarking: Comparación objetiva de cohorts', en: 'Benchmarking: Objective cohort comparison' },
     bullets: {
-      es: ['Compara cohorts con métricas comparables', 'Monitorea evolución y consistencia de talento'],
-      en: ['Compare cohorts with comparable metrics', 'Monitor talent consistency and evolution']
+      es: ['Compara cohorts con métricas estandarizadas', 'Monitorea evolución y consistencia de talento'],
+      en: ['Compare cohorts with standardized metrics', 'Monitor talent consistency and evolution']
     }
   }
 ];

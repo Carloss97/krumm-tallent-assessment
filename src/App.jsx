@@ -14,6 +14,7 @@ const DevControls = import.meta.env.DEV ? lazy(() => import('./components/DevCon
 import Footer from './components/Footer';
 import PortalButton from './components/PortalButton';
 import PostulantesLogin from './components/PostulantesLogin';
+import CandidateLogin from './components/CandidateLogin';
 
 // Lazy load components for code splitting
 const Report = lazy(() => import('./Report'));
@@ -86,6 +87,7 @@ function App() {
           {/* Recruiter routes (separate from telemetry) */}
           <Route path="/recruiter/login" element={<RecruiterLogin />} />
           <Route path="/recruiter/dashboard" element={<RecruiterDashboard />} />
+          <Route path="/candidate/login" element={<CandidateLogin />} />
           {/* Candidate portal (minimal, no global header/footer) */}
           <Route path="/postulantes" element={<PostulantesLogin />} />
 

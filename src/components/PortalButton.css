@@ -17,6 +17,16 @@
     transition: top 0.18s ease, transform 0.15s ease, box-shadow 0.15s ease;
 }
 
+/* When the landing language corner exists, push the portal button left to avoid overlap */
+.has-lang-corner .btn-portal {
+  right: 96px;
+}
+
+@media (max-width: 768px) {
+  .has-lang-corner .btn-portal { right: 72px; }
+}
+
+
 @media (max-width: 480px) {
   .btn-portal {
     top: 10px;

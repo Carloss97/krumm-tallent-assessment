@@ -345,6 +345,7 @@
 
 .lv3-section {
   padding: 1.75rem 1.1rem;
+  position: relative;
 }
 
 .lv3-container {
@@ -733,6 +734,30 @@
   color: #2f4e77;
   font-size: 0.92rem;
 }
+
+/* Color blocking helpers */
+.section--white { background: #ffffff; }
+.section--gray { background: #f7f8fb; }
+.section--brand-dark { background: linear-gradient(180deg, #0f1724 0%, #10243a 100%); color: #ffffff; }
+
+.section--brand-dark .lv3-panel { background: transparent; border-color: rgba(255,255,255,0.06); box-shadow: none; }
+.section--brand-dark .lv3-section-title svg { background: rgba(255,255,255,0.06); color: #ffffff; border-color: rgba(255,255,255,0.06); }
+.section--brand-dark .lv3-section-head p { color: rgba(255,255,255,0.88); }
+.section--brand-dark h2, .section--brand-dark .lv3-section-title { color: #ffffff; }
+
+/* Subtle diagonal separator for brand sections */
+.lv3-section.section--brand-dark::after {
+  content: '';
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: -34px;
+  height: 68px;
+  background: linear-gradient(135deg, rgba(255,255,255,0.04) 0%, rgba(255,255,255,0.0) 60%);
+  transform: skewY(-3deg);
+  pointer-events: none;
+}
+
 
 .lv3-usecase-bullets li svg { color: var(--accent-portal); margin-top: 2px; flex-shrink: 0; }
 
