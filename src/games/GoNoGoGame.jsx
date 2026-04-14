@@ -24,6 +24,7 @@ const GoNoGoGame = ({ isActive, onEndGame, isDemo, timeLimit }) => {
   const flashTimeoutRef = useRef(null);
   const [showConfetti, setShowConfetti] = useState(false);
   const confettiTimeoutRef = useRef(null);
+  const hasFeedbackRef = useRef(false);
 
   const reactionTimes = useRef([]);
   const stimulusStartTimeRef = useRef(null);
@@ -66,6 +67,8 @@ const GoNoGoGame = ({ isActive, onEndGame, isDemo, timeLimit }) => {
   nextTrialRef.current = nextTrialFunc;
 
   const handleTimeoutFunc = (isGoTrial) => {
+    if (hasFeedbackRef.current) return;
+    hasFeedbackRef.current = true;
     if (responseTimeoutRef.current) clearTimeout(responseTimeoutRef.current);
     if (isGoTrial) {
       setOmissionErrors(prev => prev + 1);
@@ -89,12 +92,17 @@ const GoNoGoGame = ({ isActive, onEndGame, isDemo, timeLimit }) => {
   const startTrialFunc = () => {
     // clear any pending response timeout before starting
     if (responseTimeoutRef.current) clearTimeout(responseTimeoutRef.current);
+    // reset per-trial feedback guard and visual flags
+    hasFeedbackRef.current = false;
+    setLastOutcome(null);
+    setFlashRight(false);
+    setFlashWrong(false);
     const isGoTrial = Math.random() < GO_PROBABILITY;
     setCurrentStimulus(isGoTrial ? 'GO' : 'NO-GO');
     setGameState('stimulus');
     stimulusStartTimeRef.current = performance.now();
     const handler = handleTimeoutRef.current;
-    responseTimeoutRef.current = setTimeout(() => { if (typeof handler === 'function') handler(isGoTrial); }, RESPONSE_WINDOW);
+    responseTimeoutRef.current = setTimeout(() => { if (!hasFeedbackRef.current && typeof handler === 'function') handler(isGoTrial); }, RESPONSE_WINDOW);
   };
   startTrialRef.current = startTrialFunc;
 
@@ -119,6 +127,8 @@ const GoNoGoGame = ({ isActive, onEndGame, isDemo, timeLimit }) => {
 
   const handleResponse = useCallback(() => {
     if (gameState !== 'stimulus') return;
+    if (hasFeedbackRef.current) return;
+    hasFeedbackRef.current = true;
     clearTimeout(responseTimeoutRef.current);
     reactionTimes.current.push(performance.now() - stimulusStartTimeRef.current);
     const isGoTrial = currentStimulus === 'GO';
@@ -191,11 +201,13 @@ const GoNoGoGame = ({ isActive, onEndGame, isDemo, timeLimit }) => {
   const hudShadow = flashWrong ? '0 0 40px rgba(239,68,68,0.8)' : (flashRight ? '0 0 40px rgba(16,185,129,0.8)' : (gameState === 'stimulus' ? '0 0 40px rgba(59, 130, 246, 0.6)' : '0 8px 25px rgba(0,0,0,0.1)'));
 
   return (
-    <div className="flex-center" style={{ width: '100%', height: '100vh', paddingTop: '80px', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', fontFamily: '"Courier New", Courier, monospace' }}>
+    <div className="flex-center" style={{ width: '100%', minHeight: '620px', paddingTop: '80px', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', fontFamily: '"Courier New", Courier, monospace' }}>
       {showConfetti && <Confetti count={12} spread={80} duration={1.1} />}
-      <div style={{ position: 'absolute', top: '12px', left: '12px', fontSize: '1rem', color: '#374151', zIndex: 55, background: 'rgba(255,255,255,0.9)', backdropFilter:'blur(6px)', padding: '6px 10px', borderRadius: '6px', border: '1px solid rgba(99,102,241,0.12)', fontWeight:'600' }}>TRIAL: <span style={{color: '#4f46e5', fontWeight: '700'}}>{trial}</span> / {MAX_TRIALS}</div>
-      <div style={{ position: 'absolute', top: '12px', right: '12px', fontSize: '1rem', color: '#374151', zIndex: 55, background: 'rgba(255,255,255,0.9)', backdropFilter:'blur(6px)', padding: '6px 10px', borderRadius: '6px', border: '1px solid rgba(99,102,241,0.12)', fontWeight:'600' }}>SCORE: <span style={{ color: '#059669', fontWeight: '700' }}>{score}</span></div>
-      {isDemo && <div style={{ position: 'absolute', top: '48px', right: '12px', fontSize: '0.95rem', color: '#374151', zIndex: 55, background: 'rgba(255,255,255,0.9)', backdropFilter:'blur(6px)', padding: '6px 10px', borderRadius: '6px', border: '1px solid rgba(99,102,241,0.12)', fontWeight:'600' }}>T-<span style={{ color: timeLeft < 10 ? '#dc2626' : '#059669', fontWeight: '700' }}>{timeLeft}s</span></div>}
+      <div style={{ position: 'absolute', top: '12px', left: '50%', transform: 'translateX(-50%)', fontSize: '0.95rem', color: '#374151', zIndex: 55, background: 'rgba(255,255,255,0.9)', backdropFilter:'blur(6px)', padding: '6px 12px', borderRadius: '8px', border: '1px solid rgba(99,102,241,0.12)', display: 'flex', gap: '12px', alignItems: 'center', fontWeight: '600' }}>
+        <span>TRIAL: <span style={{color: '#4f46e5', fontWeight: '700'}}>{trial}</span> / {MAX_TRIALS}</span>
+        <span>SCORE: <span style={{ color: '#059669', fontWeight: '700' }}>{score}</span></span>
+        {isDemo && <span>T-<span style={{ color: timeLeft < 10 ? '#dc2626' : '#059669', fontWeight: '700' }}>{timeLeft}s</span></span>}
+      </div>
       <div aria-live="polite" style={{position:'absolute', left:-9999, width:1, height:1, overflow:'hidden'}}>{gameState === 'feedback' ? (currentStimulus === 'GO' ? 'Correct' : 'Incorrect') : ''}</div>
       <div style={{ marginBottom: '40px', textAlign: 'center' }}>
         <div style={{ fontSize: '1.1rem', color: '#6b7280', marginBottom: '10px' }}>Go Accuracy: {goAccuracy}% | No-Go Accuracy: {noGoAccuracy}%</div>

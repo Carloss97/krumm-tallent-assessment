@@ -192,11 +192,13 @@ const NBackGame = ({ isActive, onEndGame, isDemo, timeLimit }) => {
   const accuracy = totalCorrect + totalErrors > 0 ? Math.round((totalCorrect / (totalCorrect + totalErrors)) * 100) : 0;
 
   return (
-    <div className="flex-center" style={{ width: '100%', height: '100vh', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', fontFamily: '"Courier New", Courier, monospace' }}>
+    <div className="flex-center" style={{ width: '100%', minHeight: '620px', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', fontFamily: '"Courier New", Courier, monospace' }}>
       {showConfetti && <Confetti count={12} spread={80} duration={1.1} />}
-      <div style={{ position: 'absolute', top: '12px', left: '12px', fontSize: '1rem', color: '#374151', zIndex: 55, background: 'rgba(255,255,255,0.9)', backdropFilter:'blur(6px)', padding: '6px 10px', borderRadius: '6px', border: '1px solid rgba(99,102,241,0.12)', fontWeight:'600' }}>ROUND: <span style={{color: '#4f46e5', fontWeight: '700'}}>{round}</span> / {MAX_ROUNDS}</div>
-      <div style={{ position: 'absolute', top: '12px', right: '12px', fontSize: '1rem', color: '#374151', zIndex: 55, background: 'rgba(255,255,255,0.9)', backdropFilter:'blur(6px)', padding: '6px 10px', borderRadius: '6px', border: '1px solid rgba(99,102,241,0.12)', fontWeight:'600' }}>SCORE: <span style={{ color: '#059669', fontWeight: '700' }}>{score}</span></div>
-      {isDemo && <div style={{ position: 'absolute', top: '48px', right: '12px', fontSize: '0.95rem', color: '#374151', zIndex: 55, background: 'rgba(255,255,255,0.9)', backdropFilter:'blur(6px)', padding: '6px 10px', borderRadius: '6px', border: '1px solid rgba(99,102,241,0.12)', fontWeight:'600' }}>T-<span style={{ color: timeLeft < 10 ? '#dc2626' : '#059669', fontWeight: '700' }}>{timeLeft}s</span></div>}
+      <div style={{ position: 'absolute', top: '12px', left: '50%', transform: 'translateX(-50%)', fontSize: '0.95rem', color: '#374151', zIndex: 55, background: 'rgba(255,255,255,0.9)', backdropFilter:'blur(6px)', padding: '6px 12px', borderRadius: '8px', border: '1px solid rgba(99,102,241,0.12)', display: 'flex', gap: '12px', alignItems: 'center', fontWeight: '600' }}>
+        <span>ROUND: <span style={{color: '#4f46e5', fontWeight: '700'}}>{round}</span> / {MAX_ROUNDS}</span>
+        <span>SCORE: <span style={{ color: '#059669', fontWeight: '700' }}>{score}</span></span>
+        {isDemo && <span>T-<span style={{ color: timeLeft < 10 ? '#dc2626' : '#059669', fontWeight: '700' }}>{timeLeft}s</span></span>}
+      </div>
       <div style={{ marginBottom: '40px', textAlign: 'center' }}>
         <div style={{ fontSize: '1.1rem', color: '#6b7280', marginBottom: '10px' }}>{nBack}-Back Task | Accuracy: {accuracy}%</div>
         <div style={{ fontSize: '0.9rem', color: '#9ca3af' }}>Correct: {totalCorrect} | Errors: {totalErrors}</div>
