@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { motion } from 'framer-motion';
 import { useTelemetry } from '../TelemetryContext';
+import { playMemoryClick, playMemoryFlash } from '../utils/audio';
 
 const GRID = 10;
 const MAX_ROUNDS = 3;
@@ -43,6 +44,7 @@ const GridOptimizerGame = ({ isActive, onEndGame, isDemo }) => {
   const [levelTimeLeft, setLevelTimeLeft] = useState(0);
   const [quizStep, setQuizStep] = useState(0);
   const [fuelEmpty, setFuelEmpty] = useState(false);
+  const [showDeliverAnim, setShowDeliverAnim] = useState(false);
 
   const quizScoreRef = useRef(0);
   const stateRef = useRef({ player:{x:0,y:0}, inventory:null, targets:[], energy:100, round:0, score:0 });
@@ -115,7 +117,8 @@ const GridOptimizerGame = ({ isActive, onEndGame, isDemo }) => {
     const lvl = LEVELS[stateRef.current.round];
     if (!lvl) return;
 
-    setLevelTimeLeft(lvl.timeLimit);
+    const timeForThisLevel = isDemo ? Math.min(lvl.timeLimit, 60) : lvl.timeLimit;
+    setLevelTimeLeft(timeForThisLevel);
     levelTimerRef.current = setInterval(() => {
       setLevelTimeLeft(prev => {
         if (prev <= 1) {
@@ -221,12 +224,23 @@ const GridOptimizerGame = ({ isActive, onEndGame, isDemo }) => {
     let newInv=inv, newTargets=[...tgt], newScore=sc;
     if (!newInv) {
       const hit = newTargets.find(t=>t.active&&t.x===nx&&t.y===ny);
-      if (hit) { newInv=hit; newTargets=newTargets.map(t=>t.id===hit.id?{...t,active:false}:t); }
+      if (hit) {
+        newInv=hit; 
+        newTargets=newTargets.map(t=>t.id===hit.id?{...t,active:false}:t);
+        try { playMemoryClick(); } catch(e) { /* noop */ }
+        // small pickup animation
+        setShowDeliverAnim(true);
+        setTimeout(() => setShowDeliverAnim(false), 800);
+      }
     } else {
       if (nx===newInv.dropZone.x && ny===newInv.dropZone.y) {
         const sat = satsRef.current[newInv.id] ?? 0;
         newScore += Math.round(newInv.points * Math.max(0.1, sat/100)); 
         newInv = null;
+        try { playMemoryFlash(); } catch(e) { /* noop */ }
+        // delivery celebration
+        setShowDeliverAnim(true);
+        setTimeout(() => setShowDeliverAnim(false), 900);
       }
     }
     
@@ -340,7 +354,12 @@ const GridOptimizerGame = ({ isActive, onEndGame, isDemo }) => {
             {lvlData.stations.length>0 && <span>âš¡ Energy Station</span>}
             <span>% = Target Satisfaction</span>
           </div>
-          <div style={{ padding:'6px', border:'1px solid rgba(99,102,241,0.2)', borderRadius:'10px', background:'rgba(220,225,255,0.5)' }}>
+          <div style={{ position:'relative', padding:'6px', border:'1px solid rgba(99,102,241,0.2)', borderRadius:'10px', background:'rgba(220,225,255,0.5)' }}>
+            {showDeliverAnim && (
+              <motion.div initial={{ scale: 0.6, opacity: 0 }} animate={{ scale: 1.1, opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.8 }} style={{ position: 'absolute', left: '50%', top: '-14px', transform: 'translateX(-50%)', zIndex: 30, pointerEvents: 'none', background: 'linear-gradient(90deg, #10b981, #3b82f6)', padding: '6px 12px', borderRadius: 10, color: 'white', fontWeight: 700 }}>
+                Entrega completa
+              </motion.div>
+            )}
             <div style={{ display:'grid', gridTemplateColumns:`repeat(${GRID}, 36px)`, gap:'2px' }}>{renderGrid()}</div>
           </div>
           <div style={{ display:'flex', alignItems:'center', gap:'10px', padding:'6px 14px', background:'rgba(99,102,241,0.07)', borderRadius:'8px', border:'1px solid rgba(99,102,241,0.18)', fontSize:'0.78rem' }}>

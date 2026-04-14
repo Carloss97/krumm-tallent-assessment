@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef, useMemo, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useTelemetry } from '../TelemetryContext';
+import { playMemoryClick, playMemoryFlash } from '../utils/audio';
 import { useGameTimer } from '../hooks/useGameTimer';
 
 const CELL = 46;
@@ -181,6 +182,7 @@ const LaserPuzzleGame = ({ isActive, onEndGame, isDemo, timeLimit }) => {
     const parTotal = procLevels ? procLevels.reduce((s, l) => s + l.par, 0) : 6;
     const efficiency = Math.min(100, Math.round((parTotal / Math.max(1, tm)) * 100));
     setGamePhase('done');
+    try { playMemoryFlash(); } catch(e) { /* noop */ }
     stopTracking('game7', efficiency, quizScore.current, { efficiency, quizScore: quizScore.current, totalMoves: tm });
     onEndGame(efficiency, quizScore.current);
   }, [procLevels, onEndGame, stopTracking]);
@@ -261,6 +263,24 @@ const LaserPuzzleGame = ({ isActive, onEndGame, isDemo, timeLimit }) => {
      if (!level) return { beamCells: new Set(), litAntennas: new Set() };
      return traceBeam(grid, level.cols, level.rows);
   }, [grid, procLevels, levelIdx]);
+
+  const prevLitRef = useRef(new Set());
+
+  useEffect(() => {
+    if (!grid) return;
+    const prev = prevLitRef.current;
+    const newly = [...litAntennas].filter(k => !prev.has(k));
+    if (newly.length > 0) {
+      try { playMemoryClick(); } catch (e) { /* noop */ }
+    }
+    prevLitRef.current = new Set(litAntennas);
+  }, [litAntennas, grid]);
+
+  useEffect(() => {
+    if (gamePhase === 'levelComplete') {
+      try { playMemoryFlash(); } catch(e) { /* noop */ }
+    }
+  }, [gamePhase]);
 
   useEffect(() => {
     if (gamePhase !== 'playing') return;
@@ -355,6 +375,13 @@ const LaserPuzzleGame = ({ isActive, onEndGame, isDemo, timeLimit }) => {
           </motion.div>
         )}
       </AnimatePresence>
+      {gamePhase === 'levelComplete' && (
+        <motion.div initial={{ scale: 0.6, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} transition={{ duration: 0.6 }} style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', pointerEvents: 'none', zIndex: 60 }}>
+          <motion.div initial={{ scale: 0.8, rotate: 0 }} animate={{ scale: 1.12, rotate: 8 }} transition={{ duration: 0.9, yoyo: Infinity }} style={{ padding: '20px 36px', background: 'rgba(16,185,129,0.12)', border: '3px solid #10b981', borderRadius: 14, color: '#059669', fontWeight: 900, fontSize: '1.25rem', textTransform: 'uppercase', letterSpacing: '2px' }}>
+            ¡Nivel completado!
+          </motion.div>
+        </motion.div>
+      )}
     </div>
   );
 };

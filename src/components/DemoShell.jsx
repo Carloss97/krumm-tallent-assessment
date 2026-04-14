@@ -4,20 +4,26 @@ import { useTelemetry } from '../TelemetryContext';
 import ProtoBalloon from '../games/BalloonGame';
 import GridOptimizerGame from '../games/GridOptimizerGame';
 import LaserPuzzleGame from '../games/LaserPuzzleGame';
+import ProtoGoNoGo from '../games/GoNoGoGame';
+import ProtoNBack from '../games/NBackGame';
 import './DemoShell.css';
 
 // Adapter wrappers so DemoShell can call prototypes with the expected onComplete() callback
-const BalloonProtoWrapper = ({ onComplete }) => <ProtoBalloon isActive={true} isDemo={true} onEndGame={() => onComplete && onComplete()} />;
-const GridProtoWrapper = ({ onComplete }) => <GridOptimizerGame isActive={true} isDemo={true} onEndGame={() => onComplete && onComplete()} />;
-const LaserProtoWrapper = ({ onComplete }) => <LaserPuzzleGame isActive={true} isDemo={true} onEndGame={() => onComplete && onComplete()} />;
+const BalloonProtoWrapper = ({ onComplete, est }) => <ProtoBalloon isActive={true} isDemo={true} timeLimit={est} onEndGame={() => onComplete && onComplete()} />;
+const GridProtoWrapper = ({ onComplete, est }) => <GridOptimizerGame isActive={true} isDemo={true} timeLimit={est} onEndGame={() => onComplete && onComplete()} />;
+const LaserProtoWrapper = ({ onComplete, est }) => <LaserPuzzleGame isActive={true} isDemo={true} timeLimit={est} onEndGame={() => onComplete && onComplete()} />;
+const GoNoGoProtoWrapper = ({ onComplete, est }) => <ProtoGoNoGo isActive={true} isDemo={true} timeLimit={est} onEndGame={() => onComplete && onComplete()} />;
+const NBackProtoWrapper = ({ onComplete, est }) => <ProtoNBack isActive={true} isDemo={true} timeLimit={est} onEndGame={() => onComplete && onComplete()} />;
 
 const ACTIVITIES = [
-  { id: 'balloon', title: 'Inflar el globo', component: BalloonProtoWrapper, est: 45 },
+  { id: 'balloon', title: 'Inflar el globo', component: BalloonProtoWrapper, est: 60 },
   { id: 'grid', title: 'Optimizar rejilla', component: GridProtoWrapper, est: 75 },
-  { id: 'laser', title: 'Puzzle láser', component: LaserProtoWrapper, est: 75 }
+  { id: 'laser', title: 'Puzzle láser', component: LaserProtoWrapper, est: 60 },
+  { id: 'gng', title: 'Go / No-Go', component: GoNoGoProtoWrapper, est: 45 },
+  { id: 'nback', title: 'N-Back', component: NBackProtoWrapper, est: 60 }
 ];
 
-const TOTAL_TIME = 300; // 5 minutes
+const TOTAL_TIME = 300; // 5 minutes target (sum of est ≈ 300s)
 
 const DemoShell = () => {
   const [step, setStep] = useState(0);
@@ -145,7 +151,7 @@ const DemoShell = () => {
           {toast && <div className="demo-toast">{toast}</div>}
           <h3>{ACTIVITIES[step].title}</h3>
           <div className="demo-activity-meta">Est. {Math.floor(ACTIVITIES[step].est / 60)}:{String(ACTIVITIES[step].est % 60).padStart(2, '0')}</div>
-          <ActivityComponent onComplete={() => onComplete(ACTIVITIES[step].id)} timeLeft={timeLeft} />
+          <ActivityComponent onComplete={() => onComplete(ACTIVITIES[step].id)} est={ACTIVITIES[step].est} />
         </section>
 
         <aside className="demo-sidebar">

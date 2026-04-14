@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useTelemetry } from '../TelemetryContext';
 import { useGameTimer } from '../hooks/useGameTimer';
+import { playMemoryClick, playMemoryFlash } from '../utils/audio';
 
 const NBackGame = ({ isActive, onEndGame, isDemo, timeLimit }) => {
   const { recordError, startTracking, stopTracking } = useTelemetry();
@@ -140,6 +141,7 @@ const NBackGame = ({ isActive, onEndGame, isDemo, timeLimit }) => {
     if (isMatch === isActualMatch) { setTotalCorrect(prev => prev + 1); setScore(prev => prev + 10); } 
     else { setTotalErrors(prev => prev + 1); recordError(); }
     setGameStateSafe('waiting');
+    try { if (isMatch === isActualMatch) playMemoryClick(); else playMemoryFlash(); } catch(e) {}
   };
 
   if (!isActive) {

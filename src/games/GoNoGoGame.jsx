@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useTelemetry } from '../TelemetryContext';
 import { useGameTimer } from '../hooks/useGameTimer';
+import { playMemoryClick, playMemoryFlash } from '../utils/audio';
 
 const GoNoGoGame = ({ isActive, onEndGame, isDemo, timeLimit }) => {
   const { recordError, startTracking, stopTracking } = useTelemetry();
@@ -99,9 +100,11 @@ const GoNoGoGame = ({ isActive, onEndGame, isDemo, timeLimit }) => {
     if (isGoTrial) {
       setCorrectGo(prev => prev + 1);
       setScore(prev => prev + 10);
+      try { playMemoryClick(); } catch (e) {}
     } else {
       setCommissionErrors(prev => prev + 1);
       recordError();
+      try { playMemoryFlash(); } catch (e) {}
     }
     setGameState('feedback');
     setTimeout(nextTrial, isGoTrial ? 500 : 1000);

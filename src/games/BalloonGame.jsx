@@ -1,10 +1,12 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { playBalloonPump, playBalloonPop } from '../utils/audio';
+import { playBalloonPump, playBalloonPop, playMemoryFlash } from '../utils/audio';
 import { useTelemetry } from '../TelemetryContext';
 
 const BalloonGame = ({ isActive, onEndGame, isDemo }) => {
   const MAX_ROUNDS = isDemo ? 3 : 10;
+  const MIN_PUMPS = 6;
+  const MAX_EXTRA = 6; // explosion threshold will be in [MIN_PUMPS .. MIN_PUMPS+MAX_EXTRA-1]
   const { startTracking, stopTracking } = useTelemetry();
 
   const [round, setRound] = useState(1);
@@ -13,6 +15,7 @@ const BalloonGame = ({ isActive, onEndGame, isDemo }) => {
   const [totalPoints, setTotalPoints] = useState(0);
   const [explosionPoint, setExplosionPoint] = useState(0);
   const [gameState, setGameState] = useState('playing'); // playing, exploded, banked
+  const [showConfetti, setShowConfetti] = useState(false);
 
   const totalPointsRef = useRef(0);
   const popsRef = useRef(0);
@@ -22,7 +25,7 @@ const BalloonGame = ({ isActive, onEndGame, isDemo }) => {
     setCurrentBalloonSize(1);
     setCurrentRoundPoints(0);
     setGameState('playing');
-    const threshold = Math.floor(Math.random() * 8) + 4; // [4..11]
+    const threshold = MIN_PUMPS + Math.floor(Math.random() * MAX_EXTRA); // [MIN_PUMPS..MIN_PUMPS+MAX_EXTRA-1]
     setExplosionPoint(threshold);
   }, []);
 
@@ -54,10 +57,11 @@ const BalloonGame = ({ isActive, onEndGame, isDemo }) => {
 
   const handlePump = () => {
     if (gameState !== 'playing' || hasEndedRef.current) return;
-    
+
     const newSize = currentBalloonSize + 1;
-    
-    const earlyPopChance = currentBalloonSize > 1 ? Math.min(0.15, currentBalloonSize * 0.02) : 0;
+
+    // Disable any chance of an "early" pop until the minimum pump threshold is reached
+    const earlyPopChance = currentBalloonSize >= MIN_PUMPS ? Math.min(0.15, currentBalloonSize * 0.02) : 0;
     const isEarlyPop = Math.random() < earlyPopChance;
 
     if (newSize >= explosionPoint || isEarlyPop) {
@@ -78,6 +82,9 @@ const BalloonGame = ({ isActive, onEndGame, isDemo }) => {
     totalPointsRef.current += currentRoundPoints;
     setTotalPoints(totalPointsRef.current);
     setGameState('banked');
+    try { playMemoryFlash(); } catch (e) {}
+    setShowConfetti(true);
+    setTimeout(() => setShowConfetti(false), 1200);
     setTimeout(() => advanceRound(), 1500);
   };
 
@@ -173,6 +180,26 @@ const BalloonGame = ({ isActive, onEndGame, isDemo }) => {
             </motion.div>
           )}
         </AnimatePresence>
+        {showConfetti && (
+          <div style={{ position: 'absolute', left: '50%', top: '50%', transform: 'translate(-50%, -50%)', pointerEvents: 'none', zIndex: 40 }}>
+            {Array.from({ length: 18 }).map((_, i) => {
+              const angle = (i / 18) * Math.PI * 2;
+              const dist = 40 + Math.random() * 60;
+              const x = Math.cos(angle) * dist;
+              const y = Math.sin(angle) * dist;
+              const color = ['#ef4444', '#f59e0b', '#10b981', '#3b82f6', '#7c3aed'][i % 5];
+              return (
+                <motion.div
+                  key={`c-${i}`}
+                  initial={{ x: 0, y: 0, scale: 0.6, opacity: 1, rotate: Math.random() * 90 }}
+                  animate={{ x, y, scale: 1, opacity: 0 }}
+                  transition={{ duration: 0.9 + Math.random() * 0.6, ease: 'easeOut' }}
+                  style={{ width: 8, height: 12, background: color, borderRadius: 2, margin: 2 }}
+                />
+              );
+            })}
+          </div>
+        )}
       </div>
 
       <div style={{ display: 'flex', gap: '24px', marginBottom: '80px', zIndex: 10 }}>
