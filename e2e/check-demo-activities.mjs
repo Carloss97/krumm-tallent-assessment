@@ -27,10 +27,18 @@ async function run() {
     if (count === 0) throw new Error('No activities found in sidebar');
 
     for (let i = 0; i < count; i++) {
+      console.log('Clicking sidebar item', i + 1);
       await items.nth(i).click();
-      await page.waitForSelector('.demo-activity h3', { timeout: 15000 });
-      const title = await page.locator('.demo-activity h3').innerText().catch(() => '');
-      console.log(`Activity ${i + 1}/${count}: "${title}"`);
+      // wait for the demo container to update (may be heavy for some activities)
+      try {
+        await page.waitForSelector('.demo-activity', { timeout: 30000 });
+        const demoHtml = await page.locator('.demo-activity').innerHTML().catch(() => '');
+        const title = await page.locator('.demo-activity h3').innerText().catch(() => '');
+        console.log(`Activity ${i + 1}/${count}: "${title}" (demo size ${demoHtml.length} chars)`);
+      } catch (innerErr) {
+        console.error('Timeout waiting for demo area after clicking index', i + 1);
+        throw innerErr;
+      }
 
       await page.waitForTimeout(800);
 

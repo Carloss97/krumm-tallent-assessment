@@ -25,6 +25,9 @@ const GoNoGoGame = ({ isActive, onEndGame, isDemo, timeLimit }) => {
   const stimulusStartTimeRef = useRef(null);
   const responseTimeoutRef = useRef(null);
   const hasEndedRef = useRef(false);
+  const startTrialRef = useRef(null);
+  const nextTrialRef = useRef(null);
+  const handleTimeoutRef = useRef(null);
 
   const MAX_TRIALS = isDemo ? 25 : 100;
   const GO_PROBABILITY = isDemo ? 0.8 : 0.7;
@@ -44,19 +47,21 @@ const GoNoGoGame = ({ isActive, onEndGame, isDemo, timeLimit }) => {
 
   const timeLeft = useGameTimer({ isActive, timeLimit, onEnd: endGame });
 
-  const nextTrial = useCallback(() => {
+  // use refs for interdependent functions to avoid temporal-dead-zone errors
+  const nextTrialFunc = () => {
     if (trial >= MAX_TRIALS) {
       endGame();
     } else {
       setTrial(prev => prev + 1);
       // schedule next trial start after a short gap (avoid racing with state updates)
       setTimeout(() => {
-        if (!hasEndedRef.current) startTrial();
+        if (!hasEndedRef.current && typeof startTrialRef.current === 'function') startTrialRef.current();
       }, 500);
     }
-  }, [trial, MAX_TRIALS, endGame, startTrial]);
+  };
+  nextTrialRef.current = nextTrialFunc;
 
-  const handleTimeout = useCallback((isGoTrial) => {
+  const handleTimeoutFunc = (isGoTrial) => {
     if (responseTimeoutRef.current) clearTimeout(responseTimeoutRef.current);
     if (isGoTrial) {
       setOmissionErrors(prev => prev + 1);
@@ -66,18 +71,22 @@ const GoNoGoGame = ({ isActive, onEndGame, isDemo, timeLimit }) => {
       setScore(prev => prev + 5);
     }
     setGameState('feedback');
-    setTimeout(nextTrial, isGoTrial ? 1000 : 500);
-  }, [nextTrial, recordError]);
+    const next = nextTrialRef.current;
+    setTimeout(() => { if (typeof next === 'function') next(); }, isGoTrial ? 1000 : 500);
+  };
+  handleTimeoutRef.current = handleTimeoutFunc;
 
-  const startTrial = useCallback(() => {
+  const startTrialFunc = () => {
     // clear any pending response timeout before starting
     if (responseTimeoutRef.current) clearTimeout(responseTimeoutRef.current);
     const isGoTrial = Math.random() < GO_PROBABILITY;
     setCurrentStimulus(isGoTrial ? 'GO' : 'NO-GO');
     setGameState('stimulus');
     stimulusStartTimeRef.current = performance.now();
-    responseTimeoutRef.current = setTimeout(() => handleTimeout(isGoTrial), RESPONSE_WINDOW);
-  }, [GO_PROBABILITY, RESPONSE_WINDOW, handleTimeout]);
+    const handler = handleTimeoutRef.current;
+    responseTimeoutRef.current = setTimeout(() => { if (typeof handler === 'function') handler(isGoTrial); }, RESPONSE_WINDOW);
+  };
+  startTrialRef.current = startTrialFunc;
 
   useEffect(() => {
     if (isActive) {
@@ -90,10 +99,11 @@ const GoNoGoGame = ({ isActive, onEndGame, isDemo, timeLimit }) => {
       setCommissionErrors(0);
       setOmissionErrors(0);
       reactionTimes.current = [];
-      startTrial();
+      // call via ref to ensure the latest handler chain is used
+      if (typeof startTrialRef.current === 'function') startTrialRef.current();
     }
     return () => clearTimeout(responseTimeoutRef.current);
-  }, [isActive, startTrial, startTracking]);
+  }, [isActive, startTracking]);
 
   
 
@@ -125,8 +135,10 @@ const GoNoGoGame = ({ isActive, onEndGame, isDemo, timeLimit }) => {
       flashTimeoutRef.current = setTimeout(() => setFlashWrong(false), 350);
     }
     setGameState('feedback');
-    setTimeout(nextTrial, isGoTrial ? 500 : 1000);
-  }, [currentStimulus, gameState, nextTrial, recordError]);
+    const next = nextTrialRef.current;
+    setTimeout(() => { if (typeof next === 'function') next(); }, isGoTrial ? 500 : 1000);
+  }, [currentStimulus, gameState, recordError]);
+  
 
   useEffect(() => {
     const handleKeyPress = (event) => {
