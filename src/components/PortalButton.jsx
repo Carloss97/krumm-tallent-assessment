@@ -1,5 +1,5 @@
 import React from 'react';
-import { useLocation } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
 import { useTelemetry } from '../TelemetryContext';
 import './PortalButton.css';
 
@@ -32,17 +32,37 @@ export default function PortalButton() {
   const isHidden = (location?.pathname || '').startsWith('/postulantes') || (location?.pathname || '').startsWith('/candidate');
   if (isHidden) return null;
 
-  const handleClick = () => {
-    if (telemetry?.recordTrialEvent) telemetry.recordTrialEvent({ event: 'portal_click' });
-    window.dataLayer?.push({ event: 'portal_click' });
+  const navigate = useNavigate();
+
+  const isExternalUrl = (url) => {
+    if (!url) return false;
+    return /^https?:\/\//i.test(url);
+  };
+
+  const handleClick = (e) => {
+    try { telemetry?.recordTrialEvent && telemetry.recordTrialEvent({ event: 'portal_click' }); } catch (err) {}
+    try { window.dataLayer?.push({ event: 'portal_click' }); } catch (err) {}
+
+    const external = isExternalUrl(portalUrl);
+    if (external) {
+      // external: navigate via full page load to ensure proper host change
+      e && e.preventDefault();
+      window.location.assign(portalUrl);
+      return;
+    }
+
+    // internal route: use SPA navigation
+    e && e.preventDefault();
+    try { navigate(portalUrl); } catch (err) { window.location.assign(portalUrl); }
   };
 
   return (
     <a
       href={portalUrl}
       className="btn-portal"
-      aria-label="Portal de Postulantes"
       onClick={handleClick}
+      aria-label="Portal de Postulantes"
+      {...(isExternalUrl(portalUrl) ? { target: '_blank', rel: 'noopener noreferrer' } : {})}
     >
       Dar mi Test
     </a>
