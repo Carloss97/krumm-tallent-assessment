@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useTelemetry } from '../TelemetryContext';
 import { useLanguage } from '../context/LanguageContext';
+import { useNavigate } from 'react-router-dom';
 // Prefer prototype games for a higher-fidelity demo experience
 import ProtoBalloon from '../games/BalloonGame';
 import GridOptimizerGame from '../games/GridOptimizerGame';
@@ -86,6 +87,7 @@ const DemoShell = () => {
   const [showReport, setShowReport] = useState(false);
   const { setIsDemo, startTracking, stopTracking, recordTrialEvent } = useTelemetry();
   const { language } = useLanguage();
+  const navigate = useNavigate();
 
   const demoCopy = {
     es: {
@@ -137,7 +139,7 @@ const DemoShell = () => {
     if (timeLeft === 0) {
       // finished by time
       handleDemoComplete(completedRef.current);
-      setShowReport(true);
+      navigate('/report');
     }
   }, [timeLeft]);
 
@@ -215,7 +217,7 @@ const DemoShell = () => {
       const doneCount = Object.keys(next).length;
       if (doneCount >= ACTIVITIES.length) {
         handleDemoComplete(next);
-        setShowReport(true);
+        navigate('/report');
       } else {
         setStep((s) => Math.min(ACTIVITIES.length - 1, s + 1));
       }
