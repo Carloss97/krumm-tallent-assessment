@@ -40,6 +40,17 @@
 
 .pl-error { background: rgba(255, 107, 107, 0.08); color: #b91c1c; padding: 10px; border-radius: 6px; margin-top: 4px; }
 
-.pl-submit { padding: 12px; border-radius: 10px; background: var(--brand-500); color: white; border: none; font-weight: 700; cursor: pointer; }
+.pl-submit {
+  width: 100%;
+  padding: 14px 16px;
+  border-radius: 10px;
+  background: var(--brand-500);
+  color: white;
+  border: none;
+  font-weight: 700;
+  cursor: pointer;
+  font-size: 1.05rem;
+  min-height: 44px;
+}
 
 .pl-link { display: inline-block; margin-top: 8px; color: var(--primary); }
