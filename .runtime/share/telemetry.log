@@ -55,3 +55,5 @@
 {"receivedAt":"2026-04-14T06:31:49.151Z","payload":{"event":"cta_demo_clicked","payload":{"event":"cta_demo_clicked","timestamp":1776148309148},"demo":true,"participantId":"DEMO-LOCAL","timestamp":1776148309148}}
 {"receivedAt":"2026-04-14T06:52:29.189Z","payload":{"event":"cta_demo_clicked","payload":{"event":"cta_demo_clicked","timestamp":1776149549175},"demo":false,"participantId":null,"timestamp":1776149549175}}
 {"receivedAt":"2026-04-14T06:55:05.855Z","payload":{"event":"cta_demo_clicked","payload":{"event":"cta_demo_clicked","timestamp":1776149705851},"demo":false,"participantId":null,"timestamp":1776149705851}}
+{"receivedAt":"2026-04-14T13:35:22.879Z","payload":{"event":"cta_demo_clicked","payload":{"event":"cta_demo_clicked","timestamp":1776173722867},"demo":false,"participantId":null,"timestamp":1776173722867}}
+{"receivedAt":"2026-04-14T13:35:22.933Z","payload":{"event":"demo_abandon","payload":{"event":"demo_abandon","payload":{"completedCount":0,"timeUsedSec":0},"timestamp":1776173722930},"demo":true,"participantId":"DEMO-LOCAL","timestamp":1776173722930}}
