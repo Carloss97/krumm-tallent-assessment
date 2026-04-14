@@ -7,17 +7,14 @@ import GridOptimizerGame from '../games/GridOptimizerGame';
 import LaserPuzzleGame from '../games/LaserPuzzleGame';
 import ProtoGoNoGo from '../games/GoNoGoGame';
 import ProtoNBack from '../games/NBackGame';
-import PermissionModal from './PermissionModal';
-import PostDemoScreen from './PostDemoScreen';
 import './DemoShell.css';
 
 // Adapter wrappers so DemoShell can call prototypes with the expected onComplete() callback
-// For the demo we intentionally allow more attempts — run full-mode versions
-const BalloonProtoWrapper = ({ onComplete, est }) => <ProtoBalloon isActive={true} isDemo={false} timeLimit={est} onEndGame={() => onComplete && onComplete()} />;
-const GridProtoWrapper = ({ onComplete, est }) => <GridOptimizerGame isActive={true} isDemo={false} timeLimit={est} onEndGame={() => onComplete && onComplete()} />;
-const LaserProtoWrapper = ({ onComplete, est }) => <LaserPuzzleGame isActive={true} isDemo={false} timeLimit={est} onEndGame={() => onComplete && onComplete()} />;
-const GoNoGoProtoWrapper = ({ onComplete, est }) => <ProtoGoNoGo isActive={true} isDemo={false} timeLimit={est} onEndGame={() => onComplete && onComplete()} />;
-const NBackProtoWrapper = ({ onComplete, est }) => <ProtoNBack isActive={true} isDemo={false} timeLimit={est} onEndGame={() => onComplete && onComplete()} />;
+const BalloonProtoWrapper = ({ onComplete, est }) => <ProtoBalloon isActive={true} isDemo={true} timeLimit={est} onEndGame={() => onComplete && onComplete()} />;
+const GridProtoWrapper = ({ onComplete, est }) => <GridOptimizerGame isActive={true} isDemo={true} timeLimit={est} onEndGame={() => onComplete && onComplete()} />;
+const LaserProtoWrapper = ({ onComplete, est }) => <LaserPuzzleGame isActive={true} isDemo={true} timeLimit={est} onEndGame={() => onComplete && onComplete()} />;
+const GoNoGoProtoWrapper = ({ onComplete, est }) => <ProtoGoNoGo isActive={true} isDemo={true} timeLimit={est} onEndGame={() => onComplete && onComplete()} />;
+const NBackProtoWrapper = ({ onComplete, est }) => <ProtoNBack isActive={true} isDemo={true} timeLimit={est} onEndGame={() => onComplete && onComplete()} />;
 
 const ACTIVITIES = [
   { id: 'balloon', title: { es: 'Inflar el globo', en: 'Inflate the balloon' }, component: BalloonProtoWrapper, est: 60 },
@@ -33,11 +30,6 @@ const DemoShell = () => {
   const [step, setStep] = useState(0);
   const [timeLeft, setTimeLeft] = useState(TOTAL_TIME);
   const [completed, setCompleted] = useState({});
-  const [showPermission, setShowPermission] = useState(true);
-  const [permissionStatus, setPermissionStatus] = useState('idle');
-  const [showInstructions, setShowInstructions] = useState(true);
-  const [activityStarted, setActivityStarted] = useState(false);
-  const [showReport, setShowReport] = useState(false);
   const [toast, setToast] = useState(null);
   const { setIsDemo, startTracking, stopTracking, recordTrialEvent } = useTelemetry();
   const { language } = useLanguage();
@@ -138,8 +130,6 @@ const DemoShell = () => {
     } catch (e) {
       // swallow telemetry errors
     }
-    // show blurred report / contact screen
-    setShowReport(true);
   };
 
   const onComplete = (id) => {
@@ -157,9 +147,6 @@ const DemoShell = () => {
     setCompleted((c) => {
       const next = { ...c, [id]: true };
       const doneCount = Object.keys(next).length;
-      // reset activity state so instructions show for next activity
-      setActivityStarted(false);
-      setShowInstructions(true);
       if (doneCount >= ACTIVITIES.length) {
         handleDemoComplete(next);
       } else {
@@ -170,8 +157,6 @@ const DemoShell = () => {
   };
 
   const skipActivity = () => {
-    setActivityStarted(false);
-    setShowInstructions(true);
     setStep((s) => Math.min(ACTIVITIES.length - 1, s + 1));
   };
 
@@ -183,34 +168,9 @@ const DemoShell = () => {
     setStep(0);
     setTimeLeft(TOTAL_TIME);
     setCompleted({});
-    setShowReport(false);
-    setShowInstructions(true);
-    setActivityStarted(false);
   };
 
   const ActivityComponent = ACTIVITIES[step].component;
-
-  useEffect(() => {
-    // when changing step, reset activity state so instructions show
-    setActivityStarted(false);
-    setShowInstructions(true);
-  }, [step]);
-
-  const requestPermissions = async () => {
-    if (typeof navigator !== 'undefined' && navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
-      try {
-        const s = await navigator.mediaDevices.getUserMedia({ audio: true, video: true });
-        // immediately stop tracks — we only wanted the permission prompt
-        if (s && s.getTracks) s.getTracks().forEach(t => t.stop());
-        setPermissionStatus('granted');
-      } catch (e) {
-        setPermissionStatus('denied');
-      }
-    } else {
-      setPermissionStatus('unsupported');
-    }
-    setShowPermission(false);
-  };
 
   return (
     <div className="demo-shell">
@@ -223,55 +183,42 @@ const DemoShell = () => {
       </header>
 
       <main className="demo-main">
-        <main className="demo-main">
-          {showReport ? (
-            <PostDemoScreen completedIds={Object.keys(completed)} />
-          ) : (
-            <section className="demo-activity">
-              {toast && <div className="demo-toast">{toast}</div>}
-              <h3>{ACTIVITIES[step].title}</h3>
-              <div className="demo-activity-meta">Est. {Math.floor(ACTIVITIES[step].est / 60)}:{String(ACTIVITIES[step].est % 60).padStart(2, '0')}</div>
+        <section className="demo-activity">
+          {toast && <div className="demo-toast">{toast}</div>}
+          <h3>{(ACTIVITIES[step].title && typeof ACTIVITIES[step].title === 'object') ? (ACTIVITIES[step].title[language] || ACTIVITIES[step].title.es) : ACTIVITIES[step].title}</h3>
+          <div className="demo-activity-meta">{demoCopy[language]?.estLabel || demoCopy.es.estLabel} {Math.floor(ACTIVITIES[step].est / 60)}:{String(ACTIVITIES[step].est % 60).padStart(2, '0')}</div>
+          <ActivityComponent onComplete={() => onComplete(ACTIVITIES[step].id)} est={ACTIVITIES[step].est} />
+        </section>
 
-              {/* Permission modal shown at start */}
-              <PermissionModal open={showPermission} onClose={() => setShowPermission(false)} onRequest={requestPermissions} />
-
-              {/* Instructions overlay before starting each activity */}
-              {showInstructions && (
-                <div className="instructions-overlay">
-                  <div className="instructions-box">
-                    <h4>Instrucciones</h4>
-                    <p>{ACTIVITIES[step].title} — sigue las instrucciones en pantalla. Cuando estés listo, pulsa comenzar.</p>
-                    <div style={{ marginTop: 12 }}>
-                      <button className="btn" onClick={() => { setShowInstructions(false); setActivityStarted(true); }}>Comenzar actividad</button>
-                      <button className="btn btn-ghost" style={{ marginLeft: 8 }} onClick={() => { setShowInstructions(false); setActivityStarted(true); }}>Omitir instrucciones</button>
-                    </div>
-                  </div>
-                </div>
-              )}
-
-              {/* Activity is mounted only after starting */}
-              {activityStarted ? (
-                <ActivityComponent onComplete={() => onComplete(ACTIVITIES[step].id)} est={ACTIVITIES[step].est} />
-              ) : (
-                <div style={{ padding: 28, textAlign: 'center', color: '#6b7280' }}>
-                  <p>Actividad preparada. Lee las instrucciones y pulsa comenzar.</p>
-                  <div style={{ marginTop: 12 }}>
-                    <button className="btn" onClick={() => { setShowInstructions(true); }}>Ver instrucciones</button>
-                  </div>
-                </div>
-              )}
-
-              <div style={{ marginTop: 18, display: 'flex', gap: 8, justifyContent: 'center' }}>
-                <button className="btn" onClick={prevActivity} disabled={step === 0}>Anterior</button>
-                <button className="btn" onClick={skipActivity} disabled={step >= ACTIVITIES.length - 1}>Saltar</button>
-                <button className="btn" onClick={() => { setActivityStarted(false); setShowInstructions(true); setStep((s) => Math.min(ACTIVITIES.length - 1, s + 1)); }} disabled={step >= ACTIVITIES.length - 1}>Siguiente</button>
-              </div>
-              <div style={{ marginTop: 12, textAlign: 'center' }}>
-                <button className="btn" onClick={restart}>Reiniciar demo</button>
-              </div>
-            </section>
-          )}
-        </main>
+        <aside className="demo-sidebar">
+          <h4>{demoCopy[language]?.progressTitle || demoCopy.es.progressTitle}</h4>
+          <ol>
+            {ACTIVITIES.map((a, i) => (
+              <li
+                key={a.id}
+                className={completed[a.id] ? 'done' : i === step ? 'active' : ''}
+                onClick={() => setStep(i)}
+                role="button"
+                tabIndex={0}
+                onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') setStep(i); }}
+              >
+                {(a.title && typeof a.title === 'object') ? (a.title[language] || a.title.es) : a.title} {completed[a.id] ? '✓' : ''}
+              </li>
+            ))}
+          </ol>
+          <div className="demo-controls">
+            <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+              <button className="btn" onClick={prevActivity} disabled={step === 0}>{demoCopy[language]?.previous || demoCopy.es.previous}</button>
+              <button className="btn" onClick={skipActivity} disabled={step >= ACTIVITIES.length - 1}>{demoCopy[language]?.skip || demoCopy.es.skip}</button>
+              <button className="btn" onClick={() => { setStep((s) => Math.min(ACTIVITIES.length - 1, s + 1)); }} disabled={step >= ACTIVITIES.length - 1}>{demoCopy[language]?.next || demoCopy.es.next}</button>
+            </div>
+            <div style={{ marginTop: 10 }}>
+              <button className="btn" onClick={restart}>{demoCopy[language]?.restart || demoCopy.es.restart}</button>
+            </div>
+          </div>
+        </aside>
+      </main>
+    </div>
   );
 };
 

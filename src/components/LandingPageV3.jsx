@@ -245,7 +245,7 @@ const processSteps = [
 const useCases = [
   {
     icon: Target,
-    title: { es: 'Minería: Reduce rotación temprana y evita accidentes', en: 'Mining: Reduce early turnover and prevent incidents' },
+    title: { es: 'Grandes industrias: Reduce rotación temprana y evita accidentes', en: 'Large industries: Reduce early turnover and prevent incidents' },
     bullets: {
       es: ['Reduce rotación temprana por ajuste de perfil', 'Mejora la seguridad al detectar estrés y fatiga'],
       en: ['Reduce early turnover from poor fit', 'Improve safety by detecting stress and fatigue']
