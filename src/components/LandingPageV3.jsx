@@ -585,7 +585,7 @@ const LandingPageV3 = () => {
           transition={{ duration: 0.45, delay: 0.15 }}
         >
           <div className="lv3-action-buttons">
-            <button className="lv3-ghost lv3-action-btn lv3-action-demo micro-breathe" onClick={() => { recordTrialEvent && recordTrialEvent({ event: 'cta_demo_clicked' }); handleStartDemo(); }}>
+            <button className="lv3-ghost lv3-action-btn lv3-action-demo soft-glow" onClick={() => { recordTrialEvent && recordTrialEvent({ event: 'cta_demo_clicked' }); handleStartDemo(); }}>
               <FlaskConical size={18} aria-hidden="true" />
               <span>{language === 'es' ? 'Comenzar demo' : 'Start demo'}</span>
               <ChevronRight size={16} aria-hidden="true" />

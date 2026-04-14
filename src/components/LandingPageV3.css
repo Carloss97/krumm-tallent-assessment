@@ -253,6 +253,7 @@
 }
 
 .lv3-action-demo:hover {
+  animation-play-state: paused;
   transform: translateY(-4px) scale(1.03);
 }
 
@@ -265,6 +266,17 @@
   0% { transform: translateY(0) scale(1); box-shadow: 0 22px 56px rgba(99,102,241,0.14); filter: brightness(1); }
   50% { transform: translateY(-1px) scale(1.003); box-shadow: 0 26px 64px rgba(99,102,241,0.15); filter: brightness(1.02); }
   100% { transform: translateY(0) scale(1); box-shadow: 0 22px 56px rgba(99,102,241,0.14); filter: brightness(1); }
+}
+
+/* Soft glow for demo CTA: subtle shadow/brightness pulse without movement */
+.lv3-action-demo.soft-glow {
+  animation: softGlowDemo 6s infinite ease-in-out;
+}
+
+@keyframes softGlowDemo {
+  0% { box-shadow: 0 22px 56px rgba(99,102,241,0.14); filter: brightness(1); }
+  50% { box-shadow: 0 28px 72px rgba(99,102,241,0.18); filter: brightness(1.04); }
+  100% { box-shadow: 0 22px 56px rgba(99,102,241,0.14); filter: brightness(1); }
 }
 
 .lv3-action-recruiter {

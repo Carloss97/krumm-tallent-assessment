@@ -48,7 +48,7 @@ export default function PortalButton() {
   return (
     <a
       href={portalUrl}
-      className="btn-portal micro-breathe"
+      className="btn-portal soft-glow"
       onClick={handleClick}
       aria-label="Portal de Postulantes"
       {...(isExternalUrl(portalUrl) ? { target: '_blank', rel: 'noopener noreferrer' } : {})}

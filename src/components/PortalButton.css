@@ -57,3 +57,14 @@
   50% { box-shadow: 0 12px 36px rgba(0,0,0,0.13); transform: translateY(-1px) scale(1.003); filter: brightness(1.02); }
   100% { box-shadow: 0 10px 34px rgba(0,0,0,0.12); transform: translateY(0) scale(1); filter: brightness(1); }
 }
+
+/* Soft glow: animate only shadow and brightness (no movement) */
+.btn-portal.soft-glow {
+  animation: softGlowPortal 6s infinite ease-in-out;
+}
+
+@keyframes softGlowPortal {
+  0% { box-shadow: 0 10px 34px rgba(0,0,0,0.12); filter: brightness(1); }
+  50% { box-shadow: 0 14px 48px rgba(0,0,0,0.16); filter: brightness(1.04); }
+  100% { box-shadow: 0 10px 34px rgba(0,0,0,0.12); filter: brightness(1); }
+}
