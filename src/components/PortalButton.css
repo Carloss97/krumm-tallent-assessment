@@ -69,9 +69,9 @@
   100% { box-shadow: 0 10px 34px rgba(0,0,0,0.12); filter: brightness(1); }
 }
 
-/* Halo ring: medium-intensity expanding ring behind the button */
+/* Halo ring: increased intensity expanding ring behind the button */
 .btn-portal.halo-ring {
-  --halo-color: rgba(243,156,18,0.16);
+  --halo-color: rgba(243,156,18,0.28);
   overflow: visible;
 }
 
@@ -80,12 +80,12 @@
   position: absolute;
   left: 50%;
   top: 50%;
-  width: 220%;
-  height: 220%;
-  transform: translate(-50%, -50%) scale(0.95);
+  width: 260%;
+  height: 260%;
+  transform: translate(-50%, -50%) scale(0.9);
   border-radius: 999px;
-  background: radial-gradient(circle, var(--halo-color) 0%, rgba(0,0,0,0) 45%);
-  filter: blur(10px);
+  background: radial-gradient(circle, var(--halo-color) 0%, rgba(0,0,0,0) 55%);
+  filter: blur(16px);
   opacity: 0;
   pointer-events: none;
   z-index: -1;
@@ -93,12 +93,12 @@
 }
 
 @keyframes haloRing {
-  0% { opacity: 0; transform: translate(-50%, -50%) scale(0.92); }
-  40% { opacity: 0.8; transform: translate(-50%, -50%) scale(1.04); }
-  100% { opacity: 0; transform: translate(-50%, -50%) scale(1.18); }
+  0% { opacity: 0; transform: translate(-50%, -50%) scale(0.9); }
+  35% { opacity: 0.85; transform: translate(-50%, -50%) scale(1.06); }
+  100% { opacity: 0; transform: translate(-50%, -50%) scale(1.28); }
 }
 
 .btn-portal.halo-ring:hover::before {
   animation-play-state: paused;
-  opacity: 0.9;
+  opacity: 0.95;
 }
