@@ -18,26 +18,24 @@ export default function CandidateLogin() {
     e.preventDefault();
     setError('');
     setLoading(true);
-    try { telemetry && telemetry.recordTrialEvent && telemetry.recordTrialEvent({ event: 'candidate_login_submit' }); } catch (e) {}
+    if (telemetry?.recordTrialEvent) telemetry.recordTrialEvent({ event: 'candidate_login_submit' });
     try {
       const authRes = await authenticateParticipant({ participantId: form.token.trim(), accessCode: form.password.trim() });
-      try {
-        telemetry && telemetry.setParticipantProfile && telemetry.setParticipantProfile({
-          fullName: authRes.participant?.fullName || 'Participante',
-          participantId: authRes.participant?.participantId || form.token,
-          email: authRes.participant?.email || '',
-          authenticatedAt: authRes.authenticatedAt || new Date().toISOString(),
-          participantToken: authRes.participantToken || null,
-          source: 'candidate_portal'
-        });
-      } catch (err) {}
+      if (telemetry?.setParticipantProfile) telemetry.setParticipantProfile({
+        fullName: authRes.participant?.fullName || 'Participante',
+        participantId: authRes.participant?.participantId || form.token,
+        email: authRes.participant?.email || '',
+        authenticatedAt: authRes.authenticatedAt || new Date().toISOString(),
+        participantToken: authRes.participantToken || null,
+        source: 'candidate_portal'
+      });
       window.dataLayer?.push({ event: 'candidate_login_success' });
-      try { telemetry && telemetry.recordTrialEvent && telemetry.recordTrialEvent({ event: 'candidate_login_success' }); } catch (e) {}
+      if (telemetry?.recordTrialEvent) telemetry.recordTrialEvent({ event: 'candidate_login_success' });
       navigate('/game/1');
     } catch (err) {
       setError(err?.message || 'Error al iniciar sesión. Verifica tus datos.');
       window.dataLayer?.push({ event: 'candidate_login_failed' });
-      try { telemetry && telemetry.recordTrialEvent && telemetry.recordTrialEvent({ event: 'candidate_login_failed' }); } catch (e) {}
+      if (telemetry?.recordTrialEvent) telemetry.recordTrialEvent({ event: 'candidate_login_failed' });
     } finally {
       setLoading(false);
     }

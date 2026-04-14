@@ -10,8 +10,8 @@ export default function DemoSection() {
   const navigate = useNavigate();
 
   const handleCTA = () => {
-    try { telemetry && telemetry.recordTrialEvent && telemetry.recordTrialEvent({ event: 'demo_open' }); } catch (e) {}
-    try { window.dataLayer?.push({ event: 'demo_open' }); } catch (e) {}
+    if (telemetry?.recordTrialEvent) telemetry.recordTrialEvent({ event: 'demo_open' });
+    window.dataLayer?.push({ event: 'demo_open' });
     navigate('/demo');
   };
 

@@ -8,20 +8,13 @@ export default function PortalButton() {
   const telemetry = useTelemetry();
   const portalUrl = import.meta.env.VITE_PORTAL_URL || '/candidate/login';
 
-  // Hide on the postulantes / candidate pages themselves
-  if ((location?.pathname || '').startsWith('/postulantes') || (location?.pathname || '').startsWith('/candidate')) return null;
-
   // Add small UX nicety: if the landing language corner exists, add a helper class
   // on the root element to avoid overlap with the fixed portal button.
   React.useEffect(() => {
     const update = () => {
-      try {
-        const el = document.querySelector('.lv3-lang-corner');
-        if (el) document.documentElement.classList.add('has-lang-corner');
-        else document.documentElement.classList.remove('has-lang-corner');
-      } catch (e) {
-        document.documentElement.classList.remove('has-lang-corner');
-      }
+      const el = document.querySelector('.lv3-lang-corner');
+      if (el) document.documentElement.classList.add('has-lang-corner');
+      else document.documentElement.classList.remove('has-lang-corner');
     };
 
     update();
@@ -35,9 +28,13 @@ export default function PortalButton() {
     };
   }, []);
 
+  // Hide on the postulantes / candidate pages themselves
+  const isHidden = (location?.pathname || '').startsWith('/postulantes') || (location?.pathname || '').startsWith('/candidate');
+  if (isHidden) return null;
+
   const handleClick = () => {
-    try { telemetry && telemetry.recordTrialEvent && telemetry.recordTrialEvent({ event: 'portal_click' }); } catch (e) {}
-    try { window.dataLayer?.push({ event: 'portal_click' }); } catch (e) {}
+    if (telemetry?.recordTrialEvent) telemetry.recordTrialEvent({ event: 'portal_click' });
+    window.dataLayer?.push({ event: 'portal_click' });
   };
 
   return (
