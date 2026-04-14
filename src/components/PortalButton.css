@@ -14,7 +14,7 @@
   text-decoration: none;
   box-shadow: 0 8px 30px rgba(0, 0, 0, 0.12);
   border: none;
-  transition: transform 0.15s ease, box-shadow 0.15s ease;
+    transition: top 0.18s ease, transform 0.15s ease, box-shadow 0.15s ease;
 }
 
 @media (max-width: 480px) {
