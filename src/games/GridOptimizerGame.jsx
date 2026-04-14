@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { motion } from 'framer-motion';
 import { useTelemetry } from '../TelemetryContext';
 import { playMemoryClick, playMemoryFlash } from '../utils/audio';
+import Confetti from '../components/Confetti';
 
 const GRID = 10;
 const MAX_ROUNDS = 3;
@@ -360,6 +361,7 @@ const GridOptimizerGame = ({ isActive, onEndGame, isDemo }) => {
                 Entrega completa
               </motion.div>
             )}
+            {showDeliverAnim && (<div style={{ position: 'absolute', inset: 0, pointerEvents: 'none', zIndex: 40 }}><Confetti count={10} spread={60} duration={0.9} /></div>)}
             <div style={{ display:'grid', gridTemplateColumns:`repeat(${GRID}, 36px)`, gap:'2px' }}>{renderGrid()}</div>
           </div>
           <div style={{ display:'flex', alignItems:'center', gap:'10px', padding:'6px 14px', background:'rgba(99,102,241,0.07)', borderRadius:'8px', border:'1px solid rgba(99,102,241,0.18)', fontSize:'0.78rem' }}>

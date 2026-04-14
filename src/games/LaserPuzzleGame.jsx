@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef, useMemo, useCallback } from 'react'
 import { motion, AnimatePresence } from 'framer-motion';
 import { useTelemetry } from '../TelemetryContext';
 import { playMemoryClick, playMemoryFlash } from '../utils/audio';
+import Confetti from '../components/Confetti';
 import { useGameTimer } from '../hooks/useGameTimer';
 
 const CELL = 46;
@@ -380,6 +381,7 @@ const LaserPuzzleGame = ({ isActive, onEndGame, isDemo, timeLimit }) => {
           <motion.div initial={{ scale: 0.8, rotate: 0 }} animate={{ scale: 1.12, rotate: 8 }} transition={{ duration: 0.9, yoyo: Infinity }} style={{ padding: '20px 36px', background: 'rgba(16,185,129,0.12)', border: '3px solid #10b981', borderRadius: 14, color: '#059669', fontWeight: 900, fontSize: '1.25rem', textTransform: 'uppercase', letterSpacing: '2px' }}>
             ¡Nivel completado!
           </motion.div>
+          <Confetti count={14} spread={80} duration={1.2} />
         </motion.div>
       )}
     </div>

@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { playBalloonPump, playBalloonPop, playMemoryFlash } from '../utils/audio';
+import Confetti from '../components/Confetti';
 import { useTelemetry } from '../TelemetryContext';
 
 const BalloonGame = ({ isActive, onEndGame, isDemo }) => {
@@ -180,26 +181,7 @@ const BalloonGame = ({ isActive, onEndGame, isDemo }) => {
             </motion.div>
           )}
         </AnimatePresence>
-        {showConfetti && (
-          <div style={{ position: 'absolute', left: '50%', top: '50%', transform: 'translate(-50%, -50%)', pointerEvents: 'none', zIndex: 40 }}>
-            {Array.from({ length: 18 }).map((_, i) => {
-              const angle = (i / 18) * Math.PI * 2;
-              const dist = 40 + Math.random() * 60;
-              const x = Math.cos(angle) * dist;
-              const y = Math.sin(angle) * dist;
-              const color = ['#ef4444', '#f59e0b', '#10b981', '#3b82f6', '#7c3aed'][i % 5];
-              return (
-                <motion.div
-                  key={`c-${i}`}
-                  initial={{ x: 0, y: 0, scale: 0.6, opacity: 1, rotate: Math.random() * 90 }}
-                  animate={{ x, y, scale: 1, opacity: 0 }}
-                  transition={{ duration: 0.9 + Math.random() * 0.6, ease: 'easeOut' }}
-                  style={{ width: 8, height: 12, background: color, borderRadius: 2, margin: 2 }}
-                />
-              );
-            })}
-          </div>
-        )}
+        {showConfetti && <Confetti count={18} spread={70} duration={1.1} />}
       </div>
 
       <div style={{ display: 'flex', gap: '24px', marginBottom: '80px', zIndex: 10 }}>
