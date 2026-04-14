@@ -179,6 +179,12 @@ const DemoShell = () => {
     };
   }, []);
 
+  // show instructions at the start of each activity
+  useEffect(() => {
+    setShowInstructions(true);
+    setActivityStarted(false);
+  }, [step]);
+
   const handleDemoComplete = (completedObj) => {
     if (finishedRef.current) return;
     finishedRef.current = true;
@@ -247,6 +253,9 @@ const DemoShell = () => {
       }
     }
     setShowPermission(false);
+    // once permissions are handled, ensure the instructions overlay is visible for the next activity
+    setShowInstructions(true);
+    setActivityStarted(false);
   };
 
   return (

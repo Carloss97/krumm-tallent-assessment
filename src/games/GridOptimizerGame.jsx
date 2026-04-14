@@ -3,6 +3,7 @@ import { motion } from 'framer-motion';
 import { useTelemetry } from '../TelemetryContext';
 import { playMemoryClick, playMemoryFlash } from '../utils/audio';
 import Confetti from '../components/Confetti';
+import { useLanguage } from '../context/LanguageContext';
 
 const GRID = 10;
 const MAX_ROUNDS = 4;
@@ -31,6 +32,7 @@ const QUIZ = [
 
 const GridOptimizerGame = ({ isActive, onEndGame, isDemo }) => {
   const { recordError, startTracking, stopTracking } = useTelemetry();
+  const { language } = useLanguage();
 
   const effectiveMaxRounds = isDemo ? 1 : MAX_ROUNDS;
   const spawnerTimerRef = useRef(null);
@@ -300,7 +302,7 @@ const GridOptimizerGame = ({ isActive, onEndGame, isDemo }) => {
 
         let content = null;
         if (isWall) content = <div style={{ width:'100%', height:'100%' }} />;
-        else if (station) content = <span style={{ fontSize:'0.95rem' }}>âš¡</span>;
+        else if (station) content = <span style={{ fontSize:'0.95rem' }}>⚡</span>;
         else if (isDrop) content = <motion.div animate={{ scale:[0.7,1,0.7] }} transition={{ duration:1.2, repeat:Infinity }} style={{ width:'38%', height:'38%', borderRadius:'50%', background:`${inventory.color}55`, border:`2px solid ${inventory.color}` }} />;
 
         if (target) {
@@ -355,14 +357,14 @@ const GridOptimizerGame = ({ isActive, onEndGame, isDemo }) => {
             <span style={{ color:'#4f46e5' }}>Score: {score} pts</span>
           </div>
           <div style={{ display:'flex', gap:'15px', fontSize:'0.68rem', color:'#64748b', flexWrap:'wrap', justifyContent:'center' }}>
-            <span><span style={{display:'inline-block',width:'8px',height:'8px',background:'#ef4444',borderRadius:'2px',marginRight:'4px'}}/><span style={{display:'inline-block',width:'8px',height:'8px',background:'#3b82f6',borderRadius:'2px',marginRight:'4px'}}/><span style={{display:'inline-block',width:'8px',height:'8px',background:'#10b981',borderRadius:'2px',marginRight:'4px'}}/> Targets</span>
-            {lvlData.stations.length>0 && <span>⚡ Energy Station</span>}
-            <span>% = Target Satisfaction</span>
+            <span><span style={{display:'inline-block',width:'8px',height:'8px',background:'#ef4444',borderRadius:'2px',marginRight:'4px'}}/><span style={{display:'inline-block',width:'8px',height:'8px',background:'#3b82f6',borderRadius:'2px',marginRight:'4px'}}/><span style={{display:'inline-block',width:'8px',height:'8px',background:'#10b981',borderRadius:'2px',marginRight:'4px'}}/> {language === 'es' ? 'Objetivos' : 'Targets'}</span>
+            {lvlData.stations.length>0 && <span>⚡ {language === 'es' ? 'Estación de energía' : 'Energy Station'}</span>}
+            <span>% = {language === 'es' ? 'Satisfacción objetivo' : 'Target Satisfaction'}</span>
           </div>
           <div style={{ position:'relative', padding:'6px', border:'1px solid rgba(99,102,241,0.2)', borderRadius:'10px', background:'rgba(220,225,255,0.5)' }}>
             {showDeliverAnim && (
               <motion.div initial={{ scale: 0.6, opacity: 0 }} animate={{ scale: 1.1, opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.8 }} style={{ position: 'absolute', left: '50%', top: '-14px', transform: 'translateX(-50%)', zIndex: 30, pointerEvents: 'none', background: 'linear-gradient(90deg, #10b981, #3b82f6)', padding: '6px 12px', borderRadius: 10, color: 'white', fontWeight: 700 }}>
-                Entrega completa
+                {language === 'es' ? 'Entrega completa' : 'Delivery complete'}
               </motion.div>
             )}
             {showDeliverAnim && (<div style={{ position: 'absolute', inset: 0, pointerEvents: 'none', zIndex: 40 }}><Confetti count={10} spread={60} duration={0.9} /></div>)}

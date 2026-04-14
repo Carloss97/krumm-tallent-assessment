@@ -7,6 +7,7 @@ import { useLanguage } from '../context/LanguageContext';
 
 const BalloonGame = ({ isActive, onEndGame, isDemo }) => {
   const MAX_ROUNDS = isDemo ? 3 : 10;
+  const MIN_PUMPS = 7;
   const { startTracking, stopTracking } = useTelemetry();
   const { language } = useLanguage();
 

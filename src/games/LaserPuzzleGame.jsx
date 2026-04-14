@@ -4,6 +4,7 @@ import { useTelemetry } from '../TelemetryContext';
 import { playMemoryClick, playMemoryFlash } from '../utils/audio';
 import Confetti from '../components/Confetti';
 import { useGameTimer } from '../hooks/useGameTimer';
+import { useLanguage } from '../context/LanguageContext';
 
 const CELL = 46;
 
@@ -166,6 +167,7 @@ const buildGrid = (level) => {
 
 const LaserPuzzleGame = ({ isActive, onEndGame, isDemo, timeLimit }) => {
   const { recordError, startTracking, stopTracking } = useTelemetry();
+  const { language } = useLanguage();
   const [procLevels, setProcLevels] = useState(null);
   const [levelIdx, setLevelIdx] = useState(0);
   const [grid, setGrid] = useState({});
@@ -394,7 +396,7 @@ const LaserPuzzleGame = ({ isActive, onEndGame, isDemo, timeLimit }) => {
       {gamePhase === 'levelComplete' && (
         <motion.div initial={{ scale: 0.6, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} transition={{ duration: 0.6 }} style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', pointerEvents: 'none', zIndex: 60 }}>
           <motion.div initial={{ scale: 0.8, rotate: 0 }} animate={{ scale: 1.12, rotate: 8 }} transition={{ duration: 0.9, yoyo: Infinity }} style={{ padding: '20px 36px', background: 'rgba(16,185,129,0.12)', border: '3px solid #10b981', borderRadius: 14, color: '#059669', fontWeight: 900, fontSize: '1.25rem', textTransform: 'uppercase', letterSpacing: '2px' }}>
-            ¡Nivel completado!
+            {language === 'es' ? '¡Nivel completado!' : 'Level complete!'}
           </motion.div>
           <Confetti count={14} spread={80} duration={1.2} />
         </motion.div>
