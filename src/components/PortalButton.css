@@ -44,13 +44,13 @@
   box-shadow: 0 22px 70px rgba(0, 0, 0, 0.22);
 }
 
-/* Soft bob: subtle vertical movement and gentle shadow changes */
-.btn-portal.soft-bob {
-  animation: portalSoftBob 6s infinite ease-in-out;
+/* Micro-breathe: extremely subtle vertical shift + gentle glow */
+.btn-portal.micro-breathe {
+  animation: microBreathe 8s infinite ease-in-out;
 }
 
-@keyframes portalSoftBob {
-  0% { box-shadow: 0 10px 34px rgba(0,0,0,0.12); transform: translateY(0) scale(1); }
-  50% { box-shadow: 0 14px 40px rgba(0,0,0,0.14); transform: translateY(-2px) scale(1.01); }
-  100% { box-shadow: 0 10px 34px rgba(0,0,0,0.12); transform: translateY(0) scale(1); }
+@keyframes microBreathe {
+  0% { box-shadow: 0 10px 34px rgba(0,0,0,0.12); transform: translateY(0) scale(1); filter: brightness(1); }
+  50% { box-shadow: 0 12px 36px rgba(0,0,0,0.13); transform: translateY(-1px) scale(1.003); filter: brightness(1.02); }
+  100% { box-shadow: 0 10px 34px rgba(0,0,0,0.12); transform: translateY(0) scale(1); filter: brightness(1); }
 }

@@ -256,15 +256,15 @@
   transform: translateY(-4px) scale(1.03);
 }
 
-/* Demo CTA pulse to draw attention */
-.lv3-action-demo.pulse {
-  animation: demoPulse 2.8s infinite ease-in-out;
+/* Subtle micro-breathe animation for hero CTAs */
+.lv3-action-demo.micro-breathe {
+  animation: microBreathe 8s infinite ease-in-out;
 }
 
-@keyframes demoPulse {
-  0% { transform: translateY(0) scale(1); box-shadow: 0 22px 56px rgba(99,102,241,0.14); }
-  50% { transform: translateY(-3px) scale(1.03); box-shadow: 0 34px 84px rgba(99,102,241,0.18); }
-  100% { transform: translateY(0) scale(1); box-shadow: 0 22px 56px rgba(99,102,241,0.14); }
+@keyframes microBreathe {
+  0% { transform: translateY(0) scale(1); box-shadow: 0 22px 56px rgba(99,102,241,0.14); filter: brightness(1); }
+  50% { transform: translateY(-1px) scale(1.003); box-shadow: 0 26px 64px rgba(99,102,241,0.15); filter: brightness(1.02); }
+  100% { transform: translateY(0) scale(1); box-shadow: 0 22px 56px rgba(99,102,241,0.14); filter: brightness(1); }
 }
 
 .lv3-action-recruiter {
