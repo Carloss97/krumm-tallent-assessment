@@ -19,9 +19,11 @@ export default function DemoSection() {
     <section className="demo-section section--brand-dark" aria-label="Demo Section">
       <div className="demo-section__inner">
         <div className="demo-mockup" aria-hidden="false">
-          <Suspense fallback={<div className="demo-placeholder">Cargando demo...</div>}>
-            <HeroDemoLazy />
-          </Suspense>
+          <div className="mockup-frame">
+            <Suspense fallback={<div className="demo-placeholder">Cargando demo...</div>}>
+              <HeroDemoLazy />
+            </Suspense>
+          </div>
         </div>
 
         <div className="demo-cta">

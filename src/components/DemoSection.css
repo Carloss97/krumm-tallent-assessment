@@ -1,6 +1,9 @@
+
 .demo-section {
-  width: 100%;
-  padding: 36px 0 28px;
+  /* Full-bleed section */
+  width: 100vw;
+  margin-left: calc(50% - 50vw);
+  padding: 56px 0 40px;
   display: block;
 }
 
@@ -10,37 +13,50 @@
   padding: 0 24px;
   display: flex;
   flex-direction: column;
-  gap: 20px;
+  gap: 24px;
   align-items: center;
 }
 
 .demo-mockup {
   width: 100%;
-  height: 60vh;
-  max-height: 720px;
-  border-radius: 12px;
-  background: var(--surface-card);
-  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.12);
-  overflow: hidden;
+  height: 66vh;
+  max-height: 760px;
+  border-radius: 18px;
+  background: transparent; /* keep panel background transparent so mockup frame shows */
+  box-shadow: none;
+  overflow: visible;
   display: flex;
   align-items: center;
   justify-content: center;
 }
 
+
 .demo-placeholder { width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; color: var(--gray); }
 
-.demo-cta { margin-top: -86px; position: relative; z-index: 3; width: 100%; display: flex; justify-content: center; }
+.mockup-frame {
+  width: 100%;
+  height: 100%;
+  max-width: 1200px;
+  border-radius: 16px;
+  background: linear-gradient(180deg, #ffffff 0%, #fbfdff 100%);
+  box-shadow: 0 30px 80px rgba(12,34,56,0.08);
+  padding: 18px;
+  overflow: hidden;
+  border: 1px solid rgba(20,30,60,0.06);
+}
+
+.demo-cta { margin-top: -90px; position: relative; z-index: 4; width: 100%; display: flex; justify-content: center; }
 
 .btn-cta {
   background: linear-gradient(135deg, var(--accent-portal), #e67a12);
   color: #ffffff;
-  padding: 18px 36px;
-  border-radius: 16px;
+  padding: 20px 44px;
+  border-radius: 18px;
   border: none;
-  font-size: 1.18rem;
-  font-weight: 800;
+  font-size: 1.22rem;
+  font-weight: 900;
   cursor: pointer;
-  box-shadow: 0 18px 46px rgba(0,0,0,0.2);
+  box-shadow: 0 22px 56px rgba(0,0,0,0.22);
   transform: translateZ(0);
 }
 
@@ -51,3 +67,4 @@
   .demo-cta { margin-top: -56px; }
   .btn-cta { padding: 14px 22px; font-size: 1.02rem; }
 }
+

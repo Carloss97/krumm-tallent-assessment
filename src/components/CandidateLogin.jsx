@@ -18,6 +18,7 @@ export default function CandidateLogin() {
     e.preventDefault();
     setError('');
     setLoading(true);
+    try { telemetry && telemetry.recordTrialEvent && telemetry.recordTrialEvent({ event: 'candidate_login_submit' }); } catch (e) {}
     try {
       const authRes = await authenticateParticipant({ participantId: form.token.trim(), accessCode: form.password.trim() });
       try {
@@ -31,10 +32,12 @@ export default function CandidateLogin() {
         });
       } catch (err) {}
       window.dataLayer?.push({ event: 'candidate_login_success' });
+      try { telemetry && telemetry.recordTrialEvent && telemetry.recordTrialEvent({ event: 'candidate_login_success' }); } catch (e) {}
       navigate('/game/1');
     } catch (err) {
       setError(err?.message || 'Error al iniciar sesión. Verifica tus datos.');
       window.dataLayer?.push({ event: 'candidate_login_failed' });
+      try { telemetry && telemetry.recordTrialEvent && telemetry.recordTrialEvent({ event: 'candidate_login_failed' }); } catch (e) {}
     } finally {
       setLoading(false);
     }
