@@ -45,7 +45,7 @@ const DesignVariants = () => {
 
         <VariantCard title="3 — Single page + big CTA" variantKey="c" current={variant === 'c'} onApply={apply}>
           <div className="dv-single">
-            <div className="dv-hero">Hacer test ya</div>
+            <div className="dv-hero">Dar mi test</div>
             <div className="dv-demo">Demo • 3 actividades</div>
           </div>
         </VariantCard>

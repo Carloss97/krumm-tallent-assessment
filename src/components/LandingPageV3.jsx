@@ -573,13 +573,12 @@ const LandingPageV3 = () => {
         >
           <div className="lv3-action-buttons">
             <button className="lv3-primary lv3-action-btn lv3-action-start" onClick={() => {
-              recordTrialEvent && recordTrialEvent({ event: 'cta_quick_modal_opened' });
-              // Quick-start demo: create a demo profile and navigate to the first game
-              ensureQuickAccessProfile();
-              navigate(`/game/1?lang=${language}`);
+              recordTrialEvent && recordTrialEvent({ event: 'cta_start_clicked' });
+              // Open credentials form so user can start the real assessment
+              setShowForm(true);
             }}>
               <Sparkles size={18} aria-hidden="true" />
-              <span>{language === 'es' ? 'Hacer test ya' : 'Start test now'}</span>
+              <span>{language === 'es' ? 'Dar mi test' : 'Take my test'}</span>
               <ChevronRight size={16} aria-hidden="true" />
             </button>
             <button className="lv3-ghost lv3-action-btn lv3-action-demo" onClick={() => { recordTrialEvent && recordTrialEvent({ event: 'cta_demo_clicked' }); handleStartDemo(); }}>

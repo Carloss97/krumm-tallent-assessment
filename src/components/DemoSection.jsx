@@ -4,6 +4,8 @@ import { useTelemetry } from '../TelemetryContext';
 import './DemoSection.css';
 
 const HeroDemoLazy = lazy(() => import('./HeroDemo'));
+// Show the full demo shell inside the hero mockup for a richer preview
+const DemoShellLazy = lazy(() => import('./DemoShell'));
 
 export default function DemoSection() {
   const telemetry = useTelemetry();
@@ -21,7 +23,7 @@ export default function DemoSection() {
         <div className="demo-mockup" aria-hidden="false">
           <div className="mockup-frame">
             <Suspense fallback={<div className="demo-placeholder">Cargando demo...</div>}>
-              <HeroDemoLazy />
+              <DemoShellLazy />
             </Suspense>
           </div>
         </div>

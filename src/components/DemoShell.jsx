@@ -1,18 +1,20 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useTelemetry } from '../TelemetryContext';
-import BalloonGame from './demo/BalloonGame';
-import CollectPeopleGame from './demo/CollectPeopleGame';
-import LaserReflectGame from './demo/LaserReflectGame';
-import DemoGoNoGo from './demo/DemoGoNoGo';
-import DemoNBack from './demo/DemoNBack';
+// Prefer prototype games for a higher-fidelity demo experience
+import ProtoBalloon from '../games/BalloonGame';
+import GridOptimizerGame from '../games/GridOptimizerGame';
+import LaserPuzzleGame from '../games/LaserPuzzleGame';
 import './DemoShell.css';
 
+// Adapter wrappers so DemoShell can call prototypes with the expected onComplete() callback
+const BalloonProtoWrapper = ({ onComplete }) => <ProtoBalloon isActive={true} isDemo={true} onEndGame={() => onComplete && onComplete()} />;
+const GridProtoWrapper = ({ onComplete }) => <GridOptimizerGame isActive={true} isDemo={true} onEndGame={() => onComplete && onComplete()} />;
+const LaserProtoWrapper = ({ onComplete }) => <LaserPuzzleGame isActive={true} isDemo={true} onEndGame={() => onComplete && onComplete()} />;
+
 const ACTIVITIES = [
-  { id: 'balloon', title: 'Inflar el globo', component: BalloonGame, est: 45 },
-  { id: 'collect', title: 'Recoger personas', component: CollectPeopleGame, est: 60 },
-  { id: 'laser', title: 'Reflejar láser', component: LaserReflectGame, est: 60 },
-  { id: 'gng', title: 'Go / No-Go', component: DemoGoNoGo, est: 60 },
-  { id: 'nback', title: '1-Back (memoria)', component: DemoNBack, est: 60 }
+  { id: 'balloon', title: 'Inflar el globo', component: BalloonProtoWrapper, est: 45 },
+  { id: 'grid', title: 'Optimizar rejilla', component: GridProtoWrapper, est: 75 },
+  { id: 'laser', title: 'Puzzle láser', component: LaserProtoWrapper, est: 75 }
 ];
 
 const TOTAL_TIME = 300; // 5 minutes
