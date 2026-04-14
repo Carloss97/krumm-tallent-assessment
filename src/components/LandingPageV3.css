@@ -279,6 +279,38 @@
   100% { box-shadow: 0 22px 56px rgba(99,102,241,0.14); filter: brightness(1); }
 }
 
+/* Halo ring for demo CTA (medium intensity) */
+.lv3-action-demo.halo-ring {
+  --halo-color: rgba(99,102,241,0.16);
+  position: relative;
+  overflow: visible;
+}
+
+.lv3-action-demo.halo-ring::before {
+  content: "";
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 200%;
+  height: 200%;
+  transform: translate(-50%, -50%) scale(0.95);
+  border-radius: 999px;
+  background: radial-gradient(circle, var(--halo-color) 0%, rgba(0,0,0,0) 40%);
+  filter: blur(10px);
+  opacity: 0;
+  pointer-events: none;
+  z-index: -1;
+  animation: haloRingDemo 3s infinite ease-in-out;
+}
+
+@keyframes haloRingDemo {
+  0% { opacity: 0; transform: translate(-50%, -50%) scale(0.92); }
+  40% { opacity: 0.8; transform: translate(-50%, -50%) scale(1.03); }
+  100% { opacity: 0; transform: translate(-50%, -50%) scale(1.15); }
+}
+
+.lv3-action-demo.halo-ring:hover::before { animation-play-state: paused; opacity: 0.9; }
+
 .lv3-action-recruiter {
   background: linear-gradient(135deg, #f3f7fb, #ebf1f7);
   color: #274263;

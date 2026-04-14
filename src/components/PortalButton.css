@@ -68,3 +68,37 @@
   50% { box-shadow: 0 14px 48px rgba(0,0,0,0.16); filter: brightness(1.04); }
   100% { box-shadow: 0 10px 34px rgba(0,0,0,0.12); filter: brightness(1); }
 }
+
+/* Halo ring: medium-intensity expanding ring behind the button */
+.btn-portal.halo-ring {
+  --halo-color: rgba(243,156,18,0.16);
+  overflow: visible;
+}
+
+.btn-portal.halo-ring::before {
+  content: "";
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 220%;
+  height: 220%;
+  transform: translate(-50%, -50%) scale(0.95);
+  border-radius: 999px;
+  background: radial-gradient(circle, var(--halo-color) 0%, rgba(0,0,0,0) 45%);
+  filter: blur(10px);
+  opacity: 0;
+  pointer-events: none;
+  z-index: -1;
+  animation: haloRing 3s infinite ease-in-out;
+}
+
+@keyframes haloRing {
+  0% { opacity: 0; transform: translate(-50%, -50%) scale(0.92); }
+  40% { opacity: 0.8; transform: translate(-50%, -50%) scale(1.04); }
+  100% { opacity: 0; transform: translate(-50%, -50%) scale(1.18); }
+}
+
+.btn-portal.halo-ring:hover::before {
+  animation-play-state: paused;
+  opacity: 0.9;
+}
