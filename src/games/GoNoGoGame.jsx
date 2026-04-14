@@ -20,6 +20,7 @@ const GoNoGoGame = ({ isActive, onEndGame, isDemo, timeLimit }) => {
   const [omissionErrors, setOmissionErrors] = useState(0);
   const [flashWrong, setFlashWrong] = useState(false);
   const [flashRight, setFlashRight] = useState(false);
+  const [lastOutcome, setLastOutcome] = useState(null); // 'correct' | 'incorrect'
   const flashTimeoutRef = useRef(null);
   const [showConfetti, setShowConfetti] = useState(false);
   const confettiTimeoutRef = useRef(null);
@@ -69,10 +70,16 @@ const GoNoGoGame = ({ isActive, onEndGame, isDemo, timeLimit }) => {
     if (isGoTrial) {
       setOmissionErrors(prev => prev + 1);
       recordError();
+      setFlashWrong(true);
+      setLastOutcome('incorrect');
     } else {
       setCorrectNoGo(prev => prev + 1);
       setScore(prev => prev + 5);
+      setFlashRight(true);
+      setLastOutcome('correct');
     }
+    if (flashTimeoutRef.current) clearTimeout(flashTimeoutRef.current);
+    flashTimeoutRef.current = setTimeout(() => { setFlashWrong(false); setFlashRight(false); }, 350);
     setGameState('feedback');
     const next = nextTrialRef.current;
     setTimeout(() => { if (typeof next === 'function') next(); }, isGoTrial ? 1000 : 500);
@@ -130,6 +137,7 @@ const GoNoGoGame = ({ isActive, onEndGame, isDemo, timeLimit }) => {
       try { playMemoryClick(); } catch (e) {}
       // visual feedback for a correct GO
       setFlashRight(true);
+      setLastOutcome('correct');
       if (flashTimeoutRef.current) clearTimeout(flashTimeoutRef.current);
       flashTimeoutRef.current = setTimeout(() => setFlashRight(false), 350);
     } else {
@@ -138,6 +146,7 @@ const GoNoGoGame = ({ isActive, onEndGame, isDemo, timeLimit }) => {
       try { playMemoryFlash(); } catch (e) {}
       // visual feedback for incorrect responses
       setFlashWrong(true);
+      setLastOutcome('incorrect');
       if (flashTimeoutRef.current) clearTimeout(flashTimeoutRef.current);
       flashTimeoutRef.current = setTimeout(() => setFlashWrong(false), 350);
     }
@@ -184,9 +193,9 @@ const GoNoGoGame = ({ isActive, onEndGame, isDemo, timeLimit }) => {
   return (
     <div className="flex-center" style={{ width: '100%', height: '100vh', paddingTop: '80px', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', fontFamily: '"Courier New", Courier, monospace' }}>
       {showConfetti && <Confetti count={12} spread={80} duration={1.1} />}
-      <div style={{ position: 'absolute', top: '30px', left: '40px', fontSize: '1.5rem', color: '#374151', zIndex: 50, background: 'rgba(255,255,255,0.82)', backdropFilter:'blur(8px)', padding: '8px 18px', borderRadius: '8px', border: '1px solid rgba(99,102,241,0.2)', fontWeight:'600' }}>TRIAL: <span style={{color: '#4f46e5', fontWeight: 'bold'}}>{trial}</span> / {MAX_TRIALS}</div>
-      <div style={{ position: 'absolute', top: '30px', right: '40px', fontSize: '1.5rem', color: '#374151', zIndex: 50, background: 'rgba(255,255,255,0.82)', backdropFilter:'blur(8px)', padding: '8px 18px', borderRadius: '8px', border: '1px solid rgba(99,102,241,0.2)', fontWeight:'600' }}>SCORE: <span style={{ color: '#059669', fontWeight: 'bold' }}>{score}</span></div>
-      {isDemo && <div style={{ position: 'absolute', top: '80px', right: '40px', fontSize: '1.2rem', color: '#374151', zIndex: 50, background: 'rgba(255,255,255,0.82)', backdropFilter:'blur(8px)', padding: '6px 12px', borderRadius: '6px', border: '1px solid rgba(99,102,241,0.2)', fontWeight:'600' }}>T-<span style={{ color: timeLeft < 10 ? '#dc2626' : '#059669', fontWeight: 'bold' }}>{timeLeft}s</span></div>}
+      <div style={{ position: 'absolute', top: '12px', left: '12px', fontSize: '1rem', color: '#374151', zIndex: 55, background: 'rgba(255,255,255,0.9)', backdropFilter:'blur(6px)', padding: '6px 10px', borderRadius: '6px', border: '1px solid rgba(99,102,241,0.12)', fontWeight:'600' }}>TRIAL: <span style={{color: '#4f46e5', fontWeight: '700'}}>{trial}</span> / {MAX_TRIALS}</div>
+      <div style={{ position: 'absolute', top: '12px', right: '12px', fontSize: '1rem', color: '#374151', zIndex: 55, background: 'rgba(255,255,255,0.9)', backdropFilter:'blur(6px)', padding: '6px 10px', borderRadius: '6px', border: '1px solid rgba(99,102,241,0.12)', fontWeight:'600' }}>SCORE: <span style={{ color: '#059669', fontWeight: '700' }}>{score}</span></div>
+      {isDemo && <div style={{ position: 'absolute', top: '48px', right: '12px', fontSize: '0.95rem', color: '#374151', zIndex: 55, background: 'rgba(255,255,255,0.9)', backdropFilter:'blur(6px)', padding: '6px 10px', borderRadius: '6px', border: '1px solid rgba(99,102,241,0.12)', fontWeight:'600' }}>T-<span style={{ color: timeLeft < 10 ? '#dc2626' : '#059669', fontWeight: '700' }}>{timeLeft}s</span></div>}
       <div aria-live="polite" style={{position:'absolute', left:-9999, width:1, height:1, overflow:'hidden'}}>{gameState === 'feedback' ? (currentStimulus === 'GO' ? 'Correct' : 'Incorrect') : ''}</div>
       <div style={{ marginBottom: '40px', textAlign: 'center' }}>
         <div style={{ fontSize: '1.1rem', color: '#6b7280', marginBottom: '10px' }}>Go Accuracy: {goAccuracy}% | No-Go Accuracy: {noGoAccuracy}%</div>
@@ -197,7 +206,7 @@ const GoNoGoGame = ({ isActive, onEndGame, isDemo, timeLimit }) => {
         <motion.div key={gameState + trial} initial={{ opacity: 0, scale: 0.8 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 1.2 }} style={{ width: '300px', height: '300px', borderRadius: '50%', backgroundColor: gameState === 'stimulus' ? '#3b82f6' : '#f3f4f6', border: '4px solid #e5e7eb', display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: '40px', boxShadow: hudShadow }}>
           {gameState === 'stimulus' && currentStimulus && <div style={{ fontSize: '3rem', fontWeight: 'bold', color: 'white', textShadow: '0 3px 6px rgba(0,0,0,0.4)' }}>{currentStimulus}</div>}
           {gameState === 'waiting' && <div style={{ fontSize: '1.5rem', color: '#6b7280', textAlign: 'center' }}>Get Ready...</div>}
-          {gameState === 'feedback' && <div style={{ fontSize: '2rem', color: flashWrong ? '#ef4444' : '#10b981', textAlign: 'center', fontWeight: 'bold' }}>{flashWrong ? (language === 'es' ? 'Incorrecto' : 'Incorrect') : (language === 'es' ? 'Correcto' : 'Correct')}</div>}
+          {gameState === 'feedback' && <div style={{ fontSize: '2rem', color: lastOutcome === 'incorrect' ? '#ef4444' : '#10b981', textAlign: 'center', fontWeight: 'bold' }}>{lastOutcome === 'incorrect' ? (language === 'es' ? 'Incorrecto' : 'Incorrect') : (language === 'es' ? 'Correcto' : 'Correct')}</div>}
         </motion.div>
       </AnimatePresence>
       <div style={{ textAlign: 'center', marginBottom: '20px' }}>

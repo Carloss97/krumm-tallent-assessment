@@ -34,8 +34,8 @@ const ACTIVITIES = [
     id: 'grid',
     title: { es: 'Optimizar rejilla', en: 'Optimize grid' },
     instructions: {
-      es: 'Coloca las piezas para optimizar la rejilla lo más rápido posible. Pulsa comenzar para iniciar.',
-      en: 'Place pieces to optimize the grid as quickly as possible. Press start to begin.'
+      es: 'Lleva los bloques de color a su destino lo antes posible. En niveles superiores evita quedarte sin energía. Pulsa comenzar para iniciar.',
+      en: 'Carry colored blocks to their destination as quickly as possible. In higher levels avoid running out of energy. Press start to begin.'
     },
     component: GridProtoWrapper,
     est: 75
@@ -44,8 +44,8 @@ const ACTIVITIES = [
     id: 'laser',
     title: { es: 'Puzzle láser', en: 'Laser puzzle' },
     instructions: {
-      es: 'Resuelve el puzzle láser dirigiendo los haces para alcanzar el objetivo. Pulsa comenzar para iniciar.',
-      en: 'Solve the laser puzzle by directing beams to reach the target. Press start to begin.'
+      es: 'Resuelve el puzzle láser dirigiendo los haces para alcanzar el objetivo. Reflectores desvían el haz, bifurcadores lo dividen en dos y portales teletransportan el haz a la otra entrada. Pulsa comenzar para iniciar.',
+      en: 'Solve the laser puzzle by directing beams to reach the target. Reflectors change the beam direction, bifurcators split the beam into two paths, and portals teleport the beam to the paired portal. Press start to begin.'
     },
     component: LaserProtoWrapper,
     est: 60
@@ -64,8 +64,8 @@ const ACTIVITIES = [
     id: 'nback',
     title: { es: 'N-Back', en: 'N-Back' },
     instructions: {
-      es: 'Recuerda la posición o la letra N pasos atrás y responde cuando coincida. Pulsa comenzar para iniciar.',
-      en: 'Remember the position or letter N steps back and respond when it matches. Press start to begin.'
+      es: 'Recuerda la posición o la letra N pasos atrás y responde cuando coincida. Usa las teclas M = Match y N = No-Match, o los botones en pantalla. Pulsa comenzar para iniciar.',
+      en: 'Remember the position or letter N steps back and respond when it matches. Use the keys M = Match and N = No-Match, or the on-screen buttons. Press start to begin.'
     },
     component: NBackProtoWrapper,
     est: 60

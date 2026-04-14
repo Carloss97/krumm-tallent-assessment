@@ -50,6 +50,7 @@ const GridOptimizerGame = ({ isActive, onEndGame, isDemo }) => {
   const [quizStep, setQuizStep] = useState(0);
   const [fuelEmpty, setFuelEmpty] = useState(false);
   const [showDeliverAnim, setShowDeliverAnim] = useState(false);
+  const [showPickupAnim, setShowPickupAnim] = useState(false);
 
   const quizScoreRef = useRef(0);
   const stateRef = useRef({ player:{x:0,y:0}, inventory:null, targets:[], energy:100, round:0, score:0 });
@@ -229,13 +230,13 @@ const GridOptimizerGame = ({ isActive, onEndGame, isDemo }) => {
     let newInv=inv, newTargets=[...tgt], newScore=sc;
     if (!newInv) {
       const hit = newTargets.find(t=>t.active&&t.x===nx&&t.y===ny);
-      if (hit) {
+        if (hit) {
         newInv=hit; 
         newTargets=newTargets.map(t=>t.id===hit.id?{...t,active:false}:t);
         try { playMemoryClick(); } catch(e) { /* noop */ }
-        // small pickup animation
-        setShowDeliverAnim(true);
-        setTimeout(() => setShowDeliverAnim(false), 800);
+        // small pickup animation (brief)
+        setShowPickupAnim(true);
+        setTimeout(() => setShowPickupAnim(false), 800);
       }
     } else {
       if (nx===newInv.dropZone.x && ny===newInv.dropZone.y) {
@@ -243,7 +244,7 @@ const GridOptimizerGame = ({ isActive, onEndGame, isDemo }) => {
         newScore += Math.round(newInv.points * Math.max(0.1, sat/100)); 
         newInv = null;
         try { playMemoryFlash(); } catch(e) { /* noop */ }
-        // delivery celebration
+        // delivery celebration — show deliver animation and confetti
         setShowDeliverAnim(true);
         setTimeout(() => setShowDeliverAnim(false), 900);
       }
@@ -348,7 +349,7 @@ const GridOptimizerGame = ({ isActive, onEndGame, isDemo }) => {
     <div style={{ width:'100%', minHeight:'100vh', display:'flex', flexDirection:'column', alignItems:'center', justifyContent:'center', padding:'16px', gap:'10px' }}>
       {gameState === 'playing' && (
         <motion.div initial={{ opacity:0 }} animate={{ opacity:1 }} className="glass-panel" style={{ padding:'16px', display:'flex', flexDirection:'column', alignItems:'center', gap:'8px' }}>
-          {fuelEmpty && <motion.div initial={{ opacity:0 }} animate={{ opacity:1 }} style={{ padding:'6px 20px', background:'#dc2626', color:'white', borderRadius:'8px', fontWeight:'700', fontSize:'0.9rem' }}>⚡ ENERGY DEPLETED — GAME OVER</motion.div>}
+          {fuelEmpty && <motion.div initial={{ opacity:0 }} animate={{ opacity:1 }} style={{ padding:'6px 20px', background:'#dc2626', color:'white', borderRadius:'8px', fontWeight:'700', fontSize:'0.9rem' }}>{language === 'es' ? '⚡ ENERGÍA AGOTADA — FIN DE NIVEL' : '⚡ ENERGY DEPLETED — GAME OVER'}</motion.div>}
           <div style={{ display:'flex', justifyContent:'space-between', width:'100%', color:'#1e1b4b', textTransform:'uppercase', letterSpacing:'1px', fontSize:'0.78rem', fontWeight:'600', gap:'14px' }}>
             <span>STAGE {round+1}/{effectiveMaxRounds}</span>
             <span style={{ color: levelTimeLeft<10?'#dc2626':'#059669' }}>⏱ {levelTimeLeft}s</span>
@@ -362,6 +363,11 @@ const GridOptimizerGame = ({ isActive, onEndGame, isDemo }) => {
             <span>% = {language === 'es' ? 'Satisfacción objetivo' : 'Target Satisfaction'}</span>
           </div>
           <div style={{ position:'relative', padding:'6px', border:'1px solid rgba(99,102,241,0.2)', borderRadius:'10px', background:'rgba(220,225,255,0.5)' }}>
+            {showPickupAnim && (
+              <motion.div initial={{ scale: 0.6, opacity: 0 }} animate={{ scale: 1.05, opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.6 }} style={{ position: 'absolute', left: '50%', top: '-14px', transform: 'translateX(-50%)', zIndex: 30, pointerEvents: 'none', background: 'linear-gradient(90deg,#6b7280,#94a3b8)', padding: '6px 12px', borderRadius: 10, color: 'white', fontWeight: 700 }}>
+                {language === 'es' ? 'Objeto recogido' : 'Picked up'}
+              </motion.div>
+            )}
             {showDeliverAnim && (
               <motion.div initial={{ scale: 0.6, opacity: 0 }} animate={{ scale: 1.1, opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.8 }} style={{ position: 'absolute', left: '50%', top: '-14px', transform: 'translateX(-50%)', zIndex: 30, pointerEvents: 'none', background: 'linear-gradient(90deg, #10b981, #3b82f6)', padding: '6px 12px', borderRadius: 10, color: 'white', fontWeight: 700 }}>
                 {language === 'es' ? 'Entrega completa' : 'Delivery complete'}
@@ -371,8 +377,8 @@ const GridOptimizerGame = ({ isActive, onEndGame, isDemo }) => {
             <div style={{ display:'grid', gridTemplateColumns:`repeat(${GRID}, 36px)`, gap:'2px' }}>{renderGrid()}</div>
           </div>
           <div style={{ display:'flex', alignItems:'center', gap:'10px', padding:'6px 14px', background:'rgba(99,102,241,0.07)', borderRadius:'8px', border:'1px solid rgba(99,102,241,0.18)', fontSize:'0.78rem' }}>
-            <span style={{ color:'#64748b', textTransform:'uppercase', fontSize:'0.68rem' }}>Carrying:</span>
-            {inventory ? <><div style={{ width:'11px', height:'11px', background:inventory.color, borderRadius:'2px' }}/><span style={{ color:'#1e1b4b' }}>Deliver to <strong>pulsing zone</strong> — sat: <span style={{color:satColor}}>{sats[inventory.id]??100}%</span></span></> : <span style={{ color:'#94a3b8', fontStyle:'italic' }}>Empty — pick up a passenger</span>}
+            <span style={{ color:'#64748b', textTransform:'uppercase', fontSize:'0.68rem' }}>{language === 'es' ? 'Transportando:' : 'Carrying:'}</span>
+            {inventory ? <><div style={{ width:'11px', height:'11px', background:inventory.color, borderRadius:'2px' }}/><span style={{ color:'#1e1b4b' }}>{language === 'es' ? 'Entregar en zona pulsante' : 'Deliver to pulsing zone'} — sat: <span style={{color:satColor}}>{sats[inventory.id]??100}%</span></span></> : <span style={{ color:'#94a3b8', fontStyle:'italic' }}>{language === 'es' ? 'Vacío — recoge un bloque' : 'Empty — pick up a block'}</span>}
           </div>
           <div style={{ display:'flex', flexDirection:'column', alignItems:'center', gap:'4px' }}>
             <div><ArrowBtn dir="up" label="↑" /></div>

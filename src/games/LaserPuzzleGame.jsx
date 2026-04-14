@@ -364,12 +364,12 @@ const LaserPuzzleGame = ({ isActive, onEndGame, isDemo, timeLimit }) => {
               <span>Antennas: <span style={{ color: litCount === allAntennas.length ? '#059669' : '#374151' }}>{litCount}/{allAntennas.length}</span></span>
             </div>
             <div style={{ display:'flex', gap:'14px', fontSize:'0.68rem', color:'#64748b', flexWrap:'wrap', justifyContent:'center' }}>
-              <span><span style={{color:'#4f46e5',fontWeight:'900'}}>{'>'}</span> Emitter</span>
-              <span><span style={{color:'#15803d',fontWeight:'900'}}>/</span> Reflector</span>
-              <span><span style={{color:'#ea580c',fontWeight:'900'}}>+</span> Bifurcator</span>
-              <span><span style={{color:'#4f46e5',fontWeight:'900'}}>P</span> Portal</span>
-              <span><span style={{color:'#475569',fontWeight:'700'}}>#</span> Rock</span>
-              <span><span style={{color:'#7c3aed'}}>O</span> Antenna</span>
+              <span><span style={{color:'#4f46e5',fontWeight:'900'}}>{'>'}</span> {language === 'es' ? 'Emisor' : 'Emitter'} — {language === 'es' ? 'Genera el haz' : 'Emits the beam'}</span>
+              <span><span style={{color:'#15803d',fontWeight:'900'}}>/</span> {language === 'es' ? 'Reflector' : 'Reflector'} — {language === 'es' ? 'Desvía el haz 90°' : 'Turns the beam 90°'}</span>
+              <span><span style={{color:'#ea580c',fontWeight:'900'}}>+</span> {language === 'es' ? 'Bifurcador' : 'Bifurcator'} — {language === 'es' ? 'Divide el haz en dos rutas' : 'Splits the beam into two paths'}</span>
+              <span><span style={{color:'#4f46e5',fontWeight:'900'}}>P</span> {language === 'es' ? 'Portal' : 'Portal'} — {language === 'es' ? 'Teletransporta el haz a su portal emparejado' : 'Teleports the beam to its paired portal'}</span>
+              <span><span style={{color:'#475569',fontWeight:'700'}}>#</span> {language === 'es' ? 'Roca' : 'Rock'}</span>
+              <span><span style={{color:'#7c3aed'}}>O</span> {language === 'es' ? 'Antena' : 'Antenna'} — {language === 'es' ? 'Objetivo que debe ser iluminado' : 'Target that must be lit'}</span>
             </div>
             <div style={{ border:'1px solid rgba(99,102,241,0.2)', borderRadius:'8px', background:'rgba(220,225,255,0.45)', padding:'4px', overflow:'auto' }}>
               <div style={{ display:'grid', gridTemplateColumns:`repeat(${level.cols}, ${CELL}px)`, gap:'2px' }}>
