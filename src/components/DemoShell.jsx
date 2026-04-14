@@ -296,11 +296,7 @@ const DemoShell = () => {
             </div>
           )}
 
-          <div style={{ marginTop: 18, display: 'flex', gap: 8, justifyContent: 'center' }}>
-            <button className="btn" onClick={prevActivity} disabled={step === 0}>{demoCopy[language]?.previous || demoCopy.es.previous}</button>
-            <button className="btn" onClick={skipActivity} disabled={step >= ACTIVITIES.length - 1}>{demoCopy[language]?.skip || demoCopy.es.skip}</button>
-            <button className="btn" onClick={() => setStep((s) => Math.min(ACTIVITIES.length - 1, s + 1))} disabled={step >= ACTIVITIES.length - 1}>{demoCopy[language]?.next || demoCopy.es.next}</button>
-          </div>
+          {/* Dev navigation buttons removed for demo deployment */}
         </section>
       </main>
     </div>

@@ -314,7 +314,7 @@ const GridOptimizerGame = ({ isActive, onEndGame, isDemo }) => {
 
         if (isPlayer) content = <div style={{ width:'68%', height:'68%', borderRadius:'4px', background:'#4f46e5', border:'2px solid rgba(255,255,255,0.9)', boxShadow:'0 0 10px rgba(79,70,229,0.7)' }} />;
 
-        cells.push(<div key={`${x}-${y}`} style={{ width:'36px', height:'36px', background:bg, border, display:'flex', justifyContent:'center', alignItems:'center', position:'relative' }}>{content}</div>);
+        cells.push(<div key={`${x}-${y}`} style={{ width:'32px', height:'32px', background:bg, border, display:'flex', justifyContent:'center', alignItems:'center', position:'relative' }}>{content}</div>);
       }
     }
     return cells;
@@ -327,7 +327,7 @@ const GridOptimizerGame = ({ isActive, onEndGame, isDemo }) => {
       onPointerDown={(e) => { e.preventDefault(); const now = Date.now(); if (now - lastMoveRef.current < 120) return; lastMoveRef.current = now; setFlashDir(dir); setTimeout(() => setFlashDir(null), 200); move(dir); }}
       aria-label={`Mover ${dir}`}
       title={`Mover ${dir}`}
-      style={{ width:46, height:46, background: flashDir === dir ? 'rgba(79,70,229,0.55)' : 'rgba(79,70,229,0.12)', border: `1px solid ${flashDir === dir ? '#6366f1' : 'rgba(79,70,229,0.3)'}`, borderRadius:'10px', fontSize:'1.1rem', cursor:'pointer', display:'flex', alignItems:'center', justifyContent:'center', userSelect:'none', touchAction:'none', transition:'background 0.1s, border 0.1s', boxShadow: flashDir === dir ? '0 0 12px rgba(99,102,241,0.7)' : 'none' }}
+      style={{ width:40, height:40, background: flashDir === dir ? 'rgba(79,70,229,0.55)' : 'rgba(79,70,229,0.12)', border: `1px solid ${flashDir === dir ? '#6366f1' : 'rgba(79,70,229,0.3)'}`, borderRadius:'10px', fontSize:'1.0rem', cursor:'pointer', display:'flex', alignItems:'center', justifyContent:'center', userSelect:'none', touchAction:'none', transition:'background 0.1s, border 0.1s', boxShadow: flashDir === dir ? '0 0 12px rgba(99,102,241,0.7)' : 'none' }}
     >{label}</button>
   );
 
@@ -346,7 +346,7 @@ const GridOptimizerGame = ({ isActive, onEndGame, isDemo }) => {
   const lvlData = LEVELS[round];
 
   return (
-    <div style={{ width:'100%', minHeight:'100vh', display:'flex', flexDirection:'column', alignItems:'center', justifyContent:'center', padding:'16px', gap:'10px' }}>
+    <div style={{ width:'100%', minHeight:'620px', display:'flex', flexDirection:'column', alignItems:'center', justifyContent:'center', padding:'12px', gap:'10px' }}>
       {gameState === 'playing' && (
         <motion.div initial={{ opacity:0 }} animate={{ opacity:1 }} className="glass-panel" style={{ padding:'16px', display:'flex', flexDirection:'column', alignItems:'center', gap:'8px' }}>
           {fuelEmpty && <motion.div initial={{ opacity:0 }} animate={{ opacity:1 }} style={{ padding:'6px 20px', background:'#dc2626', color:'white', borderRadius:'8px', fontWeight:'700', fontSize:'0.9rem' }}>{language === 'es' ? '⚡ ENERGÍA AGOTADA — FIN DE NIVEL' : '⚡ ENERGY DEPLETED — GAME OVER'}</motion.div>}
@@ -374,7 +374,7 @@ const GridOptimizerGame = ({ isActive, onEndGame, isDemo }) => {
               </motion.div>
             )}
             {showDeliverAnim && (<div style={{ position: 'absolute', inset: 0, pointerEvents: 'none', zIndex: 40 }}><Confetti count={10} spread={60} duration={0.9} /></div>)}
-            <div style={{ display:'grid', gridTemplateColumns:`repeat(${GRID}, 36px)`, gap:'2px' }}>{renderGrid()}</div>
+            <div style={{ display:'grid', gridTemplateColumns:`repeat(${GRID}, 32px)`, gap:'2px' }}>{renderGrid()}</div>
           </div>
           <div style={{ display:'flex', alignItems:'center', gap:'10px', padding:'6px 14px', background:'rgba(99,102,241,0.07)', borderRadius:'8px', border:'1px solid rgba(99,102,241,0.18)', fontSize:'0.78rem' }}>
             <span style={{ color:'#64748b', textTransform:'uppercase', fontSize:'0.68rem' }}>{language === 'es' ? 'Transportando:' : 'Carrying:'}</span>

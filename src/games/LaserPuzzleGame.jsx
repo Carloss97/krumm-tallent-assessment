@@ -6,7 +6,7 @@ import Confetti from '../components/Confetti';
 import { useGameTimer } from '../hooks/useGameTimer';
 import { useLanguage } from '../context/LanguageContext';
 
-const CELL = 46;
+const CELL = 40;
 
 const SHIP_ARROW = { right:'>', left:'<', up:'^', down:'v' };
 const DEFLECT_NE = { right:'up', left:'down', up:'right', down:'left' }; 
@@ -353,7 +353,7 @@ const LaserPuzzleGame = ({ isActive, onEndGame, isDemo, timeLimit }) => {
   const satColor = timeLeft < 30 ? '#dc2626' : timeLeft < 60 ? '#f59e0b' : '#059669';
 
   return (
-    <div style={{ width:'100%', minHeight:'100vh', display:'flex', flexDirection:'column', alignItems:'center', justifyContent:'center', padding:'16px', gap:'10px' }}>
+    <div style={{ width:'100%', minHeight:'620px', display:'flex', flexDirection:'column', alignItems:'center', justifyContent:'center', padding:'12px', gap:'10px' }}>
       <AnimatePresence mode="wait">
         {(gamePhase === 'playing' || gamePhase === 'levelComplete') && level && (
           <motion.div key={`level-${levelIdx}`} initial={{ opacity:0, y:10 }} animate={{ opacity:1, y:0 }} exit={{ opacity:0 }} className="glass-panel" style={{ padding:'16px', display:'flex', flexDirection:'column', alignItems:'center', gap:'10px' }}>
