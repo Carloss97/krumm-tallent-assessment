@@ -7,6 +7,7 @@ export default function PortalButton() {
   const location = useLocation();
   const telemetry = useTelemetry();
   const portalUrl = import.meta.env.VITE_PORTAL_URL || '/postulantes';
+  const navigate = useNavigate();
 
   // Add small UX nicety: if the landing language corner exists, add a helper class
   // on the root element to avoid overlap with the fixed portal button.
@@ -31,8 +32,6 @@ export default function PortalButton() {
   // Hide on the postulantes / candidate pages themselves
   const isHidden = (location?.pathname || '').startsWith('/postulantes') || (location?.pathname || '').startsWith('/candidate');
   if (isHidden) return null;
-
-  const navigate = useNavigate();
 
   const isExternalUrl = (url) => {
     if (!url) return false;
