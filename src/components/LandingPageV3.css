@@ -197,9 +197,6 @@
   gap: 0.72rem;
 }
 
-/* Ensure hero action buttons remain centered when only demo is shown */
-.lv3-action-buttons{justify-content:center}
-
 .lv3-action-buttons .lv3-primary,
 .lv3-action-buttons .lv3-ghost,
 .lv3-action-buttons .lv3-recruiter-btn {
@@ -245,16 +242,29 @@
 }
 
 .lv3-action-demo {
-  background: linear-gradient(135deg, #eef3f8, #e6edf5);
-  color: #244265;
-  border: 1px solid rgba(73, 102, 138, 0.32);
-  box-shadow: 0 10px 20px rgba(20, 39, 64, 0.12);
+  /* High-priority visual for demo CTA */
+  background: linear-gradient(135deg, var(--accent-primary, #6366f1), var(--accent-secondary, #a855f7));
+  color: #ffffff;
+  border: none;
+  box-shadow: 0 22px 56px rgba(99, 102, 241, 0.14);
+  padding: 1.6rem 2.8rem;
+  font-size: 1.28rem;
+  border-radius: 18px;
 }
 
 .lv3-action-demo:hover {
-  background: linear-gradient(135deg, #e8eef6, #dfe8f1);
-  color: #1b3554;
-  transform: translateY(-1px);
+  transform: translateY(-4px) scale(1.03);
+}
+
+/* Demo CTA pulse to draw attention */
+.lv3-action-demo.pulse {
+  animation: demoPulse 2.8s infinite ease-in-out;
+}
+
+@keyframes demoPulse {
+  0% { transform: translateY(0) scale(1); box-shadow: 0 22px 56px rgba(99,102,241,0.14); }
+  50% { transform: translateY(-3px) scale(1.03); box-shadow: 0 34px 84px rgba(99,102,241,0.18); }
+  100% { transform: translateY(0) scale(1); box-shadow: 0 22px 56px rgba(99,102,241,0.14); }
 }
 
 .lv3-action-recruiter {
