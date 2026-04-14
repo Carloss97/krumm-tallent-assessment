@@ -20,8 +20,16 @@ const RecruiterLogin = () => {
     const allowed = raw.split(',').map(s => s.trim().toLowerCase()).filter(Boolean);
     const matchesAllowed = allowed.includes(host) || allowed.some(p => p.startsWith('*.') && host.endsWith(p.replace('*.', '')));
     const isLocalSuffix = host.endsWith('.local');
-    setShowDevQuickAccess(matchesAllowed || isLocalSuffix || window.location.port === '5173');
-  }, []);
+    const isAllowed = matchesAllowed || isLocalSuffix || window.location.port === '5173';
+    setShowDevQuickAccess(isAllowed);
+
+    // If this page is opened in production/non-dev host, redirect to home
+    // Use the computed `isAllowed` here to avoid a race where another effect
+    // reads the initial false state and redirects before this effect runs.
+    if (!isAllowed) {
+      navigate('/');
+    }
+  }, [navigate]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -65,13 +73,7 @@ const RecruiterLogin = () => {
     navigate('/recruiter/dashboard?qa=1');
   };
 
-  useEffect(() => {
-    // If this page is opened in production/non-dev host, redirect to home
-    if (typeof window === 'undefined') return;
-    if (!showDevQuickAccess) {
-      navigate('/');
-    }
-  }, [showDevQuickAccess, navigate]);
+  
 
   return (
     <div className="recruiter-login-page">
