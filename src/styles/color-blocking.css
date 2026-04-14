@@ -1,0 +1,25 @@
+/* Color-blocking helper classes for page sections */
+.section--white { background: var(--section-bg-1); color: inherit; }
+.section--gray { background: var(--section-bg-2); color: inherit; }
+.section--brand-dark { background: var(--section-bg-3); color: #fff; }
+
+/* Smooth divider using diagonal overlay */
+.section--white::after,
+.section--gray::after,
+.section--brand-dark::after {
+  content: '';
+  display: block;
+  height: 36px;
+  width: 100%;
+  background: transparent;
+  pointer-events: none;
+}
+
+/* Utility to ensure adequate contrast for brand-dark */
+.section--brand-dark a,
+.section--brand-dark h2,
+.section--brand-dark h3,
+.section--brand-dark p,
+.section--brand-dark button {
+  color: #ffffff;
+}

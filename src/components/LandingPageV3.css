@@ -367,7 +367,7 @@
 }
 
 .lv3-section-title svg {
-  color: #3d5cb8;
+  color: var(--brand-500);
   background: linear-gradient(145deg, #f2f5ff, #e8effb);
   border: 1px solid rgba(88, 113, 218, 0.18);
   border-radius: 10px;
@@ -515,7 +515,7 @@
 }
 
 .lv3-point-list li svg {
-  color: #4161ce;
+  color: var(--brand-500);
   margin-top: 0.12rem;
   flex-shrink: 0;
 }
@@ -600,7 +600,7 @@
 .lv3-cap-card h3 svg,
 .lv3-signal-card h3 svg,
 .lv3-process-card h3 svg {
-  color: #3c58be;
+  color: var(--brand-500);
   flex-shrink: 0;
 }
 
@@ -702,7 +702,7 @@
 }
 
 .lv3-usecase-card svg {
-  color: #3a5acc;
+  color: var(--brand-500);
   margin-bottom: 0.38rem;
 }
 
@@ -716,6 +716,30 @@
   color: #2f4e77;
   line-height: 1.5;
   font-size: 0.92rem;
+}
+
+.lv3-usecase-bullets {
+  list-style: none;
+  margin: 0.25rem 0 0;
+  padding: 0;
+  display: grid;
+  gap: 0.45rem;
+}
+
+.lv3-usecase-bullets li {
+  display: flex;
+  gap: 0.45rem;
+  align-items: flex-start;
+  color: #2f4e77;
+  font-size: 0.92rem;
+}
+
+.lv3-usecase-bullets li svg { color: var(--accent-portal); margin-top: 2px; flex-shrink: 0; }
+
+/* Ensure SVG icons inherit color (stroke/fill) from currentColor */
+.lv3-usecase-card svg, .lv3-point-list li svg, .lv3-cap-card h3 svg, .lv3-section-title svg {
+  stroke: currentColor;
+  fill: currentColor;
 }
 
 .lv3-signal-grid {

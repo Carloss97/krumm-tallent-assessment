@@ -1,0 +1,45 @@
+.postulantes-login {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  background: var(--surface-0);
+}
+
+.pl-card {
+  width: 100%;
+  max-width: 420px;
+  padding: 28px;
+  border-radius: 12px;
+  background: var(--surface-card);
+  box-shadow: var(--shadow);
+  text-align: center;
+}
+
+.pl-logo {
+  width: 96px;
+  height: 96px;
+  object-fit: contain;
+  margin: 0 auto 16px;
+}
+
+.pl-instructions {
+  color: var(--gray);
+  margin-bottom: 16px;
+}
+
+.pl-form {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.pl-form label { text-align: left; font-weight: 600; color: var(--dark); }
+.pl-form input { padding: 10px 12px; border-radius: 8px; border: 1px solid var(--border); font-size: 1rem; }
+
+.pl-error { background: rgba(255, 107, 107, 0.08); color: #b91c1c; padding: 10px; border-radius: 6px; margin-top: 4px; }
+
+.pl-submit { padding: 12px; border-radius: 10px; background: var(--brand-500); color: white; border: none; font-weight: 700; cursor: pointer; }
+
+.pl-link { display: inline-block; margin-top: 8px; color: var(--primary); }

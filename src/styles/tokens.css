@@ -60,4 +60,10 @@
 
   --brand-logo-size: clamp(104px, 8vw, 128px);
   --brand-logo-size-mobile: 92px;
+  /* Color-blocking / portal CTA */
+  --brand-dark: #072b4a;
+  --accent-portal: #f39c12;
+  --section-bg-1: #ffffff;
+  --section-bg-2: #f6f7f8;
+  --section-bg-3: var(--brand-dark);
 }

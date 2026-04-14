@@ -28,7 +28,7 @@ import { getQaMode } from '../utils/qaMode';
 import logo from '../assets/logo.jpg';
 import './LandingPageV3.css';
 import TestAccessModal from './TestAccessModal';
-import HeroDemo from './HeroDemo';
+import DemoSection from './DemoSection';
 import DesignVariants from './DesignVariants';
 
 const capabilityAreas = [
@@ -246,33 +246,33 @@ const useCases = [
   {
     icon: Target,
     title: { es: 'Selección técnica', en: 'Technical selection' },
-    text: {
-      es: 'Compara evidencia de desempeño entre candidatos con criterios homogéneos.',
-      en: 'Compare performance evidence between candidates using homogeneous criteria.'
+    bullets: {
+      es: ['Reduce tiempo de preselección a 1 semana', 'Mejora la objetividad en la decisión de contratación'],
+      en: ['Reduce pre-screen time to 1 week', 'Improve objectivity in hiring decisions']
     }
   },
   {
     icon: TrendingUp,
     title: { es: 'Desarrollo profesional', en: 'Professional development' },
-    text: {
-      es: 'Detecta oportunidades de crecimiento y entrenamiento focalizado.',
-      en: 'Detect growth opportunities and targeted training paths.'
+    bullets: {
+      es: ['Detecta brechas de talento accionables', 'Genera rutas de entrenamiento focalizadas'],
+      en: ['Detect actionable skill gaps', 'Generate focused training pathways']
     }
   },
   {
     icon: Users,
     title: { es: 'Movilidad interna', en: 'Internal mobility' },
-    text: {
-      es: 'Apoya decisiones de promoción y rotación con datos comparables.',
-      en: 'Support promotion and rotation decisions with comparable data.'
+    bullets: {
+      es: ['Identifica candidatos para promoción con evidencia', 'Reduce fricción en procesos de rotación'],
+      en: ['Identify promotion-ready candidates with evidence', 'Reduce friction in rotation processes']
     }
   },
   {
     icon: LineChart,
     title: { es: 'Benchmarking', en: 'Benchmarking' },
-    text: {
-      es: 'Monitorea consistencia y evolución de talento entre cohortes.',
-      en: 'Track consistency and talent evolution across cohorts.'
+    bullets: {
+      es: ['Compara cohorts con métricas comparables', 'Monitorea evolución y consistencia de talento'],
+      en: ['Compare cohorts with comparable metrics', 'Monitor talent consistency and evolution']
     }
   }
 ];
@@ -609,18 +609,7 @@ const LandingPageV3 = () => {
       )}
 
           {featureFlags?.enableHeroDemo && (
-            <motion.div
-              className="lv3-hero-demo-wrap"
-              initial={{ opacity: 0, y: 8 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.45, delay: 0.18 }}
-            >
-              <div className="lv3-container">
-                <div className="lv3-panel">
-                  <HeroDemo />
-                </div>
-              </div>
-            </motion.div>
+            <DemoSection />
           )}
       </header>
 
@@ -719,7 +708,7 @@ const LandingPageV3 = () => {
         <DesignVariants />
       )}
 
-      <section className="lv3-section lv3-categories">
+      <section className="lv3-section lv3-categories section--white">
         <div className="lv3-container">
           <div className="lv3-panel">
             <div className="lv3-section-head">
@@ -751,7 +740,7 @@ const LandingPageV3 = () => {
         </div>
       </section>
 
-      <section className="lv3-section lv3-capabilities">
+      <section className="lv3-section lv3-capabilities section--gray">
         <div className="lv3-container">
           <div className="lv3-panel">
             <div className="lv3-section-head">
@@ -773,7 +762,7 @@ const LandingPageV3 = () => {
         </div>
       </section>
 
-      <section className="lv3-section lv3-project-signals">
+      <section className="lv3-section lv3-project-signals section--brand-dark">
         <div className="lv3-container">
           <div className="lv3-panel">
             <div className="lv3-section-head">
@@ -795,7 +784,7 @@ const LandingPageV3 = () => {
         </div>
       </section>
 
-      <section className="lv3-section lv3-process">
+      <section className="lv3-section lv3-process section--white">
         <div className="lv3-container">
           <div className="lv3-panel">
             <div className="lv3-section-head">
@@ -822,7 +811,7 @@ const LandingPageV3 = () => {
         </div>
       </section>
 
-      <section className="lv3-section lv3-usecases">
+      <section className="lv3-section lv3-usecases section--gray">
         <div className="lv3-container">
           <div className="lv3-panel">
             <div className="lv3-section-head">
@@ -838,7 +827,14 @@ const LandingPageV3 = () => {
                 <article key={item.title.es} className="lv3-usecase-card">
                   <item.icon size={20} aria-hidden="true" />
                   <h3>{item.title[language]}</h3>
-                  <p>{item.text[language]}</p>
+                  <ul className="lv3-usecase-bullets">
+                    {(item.bullets?.[language] || []).map((b) => (
+                      <li key={b}>
+                        <CheckCircle2 size={14} aria-hidden="true" />
+                        <span>{b}</span>
+                      </li>
+                    ))}
+                  </ul>
                 </article>
               ))}
             </div>
