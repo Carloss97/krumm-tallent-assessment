@@ -78,12 +78,22 @@ const Report = () => {
 
   // Check if we have sufficient data or should use dummy data
   const hasRealData = hasMinimumAssessmentData(sessionData);
+  // Support demo-specific dummy subsets via ?demoCount=5 to show only N dummy games
+  const demoCountParam = searchParams.get('demoCount');
+  const demoCount = demoCountParam ? Number(demoCountParam) : null;
+
   const reportData = useMemo(() => {
-    if (useDummyData || !hasRealData) {
-      return generateDummyReportData();
+    const base = (useDummyData || !hasRealData) ? generateDummyReportData() : sessionData;
+    if (useDummyData && demoCount && typeof base === 'object' && Object.keys(base).length > 0) {
+      const entries = Object.keys(base).filter((k) => k !== 'futureModules');
+      const subsetKeys = entries.slice(0, Math.max(0, Math.floor(demoCount)));
+      const filtered = {};
+      subsetKeys.forEach((k) => { filtered[k] = base[k]; });
+      if (base.futureModules) filtered.futureModules = base.futureModules;
+      return filtered;
     }
-    return sessionData;
-  }, [useDummyData, hasRealData, sessionData]);
+    return base;
+  }, [useDummyData, hasRealData, sessionData, demoCount]);
 
   const experimentConfig = useMemo(() => (
     getExperimentConfig('report-insight-panel-v1', participantProfile?.participantId || 'anonymous')
@@ -476,7 +486,15 @@ const Report = () => {
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(170px, 1fr))', gap: '10px', marginBottom: '18px' }}>
             <TelemetryStatCard label={isEn ? 'Profile Signal' : 'Senal de perfil'} value={recommendationLabel || 'N/A'} />
             <TelemetryStatCard label={isEn ? 'Confidence' : 'Confianza'} value={report.confidenceScore ? `${report.confidenceScore}%` : 'N/A'} />
-            <TelemetryStatCard label={isEn ? 'Coverage' : 'Cobertura'} value={`${extendedGameRows.filter((row) => typeof row.score === 'number').length}/${GAME_ROWS.length} ${isEn ? 'games' : 'juegos'}`} />
+            {
+              (() => {
+                const covered = extendedGameRows.filter((row) => typeof row.score === 'number').length;
+                const total = (useDummyData && demoCount) ? demoCount : GAME_ROWS.length;
+                return (
+                  <TelemetryStatCard label={isEn ? 'Coverage' : 'Cobertura'} value={`${covered}/${total} ${isEn ? 'games' : 'juegos'}`} />
+                );
+              })()
+            }
             {report.source === 'edge-local' && report.runtime?.latencyMs != null && (
               <TelemetryStatCard label={isEn ? 'Edge p95 target' : 'Objetivo p95 edge'} value={`${report.runtime.latencyMs} ms`} />
             )}

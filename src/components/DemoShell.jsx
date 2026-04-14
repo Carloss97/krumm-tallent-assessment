@@ -139,7 +139,8 @@ const DemoShell = () => {
     if (timeLeft === 0) {
       // finished by time
       handleDemoComplete(completedRef.current);
-      navigate('/report');
+      // navigate to report and request demo-sized dummy data for consistent demo preview
+      navigate(`/report?dummy=true&demoCount=${ACTIVITIES.length}`);
     }
   }, [timeLeft]);
 
@@ -217,7 +218,8 @@ const DemoShell = () => {
       const doneCount = Object.keys(next).length;
       if (doneCount >= ACTIVITIES.length) {
         handleDemoComplete(next);
-        navigate('/report');
+        // pass demoCount so the report shows a demo-sized dummy preview when using demo data
+        navigate(`/report?dummy=true&demoCount=${ACTIVITIES.length}`);
       } else {
         setStep((s) => Math.min(ACTIVITIES.length - 1, s + 1));
       }
