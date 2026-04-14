@@ -3,6 +3,7 @@ import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-d
 import { TelemetryProvider } from './TelemetryContext';
 import { VariantProvider } from './contexts/VariantContext';
 import { LanguageProvider } from './context/LanguageContext';
+import ErrorBoundary from './components/ErrorBoundary';
 import GlobalProgressBar from './components/GlobalProgressBar';
 import GameShell from './components/GameShell';
 import { GAME_FLOW } from './utils/gameFlow';
@@ -80,29 +81,31 @@ function App() {
 
   return (
     <VariantProvider>
-      <LanguageProvider>
-        <Router basename={basename}>
-          <PortalButton />
-        <Routes>
-          {/* Recruiter routes (separate from telemetry) */}
-          <Route path="/recruiter/login" element={<RecruiterLogin />} />
-          <Route path="/recruiter/dashboard" element={<RecruiterDashboard />} />
-          <Route path="/candidate/login" element={<Navigate to="/postulantes" replace />} />
-          {/* Candidate portal (minimal, no global header/footer) */}
-          <Route path="/postulantes" element={<PostulantesLogin />} />
+      <ErrorBoundary>
+        <LanguageProvider>
+          <Router basename={basename}>
+            <PortalButton />
+            <Routes>
+              {/* Recruiter routes (separate from telemetry) */}
+              <Route path="/recruiter/login" element={<RecruiterLogin />} />
+              <Route path="/recruiter/dashboard" element={<RecruiterDashboard />} />
+              <Route path="/candidate/login" element={<Navigate to="/postulantes" replace />} />
+              {/* Candidate portal (minimal, no global header/footer) */}
+              <Route path="/postulantes" element={<PostulantesLogin />} />
 
-          {/* Assessment routes (with telemetry tracking) */}
-          <Route
-            path="/*"
-            element={
-              <TelemetryProvider>
-                <AppContent />
-              </TelemetryProvider>
-            }
-          />
-        </Routes>
-      </Router>
-      </LanguageProvider>
+              {/* Assessment routes (with telemetry tracking) */}
+              <Route
+                path="/*"
+                element={
+                  <TelemetryProvider>
+                    <AppContent />
+                  </TelemetryProvider>
+                }
+              />
+            </Routes>
+          </Router>
+        </LanguageProvider>
+      </ErrorBoundary>
     </VariantProvider>
   );
 }
