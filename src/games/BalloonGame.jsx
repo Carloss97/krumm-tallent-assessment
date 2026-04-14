@@ -3,12 +3,12 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { playBalloonPump, playBalloonPop, playMemoryFlash } from '../utils/audio';
 import Confetti from '../components/Confetti';
 import { useTelemetry } from '../TelemetryContext';
+import { useLanguage } from '../context/LanguageContext';
 
 const BalloonGame = ({ isActive, onEndGame, isDemo }) => {
   const MAX_ROUNDS = isDemo ? 3 : 10;
-  const MIN_PUMPS = 6;
-  const MAX_EXTRA = 6; // explosion threshold will be in [MIN_PUMPS .. MIN_PUMPS+MAX_EXTRA-1]
   const { startTracking, stopTracking } = useTelemetry();
+  const { language } = useLanguage();
 
   const [round, setRound] = useState(1);
   const [currentBalloonSize, setCurrentBalloonSize] = useState(1);
@@ -26,7 +26,10 @@ const BalloonGame = ({ isActive, onEndGame, isDemo }) => {
     setCurrentBalloonSize(1);
     setCurrentRoundPoints(0);
     setGameState('playing');
-    const threshold = MIN_PUMPS + Math.floor(Math.random() * MAX_EXTRA); // [MIN_PUMPS..MIN_PUMPS+MAX_EXTRA-1]
+    // explosion threshold between 7 and 18 inclusive
+    const MIN_THRESHOLD = 7;
+    const MAX_THRESHOLD = 18;
+    const threshold = Math.floor(Math.random() * (MAX_THRESHOLD - MIN_THRESHOLD + 1)) + MIN_THRESHOLD;
     setExplosionPoint(threshold);
   }, []);
 
@@ -109,6 +112,33 @@ const BalloonGame = ({ isActive, onEndGame, isDemo }) => {
     setTimeout(() => advanceRound(), 1500);
   };
 
+  const copy = {
+    es: {
+      trialLabel: 'RONDA',
+      bankTitle: 'BANCO',
+      awaiting: 'Esperando la siguiente secuencia...',
+      criticalFailure: '[ EXPLOSIÓN ]',
+      yieldSecured: 'PUNTOS ASEGURADOS',
+      pumpLabel: 'EXPANDIR GLOBO',
+      bankBtn: 'ASEGURAR PUNTOS',
+      ariaPump: 'Expandir globo (Barra espaciadora)',
+      ariaBank: 'Asegurar puntos (Enter)'
+    },
+    en: {
+      trialLabel: 'TRIAL',
+      bankTitle: 'BANK',
+      awaiting: 'Awaiting next sequence...',
+      criticalFailure: '[ CRITICAL FAILURE ]',
+      yieldSecured: 'YIELD SECURED',
+      pumpLabel: 'PUMP BALLOON',
+      bankBtn: 'BANK POINTS',
+      ariaPump: 'Pump balloon (Spacebar)',
+      ariaBank: 'Bank points (Enter)'
+    }
+  };
+
+  const t = copy[language] || copy.es;
+
   if (!isActive) {
     return (
       <motion.div
@@ -123,17 +153,17 @@ const BalloonGame = ({ isActive, onEndGame, isDemo }) => {
     );
   }
 
-  const maxScale = 2.8;
-  const rawScale = 1 + (currentBalloonSize * 0.12);
+  const maxScale = 2.0;
+  const rawScale = 1 + (currentBalloonSize * 0.09);
   const visualScale = Math.min(rawScale, maxScale);
 
   return (
-    <div className="flex-center" style={{ width: '100%', height: '100vh', display: 'flex', flexDirection: 'column', alignItems: 'center', backgroundColor: 'transparent', fontFamily: '"Courier New", Courier, monospace', position: 'relative', overflow: 'hidden' }}>
+    <div className="flex-center" style={{ width: '100%', minHeight: '520px', display: 'flex', flexDirection: 'column', alignItems: 'center', backgroundColor: 'transparent', fontFamily: '"Courier New", Courier, monospace', position: 'relative', overflow: 'hidden' }}>
       <div style={{ position: 'absolute', top: '30px', left: '40px', fontSize: '1.5rem', color: '#374151', zIndex: 50, background: 'rgba(255,255,255,0.82)', backdropFilter:'blur(8px)', padding: '8px 18px', borderRadius: '8px', border: '1px solid rgba(99,102,241,0.2)', fontWeight:'600' }}>
-        TRIAL: <span style={{color: '#4f46e5', fontWeight: 'bold'}}>{round}</span> / {MAX_ROUNDS}
+        {t.trialLabel}: <span style={{color: '#4f46e5', fontWeight: 'bold'}}>{round}</span> / {MAX_ROUNDS}
       </div>
       <div style={{ position: 'absolute', top: '30px', right: '40px', fontSize: '1.5rem', color: '#374151', zIndex: 50, background: 'rgba(255,255,255,0.82)', backdropFilter:'blur(8px)', padding: '8px 18px', borderRadius: '8px', border: '1px solid rgba(99,102,241,0.2)', fontWeight:'600' }}>
-        BANK: <span style={{ color: '#059669', fontWeight: 'bold' }}>{totalPoints}</span>
+        {t.bankTitle}: <span style={{ color: '#059669', fontWeight: 'bold' }}>{totalPoints}</span>
       </div>
 
       <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', width: '100%', position: 'relative' }}>
@@ -145,8 +175,8 @@ const BalloonGame = ({ isActive, onEndGame, isDemo }) => {
               animate={{ scale: visualScale }}
               transition={{ type: 'spring', stiffness: 300, damping: 20 }}
               style={{
-                width: '120px',
-                height: '120px',
+                width: '100px',
+                height: '100px',
                 borderRadius: '50%',
                 background: 'radial-gradient(circle at 35% 35%, #6ee7b7 0%, #3b82f6 40%, #1e3a8a 80%)',
                 boxShadow: 'inset -15px -15px 30px rgba(0,0,0,0.6), 0 10px 30px rgba(0,0,0,0.4)',
@@ -157,7 +187,7 @@ const BalloonGame = ({ isActive, onEndGame, isDemo }) => {
                 color: 'white',
                 fontWeight: 'bold',
                 textShadow: '0 2px 4px rgba(0,0,0,0.5)',
-                fontSize: `${1.2 / visualScale}rem` // Keep text readable
+                fontSize: `${1.0 / visualScale}rem` // Keep text readable
               }}
             >
               +{currentRoundPoints}
@@ -207,21 +237,21 @@ const BalloonGame = ({ isActive, onEndGame, isDemo }) => {
         <div style={{ position: 'absolute', bottom: '36px', left: '50%', transform: 'translateX(-50%)', display: 'flex', gap: '24px', zIndex: 200 }}>
         <button
           className="btn balloon-pump-btn"
-          aria-label="Expandir globo (Barra espaciadora)"
+          aria-label={t.ariaPump}
           onClick={handlePump}
           disabled={gameState !== 'playing'}
           style={{ width: 'auto', minWidth: '160px', padding: '12px 18px', textAlign: 'center', backgroundColor: 'rgba(59, 130, 246, 0.1)', border: '1px solid #3b82f6', color: '#3b82f6', backgroundImage: 'none', boxShadow: gameState === 'playing' ? '0 0 15px rgba(59, 130, 246, 0.2)' : 'none', whiteSpace: 'nowrap' }}
         >
-          EXPANDIR GLOBO
+          {t.pumpLabel}
         </button>
         <button
           className="btn balloon-bank-btn"
-          aria-label="Asegurar puntos (Enter)"
+          aria-label={t.ariaBank}
           onClick={handleBank}
           disabled={gameState !== 'playing' || currentBalloonSize === 1}
           style={{ width: 'auto', minWidth: '160px', padding: '12px 18px', textAlign: 'center', backgroundColor: 'rgba(16, 185, 129, 0.1)', border: '1px solid #10b981', color: '#10b981', backgroundImage: 'none', boxShadow: (gameState === 'playing' && currentBalloonSize > 1) ? '0 0 15px rgba(16, 185, 129, 0.2)' : 'none', whiteSpace: 'nowrap' }}
         >
-          ASEGURAR PUNTOS
+          {t.bankBtn}
         </button>
       </div>
     </div>

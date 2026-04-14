@@ -19,14 +19,14 @@ const FRONTEND = process.env.FRONTEND_URL || 'http://127.0.0.1:5174';
     for (let i = 0; i < 7; i++) {
       console.log('Iteration', i+1);
       // handle permission modal if present
-      const continuePerm = page.locator('button', { hasText: 'Continuar sin permisos' }).first();
+      const continuePerm = page.locator('button', { hasText: /Continuar sin permisos|Continue without permissions/ }).first();
       if ((await continuePerm.count()) > 0 && await continuePerm.isVisible()) {
         await continuePerm.click();
         await page.waitForTimeout(200);
       }
 
       // dismiss instructions overlay if present
-      const startInstr = page.locator('button', { hasText: 'Comenzar actividad' }).first();
+      const startInstr = page.locator('button', { hasText: /Comenzar actividad|Start activity/ }).first();
       if ((await startInstr.count()) > 0 && await startInstr.isVisible()) {
         await startInstr.click();
         await page.waitForTimeout(200);

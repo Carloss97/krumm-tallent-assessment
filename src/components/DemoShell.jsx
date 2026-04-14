@@ -20,11 +20,56 @@ const GoNoGoProtoWrapper = ({ onComplete, est }) => <ProtoGoNoGo isActive={true}
 const NBackProtoWrapper = ({ onComplete, est }) => <ProtoNBack isActive={true} isDemo={false} timeLimit={est} onEndGame={() => onComplete && onComplete()} />;
 
 const ACTIVITIES = [
-  { id: 'balloon', title: { es: 'Inflar el globo', en: 'Inflate the balloon' }, component: BalloonProtoWrapper, est: 60 },
-  { id: 'grid', title: { es: 'Optimizar rejilla', en: 'Optimize grid' }, component: GridProtoWrapper, est: 75 },
-  { id: 'laser', title: { es: 'Puzzle láser', en: 'Laser puzzle' }, component: LaserProtoWrapper, est: 60 },
-  { id: 'gng', title: { es: 'Go / No-Go', en: 'Go / No-Go' }, component: GoNoGoProtoWrapper, est: 45 },
-  { id: 'nback', title: { es: 'N-Back', en: 'N-Back' }, component: NBackProtoWrapper, est: 60 }
+  {
+    id: 'balloon',
+    title: { es: 'Inflar el globo', en: 'Inflate the balloon' },
+    instructions: {
+      es: 'Infla el globo con cuidado. Cada inflado aumenta el riesgo de explotar. Pulsa comenzar para iniciar.',
+      en: 'Pump the balloon carefully. Each pump increases the chance of popping. Press start to begin.'
+    },
+    component: BalloonProtoWrapper,
+    est: 60
+  },
+  {
+    id: 'grid',
+    title: { es: 'Optimizar rejilla', en: 'Optimize grid' },
+    instructions: {
+      es: 'Coloca las piezas para optimizar la rejilla lo más rápido posible. Pulsa comenzar para iniciar.',
+      en: 'Place pieces to optimize the grid as quickly as possible. Press start to begin.'
+    },
+    component: GridProtoWrapper,
+    est: 75
+  },
+  {
+    id: 'laser',
+    title: { es: 'Puzzle láser', en: 'Laser puzzle' },
+    instructions: {
+      es: 'Resuelve el puzzle láser dirigiendo los haces para alcanzar el objetivo. Pulsa comenzar para iniciar.',
+      en: 'Solve the laser puzzle by directing beams to reach the target. Press start to begin.'
+    },
+    component: LaserProtoWrapper,
+    est: 60
+  },
+  {
+    id: 'gng',
+    title: { es: 'Go / No-Go', en: 'Go / No-Go' },
+    instructions: {
+      es: 'Responde rápidamente a las señales Go y evita las señales No-Go. Pulsa comenzar para iniciar.',
+      en: 'Respond quickly to Go signals and withhold response on No-Go signals. Press start to begin.'
+    },
+    component: GoNoGoProtoWrapper,
+    est: 45
+  },
+  {
+    id: 'nback',
+    title: { es: 'N-Back', en: 'N-Back' },
+    instructions: {
+      es: 'Recuerda la posición o la letra N pasos atrás y responde cuando coincida. Pulsa comenzar para iniciar.',
+      en: 'Remember the position or letter N steps back and respond when it matches. Press start to begin.'
+    },
+    component: NBackProtoWrapper,
+    est: 60
+  }
 ];
 
 const TOTAL_TIME = 300; // 5 minutes target (sum of est ≈ 300s)
@@ -54,6 +99,9 @@ const DemoShell = () => {
       skip: 'Saltar',
       next: 'Siguiente',
       restart: 'Reiniciar demo',
+      instructionsTitle: 'Instrucciones',
+      startButton: 'Comenzar actividad',
+      readyMessage: 'Actividad preparada. Lee las instrucciones y pulsa comenzar.',
       activityCompletedTemplate: 'Actividad {id} completada',
       activityCompletedShort: 'Actividad completada'
     },
@@ -68,6 +116,9 @@ const DemoShell = () => {
       skip: 'Skip',
       next: 'Next',
       restart: 'Restart demo',
+      instructionsTitle: 'Instructions',
+      startButton: 'Start activity',
+      readyMessage: 'Activity ready. Read the instructions and press start.',
       activityCompletedTemplate: 'Activity {id} completed',
       activityCompletedShort: 'Activity completed'
     }
@@ -219,10 +270,10 @@ const DemoShell = () => {
           {showInstructions && (
             <div className="instructions-overlay">
               <div className="instructions-box">
-                <h4>Instrucciones</h4>
-                <p>{(ACTIVITIES[step].title && typeof ACTIVITIES[step].title === 'object') ? (ACTIVITIES[step].title[language] || ACTIVITIES[step].title.es) : ACTIVITIES[step].title} — sigue las instrucciones en pantalla. Pulsa comenzar cuando estés listo.</p>
+                <h4>{demoCopy[language]?.instructionsTitle || demoCopy.es.instructionsTitle}</h4>
+                <p>{(ACTIVITIES[step].instructions && ACTIVITIES[step].instructions[language]) || (ACTIVITIES[step].instructions && ACTIVITIES[step].instructions.es) || (ACTIVITIES[step].title && typeof ACTIVITIES[step].title === 'object' ? (ACTIVITIES[step].title[language] || ACTIVITIES[step].title.es) : ACTIVITIES[step].title)}</p>
                 <div style={{ marginTop: 12 }}>
-                  <button className="btn" onClick={() => { setShowInstructions(false); setActivityStarted(true); }}>Comenzar actividad</button>
+                  <button className="btn" onClick={() => { setShowInstructions(false); setActivityStarted(true); }}>{demoCopy[language]?.startButton || demoCopy.es.startButton}</button>
                 </div>
               </div>
             </div>
@@ -232,7 +283,7 @@ const DemoShell = () => {
             <ActivityComponent onComplete={() => onComplete(ACTIVITIES[step].id)} est={ACTIVITIES[step].est} />
           ) : (
             <div style={{ padding: 28, textAlign: 'center', color: '#6b7280' }}>
-              <p>Actividad preparada. Lee las instrucciones y pulsa comenzar.</p>
+              <p>{demoCopy[language]?.readyMessage || demoCopy.es.readyMessage}</p>
             </div>
           )}
 
