@@ -12,6 +12,8 @@ import './App.css';
 // Load DevControls only in dev mode so it's not bundled into production builds
 const DevControls = import.meta.env.DEV ? lazy(() => import('./components/DevControls')) : null;
 import Footer from './components/Footer';
+import PortalButton from './components/PortalButton';
+import PostulantesLogin from './components/PostulantesLogin';
 
 // Lazy load components for code splitting
 const Report = lazy(() => import('./Report'));
@@ -79,10 +81,13 @@ function App() {
     <VariantProvider>
       <LanguageProvider>
         <Router basename={basename}>
+          <PortalButton />
         <Routes>
           {/* Recruiter routes (separate from telemetry) */}
           <Route path="/recruiter/login" element={<RecruiterLogin />} />
           <Route path="/recruiter/dashboard" element={<RecruiterDashboard />} />
+          {/* Candidate portal (minimal, no global header/footer) */}
+          <Route path="/postulantes" element={<PostulantesLogin />} />
 
           {/* Assessment routes (with telemetry tracking) */}
           <Route

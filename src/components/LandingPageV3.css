@@ -718,6 +718,24 @@
   font-size: 0.92rem;
 }
 
+.lv3-usecase-bullets {
+  list-style: none;
+  margin: 0.25rem 0 0;
+  padding: 0;
+  display: grid;
+  gap: 0.45rem;
+}
+
+.lv3-usecase-bullets li {
+  display: flex;
+  gap: 0.45rem;
+  align-items: flex-start;
+  color: #2f4e77;
+  font-size: 0.92rem;
+}
+
+.lv3-usecase-bullets li svg { color: #3e6bd8; margin-top: 2px; flex-shrink: 0; }
+
 .lv3-signal-grid {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
