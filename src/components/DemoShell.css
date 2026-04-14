@@ -10,7 +10,7 @@
   margin-bottom: 12px;
 }
 .demo-main { display: block; }
-.demo-activity { width: 100%; background: #ffffff; padding: 14px; border-radius: 10px; border: 1px solid rgba(15,23,42,0.04); min-height: 320px; }
+.demo-activity { position: relative; width: 100%; background: #ffffff; padding: 14px; border-radius: 10px; border: 1px solid rgba(15,23,42,0.04); min-height: 320px; }
 
 /* Removed right sidebar for demo — simplified single-column experience */
 .demo-controls { margin-top: 12px; }
