@@ -301,6 +301,14 @@ const copy = {
     stageStep3: 'Reporte accionable para selección y desarrollo',
     formTitle: 'Acceso a la evaluación',
     formDescription: 'Completa tus datos para iniciar la batería gamificada.',
+    fullNameLabel: 'Nombre completo',
+    fullNamePlaceholder: 'Tu nombre',
+    participantIdLabel: 'ID de participante *',
+    participantIdPlaceholder: 'KRUMM-2026-001',
+    emailLabel: 'Correo electrónico *',
+    emailPlaceholder: 'tu@email.com',
+    accessCodeLabel: 'Código de acceso *',
+    accessCodePlaceholder: '••••••••',
     validating: 'Validando...',
     startEvaluation: 'Comenzar evaluación',
     continueNoBackend: 'modo QA/offline (solo desarrollo)',
@@ -340,6 +348,14 @@ const copy = {
     stageStep3: 'Actionable report for selection and development',
     formTitle: 'Assessment access',
     formDescription: 'Complete your details to begin the gamified battery.',
+    fullNameLabel: 'Full name',
+    fullNamePlaceholder: 'Your name',
+    participantIdLabel: 'Participant ID *',
+    participantIdPlaceholder: 'KRUMM-2026-001',
+    emailLabel: 'Email address *',
+    emailPlaceholder: 'you@domain.com',
+    accessCodeLabel: 'Access code *',
+    accessCodePlaceholder: '••••••••',
     validating: 'Validating...',
     startEvaluation: 'Start evaluation',
     continueNoBackend: 'QA/offline mode (development only)',
@@ -645,44 +661,44 @@ const LandingPageV3 = () => {
                 </div>
               )}
 
-              <label htmlFor="fullName">Nombre completo</label>
+              <label htmlFor="fullName">{t.fullNameLabel}</label>
               <input
                 id="fullName"
                 name="fullName"
                 type="text"
-                placeholder="Tu nombre"
+                placeholder={t.fullNamePlaceholder}
                 value={formData.fullName}
                 onChange={handleChange}
               />
 
-              <label htmlFor="participantId">ID de participante *</label>
+              <label htmlFor="participantId">{t.participantIdLabel}</label>
               <input
                 id="participantId"
                 name="participantId"
                 type="text"
-                placeholder="KRUMM-2026-001"
+                placeholder={t.participantIdPlaceholder}
                 value={formData.participantId}
                 onChange={handleChange}
                 required={!isQaMode}
               />
 
-              <label htmlFor="email">Correo electrónico *</label>
+              <label htmlFor="email">{t.emailLabel}</label>
               <input
                 id="email"
                 name="email"
                 type="email"
-                placeholder="tu@email.com"
+                placeholder={t.emailPlaceholder}
                 value={formData.email}
                 onChange={handleChange}
                 required={!isQaMode}
               />
 
-              <label htmlFor="accessCode">Código de acceso *</label>
+              <label htmlFor="accessCode">{t.accessCodeLabel}</label>
               <input
                 id="accessCode"
                 name="accessCode"
                 type="password"
-                placeholder="••••••••"
+                placeholder={t.accessCodePlaceholder}
                 value={formData.accessCode}
                 onChange={handleChange}
                 required={!isQaMode}

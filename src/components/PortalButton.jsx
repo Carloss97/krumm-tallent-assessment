@@ -1,6 +1,7 @@
 import React from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { useTelemetry } from '../TelemetryContext';
+import { useLanguage } from '../context/LanguageContext';
 import './PortalButton.css';
 
 export default function PortalButton() {
@@ -17,6 +18,10 @@ export default function PortalButton() {
     if (!url) return false;
     return /^https?:\/\//i.test(url);
   };
+
+  const { language } = useLanguage();
+  const labels = { es: 'Dar mi Test', en: 'Take my Test' };
+  const ariaLabels = { es: 'Portal de Postulantes', en: 'Recruiter portal' };
 
   const handleClick = (e) => {
     try { telemetry?.recordTrialEvent && telemetry.recordTrialEvent({ event: 'portal_click' }); } catch (err) {}
@@ -50,10 +55,10 @@ export default function PortalButton() {
       href={portalUrl}
       className="btn-portal halo-ring"
       onClick={handleClick}
-      aria-label="Portal de Postulantes"
+      aria-label={ariaLabels[language] || ariaLabels.es}
       {...(isExternalUrl(portalUrl) ? { target: '_blank', rel: 'noopener noreferrer' } : {})}
     >
-      Dar mi Test
+      {labels[language] || labels.es}
     </a>
   );
 }

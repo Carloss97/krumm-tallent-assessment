@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useTelemetry } from '../TelemetryContext';
+import { useLanguage } from '../context/LanguageContext';
 // Prefer prototype games for a higher-fidelity demo experience
 import ProtoBalloon from '../games/BalloonGame';
 import GridOptimizerGame from '../games/GridOptimizerGame';
@@ -16,11 +17,11 @@ const GoNoGoProtoWrapper = ({ onComplete, est }) => <ProtoGoNoGo isActive={true}
 const NBackProtoWrapper = ({ onComplete, est }) => <ProtoNBack isActive={true} isDemo={true} timeLimit={est} onEndGame={() => onComplete && onComplete()} />;
 
 const ACTIVITIES = [
-  { id: 'balloon', title: 'Inflar el globo', component: BalloonProtoWrapper, est: 60 },
-  { id: 'grid', title: 'Optimizar rejilla', component: GridProtoWrapper, est: 75 },
-  { id: 'laser', title: 'Puzzle láser', component: LaserProtoWrapper, est: 60 },
-  { id: 'gng', title: 'Go / No-Go', component: GoNoGoProtoWrapper, est: 45 },
-  { id: 'nback', title: 'N-Back', component: NBackProtoWrapper, est: 60 }
+  { id: 'balloon', title: { es: 'Inflar el globo', en: 'Inflate the balloon' }, component: BalloonProtoWrapper, est: 60 },
+  { id: 'grid', title: { es: 'Optimizar rejilla', en: 'Optimize grid' }, component: GridProtoWrapper, est: 75 },
+  { id: 'laser', title: { es: 'Puzzle láser', en: 'Laser puzzle' }, component: LaserProtoWrapper, est: 60 },
+  { id: 'gng', title: { es: 'Go / No-Go', en: 'Go / No-Go' }, component: GoNoGoProtoWrapper, est: 45 },
+  { id: 'nback', title: { es: 'N-Back', en: 'N-Back' }, component: NBackProtoWrapper, est: 60 }
 ];
 
 const TOTAL_TIME = 300; // 5 minutes target (sum of est ≈ 300s)
@@ -31,6 +32,38 @@ const DemoShell = () => {
   const [completed, setCompleted] = useState({});
   const [toast, setToast] = useState(null);
   const { setIsDemo, startTracking, stopTracking, recordTrialEvent } = useTelemetry();
+  const { language } = useLanguage();
+
+  const demoCopy = {
+    es: {
+      interactiveDemo: 'Demo interactiva',
+      activitiesLabel: 'actividades',
+      timeRemaining: 'Tiempo restante:',
+      progressTitle: 'Progreso',
+      activityLabel: 'Actividad',
+      estLabel: 'Est.',
+      previous: 'Anterior',
+      skip: 'Saltar',
+      next: 'Siguiente',
+      restart: 'Reiniciar demo',
+      activityCompletedTemplate: 'Actividad {id} completada',
+      activityCompletedShort: 'Actividad completada'
+    },
+    en: {
+      interactiveDemo: 'Interactive demo',
+      activitiesLabel: 'activities',
+      timeRemaining: 'Time remaining:',
+      progressTitle: 'Progress',
+      activityLabel: 'Activity',
+      estLabel: 'Est.',
+      previous: 'Previous',
+      skip: 'Skip',
+      next: 'Next',
+      restart: 'Restart demo',
+      activityCompletedTemplate: 'Activity {id} completed',
+      activityCompletedShort: 'Activity completed'
+    }
+  };
 
   const startedAtRef = useRef(Date.now());
   const finishedRef = useRef(false);
@@ -107,9 +140,9 @@ const DemoShell = () => {
     }
     // brief success toast with accessible announcer
     const a = document.getElementById('demo-live-announcer');
-    if (a) a.textContent = `Actividad ${id} completada`;
+    if (a) a.textContent = (demoCopy[language]?.activityCompletedTemplate || demoCopy.es.activityCompletedTemplate).replace('{id}', id);
 
-    setToast('Actividad completada');
+    setToast(demoCopy[language]?.activityCompletedShort || demoCopy.es.activityCompletedShort);
 
     setCompleted((c) => {
       const next = { ...c, [id]: true };
@@ -142,23 +175,23 @@ const DemoShell = () => {
   return (
     <div className="demo-shell">
       <header className="demo-header">
-        <h2>Demo interactiva • {ACTIVITIES.length} actividades</h2>
+        <h2>{demoCopy[language]?.interactiveDemo || demoCopy.es.interactiveDemo} • {ACTIVITIES.length} {demoCopy[language]?.activitiesLabel || demoCopy.es.activitiesLabel}</h2>
         <div className="demo-meta">
-          <div className="demo-timer">Tiempo restante: {Math.floor(timeLeft / 60)}:{String(timeLeft % 60).padStart(2, '0')}</div>
-          <div className="demo-progress">Actividad {step + 1} / {ACTIVITIES.length}</div>
+          <div className="demo-timer">{demoCopy[language]?.timeRemaining || demoCopy.es.timeRemaining} {Math.floor(timeLeft / 60)}:{String(timeLeft % 60).padStart(2, '0')}</div>
+          <div className="demo-progress">{demoCopy[language]?.activityLabel || demoCopy.es.activityLabel} {step + 1} / {ACTIVITIES.length}</div>
         </div>
       </header>
 
       <main className="demo-main">
         <section className="demo-activity">
           {toast && <div className="demo-toast">{toast}</div>}
-          <h3>{ACTIVITIES[step].title}</h3>
-          <div className="demo-activity-meta">Est. {Math.floor(ACTIVITIES[step].est / 60)}:{String(ACTIVITIES[step].est % 60).padStart(2, '0')}</div>
+          <h3>{(ACTIVITIES[step].title && typeof ACTIVITIES[step].title === 'object') ? (ACTIVITIES[step].title[language] || ACTIVITIES[step].title.es) : ACTIVITIES[step].title}</h3>
+          <div className="demo-activity-meta">{demoCopy[language]?.estLabel || demoCopy.es.estLabel} {Math.floor(ACTIVITIES[step].est / 60)}:{String(ACTIVITIES[step].est % 60).padStart(2, '0')}</div>
           <ActivityComponent onComplete={() => onComplete(ACTIVITIES[step].id)} est={ACTIVITIES[step].est} />
         </section>
 
         <aside className="demo-sidebar">
-          <h4>Progreso</h4>
+          <h4>{demoCopy[language]?.progressTitle || demoCopy.es.progressTitle}</h4>
           <ol>
             {ACTIVITIES.map((a, i) => (
               <li
@@ -169,18 +202,18 @@ const DemoShell = () => {
                 tabIndex={0}
                 onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') setStep(i); }}
               >
-                {a.title} {completed[a.id] ? '✓' : ''}
+                {(a.title && typeof a.title === 'object') ? (a.title[language] || a.title.es) : a.title} {completed[a.id] ? '✓' : ''}
               </li>
             ))}
           </ol>
           <div className="demo-controls">
             <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
-              <button className="btn" onClick={prevActivity} disabled={step === 0}>Anterior</button>
-              <button className="btn" onClick={skipActivity} disabled={step >= ACTIVITIES.length - 1}>Saltar</button>
-              <button className="btn" onClick={() => { setStep((s) => Math.min(ACTIVITIES.length - 1, s + 1)); }} disabled={step >= ACTIVITIES.length - 1}>Siguiente</button>
+              <button className="btn" onClick={prevActivity} disabled={step === 0}>{demoCopy[language]?.previous || demoCopy.es.previous}</button>
+              <button className="btn" onClick={skipActivity} disabled={step >= ACTIVITIES.length - 1}>{demoCopy[language]?.skip || demoCopy.es.skip}</button>
+              <button className="btn" onClick={() => { setStep((s) => Math.min(ACTIVITIES.length - 1, s + 1)); }} disabled={step >= ACTIVITIES.length - 1}>{demoCopy[language]?.next || demoCopy.es.next}</button>
             </div>
             <div style={{ marginTop: 10 }}>
-              <button className="btn" onClick={restart}>Reiniciar demo</button>
+              <button className="btn" onClick={restart}>{demoCopy[language]?.restart || demoCopy.es.restart}</button>
             </div>
           </div>
         </aside>
