@@ -24,12 +24,13 @@ const NBackGame = ({ isActive, onEndGame, isDemo, timeLimit }) => {
   const isActiveRef = useRef(false);
   const hasEndedRef = useRef(false);
   const gameStateRef = useRef('waiting');
+  const isPlayingRef = useRef(false);
   const [showConfetti, setShowConfetti] = useState(false);
   const confettiTimeoutRef = useRef(null);
 
   const MAX_ROUNDS = isDemo ? 3 : 5;
-  const STIMULUS_DURATION = 500;
-  const RESPONSE_WINDOW = 2000;
+  const STIMULUS_DURATION = isDemo ? 700 : 500;
+  const RESPONSE_WINDOW = isDemo ? 2500 : 2000;
 
   const endGame = useCallback(() => {
     if (hasEndedRef.current) return;
@@ -65,7 +66,7 @@ const NBackGame = ({ isActive, onEndGame, isDemo, timeLimit }) => {
   }, [round]);
   
   const generateRound = useCallback(() => {
-    const length = 8 + round * 2;
+    const length = isDemo ? 6 + round * 2 : 8 + round * 2;
     const newSequence = [];
     const stimuli = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H'];
     for (let i = 0; i < length; i++) {
@@ -91,6 +92,8 @@ const NBackGame = ({ isActive, onEndGame, isDemo, timeLimit }) => {
   }, [currentIndex, nBack, recordError, sequence, setGameStateSafe]);
 
   const playRound = useCallback(async () => {
+    if (isPlayingRef.current) return;
+    isPlayingRef.current = true;
     for (let i = 0; i < sequence.length; i++) {
       if (!isActiveRef.current) return;
       setCurrentIndex(i);
@@ -110,6 +113,7 @@ const NBackGame = ({ isActive, onEndGame, isDemo, timeLimit }) => {
         }, RESPONSE_WINDOW - STIMULUS_DURATION);
       });
     }
+    isPlayingRef.current = false;
     advanceRound();
   }, [sequence, STIMULUS_DURATION, RESPONSE_WINDOW, handleNoResponse, advanceRound, setGameStateSafe]);
 

@@ -208,17 +208,24 @@ const LaserPuzzleGame = ({ isActive, onEndGame, isDemo, timeLimit }) => {
 
   useEffect(() => {
     if (isActive) {
-      hasEndedRef.current = false;
-      startTracking();
-      quizScore.current = 0;
-      const levels = isDemo ? [generateLevel(0)] : [generateLevel(0), generateLevel(1), generateLevel(2), generateLevel(3)];
-        setProcLevels(levels);
+        hasEndedRef.current = false;
+        startTracking();
+        quizScore.current = 0;
+        // generate levels asynchronously to avoid blocking the main thread during heavy generation
+        setProcLevels(null);
         setLevelIdx(0);
-        setGrid(buildGrid(levels[0]));
+        setGrid({});
         setMoves(0);
         setTotalMoves(0);
         setGamePhase('playing');
         setQuizStep(0);
+
+        setTimeout(() => {
+          const levels = isDemo ? [generateLevel(0)] : [generateLevel(0), generateLevel(1), generateLevel(2), generateLevel(3)];
+          setProcLevels(levels);
+          setLevelIdx(0);
+          setGrid(buildGrid(levels[0]));
+        }, 0);
     }
   }, [isActive, isDemo, startTracking]);
   

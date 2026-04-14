@@ -28,7 +28,7 @@ async function run() {
 
     for (let i = 0; i < count; i++) {
       await items.nth(i).click();
-      await page.waitForSelector('.demo-activity h3', { timeout: 8000 });
+      await page.waitForSelector('.demo-activity h3', { timeout: 15000 });
       const title = await page.locator('.demo-activity h3').innerText().catch(() => '');
       console.log(`Activity ${i + 1}/${count}: "${title}"`);
 

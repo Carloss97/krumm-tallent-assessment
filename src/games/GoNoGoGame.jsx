@@ -28,7 +28,7 @@ const GoNoGoGame = ({ isActive, onEndGame, isDemo, timeLimit }) => {
 
   const MAX_TRIALS = isDemo ? 25 : 100;
   const GO_PROBABILITY = isDemo ? 0.8 : 0.7;
-  const RESPONSE_WINDOW = isDemo ? 1400 : 1000;
+  const RESPONSE_WINDOW = isDemo ? 2000 : 1400;
 
   const endGame = useCallback(() => {
     if (hasEndedRef.current) return;
@@ -49,10 +49,15 @@ const GoNoGoGame = ({ isActive, onEndGame, isDemo, timeLimit }) => {
       endGame();
     } else {
       setTrial(prev => prev + 1);
+      // schedule next trial start after a short gap (avoid racing with state updates)
+      setTimeout(() => {
+        if (!hasEndedRef.current) startTrial();
+      }, 500);
     }
-  }, [trial, MAX_TRIALS, endGame]);
+  }, [trial, MAX_TRIALS, endGame, startTrial]);
 
   const handleTimeout = useCallback((isGoTrial) => {
+    if (responseTimeoutRef.current) clearTimeout(responseTimeoutRef.current);
     if (isGoTrial) {
       setOmissionErrors(prev => prev + 1);
       recordError();
@@ -65,6 +70,8 @@ const GoNoGoGame = ({ isActive, onEndGame, isDemo, timeLimit }) => {
   }, [nextTrial, recordError]);
 
   const startTrial = useCallback(() => {
+    // clear any pending response timeout before starting
+    if (responseTimeoutRef.current) clearTimeout(responseTimeoutRef.current);
     const isGoTrial = Math.random() < GO_PROBABILITY;
     setCurrentStimulus(isGoTrial ? 'GO' : 'NO-GO');
     setGameState('stimulus');
@@ -88,13 +95,7 @@ const GoNoGoGame = ({ isActive, onEndGame, isDemo, timeLimit }) => {
     return () => clearTimeout(responseTimeoutRef.current);
   }, [isActive, startTrial, startTracking]);
 
-  useEffect(() => {
-    if(isActive && trial > 1) {
-         
-        setGameState('waiting');
-        setTimeout(() => startTrial(), 500);
-    }
-  }, [trial, isActive, startTrial])
+  
 
   const handleResponse = useCallback(() => {
     if (gameState !== 'stimulus') return;
@@ -103,15 +104,17 @@ const GoNoGoGame = ({ isActive, onEndGame, isDemo, timeLimit }) => {
     const isGoTrial = currentStimulus === 'GO';
 
     if (isGoTrial) {
-      setCorrectGo(prev => prev + 1);
+      setCorrectGo(prev => {
+        const newVal = prev + 1;
+        if (newVal % 10 === 0) {
+          setShowConfetti(true);
+          if (confettiTimeoutRef.current) clearTimeout(confettiTimeoutRef.current);
+          confettiTimeoutRef.current = setTimeout(() => setShowConfetti(false), 1200);
+        }
+        return newVal;
+      });
       setScore(prev => prev + 10);
       try { playMemoryClick(); } catch (e) {}
-      // small celebration for milestones
-      if ((correctGo + 1) > 0 && (correctGo + 1) % 10 === 0) {
-        setShowConfetti(true);
-        if (confettiTimeoutRef.current) clearTimeout(confettiTimeoutRef.current);
-        confettiTimeoutRef.current = setTimeout(() => setShowConfetti(false), 1200);
-      }
     } else {
       setCommissionErrors(prev => prev + 1);
       recordError();
@@ -135,6 +138,9 @@ const GoNoGoGame = ({ isActive, onEndGame, isDemo, timeLimit }) => {
     window.addEventListener('keydown', handleKeyPress);
     return () => window.removeEventListener('keydown', handleKeyPress);
   }, [isActive, gameState, handleResponse]);
+
+  // Allow a clickable response for accessibility (desktop/touch)
+  const clickableResponse = (e) => { if (e && e.preventDefault) e.preventDefault(); if (isActive && gameState === 'stimulus') handleResponse(); };
 
   useEffect(() => {
     return () => {
@@ -175,6 +181,7 @@ const GoNoGoGame = ({ isActive, onEndGame, isDemo, timeLimit }) => {
       <div style={{ textAlign: 'center', marginBottom: '20px' }}>
         <div style={{ fontSize: '1.2rem', color: '#6b7280', marginBottom: '10px' }}>Press SPACEBAR for GO stimuli</div>
         <div style={{ fontSize: '1rem', color: '#9ca3af' }}>Do not press for NO-GO stimuli</div>
+        <div><button className="btn" onClick={clickableResponse} style={{ marginTop: 8 }}>RESPONDER</button></div>
       </div>
       <div style={{ width: '400px', height: '8px', backgroundColor: '#e5e7eb', borderRadius: '4px', overflow: 'hidden' }}><motion.div initial={{ width: 0 }} animate={{ width: `${progress}%` }} style={{ height: '100%', backgroundColor: '#3b82f6', borderRadius: '4px' }} /></div>
     </div>
