@@ -613,6 +613,8 @@ const LandingPageV3 = () => {
           )}
       </header>
 
+      <main id="lv3-main" className="lv3-main" role="main">
+
       {showForm && (
         <motion.section
           className="lv3-form-overlay"
@@ -847,6 +849,7 @@ const LandingPageV3 = () => {
           <DevQuickAccess t={t} language={language} />
         </Suspense>
       )}
+      </main>
     </div>
   );
 };

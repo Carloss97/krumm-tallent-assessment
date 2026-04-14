@@ -8,7 +8,7 @@
   gap: 8px;
   padding: 10px 16px;
   background: var(--accent-portal, #f39c12);
-  color: #ffffff;
+  color: var(--accent-portal-foreground, #000000);
   border-radius: 12px;
   font-weight: 700;
   text-decoration: none;

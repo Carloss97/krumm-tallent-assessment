@@ -6,7 +6,7 @@ import './PortalButton.css';
 export default function PortalButton() {
   const location = useLocation();
   const telemetry = useTelemetry();
-  const portalUrl = import.meta.env.VITE_PORTAL_URL || '/candidate/login';
+  const portalUrl = import.meta.env.VITE_PORTAL_URL || '/postulantes';
 
   // Add small UX nicety: if the landing language corner exists, add a helper class
   // on the root element to avoid overlap with the fixed portal button.

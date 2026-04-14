@@ -1,5 +1,5 @@
 import React, { lazy, Suspense } from 'react';
-import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { TelemetryProvider } from './TelemetryContext';
 import { VariantProvider } from './contexts/VariantContext';
 import { LanguageProvider } from './context/LanguageContext';
@@ -87,7 +87,7 @@ function App() {
           {/* Recruiter routes (separate from telemetry) */}
           <Route path="/recruiter/login" element={<RecruiterLogin />} />
           <Route path="/recruiter/dashboard" element={<RecruiterDashboard />} />
-          <Route path="/candidate/login" element={<CandidateLogin />} />
+          <Route path="/candidate/login" element={<Navigate to="/postulantes" replace />} />
           {/* Candidate portal (minimal, no global header/footer) */}
           <Route path="/postulantes" element={<PostulantesLogin />} />
 
