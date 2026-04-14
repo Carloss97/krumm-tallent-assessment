@@ -197,6 +197,9 @@
   gap: 0.72rem;
 }
 
+/* Ensure hero action buttons remain centered when only demo is shown */
+.lv3-action-buttons{justify-content:center}
+
 .lv3-action-buttons .lv3-primary,
 .lv3-action-buttons .lv3-ghost,
 .lv3-action-buttons .lv3-recruiter-btn {
@@ -619,6 +622,14 @@
 
 .lv3-project-signals {
   padding-top: 2.2rem;
+}
+
+/* Ensure strong contrast for signals section headers and intro copy */
+.lv3-project-signals .lv3-section-head h2 {
+  color: #ffffff !important;
+}
+.lv3-project-signals .lv3-section-head p {
+  color: rgba(255,255,255,0.95) !important;
 }
 
 .lv3-process {

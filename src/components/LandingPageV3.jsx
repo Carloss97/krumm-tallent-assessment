@@ -471,8 +471,14 @@ const LandingPageV3 = () => {
       preferredLanguage: language,
       source: 'demo'
     });
-    // Open demo overlay within the landing page instead of navigating away
-    try { document.dispatchEvent(new CustomEvent('krumm:open-demo', { detail: { lang: language } })); } catch (e) { /* noop */ }
+    // Open demo overlay within the landing page if enabled; fallback to route
+    try {
+      if (featureFlags?.enableHeroDemo) {
+        document.dispatchEvent(new CustomEvent('krumm:open-demo', { detail: { lang: language } }));
+      } else {
+        navigate(`/demo?lang=${language}`);
+      }
+    } catch (e) { navigate(`/demo?lang=${language}`); }
   };
 
   const handleContinueLocal = () => {
@@ -581,7 +587,7 @@ const LandingPageV3 = () => {
           <div className="lv3-action-buttons">
             <button className="lv3-ghost lv3-action-btn lv3-action-demo" onClick={() => { recordTrialEvent && recordTrialEvent({ event: 'cta_demo_clicked' }); handleStartDemo(); }}>
               <FlaskConical size={18} aria-hidden="true" />
-              <span>{t.actionDemo}</span>
+              <span>DEMO</span>
               <ChevronRight size={16} aria-hidden="true" />
             </button>
             {showDevQuickAccess && (
