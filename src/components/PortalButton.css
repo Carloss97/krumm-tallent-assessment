@@ -1,22 +1,22 @@
 .btn-portal {
   position: fixed;
   top: 8px;
-  right: 8px;
+  right: 24px;
   z-index: 9999;
   display: inline-flex;
   align-items: center;
-  gap: 10px;
-  padding: 14px 20px;
+  gap: 12px;
+  padding: 16px 24px;
   background: var(--accent-portal, #f39c12);
   color: var(--accent-portal-foreground, #000000);
-  border-radius: 18px;
+  border-radius: 20px;
   font-weight: 900;
-  font-size: 1.12rem;
+  font-size: 1.18rem;
   text-decoration: none;
-  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.12);
+  box-shadow: 0 10px 34px rgba(0, 0, 0, 0.12);
   border: none;
-  min-height: 56px;
-  min-width: 140px;
+  min-height: 64px;
+  min-width: 170px;
   transition: top 0.18s ease, transform 0.15s ease, box-shadow 0.15s ease;
 }
 
@@ -25,10 +25,11 @@
 @media (max-width: 480px) {
   .btn-portal {
     top: 10px;
-    right: 10px;
+    right: 12px;
     padding: 9px 12px;
     font-size: 0.96rem;
     min-width: 110px;
+    min-height: 48px;
   }
 }
 
@@ -38,17 +39,18 @@
 }
 
 .btn-portal:hover {
-  transform: translateY(-4px) scale(1.02);
-  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.22);
+  animation-play-state: paused;
+  transform: translateY(-6px) scale(1.04);
+  box-shadow: 0 22px 70px rgba(0, 0, 0, 0.22);
 }
 
-/* Slight pulse to draw attention */
-.btn-portal.pulse {
-  animation: portalPulse 2.6s infinite ease-in-out;
+/* Soft bob: subtle vertical movement and gentle shadow changes */
+.btn-portal.soft-bob {
+  animation: portalSoftBob 6s infinite ease-in-out;
 }
 
-@keyframes portalPulse {
-  0% { box-shadow: 0 20px 60px rgba(0,0,0,0.18); transform: translateY(0) scale(1); }
-  50% { box-shadow: 0 28px 80px rgba(0,0,0,0.24); transform: translateY(-3px) scale(1.03); }
-  100% { box-shadow: 0 20px 60px rgba(0,0,0,0.18); transform: translateY(0) scale(1); }
+@keyframes portalSoftBob {
+  0% { box-shadow: 0 10px 34px rgba(0,0,0,0.12); transform: translateY(0) scale(1); }
+  50% { box-shadow: 0 14px 40px rgba(0,0,0,0.14); transform: translateY(-2px) scale(1.01); }
+  100% { box-shadow: 0 10px 34px rgba(0,0,0,0.12); transform: translateY(0) scale(1); }
 }
