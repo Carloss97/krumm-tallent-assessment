@@ -77,17 +77,19 @@ A comprehensive, scientifically-validated cognitive assessment platform featurin
 
 3. **Start the development environment:**
    ```bash
-   # Start both frontend and backend
-   npm run dev:full
+   # Install deps, then start the combined dev server (frontend + backend)
+   npm install
+   npm run dev
 
-   # Or start separately:
-   npm run dev          # Frontend (port 5173)
-   npm run dev:server   # Backend (port 3001)
+   # Notes:
+   # - `npm run dev` uses the `dev` script which launches Vite with port 5174 and the backend (Express) together.
+   # - `npm run dev:full` runs `vite` and the backend separately (vite default port may differ).
+   # - Backend default port is 4000 unless `PORT` is set in your environment.
    ```
 
 4. **Open your browser:**
    ```
-   http://localhost:5173
+   http://localhost:5174
    ```
 
 ## 🧪 Testing
