@@ -43,8 +43,8 @@ const TestAccessModal = ({ isOpen = true, onClose = () => {} }) => {
 
       onClose();
       navigate(`/game/1?lang=${language}`);
-    } catch (err) {
-      const msg = err?.message || (language === 'en' ? 'Unable to validate credentials.' : 'No fue posible validar tus credenciales.');
+    } catch (error) {
+      const msg = error?.message || (language === 'en' ? 'Unable to validate credentials.' : 'No fue posible validar tus credenciales.');
       setError(msg);
       recordTrialEvent && recordTrialEvent({ event: 'cta_test_login_failed', participantId, error: msg });
     } finally {

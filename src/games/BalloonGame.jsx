@@ -107,7 +107,7 @@ const BalloonGame = ({ isActive, onEndGame, isDemo }) => {
     totalPointsRef.current += currentRoundPoints;
     setTotalPoints(totalPointsRef.current);
     setGameState('banked');
-    try { playMemoryFlash(); } catch (e) {}
+    try { playMemoryFlash(); } catch (error) { void error; }
     setShowConfetti(true);
     setTimeout(() => setShowConfetti(false), 1200);
     setTimeout(() => advanceRound(), 1500);

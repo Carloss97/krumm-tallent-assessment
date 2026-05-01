@@ -187,9 +187,9 @@ const RecruiterDashboard = () => {
       if (analyticsData) {
         setAnalytics(analyticsData);
       }
-    } catch (err) {
-      console.error('Error fetching sessions:', err);
-      setError(err.message);
+    } catch (error) {
+      console.error('Error fetching sessions:', error);
+      setError(error.message);
     } finally {
       setLoading(false);
     }

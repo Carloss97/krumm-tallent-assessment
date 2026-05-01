@@ -34,7 +34,7 @@ export default function DemoSection() {
   };
 
   useEffect(() => {
-    const onOpen = (e) => setIsOpen(true);
+    const onOpen = () => setIsOpen(true);
     document.addEventListener('krumm:open-demo', onOpen);
     return () => document.removeEventListener('krumm:open-demo', onOpen);
   }, []);

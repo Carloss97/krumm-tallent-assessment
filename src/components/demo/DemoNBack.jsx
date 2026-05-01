@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useRef } from 'react';
+import React, { useEffect, useState, useRef, useCallback } from 'react';
 
 const DemoNBack = ({ onComplete }) => {
   const N = 1; // 1-back for simplest demo
@@ -46,7 +46,7 @@ const DemoNBack = ({ onComplete }) => {
     return () => clearTimeout(timeoutRef.current);
   }, [index, sequence, onComplete, correct]);
 
-  const handleMatch = () => {
+  const handleMatch = useCallback(() => {
     if (!sequence.length) return;
     const i = index;
     const isMatch = i >= N && sequence[i] === sequence[i - N];
@@ -54,7 +54,7 @@ const DemoNBack = ({ onComplete }) => {
     // move to next immediately
     clearTimeout(timeoutRef.current);
     setIndex((i) => Math.min(sequence.length, i + 1));
-  };
+  }, [index, sequence]);
 
   useEffect(() => {
     const onKey = (e) => {
@@ -65,7 +65,7 @@ const DemoNBack = ({ onComplete }) => {
     };
     window.addEventListener('keydown', onKey);
     return () => window.removeEventListener('keydown', onKey);
-  }, [sequence, index]);
+  }, [sequence, index, handleMatch]);
 
   const current = sequence[index] || '-';
 

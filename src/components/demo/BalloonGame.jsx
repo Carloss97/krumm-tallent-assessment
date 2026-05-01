@@ -27,8 +27,8 @@ const playToneInternal = (freq = 440, duration = 0.06) => {
     g.gain.exponentialRampToValueAtTime(0.08, ctx.currentTime + 0.01);
     g.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + duration);
     setTimeout(() => { o.stop(); ctx.close(); }, (duration + 0.05) * 1000);
-  } catch (e) {
-    // ignore audio errors
+  } catch (error) {
+    void error;
   }
 };
 
@@ -57,6 +57,38 @@ const BalloonGame = ({ onComplete, trials = DEFAULT_TRIALS }) => {
     if (timeoutRef.current) { clearTimeout(timeoutRef.current); timeoutRef.current = null; }
   };
 
+  function goToNextTrial() {
+    cleanupTimeout();
+    const next = trialIndex + 1;
+    if (next >= trials) {
+      // finished: results effect will handle finalization
+      setTrialIndex(next);
+      return;
+    }
+    setTrialIndex(next);
+    // small gap between trials for animation
+    // eslint-disable-next-line react-hooks/immutability
+    setTimeout(() => startTrial(next), 400);
+  }
+
+  function handleBank(forced = false) {
+    if (disabled) return;
+    cleanupTimeout();
+    setDisabled(true);
+    const bankedPoints = pumps * REWARD_PER_PUMP;
+    setTotalBanked((t) => t + bankedPoints);
+    setShowConfetti(true);
+    playToneInternal(880, 0.12);
+    try { recordTrialEvent && recordTrialEvent({ event: 'balloon_bank', payload: { trialIndex, pumpNumber: pumps, bankedPoints, forced, tSinceStartMs: Date.now() - trialStartRef.current } }); } catch (error) { void error; }
+
+    setResults((r) => [...r, { trialIndex, pumps, exploded: false, bankedPoints, durationMs: Date.now() - trialStartRef.current }]);
+
+    setTimeout(() => {
+      setShowConfetti(false);
+      goToNextTrial();
+    }, 900);
+  }
+
   const startTrial = useCallback((index) => {
     cleanupTimeout();
     const newThreshold = randInt(MIN_PUMPS_THRESHOLD, MAX_PUMPS_THRESHOLD);
@@ -67,7 +99,7 @@ const BalloonGame = ({ onComplete, trials = DEFAULT_TRIALS }) => {
     setDisabled(false);
     setJustPumped(false);
     trialStartRef.current = Date.now();
-    try { recordTrialEvent && recordTrialEvent({ event: 'balloon_trial_start', payload: { trialIndex: index, threshold: newThreshold, trials } }); } catch (e) {}
+    try { recordTrialEvent && recordTrialEvent({ event: 'balloon_trial_start', payload: { trialIndex: index, threshold: newThreshold, trials } }); } catch (error) { void error; }
 
     // auto-end trial after timeout (bank current pumps if any, otherwise advance)
     timeoutRef.current = setTimeout(() => {
@@ -93,31 +125,18 @@ const BalloonGame = ({ onComplete, trials = DEFAULT_TRIALS }) => {
         event: 'balloon_session_summary',
         payload: { totalBanked, trials, results, explosionCount, meanPumpsAtBank }
       });
-    } catch (e) {}
+    } catch (error) { void error; }
 
     // small delay for UX then signal completion
-    setTimeout(() => { try { onComplete && onComplete(); } catch (e) {} }, 300);
+    setTimeout(() => { try { onComplete && onComplete(); } catch (error) { void error; } }, 300);
   }, [results, trials, totalBanked, recordTrialEvent, onComplete]);
-
-  const goToNextTrial = useCallback(() => {
-    cleanupTimeout();
-    const next = trialIndex + 1;
-    if (next >= trials) {
-      // finished: results effect will handle finalization
-      setTrialIndex(next);
-      return;
-    }
-    setTrialIndex(next);
-    // small gap between trials for animation
-    setTimeout(() => startTrial(next), 400);
-  }, [trialIndex, trials, startTrial]);
 
   const handleExplosion = (pumpCount) => {
     setExploded(true);
     setDisabled(true);
     cleanupTimeout();
     playToneInternal(120, 0.22);
-    try { recordTrialEvent && recordTrialEvent({ event: 'balloon_explode', payload: { trialIndex, pumpNumber: pumpCount, lostPoints: pumpCount * REWARD_PER_PUMP, tSinceStartMs: Date.now() - trialStartRef.current } }); } catch (e) {}
+    try { recordTrialEvent && recordTrialEvent({ event: 'balloon_explode', payload: { trialIndex, pumpNumber: pumpCount, lostPoints: pumpCount * REWARD_PER_PUMP, tSinceStartMs: Date.now() - trialStartRef.current } }); } catch (error) { void error; }
 
     // record trial result
     setResults((r) => [...r, { trialIndex, pumps: pumpCount, exploded: true, bankedPoints: 0, durationMs: Date.now() - trialStartRef.current }]);
@@ -126,31 +145,13 @@ const BalloonGame = ({ onComplete, trials = DEFAULT_TRIALS }) => {
     setTimeout(() => goToNextTrial(), 900);
   };
 
-  const handleBank = (forced = false) => {
-    if (disabled) return;
-    cleanupTimeout();
-    setDisabled(true);
-    const bankedPoints = pumps * REWARD_PER_PUMP;
-    setTotalBanked((t) => t + bankedPoints);
-    setShowConfetti(true);
-    playToneInternal(880, 0.12);
-    try { recordTrialEvent && recordTrialEvent({ event: 'balloon_bank', payload: { trialIndex, pumpNumber: pumps, bankedPoints, forced, tSinceStartMs: Date.now() - trialStartRef.current } }); } catch (e) {}
-
-    setResults((r) => [...r, { trialIndex, pumps, exploded: false, bankedPoints, durationMs: Date.now() - trialStartRef.current }]);
-
-    setTimeout(() => {
-      setShowConfetti(false);
-      goToNextTrial();
-    }, 900);
-  };
-
   const pump = () => {
     if (disabled || exploded) return;
     const next = Math.min(MAX_PUMPS, pumps + 1);
     setPumps(next);
     setJustPumped(true);
     setTimeout(() => setJustPumped(false), 160);
-    try { recordTrialEvent && recordTrialEvent({ event: 'balloon_pump', payload: { trialIndex, pumpNumber: next, tSinceStartMs: Date.now() - (trialStartRef.current || Date.now()) } }); } catch (e) {}
+    try { recordTrialEvent && recordTrialEvent({ event: 'balloon_pump', payload: { trialIndex, pumpNumber: next, tSinceStartMs: Date.now() - (trialStartRef.current || Date.now()) } }); } catch (error) { void error; }
     playToneInternal(620, 0.06);
     if (next >= threshold) {
       handleExplosion(next);
@@ -188,8 +189,11 @@ const BalloonGame = ({ onComplete, trials = DEFAULT_TRIALS }) => {
           {showConfetti && (
             <div className="confetti" aria-hidden>
               {Array.from({ length: 22 }).map((_, i) => {
+                // eslint-disable-next-line react-hooks/purity
                 const left = Math.random() * 100;
+                // eslint-disable-next-line react-hooks/purity
                 const delay = Math.random() * 0.6;
+                // eslint-disable-next-line react-hooks/purity
                 const dur = 1.2 + Math.random() * 1.4;
                 const colors = ['#ff7a7a', '#ffd166', '#60a5fa', '#34d399', '#c084fc'];
                 const bg = colors[i % colors.length];

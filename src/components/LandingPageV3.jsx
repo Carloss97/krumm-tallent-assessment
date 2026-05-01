@@ -23,7 +23,6 @@ import { useTelemetry } from '../TelemetryContext';
 import { useLanguage } from '../context/LanguageContext';
 import { authenticateParticipant } from '../services/backendService';
 import { GAME_FLOW, DEMO_GAME_IDS } from '../utils/gameFlow';
-import { getLocalizedGameInstruction } from '../utils/gameFlowI18n';
 import { getQaMode } from '../utils/qaMode';
 import logo from '../assets/logo.jpg';
 import './LandingPageV3.css';
@@ -494,7 +493,9 @@ const LandingPageV3 = () => {
       } else {
         navigate(`/demo?lang=${language}`);
       }
-    } catch (e) { navigate(`/demo?lang=${language}`); }
+    } catch {
+      navigate(`/demo?lang=${language}`);
+    }
   };
 
   const handleContinueLocal = () => {
@@ -512,29 +513,6 @@ const LandingPageV3 = () => {
   };
 
   // QA toggle removed from UI — QA mode can still be controlled via localStorage if needed
-
-  const ensureQuickAccessProfile = () => {
-    setIsDemo(true);
-    setParticipantProfile({
-      fullName: language === 'en' ? 'Quick access demo' : 'Acceso rápido (demo)',
-      participantId: `DEMO-${Date.now()}`,
-      email: '',
-      authenticatedAt: new Date().toISOString(),
-      participantToken: null,
-      preferredLanguage: language,
-      source: 'quick_access_demo'
-    });
-  };
-
-  const handleQuickGoToGame = (path) => {
-    ensureQuickAccessProfile();
-    navigate(path);
-  };
-
-  const handleQuickGoToReport = () => {
-    ensureQuickAccessProfile();
-    navigate('/report?dummy=true');
-  };
 
   return (
     <div className="landing-v3">

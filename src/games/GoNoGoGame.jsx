@@ -53,7 +53,7 @@ const GoNoGoGame = ({ isActive, onEndGame, isDemo, timeLimit }) => {
   const timeLeft = useGameTimer({ isActive, timeLimit, onEnd: endGame });
 
   // use refs for interdependent functions to avoid temporal-dead-zone errors
-  const nextTrialFunc = () => {
+  const nextTrialFunc = useCallback(() => {
     if (trial >= MAX_TRIALS) {
       endGame();
     } else {
@@ -63,10 +63,13 @@ const GoNoGoGame = ({ isActive, onEndGame, isDemo, timeLimit }) => {
         if (!hasEndedRef.current && typeof startTrialRef.current === 'function') startTrialRef.current();
       }, 500);
     }
-  };
-  nextTrialRef.current = nextTrialFunc;
+  }, [trial, MAX_TRIALS, endGame]);
 
-  const handleTimeoutFunc = (isGoTrial) => {
+  useEffect(() => {
+    nextTrialRef.current = nextTrialFunc;
+  }, [nextTrialFunc]);
+
+  const handleTimeoutFunc = useCallback((isGoTrial) => {
     if (hasFeedbackRef.current) return;
     hasFeedbackRef.current = true;
     if (responseTimeoutRef.current) clearTimeout(responseTimeoutRef.current);
@@ -86,10 +89,13 @@ const GoNoGoGame = ({ isActive, onEndGame, isDemo, timeLimit }) => {
     setGameState('feedback');
     const next = nextTrialRef.current;
     setTimeout(() => { if (typeof next === 'function') next(); }, isGoTrial ? 1000 : 500);
-  };
-  handleTimeoutRef.current = handleTimeoutFunc;
+  }, [recordError]);
 
-  const startTrialFunc = () => {
+  useEffect(() => {
+    handleTimeoutRef.current = handleTimeoutFunc;
+  }, [handleTimeoutFunc]);
+
+  const startTrialFunc = useCallback(() => {
     // clear any pending response timeout before starting
     if (responseTimeoutRef.current) clearTimeout(responseTimeoutRef.current);
     // reset per-trial feedback guard and visual flags
@@ -103,8 +109,11 @@ const GoNoGoGame = ({ isActive, onEndGame, isDemo, timeLimit }) => {
     stimulusStartTimeRef.current = performance.now();
     const handler = handleTimeoutRef.current;
     responseTimeoutRef.current = setTimeout(() => { if (!hasFeedbackRef.current && typeof handler === 'function') handler(isGoTrial); }, RESPONSE_WINDOW);
-  };
-  startTrialRef.current = startTrialFunc;
+  }, [GO_PROBABILITY, RESPONSE_WINDOW]);
+
+  useEffect(() => {
+    startTrialRef.current = startTrialFunc;
+  }, [startTrialFunc]);
 
   useEffect(() => {
     if (isActive) {
@@ -144,7 +153,7 @@ const GoNoGoGame = ({ isActive, onEndGame, isDemo, timeLimit }) => {
         return newVal;
       });
       setScore(prev => prev + 10);
-      try { playMemoryClick(); } catch (e) {}
+      try { playMemoryClick(); } catch (error) { void error; }
       // visual feedback for a correct GO
       setFlashRight(true);
       setLastOutcome('correct');
@@ -153,7 +162,7 @@ const GoNoGoGame = ({ isActive, onEndGame, isDemo, timeLimit }) => {
     } else {
       setCommissionErrors(prev => prev + 1);
       recordError();
-      try { playMemoryFlash(); } catch (e) {}
+      try { playMemoryFlash(); } catch (error) { void error; }
       // visual feedback for incorrect responses
       setFlashWrong(true);
       setLastOutcome('incorrect');

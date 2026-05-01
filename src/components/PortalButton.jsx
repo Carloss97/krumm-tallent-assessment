@@ -7,6 +7,7 @@ import './PortalButton.css';
 export default function PortalButton() {
   const location = useLocation();
   const telemetry = useTelemetry();
+  const { language } = useLanguage();
   const portalUrl = import.meta.env.VITE_PORTAL_URL || '/postulantes';
   const navigate = useNavigate();
   // Only show the portal button on the landing page root. Hide in demo, game, report, candidate, etc.
@@ -18,14 +19,12 @@ export default function PortalButton() {
     if (!url) return false;
     return /^https?:\/\//i.test(url);
   };
-
-  const { language } = useLanguage();
   const labels = { es: 'Dar Test', en: 'Take Test' };
   const ariaLabels = { es: 'Portal de Postulantes', en: 'Recruiter portal' };
 
   const handleClick = (e) => {
-    try { telemetry?.recordTrialEvent && telemetry.recordTrialEvent({ event: 'portal_click' }); } catch (err) {}
-    try { window.dataLayer?.push({ event: 'portal_click' }); } catch (err) {}
+    try { telemetry?.recordTrialEvent && telemetry.recordTrialEvent({ event: 'portal_click' }); } catch (error) { void error; }
+    try { window.dataLayer?.push({ event: 'portal_click' }); } catch (error) { void error; }
 
     const external = isExternalUrl(portalUrl);
     if (external) {
@@ -43,11 +42,11 @@ export default function PortalButton() {
         document.dispatchEvent(new CustomEvent('krumm:open-start-form'));
         return;
       }
-    } catch (err) {
+    } catch {
       // fallback to SPA navigation if event dispatch fails
     }
 
-    try { navigate(portalUrl); } catch (err) { window.location.assign(portalUrl); }
+    try { navigate(portalUrl); } catch { window.location.assign(portalUrl); }
   };
 
   return (

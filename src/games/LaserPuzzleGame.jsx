@@ -185,7 +185,7 @@ const LaserPuzzleGame = ({ isActive, onEndGame, isDemo, timeLimit }) => {
     const parTotal = procLevels ? procLevels.reduce((s, l) => s + l.par, 0) : 6;
     const efficiency = Math.min(100, Math.round((parTotal / Math.max(1, tm)) * 100));
     setGamePhase('done');
-    try { playMemoryFlash(); } catch(e) { /* noop */ }
+    try { playMemoryFlash(); } catch (error) { void error; }
     stopTracking('game7', efficiency, quizScore.current, { efficiency, quizScore: quizScore.current, totalMoves: tm });
     onEndGame(efficiency, quizScore.current);
   }, [procLevels, onEndGame, stopTracking]);
@@ -281,14 +281,14 @@ const LaserPuzzleGame = ({ isActive, onEndGame, isDemo, timeLimit }) => {
     const prev = prevLitRef.current;
     const newly = [...litAntennas].filter(k => !prev.has(k));
     if (newly.length > 0) {
-      try { playMemoryClick(); } catch (e) { /* noop */ }
+      try { playMemoryClick(); } catch (error) { void error; }
     }
     prevLitRef.current = new Set(litAntennas);
   }, [litAntennas, grid]);
 
   useEffect(() => {
     if (gamePhase === 'levelComplete') {
-      try { playMemoryFlash(); } catch(e) { /* noop */ }
+      try { playMemoryFlash(); } catch (error) { void error; }
     }
   }, [gamePhase]);
 

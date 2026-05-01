@@ -26,9 +26,10 @@ const DemoGoNoGo = ({ onComplete }) => {
 
   useEffect(() => {
     // start
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     startNext();
     return () => clearTimeout(timeoutRef.current);
-  }, []);
+  }, [startNext]);
 
   useEffect(() => {
     if (trial >= TRIALS) {
@@ -43,7 +44,7 @@ const DemoGoNoGo = ({ onComplete }) => {
     return undefined;
   }, [trial, correctGo, onComplete, startNext]);
 
-  const handleRespond = () => {
+  const handleRespond = useCallback(() => {
     if (!awaiting) return;
     const isGo = stimulus === 'GO';
     if (isGo) {
@@ -55,7 +56,7 @@ const DemoGoNoGo = ({ onComplete }) => {
     // advance immediately
     clearTimeout(timeoutRef.current);
     setTrial((t) => t + 1);
-  };
+  }, [awaiting, stimulus]);
 
   useEffect(() => {
     const onKey = (e) => {
@@ -66,7 +67,7 @@ const DemoGoNoGo = ({ onComplete }) => {
     };
     window.addEventListener('keydown', onKey);
     return () => window.removeEventListener('keydown', onKey);
-  }, [awaiting, stimulus]);
+  }, [awaiting, stimulus, handleRespond]);
 
   return (
     <div style={{ display: 'grid', gap: 12, alignItems: 'center' }}>

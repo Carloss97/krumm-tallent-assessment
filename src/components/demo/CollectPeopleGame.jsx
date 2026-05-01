@@ -34,12 +34,12 @@ const CollectPeopleGame = ({ onComplete, targetCount = 5 }) => {
     if (area) { w = area.clientWidth; h = area.clientHeight; }
 
     startTimeRef.current = Date.now();
-    try { recordTrialEvent && recordTrialEvent({ event: 'collect_trial_start', payload: { targetCount } }); } catch (e) {}
+    try { recordTrialEvent && recordTrialEvent({ event: 'collect_trial_start', payload: { targetCount } }); } catch (error) { void error; }
 
     const spawn = setInterval(() => {
       setPeople((p) => {
         const np = spawnPerson(w, h);
-        try { recordTrialEvent && recordTrialEvent({ event: 'person_spawn', payload: { id: np.id, x: np.x, y: np.y } }); } catch (e) {}
+        try { recordTrialEvent && recordTrialEvent({ event: 'person_spawn', payload: { id: np.id, x: np.x, y: np.y } }); } catch (error) { void error; }
         return [...p, np];
       });
     }, 900);
@@ -87,12 +87,14 @@ const CollectPeopleGame = ({ onComplete, targetCount = 5 }) => {
   useEffect(() => {
     const hit = people.find(p => Math.hypot(p.x - player.x, p.y - player.y) < 22);
     if (hit) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setPeople((ps) => ps.filter(p => p.id !== hit.id));
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setCollected((c) => {
         const nc = c + 1;
-        try { recordTrialEvent && recordTrialEvent({ event: 'person_collect', payload: { id: hit.id, x: hit.x, y: hit.y, newCount: nc } }); } catch (e) {}
+        try { recordTrialEvent && recordTrialEvent({ event: 'person_collect', payload: { id: hit.id, x: hit.x, y: hit.y, newCount: nc } }); } catch (error) { void error; }
         if (nc >= targetCount) {
-          try { recordTrialEvent && recordTrialEvent({ event: 'collect_trial_end', payload: { totalCollected: nc, durationMs: Date.now() - (startTimeRef.current || Date.now()) } }); } catch (e) {}
+          try { recordTrialEvent && recordTrialEvent({ event: 'collect_trial_end', payload: { totalCollected: nc, durationMs: Date.now() - (startTimeRef.current || Date.now()) } }); } catch (error) { void error; }
           setTimeout(() => onComplete && onComplete(), 500);
         }
         return nc;

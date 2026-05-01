@@ -233,7 +233,7 @@ const GridOptimizerGame = ({ isActive, onEndGame, isDemo }) => {
         if (hit) {
         newInv=hit; 
         newTargets=newTargets.map(t=>t.id===hit.id?{...t,active:false}:t);
-        try { playMemoryClick(); } catch(e) { /* noop */ }
+        try { playMemoryClick(); } catch (error) { void error; }
         // small pickup animation (brief)
         setShowPickupAnim(true);
         setTimeout(() => setShowPickupAnim(false), 800);
@@ -243,7 +243,7 @@ const GridOptimizerGame = ({ isActive, onEndGame, isDemo }) => {
         const sat = satsRef.current[newInv.id] ?? 0;
         newScore += Math.round(newInv.points * Math.max(0.1, sat/100)); 
         newInv = null;
-        try { playMemoryFlash(); } catch(e) { /* noop */ }
+        try { playMemoryFlash(); } catch (error) { void error; }
         // delivery celebration — show deliver animation and confetti
         setShowDeliverAnim(true);
         setTimeout(() => setShowDeliverAnim(false), 900);

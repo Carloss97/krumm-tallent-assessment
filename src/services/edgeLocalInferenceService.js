@@ -694,3 +694,75 @@ export function getEdgeCalibrationStatus(options = {}) {
     },
   };
 }
+
+function formatPercent(value) {
+  return Math.round(clamp(safeNumber(value, 0), 0, 100));
+}
+
+export function buildEdgeLocalLiveInsight(currentTelemetry = {}, options = {}) {
+  if (!currentTelemetry || !currentTelemetry.startTime) {
+    return null;
+  }
+
+  const elapsedSec = Math.max(1, Math.round((Date.now() - currentTelemetry.startTime) / 1000));
+  const cursorEvents = currentTelemetry.mouseMovements?.length || 0;
+  const clickEvents = currentTelemetry.clicks?.length || 0;
+  const trialEvents = currentTelemetry.trialEvents?.length || 0;
+  const webcamFrames = currentTelemetry.webcamFrames?.length || 0;
+  const qualityFlags = currentTelemetry.qualityFlags?.length || 0;
+  const hesitationCount = currentTelemetry.cursorMetrics?.hesitationCount || 0;
+  const avgVelocity = currentTelemetry.cursorMetrics?.avgVelocity || 0;
+  const webcamQuality = Number.isFinite(currentTelemetry.webcamQualityScore) ? currentTelemetry.webcamQualityScore : 0;
+
+  const eventDensity = (cursorEvents + clickEvents + trialEvents + webcamFrames) / elapsedSec;
+  const coverageScore = clamp(eventDensity * 10, 0, 100);
+  const motionQualityScore = normalizeTargetBand(avgVelocity, 250, 1300, 50, 2200);
+  const stabilityScore = clamp(
+    (motionQualityScore * 0.28)
+    + (webcamQuality * 0.24)
+    + ((100 - Math.min(hesitationCount * 3.2, 100)) * 0.3)
+    + ((100 - Math.min(qualityFlags * 12, 100)) * 0.18),
+    0,
+    100
+  );
+  const fatigueScore = clamp(
+    (elapsedSec * 1.5)
+    + (qualityFlags * 10)
+    + ((100 - webcamQuality) * 0.22)
+    + (hesitationCount * 1.4),
+    0,
+    100
+  );
+  const readinessScore = clamp(
+    (coverageScore * 0.32)
+    + (stabilityScore * 0.44)
+    + ((100 - fatigueScore) * 0.18)
+    + (webcamQuality * 0.06),
+    0,
+    100
+  );
+
+  const signals = [];
+  if (qualityFlags > 0) signals.push('Quality flags active');
+  if (webcamQuality > 0 && webcamQuality < 60) signals.push('Webcam quality is low');
+  if (hesitationCount > 5) signals.push('Hesitation is increasing');
+  if (elapsedSec > 60 && fatigueScore > 55) signals.push('Fatigue trend is visible');
+
+  return {
+    elapsedSec,
+    cursorEvents,
+    clickEvents,
+    trialEvents,
+    webcamFrames,
+    qualityFlags,
+    hesitationCount,
+    avgVelocity: Math.round(avgVelocity),
+    webcamQuality: formatPercent(webcamQuality),
+    coverageScore: formatPercent(coverageScore),
+    stabilityScore: formatPercent(stabilityScore),
+    fatigueScore: formatPercent(fatigueScore),
+    readinessScore: formatPercent(readinessScore),
+    signals,
+    calibration: resolveCalibration(options),
+  };
+}

@@ -58,9 +58,9 @@ const RecruiterLogin = () => {
       });
 
       navigate('/recruiter/dashboard');
-    } catch (err) {
-      setError(err.message || 'Login failed. Please try again.');
-      console.error('Login error:', err);
+    } catch (error) {
+      setError(error.message || 'Login failed. Please try again.');
+      console.error('Login error:', error);
     } finally {
       setIsLoading(false);
     }

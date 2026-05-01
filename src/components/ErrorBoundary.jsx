@@ -13,7 +13,6 @@ class ErrorBoundary extends React.Component {
   componentDidCatch(error, info) {
     // Log to console and allow telemetry hooks to pick it up if available
     // Avoid importing telemetry here to keep this boundary generic and safe.
-    // eslint-disable-next-line no-console
     console.error('ErrorBoundary caught an error:', error, info);
   }
 

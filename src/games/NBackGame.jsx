@@ -160,7 +160,7 @@ const NBackGame = ({ isActive, onEndGame, isDemo, timeLimit }) => {
     if (isMatch === isActualMatch) { setTotalCorrect(prev => prev + 1); setScore(prev => prev + 10); } 
     else { setTotalErrors(prev => prev + 1); recordError(); }
     setGameStateSafe('waiting');
-    try { if (isMatch === isActualMatch) playMemoryClick(); else playMemoryFlash(); } catch(e) {}
+    try { if (isMatch === isActualMatch) playMemoryClick(); else playMemoryFlash(); } catch (error) { void error; }
   };
 
   // Keyboard shortcuts for accessibility: M = match, N = no-match

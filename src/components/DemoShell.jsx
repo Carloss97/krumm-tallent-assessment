@@ -14,6 +14,8 @@ import PermissionModal from './PermissionModal';
 import PostDemoScreen from './PostDemoScreen';
 import GameGallery from './GameGallery';
 import ProgressTracker from './ProgressTracker';
+import LiveDemoTelemetryHud from './LiveDemoTelemetryHud';
+import { analyzeDemoTelemetry } from '../utils/advancedTelemetryAnalytics';
 import './DemoShell.css';
 
 // Adapter wrappers so DemoShell can call games with the expected onComplete() callback
@@ -127,7 +129,7 @@ const DemoShell = () => {
   const [activityStarted, setActivityStarted] = useState(false);
   const [showReport, setShowReport] = useState(false);
   const [demoSummary, setDemoSummary] = useState(null);
-  const { setIsDemo, startTracking, stopTracking, recordTrialEvent } = useTelemetry();
+  const { sessionData, setIsDemo, startTracking, stopTracking, recordTrialEvent } = useTelemetry();
   const { language } = useLanguage();
 
   // Build ACTIVITIES from selected games
@@ -143,12 +145,14 @@ const DemoShell = () => {
   // Initialize timeLeft when TOTAL_TIME changes
   useEffect(() => {
     if (timeLeft === null) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setTimeLeft(TOTAL_TIME);
     }
   }, [TOTAL_TIME, timeLeft]);
 
   useEffect(() => {
     if (step >= ACTIVITIES.length && ACTIVITIES.length > 0) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setStep(0);
     }
   }, [step, ACTIVITIES.length]);
@@ -206,9 +210,50 @@ const DemoShell = () => {
     setSelectedGameIds(newSelection);
   };
 
-  const startedAtRef = useRef(Date.now());
+  const startedAtRef = useRef(0);
   const finishedRef = useRef(false);
   const completedRef = useRef(completed);
+
+  function handleDemoComplete(completedObj, reason = 'completed') {
+    if (finishedRef.current) return;
+    finishedRef.current = true;
+    const completedIds = Object.keys(completedObj || {});
+    const timeUsedSec = Math.round((Date.now() - startedAtRef.current) / 1000);
+
+    const activityRows = ACTIVITIES.map((activity, index) => ({
+      id: activity.id,
+      title: activity.title,
+      est: activity.est,
+      order: index + 1,
+      status: completedIds.includes(activity.id) ? 'completed' : 'not_completed',
+    }));
+
+    const telemetryReport = analyzeDemoTelemetry(sessionData, activityRows);
+    const gameRowsById = new Map(telemetryReport.perGame.map((item) => [item.id, item]));
+    const enrichedActivities = activityRows.map((activity) => ({
+      ...activity,
+      analytics: gameRowsById.get(activity.id) || null,
+    }));
+
+    setDemoSummary({
+      reason,
+      timeUsedSec,
+      totalActivities: ACTIVITIES.length,
+      completedCount: completedIds.length,
+      selectedIds: selectedGameIds,
+      completedIds,
+      activities: enrichedActivities,
+      telemetry: telemetryReport,
+    });
+    setShowReport(true);
+
+    try {
+      stopTracking('demo', 0, null, { completedIds, timeUsedSec });
+      recordTrialEvent({ event: 'demo_complete', payload: { completedIds, timeUsedSec, completedCount: completedIds.length } });
+    } catch {
+      // swallow telemetry errors
+    }
+  }
 
   useEffect(() => {
     // Only start timer if demo is running
@@ -242,7 +287,7 @@ const DemoShell = () => {
       setIsDemo(true);
       startTracking('demo');
       startedAtRef.current = Date.now();
-    } catch (e) {
+    } catch {
       // noop
     }
 
@@ -255,7 +300,7 @@ const DemoShell = () => {
         try {
           stopTracking('demo', 0, null, { reason: 'unmount', completedCount, timeUsedSec });
           recordTrialEvent({ event: 'demo_abandon', payload: { completedCount, timeUsedSec } });
-        } catch (e) {
+        } catch {
           // silent
         }
         finishedRef.current = true;
@@ -265,47 +310,16 @@ const DemoShell = () => {
 
   // show instructions at the start of each activity
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setShowInstructions(true);
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setActivityStarted(false);
   }, [step]);
-
-  const handleDemoComplete = (completedObj, reason = 'completed') => {
-    if (finishedRef.current) return;
-    finishedRef.current = true;
-    const completedIds = Object.keys(completedObj || {});
-    const timeUsedSec = Math.round((Date.now() - startedAtRef.current) / 1000);
-
-    const activityRows = ACTIVITIES.map((activity, index) => ({
-      id: activity.id,
-      title: activity.title,
-      est: activity.est,
-      order: index + 1,
-      status: completedIds.includes(activity.id) ? 'completed' : 'not_completed',
-    }));
-
-    setDemoSummary({
-      reason,
-      timeUsedSec,
-      totalActivities: ACTIVITIES.length,
-      completedCount: completedIds.length,
-      selectedIds: selectedGameIds,
-      completedIds,
-      activities: activityRows,
-    });
-    setShowReport(true);
-
-    try {
-      stopTracking('demo', 0, null, { completedIds, timeUsedSec });
-      recordTrialEvent({ event: 'demo_complete', payload: { completedIds, timeUsedSec, completedCount: completedIds.length } });
-    } catch (e) {
-      // swallow telemetry errors
-    }
-  };
 
   const onComplete = (id) => {
     try {
       recordTrialEvent && recordTrialEvent({ event: 'demo_activity_complete', payload: { id, step } });
-    } catch (e) {
+    } catch {
       // noop
     }
     // brief success toast with accessible announcer
@@ -326,14 +340,6 @@ const DemoShell = () => {
     });
   };
 
-  const skipActivity = () => {
-    setStep((s) => Math.min(ACTIVITIES.length - 1, s + 1));
-  };
-
-  const prevActivity = () => {
-    setStep((s) => Math.max(0, s - 1));
-  };
-
   const restart = () => {
     finishedRef.current = false;
     startedAtRef.current = Date.now();
@@ -348,7 +354,6 @@ const DemoShell = () => {
   if (showReport) {
     return (
       <PostDemoScreen
-        completedIds={Object.keys(completed)}
         summary={demoSummary}
         onRestart={restart}
       />
@@ -360,7 +365,7 @@ const DemoShell = () => {
       try {
         const s = await navigator.mediaDevices.getUserMedia({ audio: true, video: true });
         if (s && s.getTracks) s.getTracks().forEach(t => t.stop());
-      } catch (e) {
+      } catch {
         // ignore permission errors
       }
     }
@@ -422,6 +427,12 @@ const DemoShell = () => {
 
           <main className="demo-main">
             <section className="demo-activity">
+              <LiveDemoTelemetryHud
+                activeGameId={ACTIVITIES[step]?.id}
+                activeGameLabel={(ACTIVITIES[step]?.title && typeof ACTIVITIES[step].title === 'object')
+                  ? (ACTIVITIES[step].title[language] || ACTIVITIES[step].title.es)
+                  : ACTIVITIES[step]?.title}
+              />
               {toast && <div className="demo-toast">{toast}</div>}
               <h3>{(ACTIVITIES[step]?.title && typeof ACTIVITIES[step].title === 'object') ? (ACTIVITIES[step].title[language] || ACTIVITIES[step].title.es) : ACTIVITIES[step]?.title}</h3>
               <div className="demo-activity-meta">{demoCopy[language]?.estLabel || demoCopy.es.estLabel} {Math.floor(ACTIVITIES[step]?.est / 60)}:{String(ACTIVITIES[step]?.est % 60).padStart(2, '0')}</div>

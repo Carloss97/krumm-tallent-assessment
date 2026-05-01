@@ -16,8 +16,8 @@ export const VariantProvider = ({ children }) => {
         const saved = localStorage.getItem(VARIANT_KEY);
         if (saved) return saved;
       }
-    } catch (e) {
-      // ignore
+    } catch (error) {
+      void error;
     }
     return DEFAULT_VARIANT;
   });
@@ -29,8 +29,8 @@ export const VariantProvider = ({ children }) => {
     }
     try {
       if (typeof window !== 'undefined') localStorage.setItem(VARIANT_KEY, variant);
-    } catch (e) {
-      // ignore
+    } catch (error) {
+      void error;
     }
   }, [variant]);
 
@@ -99,6 +99,4 @@ export const VariantProvider = ({ children }) => {
   );
 };
 
-export const useVariant = () => useContext(VariantContext);
-
-export default VariantContext;
+export const useVariant = () => useContext(VariantContext); // eslint-disable-line react-refresh/only-export-components

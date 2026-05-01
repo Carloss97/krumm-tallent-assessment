@@ -29,11 +29,11 @@ export default function PostulantesLogin() {
           participantToken: authRes.participantToken || null,
           source: 'portal_login'
         });
-      } catch (err) {}
+      } catch (error) { void error; }
       window.dataLayer?.push({ event: 'portal_login_success' });
       navigate('/game/1');
-    } catch (err) {
-      setError(err?.message || 'Error al iniciar sesión. Verifica tus datos.');
+    } catch (error) {
+      setError(error?.message || 'Error al iniciar sesión. Verifica tus datos.');
       window.dataLayer?.push({ event: 'portal_login_failed' });
     } finally {
       setLoading(false);

@@ -12,6 +12,7 @@ const DevQuickAccess = ({ t, language }) => {
     setIsDemo(true);
     setParticipantProfile({
       fullName: 'Acceso rapido dev',
+      // eslint-disable-next-line react-hooks/purity
       participantId: `DEV-${Date.now()}`,
       email: 'dev@krumm.local',
       authenticatedAt: new Date().toISOString(),
