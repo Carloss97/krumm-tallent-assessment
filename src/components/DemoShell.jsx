@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { useTelemetry } from '../TelemetryContext';
 import { useLanguage } from '../context/LanguageContext';
 import { useNavigate } from 'react-router-dom';
@@ -8,20 +8,29 @@ import GridOptimizerGame from '../games/GridOptimizerGame';
 import LaserPuzzleGame from '../games/LaserPuzzleGame';
 import ProtoGoNoGo from '../games/GoNoGoGame';
 import ProtoNBack from '../games/NBackGame';
+import MemoryGame from '../games/MemoryGame';
+import ColorWordGame from '../games/ColorWordGame';
+import TrailMakingGame from '../games/TrailMakingGame';
 import PermissionModal from './PermissionModal';
 import PostDemoScreen from './PostDemoScreen';
+import GameGallery from './GameGallery';
+import ProgressTracker from './ProgressTracker';
 import './DemoShell.css';
 
-// Adapter wrappers so DemoShell can call prototypes with the expected onComplete() callback
-// For the demo we intentionally allow more attempts — run full-mode versions
+// Adapter wrappers so DemoShell can call games with the expected onComplete() callback
+// For the demo we intentionally allow full-mode versions
 const BalloonProtoWrapper = ({ onComplete, est }) => <ProtoBalloon isActive={true} isDemo={false} timeLimit={est} onEndGame={() => onComplete && onComplete()} />;
 const GridProtoWrapper = ({ onComplete, est }) => <GridOptimizerGame isActive={true} isDemo={false} timeLimit={est} onEndGame={() => onComplete && onComplete()} />;
 const LaserProtoWrapper = ({ onComplete, est }) => <LaserPuzzleGame isActive={true} isDemo={false} timeLimit={est} onEndGame={() => onComplete && onComplete()} />;
 const GoNoGoProtoWrapper = ({ onComplete, est }) => <ProtoGoNoGo isActive={true} isDemo={false} timeLimit={est} onEndGame={() => onComplete && onComplete()} />;
 const NBackProtoWrapper = ({ onComplete, est }) => <ProtoNBack isActive={true} isDemo={false} timeLimit={est} onEndGame={() => onComplete && onComplete()} />;
+const MemoryProtoWrapper = ({ onComplete, est }) => <MemoryGame isActive={true} isDemo={false} timeLimit={est} onEndGame={() => onComplete && onComplete()} />;
+const ColorWordProtoWrapper = ({ onComplete, est }) => <ColorWordGame isActive={true} isDemo={false} timeLimit={est} onEndGame={() => onComplete && onComplete()} />;
+const TrailProtoWrapper = ({ onComplete, est }) => <TrailMakingGame isActive={true} isDemo={false} timeLimit={est} onEndGame={() => onComplete && onComplete()} />;
 
-const ACTIVITIES = [
-  {
+// Complete game catalog for demo selection
+const ALL_GAMES = {
+  balloon: {
     id: 'balloon',
     title: { es: 'Inflar el globo', en: 'Inflate the balloon' },
     instructions: {
@@ -31,7 +40,7 @@ const ACTIVITIES = [
     component: BalloonProtoWrapper,
     est: 60
   },
-  {
+  grid: {
     id: 'grid',
     title: { es: 'Optimizar rejilla', en: 'Optimize grid' },
     instructions: {
@@ -41,7 +50,7 @@ const ACTIVITIES = [
     component: GridProtoWrapper,
     est: 75
   },
-  {
+  laser: {
     id: 'laser',
     title: { es: 'Puzzle láser', en: 'Laser puzzle' },
     instructions: {
@@ -51,7 +60,7 @@ const ACTIVITIES = [
     component: LaserProtoWrapper,
     est: 60
   },
-  {
+  gng: {
     id: 'gng',
     title: { es: 'Go / No-Go', en: 'Go / No-Go' },
     instructions: {
@@ -61,7 +70,7 @@ const ACTIVITIES = [
     component: GoNoGoProtoWrapper,
     est: 45
   },
-  {
+  nback: {
     id: 'nback',
     title: { es: 'N-Back', en: 'N-Back' },
     instructions: {
@@ -70,14 +79,47 @@ const ACTIVITIES = [
     },
     component: NBackProtoWrapper,
     est: 60
+  },
+  memory: {
+    id: 'memory',
+    title: { es: 'Secuencia Memorizada', en: 'Memory Sequence' },
+    instructions: {
+      es: 'Observa y memoriza la secuencia de cuadrados iluminados. Después, repite la secuencia pulsando en el mismo orden. Pulsa comenzar para iniciar.',
+      en: 'Watch and memorize the sequence of illuminated squares. Then, repeat the sequence by tapping in the same order. Press start to begin.'
+    },
+    component: MemoryProtoWrapper,
+    est: 90
+  },
+  colorword: {
+    id: 'colorword',
+    title: { es: 'Test Stroop (Color-Palabra)', en: 'Stroop Test' },
+    instructions: {
+      es: 'Elige el color de la palabra, NO el color escrito. Por ejemplo, si ves "ROJO" escrito en azul, elige azul. Pulsa comenzar para iniciar.',
+      en: 'Choose the color of the word, NOT the written color. For example, if you see "RED" written in blue, choose blue. Press start to begin.'
+    },
+    component: ColorWordProtoWrapper,
+    est: 75
+  },
+  trails: {
+    id: 'trails',
+    title: { es: 'Trail Making', en: 'Trail Making Test' },
+    instructions: {
+      es: 'Conecta los números en orden ascendente lo más rápido posible. En la Parte B, alterna entre números y letras (1-A-2-B-3-C...). Pulsa comenzar para iniciar.',
+      en: 'Connect the numbers in ascending order as quickly as possible. In Part B, alternate between numbers and letters (1-A-2-B-3-C...). Press start to begin.'
+    },
+    component: TrailProtoWrapper,
+    est: 120
   }
-];
+};
 
-const TOTAL_TIME = 300; // 5 minutes target (sum of est ≈ 300s)
+// Default selection (5 games)
+const DEFAULT_ACTIVITIES = ['balloon', 'grid', 'laser', 'gng', 'nback'];
 
 const DemoShell = () => {
+  const [gameSelectionMode, setGameSelectionMode] = useState(true);
+  const [selectedGameIds, setSelectedGameIds] = useState(DEFAULT_ACTIVITIES);
   const [step, setStep] = useState(0);
-  const [timeLeft, setTimeLeft] = useState(TOTAL_TIME);
+  const [timeLeft, setTimeLeft] = useState(null);
   const [completed, setCompleted] = useState({});
   const [toast, setToast] = useState(null);
   // Demo-specific UI state
@@ -89,9 +131,27 @@ const DemoShell = () => {
   const { language } = useLanguage();
   const navigate = useNavigate();
 
+  // Build ACTIVITIES from selected games
+  const ACTIVITIES = useMemo(() => {
+    return selectedGameIds.map(id => ALL_GAMES[id]).filter(Boolean);
+  }, [selectedGameIds]);
+
+  // Calculate total time from selected games
+  const TOTAL_TIME = useMemo(() => {
+    return ACTIVITIES.reduce((sum, game) => sum + game.est, 0);
+  }, [ACTIVITIES]);
+
+  // Initialize timeLeft when TOTAL_TIME changes
+  useEffect(() => {
+    if (timeLeft === null) {
+      setTimeLeft(TOTAL_TIME);
+    }
+  }, [TOTAL_TIME, timeLeft]);
+
   const demoCopy = {
     es: {
       interactiveDemo: 'Demo interactiva',
+      selectGames: 'Selecciona tus juegos',
       activitiesLabel: 'actividades',
       timeRemaining: 'Tiempo restante:',
       progressTitle: 'Progreso',
@@ -103,12 +163,15 @@ const DemoShell = () => {
       restart: 'Reiniciar demo',
       instructionsTitle: 'Instrucciones',
       startButton: 'Comenzar actividad',
+      continueButton: 'Continuar a demo',
       readyMessage: 'Actividad preparada. Lee las instrucciones y pulsa comenzar.',
       activityCompletedTemplate: 'Actividad {id} completada',
-      activityCompletedShort: 'Actividad completada'
+      activityCompletedShort: 'Actividad completada',
+      noGamesSelected: 'Selecciona al menos un juego para continuar'
     },
     en: {
       interactiveDemo: 'Interactive demo',
+      selectGames: 'Select your games',
       activitiesLabel: 'activities',
       timeRemaining: 'Time remaining:',
       progressTitle: 'Progress',
@@ -120,10 +183,22 @@ const DemoShell = () => {
       restart: 'Restart demo',
       instructionsTitle: 'Instructions',
       startButton: 'Start activity',
+      continueButton: 'Continue to demo',
       readyMessage: 'Activity ready. Read the instructions and press start.',
       activityCompletedTemplate: 'Activity {id} completed',
-      activityCompletedShort: 'Activity completed'
+      activityCompletedShort: 'Activity completed',
+      noGamesSelected: 'Select at least one game to continue'
     }
+  };
+
+  const handleStartDemo = () => {
+    setGameSelectionMode(false);
+    setShowPermission(true);
+    setTimeLeft(TOTAL_TIME);
+  };
+
+  const handleGameSelectionChange = (newSelection) => {
+    setSelectedGameIds(newSelection);
   };
 
   const startedAtRef = useRef(Date.now());
@@ -131,18 +206,21 @@ const DemoShell = () => {
   const completedRef = useRef(completed);
 
   useEffect(() => {
+    // Only start timer if demo is running
+    if (gameSelectionMode || !ACTIVITIES.length) return;
+    
     const t = setInterval(() => setTimeLeft((s) => Math.max(0, s - 1)), 1000);
     return () => clearInterval(t);
-  }, []);
+  }, [gameSelectionMode, ACTIVITIES.length]);
 
   useEffect(() => {
-    if (timeLeft === 0) {
-      // finished by time
-      handleDemoComplete(completedRef.current);
-      // navigate to report and request demo-sized dummy data for consistent demo preview
-      navigate(`/report?dummy=true&demoCount=${ACTIVITIES.length}`);
-    }
-  }, [timeLeft]);
+    if (gameSelectionMode || !timeLeft || timeLeft > 0) return;
+    
+    // finished by time
+    handleDemoComplete(completedRef.current);
+    // navigate to report and request demo-sized dummy data for consistent demo preview
+    navigate(`/report?dummy=true&demoCount=${ACTIVITIES.length}`);
+  }, [timeLeft, gameSelectionMode, ACTIVITIES.length]);
 
   useEffect(() => {
     // keep a ref to the latest completed state for cleanup callbacks
@@ -264,45 +342,88 @@ const DemoShell = () => {
 
   return (
     <div className="demo-shell">
-      <header className="demo-header">
-        <h2>{demoCopy[language]?.interactiveDemo || demoCopy.es.interactiveDemo} • {ACTIVITIES.length} {demoCopy[language]?.activitiesLabel || demoCopy.es.activitiesLabel}</h2>
-        <div className="demo-meta">
-          <div className="demo-timer">{demoCopy[language]?.timeRemaining || demoCopy.es.timeRemaining} {Math.floor(timeLeft / 60)}:{String(timeLeft % 60).padStart(2, '0')}</div>
-          <div className="demo-progress">{demoCopy[language]?.activityLabel || demoCopy.es.activityLabel} {step + 1} / {ACTIVITIES.length}</div>
+      {/* GAME SELECTION SCREEN */}
+      {gameSelectionMode ? (
+        <div className="demo-selection">
+          <header className="selection-header">
+            <h1>{demoCopy[language]?.interactiveDemo || demoCopy.es.interactiveDemo}</h1>
+            <p>{demoCopy[language]?.selectGames || demoCopy.es.selectGames}</p>
+          </header>
+
+          <main className="selection-main">
+            <GameGallery
+              selectedGames={selectedGameIds}
+              onSelectionChange={handleGameSelectionChange}
+              maxGames={8}
+            />
+
+            {selectedGameIds.length > 0 && (
+              <div className="selection-actions">
+                <button
+                  className="btn btn-primary"
+                  onClick={handleStartDemo}
+                >
+                  {demoCopy[language]?.continueButton || demoCopy.es.continueButton}
+                  {' '}
+                  ({ACTIVITIES.length} {demoCopy[language]?.activitiesLabel || demoCopy.es.activitiesLabel})
+                </button>
+              </div>
+            )}
+          </main>
         </div>
-      </header>
-
-      <main className="demo-main">
-        <section className="demo-activity">
-          {toast && <div className="demo-toast">{toast}</div>}
-          <h3>{(ACTIVITIES[step].title && typeof ACTIVITIES[step].title === 'object') ? (ACTIVITIES[step].title[language] || ACTIVITIES[step].title.es) : ACTIVITIES[step].title}</h3>
-          <div className="demo-activity-meta">{demoCopy[language]?.estLabel || demoCopy.es.estLabel} {Math.floor(ACTIVITIES[step].est / 60)}:{String(ACTIVITIES[step].est % 60).padStart(2, '0')}</div>
-
-          <PermissionModal open={showPermission} onClose={() => setShowPermission(false)} onRequest={requestPermissions} />
-
-          {showInstructions && (
-            <div className="instructions-overlay">
-              <div className="instructions-box">
-                <h4>{demoCopy[language]?.instructionsTitle || demoCopy.es.instructionsTitle}</h4>
-                <p>{(ACTIVITIES[step].instructions && ACTIVITIES[step].instructions[language]) || (ACTIVITIES[step].instructions && ACTIVITIES[step].instructions.es) || (ACTIVITIES[step].title && typeof ACTIVITIES[step].title === 'object' ? (ACTIVITIES[step].title[language] || ACTIVITIES[step].title.es) : ACTIVITIES[step].title)}</p>
-                <div style={{ marginTop: 12 }}>
-                  <button className="btn" onClick={() => { setShowInstructions(false); setActivityStarted(true); }}>{demoCopy[language]?.startButton || demoCopy.es.startButton}</button>
-                </div>
+      ) : (
+        <>
+          {/* DEMO PLAYTHROUGH SCREEN */}
+          <header className="demo-header">
+            <div className="header-top">
+              <h2>{demoCopy[language]?.interactiveDemo || demoCopy.es.interactiveDemo} • {ACTIVITIES.length} {demoCopy[language]?.activitiesLabel || demoCopy.es.activitiesLabel}</h2>
+              <div className="demo-timer">
+                {demoCopy[language]?.timeRemaining || demoCopy.es.timeRemaining} {Math.floor((timeLeft || TOTAL_TIME) / 60)}:{String((timeLeft || TOTAL_TIME) % 60).padStart(2, '0')}
               </div>
             </div>
-          )}
+            
+            <ProgressTracker
+              completed={Object.keys(completed)}
+              total={ACTIVITIES.length}
+              currentId={ACTIVITIES[step]?.id}
+              games={ACTIVITIES}
+            />
+          </header>
 
-          {activityStarted ? (
-            <ActivityComponent onComplete={() => onComplete(ACTIVITIES[step].id)} est={ACTIVITIES[step].est} />
-          ) : (
-            <div style={{ padding: 28, textAlign: 'center', color: '#6b7280' }}>
-              <p>{demoCopy[language]?.readyMessage || demoCopy.es.readyMessage}</p>
-            </div>
-          )}
+          <main className="demo-main">
+            <section className="demo-activity">
+              {toast && <div className="demo-toast">{toast}</div>}
+              <h3>{(ACTIVITIES[step]?.title && typeof ACTIVITIES[step].title === 'object') ? (ACTIVITIES[step].title[language] || ACTIVITIES[step].title.es) : ACTIVITIES[step]?.title}</h3>
+              <div className="demo-activity-meta">{demoCopy[language]?.estLabel || demoCopy.es.estLabel} {Math.floor(ACTIVITIES[step]?.est / 60)}:{String(ACTIVITIES[step]?.est % 60).padStart(2, '0')}</div>
 
-          {/* Dev navigation buttons removed for demo deployment */}
-        </section>
-      </main>
+              <PermissionModal open={showPermission} onClose={() => setShowPermission(false)} onRequest={requestPermissions} />
+
+              {showInstructions && (
+                <div className="instructions-overlay">
+                  <div className="instructions-box">
+                    <h4>{demoCopy[language]?.instructionsTitle || demoCopy.es.instructionsTitle}</h4>
+                    <p>{(ACTIVITIES[step]?.instructions && ACTIVITIES[step].instructions[language]) || (ACTIVITIES[step]?.instructions && ACTIVITIES[step].instructions.es) || (ACTIVITIES[step]?.title && typeof ACTIVITIES[step].title === 'object' ? (ACTIVITIES[step].title[language] || ACTIVITIES[step].title.es) : ACTIVITIES[step]?.title)}</p>
+                    <div style={{ marginTop: 12 }}>
+                      <button className="btn" onClick={() => { setShowInstructions(false); setActivityStarted(true); }}>{demoCopy[language]?.startButton || demoCopy.es.startButton}</button>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {activityStarted && ACTIVITIES[step] ? (() => {
+                const ActivityComponent = ACTIVITIES[step].component;
+                return <ActivityComponent onComplete={() => onComplete(ACTIVITIES[step].id)} est={ACTIVITIES[step].est} />;
+              })() : (
+                <div style={{ padding: 28, textAlign: 'center', color: '#6b7280' }}>
+                  <p>{demoCopy[language]?.readyMessage || demoCopy.es.readyMessage}</p>
+                </div>
+              )}
+            </section>
+          </main>
+        </>
+      )}
+
+      <div id="demo-live-announcer" className="sr-only" role="status" aria-live="polite" />
     </div>
   );
 };
