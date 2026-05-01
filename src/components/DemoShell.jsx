@@ -1,7 +1,6 @@
 import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { useTelemetry } from '../TelemetryContext';
 import { useLanguage } from '../context/LanguageContext';
-import { useNavigate } from 'react-router-dom';
 // Prefer prototype games for a higher-fidelity demo experience
 import ProtoBalloon from '../games/BalloonGame';
 import GridOptimizerGame from '../games/GridOptimizerGame';
@@ -127,9 +126,9 @@ const DemoShell = () => {
   const [showInstructions, setShowInstructions] = useState(true);
   const [activityStarted, setActivityStarted] = useState(false);
   const [showReport, setShowReport] = useState(false);
+  const [demoSummary, setDemoSummary] = useState(null);
   const { setIsDemo, startTracking, stopTracking, recordTrialEvent } = useTelemetry();
   const { language } = useLanguage();
-  const navigate = useNavigate();
 
   // Build ACTIVITIES from selected games
   const ACTIVITIES = useMemo(() => {
@@ -147,6 +146,12 @@ const DemoShell = () => {
       setTimeLeft(TOTAL_TIME);
     }
   }, [TOTAL_TIME, timeLeft]);
+
+  useEffect(() => {
+    if (step >= ACTIVITIES.length && ACTIVITIES.length > 0) {
+      setStep(0);
+    }
+  }, [step, ACTIVITIES.length]);
 
   const demoCopy = {
     es: {
@@ -215,11 +220,9 @@ const DemoShell = () => {
 
   useEffect(() => {
     if (gameSelectionMode || !timeLeft || timeLeft > 0) return;
-    
+
     // finished by time
-    handleDemoComplete(completedRef.current);
-    // navigate to report and request demo-sized dummy data for consistent demo preview
-    navigate(`/report?dummy=true&demoCount=${ACTIVITIES.length}`);
+    handleDemoComplete(completedRef.current, 'timeout');
   }, [timeLeft, gameSelectionMode, ACTIVITIES.length]);
 
   useEffect(() => {
@@ -266,11 +269,31 @@ const DemoShell = () => {
     setActivityStarted(false);
   }, [step]);
 
-  const handleDemoComplete = (completedObj) => {
+  const handleDemoComplete = (completedObj, reason = 'completed') => {
     if (finishedRef.current) return;
     finishedRef.current = true;
     const completedIds = Object.keys(completedObj || {});
     const timeUsedSec = Math.round((Date.now() - startedAtRef.current) / 1000);
+
+    const activityRows = ACTIVITIES.map((activity, index) => ({
+      id: activity.id,
+      title: activity.title,
+      est: activity.est,
+      order: index + 1,
+      status: completedIds.includes(activity.id) ? 'completed' : 'not_completed',
+    }));
+
+    setDemoSummary({
+      reason,
+      timeUsedSec,
+      totalActivities: ACTIVITIES.length,
+      completedCount: completedIds.length,
+      selectedIds: selectedGameIds,
+      completedIds,
+      activities: activityRows,
+    });
+    setShowReport(true);
+
     try {
       stopTracking('demo', 0, null, { completedIds, timeUsedSec });
       recordTrialEvent({ event: 'demo_complete', payload: { completedIds, timeUsedSec, completedCount: completedIds.length } });
@@ -295,9 +318,7 @@ const DemoShell = () => {
       const next = { ...c, [id]: true };
       const doneCount = Object.keys(next).length;
       if (doneCount >= ACTIVITIES.length) {
-        handleDemoComplete(next);
-        // pass demoCount so the report shows a demo-sized dummy preview when using demo data
-        navigate(`/report?dummy=true&demoCount=${ACTIVITIES.length}`);
+        handleDemoComplete(next, 'completed');
       } else {
         setStep((s) => Math.min(ACTIVITIES.length - 1, s + 1));
       }
@@ -314,15 +335,24 @@ const DemoShell = () => {
   };
 
   const restart = () => {
+    finishedRef.current = false;
+    startedAtRef.current = Date.now();
     setStep(0);
     setTimeLeft(TOTAL_TIME);
     setCompleted({});
+    setDemoSummary(null);
+    setShowReport(false);
+    setGameSelectionMode(true);
   };
 
-  const ActivityComponent = ACTIVITIES[step].component;
-
   if (showReport) {
-    return <PostDemoScreen completedIds={Object.keys(completed)} />;
+    return (
+      <PostDemoScreen
+        completedIds={Object.keys(completed)}
+        summary={demoSummary}
+        onRestart={restart}
+      />
+    );
   }
 
   const requestPermissions = async () => {

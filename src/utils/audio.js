@@ -1,7 +1,21 @@
-const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+// Initialize AudioContext safely (may not be available in jsdom test environment)
+let audioCtx = null;
+try {
+  const AudioContextClass = window.AudioContext || window.webkitAudioContext;
+  if (AudioContextClass && typeof AudioContextClass === 'function') {
+    audioCtx = new AudioContextClass();
+  }
+} catch (err) {
+  // AudioContext not available (e.g., in jsdom test environment)
+  if (typeof console !== 'undefined' && import.meta?.env?.DEV) {
+    console.debug('AudioContext unavailable:', err.message);
+  }
+}
+
 const DEBUG_AUDIO = Boolean(import.meta?.env?.DEV || import.meta?.env?.VITE_DEBUG_MODE);
 
 const playTone = (freq, type, duration, vol=0.1, freqSlide=null) => {
+  if (!audioCtx) return; // Skip if AudioContext not available
   try {
     if (audioCtx.state === 'suspended') audioCtx.resume();
     const osc = audioCtx.createOscillator();

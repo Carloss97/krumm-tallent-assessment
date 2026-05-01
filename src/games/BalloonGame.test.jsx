@@ -34,6 +34,8 @@ describe('BalloonGame Telemetry Integration', () => {
     );
 
     // The game should be active and show the game UI
-    expect(screen.getByText(/TRIAL:/i)).toBeDefined();
+    // Check for buttons that appear in active game state
+    const expandBtn = screen.getByRole('button', { name: /expandir globo|expand balloon/i });
+    expect(expandBtn).toBeDefined();
   });
 });
