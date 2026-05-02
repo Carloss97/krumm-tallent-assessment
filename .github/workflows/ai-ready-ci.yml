@@ -182,7 +182,7 @@ jobs:
       - uses: actions/checkout@v4
 
       - name: Run Gitleaks secret scan
-        uses: zricethezav/gitleaks-action@v8
+        uses: zricethezav/gitleaks-action@d1c8244c7aea93f6f1da9c62cfcfc8c1acbaf8fb # v2.4.3
         with:
           args: '--config .gitleaks.toml --redact --report-format=json --report-path=gitleaks-report.json'
 
