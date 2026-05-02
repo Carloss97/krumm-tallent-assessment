@@ -148,14 +148,14 @@ const DemoShell = () => {
   // Initialize timeLeft when TOTAL_TIME changes
   useEffect(() => {
     if (timeLeft === null) {
-      // eslint-disable-next-line react-hooks/set-state-in-effect
+       
       setTimeLeft(TOTAL_TIME);
     }
   }, [TOTAL_TIME, timeLeft]);
 
   useEffect(() => {
     if (step >= ACTIVITIES.length && ACTIVITIES.length > 0) {
-      // eslint-disable-next-line react-hooks/set-state-in-effect
+       
       setStep(0);
     }
   }, [step, ACTIVITIES.length]);
@@ -313,9 +313,9 @@ const DemoShell = () => {
 
   // show instructions at the start of each activity
   useEffect(() => {
-    // eslint-disable-next-line react-hooks/set-state-in-effect
+     
     setShowInstructions(true);
-    // eslint-disable-next-line react-hooks/set-state-in-effect
+     
     setActivityStarted(false);
   }, [step]);
 

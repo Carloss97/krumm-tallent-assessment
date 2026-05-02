@@ -170,6 +170,29 @@ jobs:
               body: bodyLines.join('\n')
             });
 
+
+  secret-scan:
+    name: Secret Scan (Gitleaks)
+    runs-on: ubuntu-latest
+    continue-on-error: true
+    strategy:
+      matrix:
+        node-version: [20.x]
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Run Gitleaks secret scan
+        uses: zricethezav/gitleaks-action@d1c8244c7aea93f6f1da9c62cfcfc8c1acbaf8fb # v2.4.3
+        with:
+          args: '--config .gitleaks.toml --redact --report-format=json --report-path=gitleaks-report.json'
+
+      - name: Upload gitleaks report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: gitleaks-report
+          path: gitleaks-report.json
+
   integration-test:
     name: Integration Tests
     runs-on: ubuntu-latest

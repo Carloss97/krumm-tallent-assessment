@@ -89,7 +89,7 @@ const CollectPeopleGame = ({ onComplete, targetCount = 5 }) => {
     if (hit) {
       // eslint-disable-next-line react-hooks/set-state-in-effect
       setPeople((ps) => ps.filter(p => p.id !== hit.id));
-      // eslint-disable-next-line react-hooks/set-state-in-effect
+       
       setCollected((c) => {
         const nc = c + 1;
         try { recordTrialEvent && recordTrialEvent({ event: 'person_collect', payload: { id: hit.id, x: hit.x, y: hit.y, newCount: nc } }); } catch (error) { void error; }
