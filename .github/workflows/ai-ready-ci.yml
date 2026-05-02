@@ -9,6 +9,11 @@ on:
     # Run security audit weekly
     - cron: '0 0 * * 0'
 
+permissions:
+  contents: read
+  pull-requests: write
+  issues: write
+
 jobs:
   lint:
     name: Lint & Format Check
@@ -54,10 +59,7 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
-      - name: Run unit tests
-        run: npm test
-
-      - name: Generate coverage report
+      - name: Run unit tests with coverage
         run: npm run test:coverage
 
       - name: Upload coverage to Codecov
@@ -155,14 +157,17 @@ jobs:
             const fs = require('fs');
             const audit = fs.readFileSync('audit-report.txt', 'utf8');
             const hasVulnerabilities = audit.includes('vulnerabilities');
-            const message = hasVulnerabilities 
-              ? `⚠️ **Security Audit Found Issues**\n\`\`\`\n${audit}\n\`\`\``
-              : '✅ **Security Audit Passed**';
+            let bodyLines = [];
+            if (hasVulnerabilities) {
+              bodyLines = ['⚠️ **Security Audit Found Issues**', '```', audit, '```'];
+            } else {
+              bodyLines = ['✅ **Security Audit Passed**'];
+            }
             github.rest.issues.createComment({
               issue_number: context.issue.number,
               owner: context.repo.owner,
               repo: context.repo.repo,
-              body: message
+              body: bodyLines.join('\n')
             });
 
   integration-test:
@@ -171,20 +176,6 @@ jobs:
     strategy:
       matrix:
         node-version: [20.x]
-    services:
-      # Optional: Add database service if using PostgreSQL
-      # postgres:
-      #   image: postgres:15
-      #   env:
-      #     POSTGRES_DB: test_db
-      #     POSTGRES_PASSWORD: password
-      #   options: >-
-      #     --health-cmd pg_isready
-      #     --health-interval 10s
-      #     --health-timeout 5s
-      #     --health-retries 5
-      #   ports:
-      #     - 5432:5432
     steps:
       - uses: actions/checkout@v4
 
@@ -198,7 +189,7 @@ jobs:
         run: npm ci
 
       - name: Run integration tests
-        run: npm test -- integration
+        run: npm run test:integration
         continue-on-error: true
         env:
           DATABASE_URL: file:./test.db

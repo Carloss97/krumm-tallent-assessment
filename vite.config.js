@@ -39,7 +39,8 @@ export default ({ mode }) => {
     minThreads: 1,
     coverage: {
       provider: 'v8',
-      reporter: ['text', 'json-summary'],
+      reporter: ['text', 'json', 'json-summary', 'html'],
+      reportsDirectory: './coverage',
       thresholds: {
         lines: 40,
         functions: 40,
