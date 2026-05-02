@@ -155,14 +155,17 @@ jobs:
             const fs = require('fs');
             const audit = fs.readFileSync('audit-report.txt', 'utf8');
             const hasVulnerabilities = audit.includes('vulnerabilities');
-            const message = hasVulnerabilities 
-              ? `⚠️ **Security Audit Found Issues**\n\`\`\`\n${audit}\n\`\`\``
-              : '✅ **Security Audit Passed**';
+            let bodyLines = [];
+            if (hasVulnerabilities) {
+              bodyLines = ['⚠️ **Security Audit Found Issues**', '```', audit, '```'];
+            } else {
+              bodyLines = ['✅ **Security Audit Passed**'];
+            }
             github.rest.issues.createComment({
               issue_number: context.issue.number,
               owner: context.repo.owner,
               repo: context.repo.repo,
-              body: message
+              body: bodyLines.join('\n')
             });
 
   integration-test:
