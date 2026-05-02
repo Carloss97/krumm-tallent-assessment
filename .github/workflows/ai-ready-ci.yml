@@ -9,6 +9,11 @@ on:
     # Run security audit weekly
     - cron: '0 0 * * 0'
 
+permissions:
+  contents: read
+  pull-requests: write
+  issues: write
+
 jobs:
   lint:
     name: Lint & Format Check
@@ -54,10 +59,7 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
-      - name: Run unit tests
-        run: npm test
-
-      - name: Generate coverage report
+      - name: Run unit tests with coverage
         run: npm run test:coverage
 
       - name: Upload coverage to Codecov
@@ -187,7 +189,7 @@ jobs:
         run: npm ci
 
       - name: Run integration tests
-        run: npm test -- integration
+        run: npm run test:integration
         continue-on-error: true
         env:
           DATABASE_URL: file:./test.db
