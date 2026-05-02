@@ -20,6 +20,7 @@ import {
   requireRecruiter
 } from './tokenService.js';
 import { rateLimiter, requestLogger } from './middleware.js';
+import { httpLogger, logger } from './logger.js';
 import { serverConfig } from './config.js';
 
 dotenv.config();
@@ -78,6 +79,9 @@ app.use((req, res, next) => {
   }
   return next();
 });
+
+// Attach pino-http middleware so requests are logged in structured JSON
+app.use(httpLogger);
 
 app.use((error, req, res, next) => {
   if (error?.type === 'entity.parse.failed' || error instanceof SyntaxError) {
@@ -146,6 +150,18 @@ app.use((req, res, next) => {
     }
   });
   next();
+});
+
+// Expose Prometheus metrics endpoint
+app.get('/metrics', async (req, res) => {
+  try {
+    res.setHeader('Content-Type', register.contentType);
+    const metrics = await register.metrics();
+    return res.send(metrics);
+  } catch (err) {
+    logger.error({ err: String(err) }, 'metrics_endpoint_error');
+    return res.status(500).send('metrics_error');
+  }
 });
 const globalLimiter = rateLimiter(serverConfig.rateLimit.global);
 const bypassedRateLimitPaths = new Set(serverConfig.rateLimit.bypassPaths);
@@ -457,10 +473,10 @@ app.post('/api/telemetry', (req, res) => {
     const logPath = path.join(logDir, 'telemetry.log');
     const entry = JSON.stringify({ receivedAt: new Date().toISOString(), payload }) + '\n';
     fs.appendFileSync(logPath, entry, 'utf8');
-    console.log('Telemetry event:', payload.event || payload);
+    logger.info({ event: payload.event || payload }, 'telemetry_event_received');
     return res.json({ ok: true, saved: true });
   } catch (err) {
-    console.error('Failed to save telemetry:', err?.message || err);
+    logger.error({ err: err?.message || err }, 'failed_to_save_telemetry');
     return res.status(500).json({ ok: false, error: 'failed_to_save' });
   }
 });
@@ -696,7 +712,7 @@ app.post('/api/auth/participant', (req, res) => {
       message: 'Participant authenticated'
     });
   } catch (error) {
-    console.error('Error authenticating participant:', error.message);
+    logger.error({ err: error?.message || error }, 'error_authenticating_participant');
     return res.status(500).json({
       error: 'Authentication failed',
       details: error.message
@@ -738,7 +754,7 @@ app.post('/api/auth/recruiter', (req, res) => {
       message: 'Recruiter authenticated'
     });
   } catch (error) {
-    console.error('Error authenticating recruiter:', error.message);
+    logger.error({ err: error?.message || error }, 'error_authenticating_recruiter');
     return res.status(500).json({
       error: 'Recruiter authentication failed',
       details: error.message
@@ -791,7 +807,7 @@ app.post('/api/session', authenticateToken, requireParticipant, (req, res) => {
     }
   } catch (err) {
     // normalization errors should not block saving; log and continue
-    console.warn('Session normalization failed:', err?.message || err);
+    logger.warn({ err: err?.message || err }, 'session_normalization_failed');
   }
 
   // Validate session payload shape
@@ -821,7 +837,7 @@ app.post('/api/session', authenticateToken, requireParticipant, (req, res) => {
       timestamp: new Date().toISOString()
     });
   } catch (error) {
-    console.error('Error saving session:', error.message);
+    logger.error({ err: error?.message || error }, 'error_saving_session');
     return res.status(500).json({
       error: 'Failed to save session',
       details: error.message
@@ -852,7 +868,7 @@ app.get('/api/session/:id', authenticateToken, requireParticipant, (req, res) =>
 
     return res.json(session);
   } catch (error) {
-    console.error('Error retrieving session:', error.message);
+    logger.error({ err: error?.message || error }, 'error_retrieving_session');
     return res.status(500).json({
       error: 'Failed to retrieve session',
       details: error.message
@@ -877,7 +893,7 @@ app.get('/api/sessions', authenticateToken, requireParticipant, (req, res) => {
       participantId: req.user.participantId
     });
   } catch (error) {
-    console.error('Error retrieving sessions:', error.message);
+    logger.error({ err: error?.message || error }, 'error_retrieving_sessions');
     return res.status(500).json({
       error: 'Failed to retrieve sessions',
       details: error.message
@@ -911,7 +927,7 @@ app.get('/api/participant/:id', authenticateToken, requireParticipant, (req, res
       lastAuthenticated: participant.last_authenticated
     });
   } catch (error) {
-    console.error('Error retrieving participant:', error.message);
+    logger.error({ err: error?.message || error }, 'error_retrieving_participant');
     return res.status(500).json({
       error: 'Failed to retrieve participant',
       details: error.message
@@ -931,7 +947,7 @@ app.get('/api/recruiter/sessions', authenticateToken, requireRecruiter, (req, re
       sessions
     });
   } catch (error) {
-    console.error('Error retrieving recruiter sessions:', error.message);
+    logger.error({ err: error?.message || error }, 'error_retrieving_recruiter_sessions');
     return res.status(500).json({
       error: 'Failed to retrieve recruiter sessions',
       details: error.message
@@ -966,7 +982,7 @@ app.get('/api/recruiter/analytics', authenticateToken, requireRecruiter, (req, r
       recommendationDistribution,
     });
   } catch (error) {
-    console.error('Error retrieving recruiter analytics:', error.message);
+    logger.error({ err: error?.message || error }, 'error_retrieving_recruiter_analytics');
     return res.status(500).json({
       error: 'Failed to retrieve recruiter analytics',
       details: error.message
@@ -1015,7 +1031,7 @@ app.get('/api/recruiter/analytics/v2', authenticateToken, requireRecruiter, (req
       kpiSnapshot: kpi?.kpis || null,
     });
   } catch (error) {
-    console.error('Error retrieving recruiter analytics v2:', error.message);
+    logger.error({ err: error?.message || error }, 'error_retrieving_recruiter_analytics_v2');
     return res.status(500).json({
       error: 'Failed to retrieve recruiter analytics v2',
       details: error.message,
@@ -1026,7 +1042,7 @@ app.get('/api/recruiter/analytics/v2', authenticateToken, requireRecruiter, (req
 // Global error handler middleware
 // eslint-disable-next-line no-unused-vars
 app.use((err, req, res, next) => {
-  console.error('Unhandled error:', err);
+  logger.error({ err }, 'unhandled_error');
   res.status(err.status || 500).json({
     error: err.message || 'Internal server error',
     timestamp: new Date().toISOString()
@@ -1044,33 +1060,29 @@ app.use((req, res) => {
 
 // ===== SERVER STARTUP =====
 const server = app.listen(PORT, () => {
-  console.log(`✓ Backend API server running at http://localhost:${PORT}`);
-  console.log(`✓ Health check: GET /health`);
-  console.log(`✓ Readiness: GET /ready`);
-  console.log(`✓ Metrics: GET /metrics`);
-  console.log(`✓ Authentication: POST /api/auth/participant`);
-  console.log(`✓ Recruiter auth: POST /api/auth/recruiter`);
-  console.log(`✓ Environment: ${process.env.NODE_ENV || 'development'}`);
+  logger.info({ url: `http://localhost:${PORT}` }, 'server_started');
+  logger.info({ endpoints: ['/health', '/ready', '/metrics', '/api/auth/participant', '/api/auth/recruiter'] }, 'server_info');
+  logger.info({ environment: process.env.NODE_ENV || 'development' }, 'environment');
   try {
     const routes = (app._router && app._router.stack) ? app._router.stack.filter(r => r.route).map(r => {
       const methods = Object.keys(r.route.methods || {}).join(',').toUpperCase();
       return `${methods} ${r.route.path}`;
     }) : [];
-    console.log('Registered routes:\n' + routes.join('\n'));
+    logger.debug({ routes }, 'registered_routes');
   } catch {
     // ignore
   }
 });
 
 const shutdown = (signal) => {
-  console.log(`Received ${signal}. Shutting down gracefully...`);
+  logger.info({ signal }, 'shutdown_initiated');
   server.close(() => {
-    console.log('Server closed.');
+    logger.info('server_closed', 'Server closed.');
     process.exit(0);
   });
   // force exit after timeout
   setTimeout(() => {
-    console.error('Forcing shutdown after timeout.');
+    logger.error('forcing_shutdown', 'Forcing shutdown after timeout.');
     process.exit(1);
   }, 10000).unref();
 };

@@ -1,0 +1,12 @@
+title = "Gitleaks baseline - ignore known false positives"
+description = "Baseline allowlist to ignore commonly noisy paths and known non-secret files for this repository. Review before changing."
+
+[allowlist]
+  # Paths (regex) to ignore from secret scanning
+  paths = ["^node_modules/", "^\.github/", "^\.env$", "^public/", "^dist/"]
+
+# If you need to allow specific files, add them by path or regex here.
+# commits, authors, and messages can also be allowlisted if needed.
+
+[rules]
+# No custom rules defined in baseline; keep default gitleaks rules active.
