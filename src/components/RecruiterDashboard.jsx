@@ -143,12 +143,35 @@ const computeAbEngagementStats = (sessions) => {
   };
 };
 
+const exportSessionsToCSV = (sessionRows) => {
+  const header = ['Participant ID', 'Email', 'Games Completed', 'Avg Score', 'Date', 'Status'];
+  const rows = sessionRows.map((s) => [
+    s.participantId ?? '',
+    s.email ?? '',
+    s.gameCount ?? '',
+    s.avgScore ?? '',
+    s.createdAt ?? '',
+    s.rawDataProtected ? 'Encrypted' : 'Invalid',
+  ]);
+  const csvContent = [header, ...rows]
+    .map((row) => row.map((cell) => `"${String(cell).replace(/"/g, '""')}"`).join(','))
+    .join('\n');
+  const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement('a');
+  link.href = url;
+  link.download = `sessions-export-${new Date().toISOString().slice(0, 10)}.csv`;
+  link.click();
+  URL.revokeObjectURL(url);
+};
+
 const RecruiterDashboard = () => {
   const navigate = useNavigate();
   const [sessions, setSessions] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [filter, setFilter] = useState('all'); // all, recent, highScore
+  const [search, setSearch] = useState('');
   const [analytics, setAnalytics] = useState({
     totalSessions: 0,
     last24hSessions: 0,
@@ -271,6 +294,14 @@ const RecruiterDashboard = () => {
       } catch {
         return { id: session.id, error: 'Invalid session data' };
       }
+    })
+    .filter((session) => {
+      if (!search.trim()) return true;
+      const q = search.toLowerCase();
+      return (
+        (session.participantId || '').toLowerCase().includes(q) ||
+        (session.email || '').toLowerCase().includes(q)
+      );
     });
 
   if (loading) {
@@ -447,8 +478,25 @@ const RecruiterDashboard = () => {
 
         {/* Sessions Table */}
         <div className="sessions-container">
-          <div className="table-header">
+          <div className="table-header" style={{ display: 'flex', gap: '8px', alignItems: 'center', flexWrap: 'wrap' }}>
             <button onClick={handleRefresh} className="refresh-btn">↻ Refresh</button>
+            <input
+              type="search"
+              placeholder="Search by ID or email…"
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              aria-label="Search sessions"
+              style={{ flex: 1, minWidth: '180px', padding: '6px 10px', borderRadius: '6px', border: '1px solid #e2e8f0', fontSize: '13px' }}
+            />
+            {displaySessions.length > 0 && (
+              <button
+                className="refresh-btn"
+                onClick={() => exportSessionsToCSV(displaySessions)}
+                title="Export visible sessions as CSV"
+              >
+                ↓ Export CSV
+              </button>
+            )}
           </div>
 
           {displaySessions.length === 0 ? (
