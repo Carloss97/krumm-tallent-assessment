@@ -24,6 +24,7 @@ const LandingPage = lazy(() => import('./components/LandingPageV3'));
 const FutureAssessmentLab = lazy(() => import('./components/FutureAssessmentLab'));
 const ComplementaryIntro = lazy(() => import('./components/ComplementaryIntro'));
 const DemoShell = lazy(() => import('./components/DemoShell'));
+const PitchDeckPage = lazy(() => import('./components/PitchDeckPage'));
 
 // Main App Router and State
 function AppContent() {
@@ -67,6 +68,7 @@ function AppContent() {
             <Route path="/future/lab" element={<FutureAssessmentLab />} />
             <Route path="/report" element={<Report />} />
             <Route path="/demo" element={<DemoShell />} />
+            <Route path="/pitch" element={<PitchDeckPage />} />
           </Routes>
         </Suspense>
       </div>
