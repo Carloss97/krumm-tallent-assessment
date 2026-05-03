@@ -329,6 +329,19 @@
   transform: translateY(-1px);
 }
 
+.lv3-action-pitch {
+  background: linear-gradient(135deg, #f3efff, #e9f5ff);
+  color: #1f3a65;
+  border: 1px solid rgba(52, 83, 142, 0.28);
+  box-shadow: 0 10px 20px rgba(29, 61, 120, 0.14);
+}
+
+.lv3-action-pitch:hover {
+  background: linear-gradient(135deg, #ebe3ff, #dff1ff);
+  color: #183055;
+  transform: translateY(-1px);
+}
+
 /* Accessibility: strong focus styles for hero action buttons */
 .lv3-action-btn:focus-visible {
   outline: 3px solid rgba(124, 58, 237, 0.9);
@@ -966,6 +979,7 @@
   display: grid;
   place-items: center;
   background: rgba(8, 14, 27, 0.48);
+  -webkit-backdrop-filter: blur(4px);
   backdrop-filter: blur(4px);
   padding: 1.2rem;
 }
