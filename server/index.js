@@ -43,9 +43,9 @@ app.set('trust proxy', true);
 app.use(helmet());
 app.use(compression());
 
-// Configure CORS with optional whitelist from env var `CORS_ORIGINS` or `ALLOWED_ORIGINS`
-// Accept either name for backward compatibility. Values are comma-separated origins.
-const corsOriginsEnv = process.env.CORS_ORIGINS || process.env.ALLOWED_ORIGINS || '';
+// Configure CORS with optional whitelist from env var `ALLOWED_ORIGINS` (canonical name)
+// Fallback to `CORS_ORIGINS` for backward compatibility. Values are comma-separated origins.
+const corsOriginsEnv = process.env.ALLOWED_ORIGINS || process.env.CORS_ORIGINS || '';
 const allowedCorsOrigins = corsOriginsEnv.split(',').map(s => s.trim()).filter(Boolean);
 if (allowedCorsOrigins.length > 0) {
   app.use(cors({
@@ -286,7 +286,7 @@ const readQualityAlertSummary = (filePath) => {
 };
 
 const getGeminiApiKey = () => {
-  const key = process.env.GOOGLE_API_KEY || process.env.GEMINI_API_KEY || '';
+  const key = process.env.GEMINI_API_KEY || process.env.GOOGLE_API_KEY || '';
   return String(key).trim();
 };
 
