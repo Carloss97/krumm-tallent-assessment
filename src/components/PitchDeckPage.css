@@ -1,0 +1,424 @@
+.pitch-page {
+  min-height: 100%;
+  color: var(--ink-strong);
+  background:
+    radial-gradient(circle at 85% 10%, rgba(163, 190, 214, 0.15), transparent 38%),
+    radial-gradient(circle at 10% 85%, rgba(109, 149, 194, 0.16), transparent 40%),
+    linear-gradient(160deg, #f6f9fc 0%, #ebf1f7 54%, #e3ebf3 100%);
+}
+
+.pitch-hero {
+  position: relative;
+  overflow: hidden;
+  padding: 1.2rem 1.2rem 2rem;
+}
+
+.pitch-noise {
+  position: absolute;
+  inset: 0;
+  background-image: radial-gradient(rgba(255, 255, 255, 0.35) 1px, transparent 1px);
+  background-size: 3px 3px;
+  opacity: 0.2;
+  pointer-events: none;
+}
+
+.pitch-hero-content {
+  max-width: 1220px;
+  margin: 0 auto;
+  position: relative;
+  z-index: 1;
+}
+
+.pitch-topbar {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-bottom: 1.35rem;
+}
+
+.pitch-lang {
+  border-radius: 999px;
+  padding: 0.26rem;
+  border: 1px solid var(--line-soft);
+  background: rgba(255, 255, 255, 0.8);
+  display: inline-flex;
+  gap: 0.2rem;
+}
+
+.pitch-lang button {
+  border: 0;
+  background: transparent;
+  border-radius: 999px;
+  padding: 0.45rem 0.9rem;
+  color: var(--ink-medium);
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.pitch-lang button.active {
+  color: #fff;
+  background: linear-gradient(135deg, var(--brand-600), var(--brand-500));
+}
+
+.pitch-hero-grid {
+  display: grid;
+  grid-template-columns: 1.35fr 0.65fr;
+  gap: 1rem;
+}
+
+.pitch-badge {
+  display: inline-flex;
+  border-radius: 999px;
+  padding: 0.36rem 0.78rem;
+  background: rgba(38, 70, 111, 0.12);
+  border: 1px solid rgba(38, 70, 111, 0.2);
+  color: var(--brand-700);
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  margin-bottom: 0.6rem;
+}
+
+.pitch-hero h1 {
+  font-family: var(--font-display);
+  font-size: clamp(2rem, 3.8vw, 3.5rem);
+  line-height: 1.06;
+  margin-bottom: 0.75rem;
+  max-width: 16ch;
+}
+
+.pitch-hero p {
+  color: var(--ink-medium);
+  line-height: 1.62;
+  max-width: 62ch;
+}
+
+.pitch-hero-actions {
+  margin-top: 1rem;
+  display: flex;
+  gap: 0.6rem;
+  flex-wrap: wrap;
+}
+
+.pitch-solid,
+.pitch-outline,
+.pitch-sections button {
+  border-radius: 12px;
+  border: 1px solid transparent;
+  padding: 0.65rem 1rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.pitch-solid {
+  color: #fff;
+  background: linear-gradient(130deg, var(--brand-700), var(--brand-500));
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+}
+
+.pitch-outline {
+  color: var(--brand-700);
+  background: rgba(255, 255, 255, 0.82);
+  border-color: rgba(38, 70, 111, 0.25);
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+}
+
+.pitch-solid:hover,
+.pitch-outline:hover,
+.pitch-sections button:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 8px 16px rgba(20, 39, 65, 0.15);
+}
+
+.pitch-solid:focus-visible,
+.pitch-outline:focus-visible,
+.pitch-sections button:focus-visible,
+.pitch-lang button:focus-visible {
+  outline: 3px solid rgba(99, 102, 241, 0.95);
+  outline-offset: 2px;
+}
+
+.pitch-logo-card {
+  background: rgba(255, 255, 255, 0.84);
+  border: 1px solid var(--line-soft);
+  border-radius: 20px;
+  box-shadow: var(--elevation-2);
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  padding: 1rem;
+  text-align: center;
+}
+
+.pitch-logo-card img {
+  width: clamp(110px, 16vw, 180px);
+  height: clamp(110px, 16vw, 180px);
+  object-fit: contain;
+  border-radius: 16px;
+  border: 1px solid rgba(38, 70, 111, 0.18);
+  margin-bottom: 0.65rem;
+}
+
+.pitch-logo-card h2 {
+  font-size: 1.4rem;
+  margin-bottom: 0.2rem;
+  color: var(--brand-700);
+}
+
+.pitch-logo-card p {
+  color: var(--ink-soft);
+  font-size: 0.95rem;
+}
+
+.pitch-sections {
+  position: sticky;
+  top: 0;
+  z-index: 20;
+  display: flex;
+  gap: 0.45rem;
+  overflow-x: auto;
+  padding: 0.7rem 1rem;
+  background: rgba(248, 251, 255, 0.86);
+  -webkit-backdrop-filter: blur(10px);
+  backdrop-filter: blur(10px);
+  border-top: 1px solid rgba(38, 70, 111, 0.12);
+  border-bottom: 1px solid rgba(38, 70, 111, 0.12);
+}
+
+.pitch-sections button {
+  white-space: nowrap;
+  background: #fff;
+  color: var(--ink-medium);
+  border-color: rgba(38, 70, 111, 0.18);
+}
+
+.pitch-main {
+  max-width: 1220px;
+  margin: 0 auto;
+  padding: 1.2rem 1.2rem 3rem;
+  display: grid;
+  gap: 1rem;
+}
+
+.pitch-block {
+  background: rgba(255, 255, 255, 0.82);
+  border: 1px solid var(--line-soft);
+  border-radius: 18px;
+  padding: clamp(1rem, 1.8vw, 1.5rem);
+  box-shadow: var(--elevation-1);
+}
+
+.pitch-block h2 {
+  font-size: clamp(1.35rem, 2.3vw, 1.85rem);
+  margin-bottom: 0.9rem;
+  color: var(--brand-700);
+}
+
+.pitch-block-dark {
+  background: linear-gradient(135deg, #1e355a, #2c4e79);
+  border-color: rgba(255, 255, 255, 0.2);
+}
+
+.pitch-block-dark h2 {
+  color: #ecf4ff;
+}
+
+.pitch-card-grid {
+  display: grid;
+  gap: 0.75rem;
+}
+
+.pitch-card-grid-2 {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.pitch-card-grid-3 {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.pitch-card {
+  border-radius: 14px;
+  border: 1px solid rgba(38, 70, 111, 0.17);
+  background: rgba(255, 255, 255, 0.93);
+  padding: 0.9rem;
+  display: grid;
+  gap: 0.4rem;
+}
+
+.pitch-card svg {
+  color: var(--brand-600);
+}
+
+.pitch-card h3 {
+  font-size: 1.03rem;
+  color: var(--ink-strong);
+}
+
+.pitch-card p {
+  color: var(--ink-medium);
+  line-height: 1.58;
+}
+
+.pitch-card-dark {
+  background: rgba(255, 255, 255, 0.08);
+  border-color: rgba(255, 255, 255, 0.23);
+}
+
+.pitch-card-dark svg,
+.pitch-card-dark h3,
+.pitch-card-dark p {
+  color: #f4f8ff;
+}
+
+.pitch-market-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0.7rem;
+}
+
+.pitch-market-card {
+  border-radius: 16px;
+  border: 1px solid rgba(38, 70, 111, 0.2);
+  background: linear-gradient(160deg, rgba(255, 255, 255, 0.96), rgba(238, 245, 255, 0.96));
+  padding: 1rem;
+  display: grid;
+  gap: 0.3rem;
+}
+
+.pitch-market-card span {
+  font-size: 0.82rem;
+  color: var(--ink-soft);
+  font-weight: 700;
+}
+
+.pitch-market-card strong {
+  font-size: 2rem;
+  color: var(--brand-700);
+  line-height: 1;
+}
+
+.pitch-market-card p {
+  color: var(--ink-medium);
+  line-height: 1.55;
+}
+
+.pitch-table-wrap {
+  overflow-x: auto;
+}
+
+.pitch-table-wrap table {
+  width: 100%;
+  border-collapse: collapse;
+  min-width: 680px;
+}
+
+.pitch-table-wrap th,
+.pitch-table-wrap td {
+  text-align: left;
+  padding: 0.78rem;
+  border-bottom: 1px solid rgba(38, 70, 111, 0.14);
+}
+
+.pitch-table-wrap th {
+  color: var(--ink-soft);
+  font-size: 0.86rem;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.pitch-td-krumm {
+  font-weight: 800;
+  color: var(--brand-700);
+}
+
+.pitch-role {
+  font-weight: 700;
+  color: var(--brand-500);
+  margin-top: -0.1rem;
+}
+
+.pitch-highlight {
+  background: linear-gradient(130deg, #1f3558 0%, #355f93 100%);
+  border-color: rgba(255, 255, 255, 0.25);
+}
+
+.pitch-highlight-grid {
+  display: grid;
+  grid-template-columns: 1.15fr 0.85fr;
+  gap: 0.85rem;
+  align-items: stretch;
+}
+
+.pitch-highlight h2,
+.pitch-highlight p {
+  color: #eef5ff;
+}
+
+.pitch-highlight aside {
+  border-radius: 16px;
+  border: 1px solid rgba(255, 255, 255, 0.24);
+  background: rgba(255, 255, 255, 0.08);
+  display: grid;
+  place-items: center;
+  text-align: center;
+  gap: 0.25rem;
+  padding: 1rem;
+}
+
+.pitch-highlight aside svg {
+  color: #eaf3ff;
+}
+
+.pitch-highlight aside p {
+  color: rgba(234, 243, 255, 0.92);
+}
+
+.pitch-highlight aside strong {
+  font-size: 2.6rem;
+  color: #ffffff;
+  line-height: 1;
+}
+
+.pitch-highlight aside span {
+  color: rgba(234, 243, 255, 0.88);
+  font-weight: 700;
+}
+
+@media (max-width: 960px) {
+  .pitch-hero-grid,
+  .pitch-highlight-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .pitch-card-grid-2,
+  .pitch-card-grid-3,
+  .pitch-market-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .pitch-sections {
+    top: 0;
+  }
+}
+
+@media (max-width: 640px) {
+  .pitch-topbar {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .pitch-hero-actions {
+    flex-direction: column;
+  }
+
+  .pitch-solid,
+  .pitch-outline {
+    width: 100%;
+    justify-content: center;
+  }
+}
