@@ -286,6 +286,7 @@ const copy = {
       'Krumm transforma evaluaciones tradicionales en una experiencia con mayor participación para aumentar la finalización de la prueba y entregar reportes de evidencia conductual para decisiones de talento.',
     actionStart: 'Ingresar al test',
     actionDemo: 'Ver demostración guiada',
+    actionPitch: 'Ver pitch deck',
     actionRecruiter: 'Portal reclutador',
     statChallenges: 'retos gamificados',
     statParticipationTitle: 'Participación',
@@ -333,6 +334,7 @@ const copy = {
       'Krumm transforms traditional assessments into high-engagement experiences to increase completion and deliver behavioral evidence for talent decisions.',
     actionStart: 'Start assessment',
     actionDemo: 'Watch guided demo',
+    actionPitch: 'View pitch deck',
     actionRecruiter: 'Recruiter portal',
     statChallenges: 'gamified challenges',
     statParticipationTitle: 'Engagement',
@@ -582,6 +584,17 @@ const LandingPageV3 = () => {
             <button className="lv3-ghost lv3-action-btn lv3-action-demo halo-ring" onClick={() => { recordTrialEvent && recordTrialEvent({ event: 'cta_demo_clicked' }); handleStartDemo(); }}>
               <FlaskConical size={18} aria-hidden="true" />
               <span>{language === 'es' ? 'Comenzar demo' : 'Start demo'}</span>
+              <ChevronRight size={16} aria-hidden="true" />
+            </button>
+            <button
+              className="lv3-ghost lv3-action-btn lv3-action-pitch"
+              onClick={() => {
+                recordTrialEvent && recordTrialEvent({ event: 'cta_pitch_clicked' });
+                navigate('/pitch');
+              }}
+            >
+              <LineChart size={18} aria-hidden="true" />
+              <span>{t.actionPitch}</span>
               <ChevronRight size={16} aria-hidden="true" />
             </button>
             {showDevQuickAccess && (
