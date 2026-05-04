@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useEffect, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
   ArrowLeft,
@@ -16,9 +16,7 @@ import {
   Target,
   TrendingUp,
   Users,
-  Zap,
-  ChevronLeft,
-  ChevronRight
+  Zap
 } from 'lucide-react';
 import { useLanguage } from '../context/LanguageContext';
 import logo from '../assets/logo.jpg';
@@ -294,269 +292,218 @@ function PitchDeckPage() {
   const navigate = useNavigate();
   const { language, setLanguage } = useLanguage();
   const t = pageCopy[language] || pageCopy.es;
-  const [currentSlide, setCurrentSlide] = useState(0);
 
   useEffect(() => {
-    document.title = language === 'en' ? 'KRUMM | Pitch Presentation' : 'KRUMM | Presentación';
+    document.title = language === 'en' ? 'KRUMM | Pitch Deck' : 'KRUMM | Pitch';
   }, [language]);
 
-  // Define all slides in order
-  const slides = [
-    // Slide 0: Hero/Title
-    {
-      type: 'hero',
-      render: () => (
-        <div className="pitch-slide-hero">
-          <aside className="pitch-logo-card-hero" aria-label="KRUMM brand">
-            <img src={logo} alt="KRUMM" />
-            <h2>KRUMM</h2>
-            <p>Behavioral Intelligence</p>
-          </aside>
-          <article className="pitch-hero-content">
-            <h1>{t.heroTitle}</h1>
-            <p>{t.heroText}</p>
-            <div className="pitch-slide-footer-text">
-              {language === 'es' ? 'Desliza para comenzar →' : 'Swipe to begin →'}
-            </div>
-          </article>
-        </div>
-      )
-    },
-    // Slide 1: Problem and thesis
-    {
-      type: 'cards',
-      title: t.sectionProblem,
-      cards: coreCards,
-      columns: 3
-    },
-    // Slide 2: How it works
-    {
-      type: 'cards',
-      title: t.sectionProcess,
-      cards: processSteps,
-      columns: 3,
-      variant: 'process'
-    },
-    // Slide 3: Edge AI advantage
-    {
-      type: 'cards',
-      title: t.sectionEdge,
-      cards: edgeBenefits,
-      columns: 3,
-      variant: 'dark'
-    },
-    // Slide 4: Moat
-    {
-      type: 'cards',
-      title: t.sectionMoat,
-      cards: moatItems,
-      columns: 2
-    },
-    // Slide 5: Market
-    {
-      type: 'market',
-      title: t.sectionMarket,
-      data: marketRows
-    },
-    // Slide 6: Comparison
-    {
-      type: 'comparison',
-      title: t.sectionComparison,
-      data: comparisonRows
-    },
-    // Slide 7: Team
-    {
-      type: 'cards',
-      title: t.sectionTeam,
-      cards: teamMembers.map(member => ({
-        icon: Users,
-        title: { es: member.name, en: member.name },
-        text: member.text,
-        role: member.role
-      })),
-      columns: 3,
-      variant: 'team'
-    },
-    // Slide 8: CTA/Milestone
-    {
-      type: 'milestone',
-      title: t.roiTitle,
-      subtitle: t.sectionMilestone,
-      text: t.roiText,
-      cta: t.milestoneArr,
-      milestoneText: t.milestoneText
-    }
-  ];
+  const sections = useMemo(
+    () => [
+      { id: 'pitch-problem', label: t.sectionProblem },
+      { id: 'pitch-process', label: t.sectionProcess },
+      { id: 'pitch-edge', label: t.sectionEdge },
+      { id: 'pitch-moat', label: t.sectionMoat },
+      { id: 'pitch-market', label: t.sectionMarket },
+      { id: 'pitch-compare', label: t.sectionComparison },
+      { id: 'pitch-team', label: t.sectionTeam },
+      { id: 'pitch-milestone', label: t.sectionMilestone }
+    ],
+    [t]
+  );
 
-  const goNext = () => {
-    if (currentSlide < slides.length - 1) {
-      setCurrentSlide(currentSlide + 1);
-    }
+  const goToSection = (id) => {
+    const element = document.getElementById(id);
+    if (!element) return;
+    element.scrollIntoView({ behavior: 'smooth', block: 'start' });
   };
-
-  const goPrev = () => {
-    if (currentSlide > 0) {
-      setCurrentSlide(currentSlide - 1);
-    }
-  };
-
-  const handleKeyDown = (e) => {
-    if (e.key === 'ArrowRight') goNext();
-    if (e.key === 'ArrowLeft') goPrev();
-    if (e.key === 'Escape') navigate('/');
-  };
-
-  useEffect(() => {
-    window.addEventListener('keydown', handleKeyDown);
-    return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [currentSlide]);
-
-  const slide = slides[currentSlide];
 
   return (
-    <div className="pitch-presentation">
-      <header className="pitch-pres-header">
-        <button type="button" className="pitch-exit" onClick={() => navigate('/')} title="Exit (Esc)">
-          <ArrowLeft size={20} />
-        </button>
+    <div className="pitch-page">
+      <header className="pitch-hero">
+        <div className="pitch-noise" aria-hidden="true" />
+        <div className="pitch-hero-content">
+          <div className="pitch-topbar">
+            <button type="button" className="pitch-outline" onClick={() => navigate('/')}>
+              <ArrowLeft size={16} aria-hidden="true" />
+              <span>{t.back}</span>
+            </button>
 
-        <div className="pitch-lang-toggle" role="group" aria-label="Language">
-          <button
-            type="button"
-            className={language === 'es' ? 'active' : ''}
-            onClick={() => setLanguage('es')}
-          >
-            ES
-          </button>
-          <button
-            type="button"
-            className={language === 'en' ? 'active' : ''}
-            onClick={() => setLanguage('en')}
-          >
-            EN
-          </button>
+            <div className="pitch-lang" role="group" aria-label="Language selector">
+              <button
+                type="button"
+                className={language === 'es' ? 'active' : ''}
+                onClick={() => setLanguage('es')}
+              >
+                ES
+              </button>
+              <button
+                type="button"
+                className={language === 'en' ? 'active' : ''}
+                onClick={() => setLanguage('en')}
+              >
+                EN
+              </button>
+            </div>
+          </div>
+
+          <div className="pitch-hero-grid">
+            <article>
+              <span className="pitch-badge">{t.badge}</span>
+              <h1>{t.heroTitle}</h1>
+              <p>{t.heroText}</p>
+              <div className="pitch-hero-actions">
+                <button type="button" className="pitch-solid" onClick={() => navigate('/demo')}>
+                  <span>{t.cta}</span>
+                  <ArrowRight size={16} aria-hidden="true" />
+                </button>
+                <button type="button" className="pitch-outline" onClick={() => goToSection('pitch-problem')}>
+                  <span>{language === 'es' ? 'Explorar resumen' : 'Explore summary'}</span>
+                </button>
+              </div>
+            </article>
+
+            <aside className="pitch-logo-card" aria-label="KRUMM brand block">
+              <img src={logo} alt="KRUMM" />
+              <div>
+                <h2>KRUMM</h2>
+                <p>{language === 'es' ? 'Behavioral Intelligence Platform' : 'Behavioral Intelligence Platform'}</p>
+              </div>
+            </aside>
+          </div>
         </div>
       </header>
 
-      <main className="pitch-pres-main">
-        <div className={`pitch-slide ${slide.variant || ''}`} key={currentSlide}>
-          {slide.type === 'hero' && slide.render()}
+      <nav className="pitch-sections" aria-label="Pitch sections">
+        {sections.map((section) => (
+          <button key={section.id} type="button" onClick={() => goToSection(section.id)}>
+            {section.label}
+          </button>
+        ))}
+      </nav>
 
-          {slide.type === 'cards' && (
-            <>
-              <h2>{slide.title}</h2>
-              <div className={`pitch-card-grid pitch-grid-${slide.columns}`}>
-                {slide.cards.map((card, idx) => {
-                  const Icon = card.icon;
-                  const role = slide.variant === 'team' ? card.role : null;
-                  return (
-                    <article key={idx} className={`pitch-card ${slide.variant || ''}`}>
-                      <Icon size={24} aria-hidden="true" />
-                      <h3>{card.title[language]}</h3>
-                      {role && <p className="pitch-role">{role[language]}</p>}
-                      <p>{card.text[language]}</p>
-                    </article>
-                  );
-                })}
-              </div>
-            </>
-          )}
+      <main className="pitch-main">
+        <section id="pitch-problem" className="pitch-block">
+          <h2>{t.sectionProblem}</h2>
+          <div className="pitch-card-grid pitch-card-grid-3">
+            {coreCards.map((card) => (
+              <article key={card.title.es} className="pitch-card">
+                <card.icon size={20} aria-hidden="true" />
+                <h3>{card.title[language]}</h3>
+                <p>{card.text[language]}</p>
+              </article>
+            ))}
+          </div>
+        </section>
 
-          {slide.type === 'market' && (
-            <>
-              <h2>{slide.title}</h2>
-              <div className="pitch-market-grid-slide">
-                {slide.data.map((row, idx) => (
-                  <article key={idx} className="pitch-market-card-slide">
-                    <span>{row.label[language]}</span>
-                    <strong>{row.value}</strong>
-                    <p>{row.text[language]}</p>
-                  </article>
+        <section id="pitch-process" className="pitch-block">
+          <h2>{t.sectionProcess}</h2>
+          <div className="pitch-card-grid pitch-card-grid-3">
+            {processSteps.map((step) => (
+              <article key={step.title.es} className="pitch-card pitch-card-process">
+                <step.icon size={20} aria-hidden="true" />
+                <h3>{step.title[language]}</h3>
+                <p>{step.text[language]}</p>
+              </article>
+            ))}
+          </div>
+        </section>
+
+        <section id="pitch-edge" className="pitch-block pitch-block-dark">
+          <h2>{t.sectionEdge}</h2>
+          <div className="pitch-card-grid pitch-card-grid-3">
+            {edgeBenefits.map((item) => (
+              <article key={item.title.es} className="pitch-card pitch-card-dark">
+                <item.icon size={20} aria-hidden="true" />
+                <h3>{item.title[language]}</h3>
+                <p>{item.text[language]}</p>
+              </article>
+            ))}
+          </div>
+        </section>
+
+        <section id="pitch-moat" className="pitch-block">
+          <h2>{t.sectionMoat}</h2>
+          <div className="pitch-card-grid pitch-card-grid-2">
+            {moatItems.map((item) => (
+              <article key={item.title.es} className="pitch-card">
+                <item.icon size={20} aria-hidden="true" />
+                <h3>{item.title[language]}</h3>
+                <p>{item.text[language]}</p>
+              </article>
+            ))}
+          </div>
+        </section>
+
+        <section id="pitch-market" className="pitch-block">
+          <h2>{t.sectionMarket}</h2>
+          <div className="pitch-market-grid">
+            {marketRows.map((row) => (
+              <article key={row.label.es} className="pitch-market-card">
+                <span>{row.label[language]}</span>
+                <strong>{row.value}</strong>
+                <p>{row.text[language]}</p>
+              </article>
+            ))}
+          </div>
+        </section>
+
+        <section id="pitch-compare" className="pitch-block">
+          <h2>{t.sectionComparison}</h2>
+          <div className="pitch-table-wrap" role="region" aria-label="Competitive comparison">
+            <table>
+              <thead>
+                <tr>
+                  <th>{language === 'es' ? 'Criterio' : 'Criteria'}</th>
+                  <th>ATS</th>
+                  <th>{language === 'es' ? 'IA Avatares' : 'AI Avatars'}</th>
+                  <th>KRUMM</th>
+                </tr>
+              </thead>
+              <tbody>
+                {comparisonRows.map((row) => (
+                  <tr key={row.metric.es}>
+                    <td>{row.metric[language]}</td>
+                    <td>{row.ats[language]}</td>
+                    <td>{row.avatars[language]}</td>
+                    <td className="pitch-td-krumm">{row.krumm[language]}</td>
+                  </tr>
                 ))}
-              </div>
-            </>
-          )}
+              </tbody>
+            </table>
+          </div>
+        </section>
 
-          {slide.type === 'comparison' && (
-            <>
-              <h2>{slide.title}</h2>
-              <div className="pitch-table-slide">
-                <table>
-                  <thead>
-                    <tr>
-                      <th>{language === 'es' ? 'Criterio' : 'Criteria'}</th>
-                      <th>ATS</th>
-                      <th>{language === 'es' ? 'IA Avatares' : 'AI Avatars'}</th>
-                      <th>KRUMM</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {slide.data.map((row, idx) => (
-                      <tr key={idx}>
-                        <td>{row.metric[language]}</td>
-                        <td>{row.ats[language]}</td>
-                        <td>{row.avatars[language]}</td>
-                        <td className="pitch-td-highlight">{row.krumm[language]}</td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            </>
-          )}
+        <section id="pitch-team" className="pitch-block">
+          <h2>{t.sectionTeam}</h2>
+          <div className="pitch-card-grid pitch-card-grid-3">
+            {teamMembers.map((member) => (
+              <article key={member.name} className="pitch-card">
+                <Users size={20} aria-hidden="true" />
+                <h3>{member.name}</h3>
+                <p className="pitch-role">{member.role[language]}</p>
+                <p>{member.text[language]}</p>
+              </article>
+            ))}
+          </div>
+        </section>
 
-          {slide.type === 'milestone' && (
-            <div className="pitch-milestone-slide">
-              <div className="pitch-milestone-content">
-                <h2>{slide.title}</h2>
-                <p>{slide.text}</p>
-                <p className="pitch-milestone-emphasis">{slide.milestoneText}</p>
-                <div className="pitch-milestone-arr">
-                  <Globe2 size={32} />
-                  <div>
-                    <p>{slide.cta}</p>
-                    <strong>$10M+</strong>
-                    <span>ARR</span>
-                  </div>
-                </div>
-              </div>
-            </div>
-          )}
-        </div>
+        <section id="pitch-milestone" className="pitch-block pitch-highlight">
+          <div className="pitch-highlight-grid">
+            <article>
+              <h2>{t.roiTitle}</h2>
+              <p>{t.roiText}</p>
+              <p>{t.milestoneText}</p>
+            </article>
+            <aside>
+              <Globe2 size={20} aria-hidden="true" />
+              <p>{t.milestoneArr}</p>
+              <strong>$10M+</strong>
+              <span>ARR</span>
+              <TrendingUp size={18} aria-hidden="true" />
+            </aside>
+          </div>
+        </section>
       </main>
-
-      <footer className="pitch-pres-footer">
-        <div className="pitch-footer-left">
-          <span className="pitch-slide-counter">
-            {currentSlide + 1} / {slides.length}
-          </span>
-        </div>
-
-        <div className="pitch-footer-center">
-          {language === 'es' ? 'Usa flechas o botones para navegar' : 'Use arrows or buttons to navigate'}
-        </div>
-
-        <div className="pitch-footer-right">
-          <button
-            type="button"
-            className="pitch-nav-btn"
-            onClick={goPrev}
-            disabled={currentSlide === 0}
-            title={language === 'es' ? 'Anterior (←)' : 'Previous (←)'}
-          >
-            <ChevronLeft size={20} />
-          </button>
-          <button
-            type="button"
-            className="pitch-nav-btn"
-            onClick={goNext}
-            disabled={currentSlide === slides.length - 1}
-            title={language === 'es' ? 'Siguiente (→)' : 'Next (→)'}
-          >
-            <ChevronRight size={20} />
-          </button>
-        </div>
-      </footer>
     </div>
   );
 }

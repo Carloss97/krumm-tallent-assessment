@@ -7,6 +7,7 @@ A comprehensive, scientifically-validated cognitive assessment platform featurin
 - **14 Cognitive Games**: Complete battery of scientifically-validated assessments
 - **Real-time Telemetry**: Live performance tracking and data collection
 - **AI-Powered Reports**: Google Gemini integration for intelligent analysis
+- **Integrated Pitch Experience**: Dedicated public route at `/pitch` aligned with KRUMM branding
 - **Performance Optimized**: Code splitting and lazy loading for fast loading
 - **Comprehensive Testing**: Full test suite with 95%+ coverage
 - **Load Tested**: Supports multiple concurrent users
