@@ -53,23 +53,46 @@ const BalloonGame = ({ onComplete, trials = DEFAULT_TRIALS }) => {
 
   const size = Math.min(MAX_SIZE, MIN_SIZE + pumps * PUMP_SIZE_BOOST);
 
-  const cleanupTimeout = () => {
+  const cleanupTimeout = useCallback(() => {
     if (timeoutRef.current) { clearTimeout(timeoutRef.current); timeoutRef.current = null; }
-  };
+  }, []);
 
-  function goToNextTrial() {
+  // Stable refs so callbacks can call each other without circular deps or stale closures
+  const handleBankRef = useRef(null);
+  const pumpRef = useRef(null);
+  const goToNextTrialRef = useRef(null);
+
+  // startTrial is stable; it calls handleBankRef.current to avoid circular dependency
+  const startTrial = useCallback((index) => {
+    cleanupTimeout();
+    const newThreshold = randInt(MIN_PUMPS_THRESHOLD, MAX_PUMPS_THRESHOLD);
+    setThreshold(newThreshold);
+    setPumps(0);
+    setExploded(false);
+    setShowConfetti(false);
+    setDisabled(false);
+    setJustPumped(false);
+    trialStartRef.current = Date.now();
+    try { recordTrialEvent && recordTrialEvent({ event: 'balloon_trial_start', payload: { trialIndex: index, threshold: newThreshold, trials } }); } catch (error) { void error; }
+
+    // auto-end trial after timeout - use ref to avoid stale closure
+    timeoutRef.current = setTimeout(() => {
+      if (handleBankRef.current) handleBankRef.current(true);
+    }, TRIAL_TIMEOUT_MS);
+  }, [cleanupTimeout, recordTrialEvent, trials]);
+
+  // goToNextTrial captures startTrial (stable) and reads latest trialIndex/trials via closure
+  const goToNextTrial = useCallback(() => {
     cleanupTimeout();
     const next = trialIndex + 1;
     if (next >= trials) {
-      // finished: results effect will handle finalization
       setTrialIndex(next);
       return;
     }
     setTrialIndex(next);
-    // small gap between trials for animation
-    // eslint-disable-next-line react-hooks/immutability
     setTimeout(() => startTrial(next), 400);
-  }
+  }, [cleanupTimeout, trialIndex, trials, startTrial]);
+  goToNextTrialRef.current = goToNextTrial;
 
   function handleBank(forced = false) {
     if (disabled) return;
@@ -85,34 +108,16 @@ const BalloonGame = ({ onComplete, trials = DEFAULT_TRIALS }) => {
 
     setTimeout(() => {
       setShowConfetti(false);
-      goToNextTrial();
+      if (goToNextTrialRef.current) goToNextTrialRef.current();
     }, 900);
   }
-
-  const startTrial = useCallback((index) => {
-    cleanupTimeout();
-    const newThreshold = randInt(MIN_PUMPS_THRESHOLD, MAX_PUMPS_THRESHOLD);
-    setThreshold(newThreshold);
-    setPumps(0);
-    setExploded(false);
-    setShowConfetti(false);
-    setDisabled(false);
-    setJustPumped(false);
-    trialStartRef.current = Date.now();
-    try { recordTrialEvent && recordTrialEvent({ event: 'balloon_trial_start', payload: { trialIndex: index, threshold: newThreshold, trials } }); } catch (error) { void error; }
-
-    // auto-end trial after timeout (bank current pumps if any, otherwise advance)
-    timeoutRef.current = setTimeout(() => {
-      // forced bank or advance
-      handleBank(true);
-    }, TRIAL_TIMEOUT_MS);
-  }, [recordTrialEvent, trials]);
+  handleBankRef.current = handleBank;
 
   useEffect(() => {
     // start first trial on mount
     startTrial(0);
     return () => { cleanupTimeout(); };
-  }, [startTrial]);
+  }, [startTrial, cleanupTimeout]);
 
   // push final summary when we have results equal to trials
   useEffect(() => {
@@ -131,7 +136,7 @@ const BalloonGame = ({ onComplete, trials = DEFAULT_TRIALS }) => {
     setTimeout(() => { try { onComplete && onComplete(); } catch (error) { void error; } }, 300);
   }, [results, trials, totalBanked, recordTrialEvent, onComplete]);
 
-  const handleExplosion = (pumpCount) => {
+  const handleExplosion = useCallback((pumpCount) => {
     setExploded(true);
     setDisabled(true);
     cleanupTimeout();
@@ -141,11 +146,11 @@ const BalloonGame = ({ onComplete, trials = DEFAULT_TRIALS }) => {
     // record trial result
     setResults((r) => [...r, { trialIndex, pumps: pumpCount, exploded: true, bankedPoints: 0, durationMs: Date.now() - trialStartRef.current }]);
 
-    // brief explosion animation then next trial
-    setTimeout(() => goToNextTrial(), 900);
-  };
+    // brief explosion animation then next trial — use ref to always call latest version
+    setTimeout(() => { if (goToNextTrialRef.current) goToNextTrialRef.current(); }, 900);
+  }, [cleanupTimeout, recordTrialEvent, trialIndex]);
 
-  const pump = () => {
+  const pump = useCallback(() => {
     if (disabled || exploded) return;
     const next = Math.min(MAX_PUMPS, pumps + 1);
     setPumps(next);
@@ -156,23 +161,24 @@ const BalloonGame = ({ onComplete, trials = DEFAULT_TRIALS }) => {
     if (next >= threshold) {
       handleExplosion(next);
     }
-  };
+  }, [disabled, exploded, pumps, recordTrialEvent, trialIndex, threshold, handleExplosion]);
+  pumpRef.current = pump;
 
-  // keyboard support: Space = pump, Enter = bank
+  // keyboard support: Space = pump, Enter = bank — use stable refs to avoid re-subscribing on every render
   useEffect(() => {
     const onKey = (e) => {
       if (e.code === 'Space') {
         e.preventDefault();
-        if (e.type === 'keydown') pump();
+        if (e.type === 'keydown' && pumpRef.current) pumpRef.current();
       }
       if (e.key === 'Enter' && e.type === 'keydown') {
         e.preventDefault();
-        handleBank(false);
+        if (handleBankRef.current) handleBankRef.current(false);
       }
     };
     window.addEventListener('keydown', onKey);
     return () => window.removeEventListener('keydown', onKey);
-  }, [pump, handleBank]);
+  }, []);
 
   const perc = Math.round((pumps / MAX_PUMPS) * 100);
 
