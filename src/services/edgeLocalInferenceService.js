@@ -451,37 +451,36 @@ function localizedLabels(isEn) {
     summaryPrefix: 'La evaluacion edge-local indica',
     confidencePrefix: 'confianza calibrada por estabilidad de senales locales',
     strengths: {
-      executionControl: 'control de ejecucion bajo presion',
-      adaptability: 'adaptabilidad ante cambios de reglas',
-      attentionStability: 'estabilidad de atencion sostenida',
-      decisionQuality: 'calidad de decision con tiempo acotado',
-      learningVelocity: 'velocidad de aprendizaje entre tareas',
+      executionControl: 'control de ejecución y precisión rítmica',
+      adaptability: 'adaptabilidad a cambios dinámicos de reglas',
+      attentionStability: 'estabilidad atencional y foco sostenido',
+      decisionQuality: 'calidad de decisión situacional bajo presión',
+      learningVelocity: 'velocidad de aprendizaje y transferencia de tareas',
     },
     areas: {
-      executionControl: 'estabilizar consistencia de ejecucion en bloques de alta carga cognitiva',
-      adaptability: 'entrenar adaptacion mas rapida cuando cambian las condiciones',
-      attentionStability: 'reforzar atencion sostenida en secuencias repetitivas',
-      decisionQuality: 'mejorar calibracion entre velocidad y precision',
-      learningVelocity: 'aumentar velocidad de transferencia tras feedback y cambios de regla',
+      executionControl: 'optimizar la consistencia de ejecución en escenarios de alta carga',
+      adaptability: 'entrenar la velocidad de adaptación ante cambios imprevistos en la red',
+      attentionStability: 'reforzar el foco sostenido en secuencias de ruteo complejas',
+      decisionQuality: 'mejorar la calibración riesgo-recompensa en condiciones críticas',
+      learningVelocity: 'aumentar la transferencia de patrones tras la actualización de protocolos',
     },
-    evidenceInterpretationHigh: 'senal por sobre la linea base objetivo',
-    evidenceInterpretationMid: 'senal en banda esperada de linea base',
-    evidenceInterpretationLow: 'senal por debajo de la linea base objetivo',
+    evidenceInterpretationHigh: 'señal de desempeño superior a la línea base',
+    evidenceInterpretationMid: 'señal dentro de los rangos óptimos esperados',
+    evidenceInterpretationLow: 'señal por debajo de la línea base competitiva',
     career: [
       {
-        role: 'Coordinacion Operativa / Liderazgo de Equipo',
-        fit: 'Ejecucion consistente y calidad de decision situacional alinean con rutas de liderazgo operativo.',
+        role: 'Líder de Operaciones Estratégicas',
+        fit: 'La consistencia en el control de ejecución y la calidad de decisión situacional son ideales para roles de mando operativo.',
       },
       {
-        role: 'Operaciones de Cliente / Excelencia de Servicio',
-        fit: 'Perfil de atencion y control de respuesta favorece flujos sensibles a calidad de servicio.',
+        role: 'Especialista en Excelencia de Servicio',
+        fit: 'El perfil de estabilidad atencional y control de respuesta favorece flujos críticos de calidad y atención al cliente.',
       },
       {
-        role: 'Analista Junior / Mejora de Procesos',
-        fit: 'Adaptabilidad y velocidad de aprendizaje sugieren encaje para crecimiento analitico estructurado.',
+        role: 'Analista de Procesos Senior',
+        fit: 'La adaptabilidad y velocidad de aprendizaje sugieren una alta capacidad para el diseño y mejora de sistemas complejos.',
       },
-    ],
-  };
+    ],  };
 }
 
 function buildEvidence(dimensions, labels) {
