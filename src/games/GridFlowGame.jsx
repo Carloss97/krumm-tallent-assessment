@@ -1,0 +1,481 @@
+import React, { useState, useEffect, useRef, useCallback } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { useTelemetry } from '../TelemetryContext';
+import { playMemoryClick, playMemoryFlash } from '../utils/audio';
+import Confetti from '../components/Confetti';
+import { useLanguage } from '../context/LanguageContext';
+
+const GRID = 10;
+const SAT_DECAY = 2; // % per second
+
+const WALLS_L1 = [
+  '1,1','2,1','1,2','2,2', '4,1','5,1','4,2','5,2', '7,1','8,1','7,2','8,2',
+  '1,5','2,5','1,6','2,6', '4,5','5,5','4,6', '7,5','8,5','7,6','8,6',
+];
+
+const LEVELS = [
+  { 
+    walls: WALLS_L1, 
+    targets: [
+      { id:1, x:2, y:0, color:'#ef4444', points:150, dropZone:{x:7,y:9} }, 
+      { id:2, x:0, y:4, color:'#3b82f6', points:100, dropZone:{x:9,y:7} }
+    ], 
+    stations: [], 
+    energyDrain: 0, 
+    timeLimit: 60, 
+    startPos: { x:0, y:0 } 
+  },
+  { 
+    walls: WALLS_L1, 
+    targets: [
+      { id:3, x:6, y:0, color:'#ef4444', points:150, dropZone:{x:3,y:9} }, 
+      { id:4, x:0, y:7, color:'#3b82f6', points:100, dropZone:{x:9,y:4} }
+    ], 
+    stations: [{ x:3, y:3 }, { x:6, y:6 }], 
+    energyDrain: 4, 
+    timeLimit: 75, 
+    startPos: { x:0, y:0 } 
+  },
+  { 
+    walls: WALLS_L1, 
+    targets: [
+      { id:5, x:4, y:4, color:'#10b981', points:200, dropZone:{x:1,y:9} }
+    ], 
+    stations: [{ x:5, y:5 }], 
+    energyDrain: 5, 
+    timeLimit: 45, 
+    startPos: { x:9, y:9 } 
+  },
+];
+
+const QUIZ = [
+  { q: '¿Qué sucede con la satisfacción del objetivo con el tiempo?', opts: ['Aumenta', 'Se mantiene igual', 'Disminuye', 'Depende del color'], correct: 2 },
+  { q: '¿Para qué sirven las estaciones con rayo (⚡)?', opts: ['Aumentar puntos', 'Recargar energía', 'Teletransportarse', 'Ganar tiempo'], correct: 1 },
+];
+
+const DEMO_BRIEFINGS = {
+  es: [
+    {
+      title: 'Protocolo I: Flujo Logístico',
+      body: 'Iniciando simulación de ruteo. Tu objetivo es interceptar los paquetes de datos y transferirlos a sus respectivos nodos de descarga. La precisión en la ruta es fundamental.'
+    },
+    {
+      title: 'Protocolo II: Matriz Energética',
+      body: 'La red ahora presenta restricciones de consumo. Cada unidad de desplazamiento consume energía del sistema. Utiliza las estaciones de carga (⚡) para mantener la integridad de la operación.'
+    },
+    {
+      title: 'Protocolo III: Optimización de Red',
+      body: 'Escenario de alta complejidad. El flujo de datos es inestable y el consumo energético es crítico. Planifica una secuencia de ruteo que maximice la eficiencia antes de que expire la ventana de tiempo.'
+    }
+  ],
+  en: [
+    {
+      title: 'Protocol I: Logistic Flow',
+      body: 'Starting routing simulation. Your objective is to intercept data packets and transfer them to their respective download nodes. Routing precision is fundamental.'
+    },
+    {
+      title: 'Protocol II: Energy Matrix',
+      body: 'The network now presents consumption restrictions. Each unit of movement consumes system energy. Use charging stations (⚡) to maintain the integrity of the operation.'
+    },
+    {
+      title: 'Protocol III: Network Optimization',
+      body: 'High complexity scenario. Data flow is unstable and energy consumption is critical. Plan a routing sequence that maximizes efficiency before the time window expires.'
+    }
+  ]
+};
+
+const GridFlowGame = ({ isActive, onEndGame, isDemo }) => {
+  const { recordError, startTracking, stopTracking } = useTelemetry();
+  const { language } = useLanguage();
+
+  const effectiveMaxRounds = LEVELS.length;
+  const hasEndedRef = useRef(false);
+
+  const [gameState, setGameState] = useState('playing');
+  const [briefing, setBriefing] = useState(null);
+  const [round, setRound] = useState(0);
+  const [player, setPlayer] = useState({ x:0, y:0 });
+  const [inventory, setInventory] = useState(null);
+  const [energy, setEnergy] = useState(100);
+  const [targets, setTargets] = useState([]);
+  const [sats, setSats] = useState({});
+  const [score, setScore] = useState(0);
+  const [levelTimeLeft, setLevelTimeLeft] = useState(0);
+  const [quizStep, setQuizStep] = useState(0);
+  const [fuelEmpty, setFuelEmpty] = useState(false);
+  const [showDeliverAnim, setShowDeliverAnim] = useState(false);
+  const [showPickupAnim, setShowPickupAnim] = useState(false);
+  const [showChargeAnim, setShowChargeAnim] = useState(false);
+
+  const quizScoreRef = useRef(0);
+  const stateRef = useRef({ player:{x:0,y:0}, inventory:null, targets:[], energy:100, round:0, score:0 });
+  const satsRef = useRef({});
+  const levelTimerRef = useRef(null);
+  const satTimerRef = useRef(null);
+
+  const finishGame = useCallback(() => {
+    if (hasEndedRef.current) return;
+    hasEndedRef.current = true;
+    setGameState('done');
+    stopTracking('game6', stateRef.current.score, quizScoreRef.current, { score: stateRef.current.score, quizScore: quizScoreRef.current });
+    onEndGame(stateRef.current.score, quizScoreRef.current);
+  }, [onEndGame, stopTracking]);
+
+  const transitionToQuiz = useCallback(() => {
+    if (hasEndedRef.current) return;
+    clearInterval(levelTimerRef.current);
+    clearInterval(satTimerRef.current);
+    setGameState('quiz');
+  }, []);
+
+  const loadLevel = useCallback((idx) => {
+    if (idx >= effectiveMaxRounds) { transitionToQuiz(); return; }
+    
+    const lvl = LEVELS[idx];
+    const initSats = {};
+    lvl.targets.forEach(t => { initSats[t.id] = 100; });
+    satsRef.current = initSats;
+    setSats({ ...initSats });
+    setFuelEmpty(false);
+    
+    const newState = {
+      round: idx,
+      player: { ...lvl.startPos },
+      inventory: null,
+      energy: 100,
+      targets: lvl.targets.map(t => ({ ...t, active:true })),
+    };
+    stateRef.current = { ...stateRef.current, ...newState };
+    setRound(newState.round);
+    setPlayer(newState.player);
+    setInventory(newState.inventory);
+    setEnergy(newState.energy);
+    setTargets(newState.targets);
+    
+    const pack = DEMO_BRIEFINGS[language] || DEMO_BRIEFINGS.es;
+    setBriefing(pack[idx] || null);
+    setGameState('briefing');
+
+  }, [transitionToQuiz, effectiveMaxRounds, language]);
+
+  useEffect(() => { 
+    if (isActive) { 
+      hasEndedRef.current = false;
+      startTracking();
+      quizScoreRef.current = 0;
+      stateRef.current = { player:{x:0,y:0}, inventory:null, targets:[], energy:100, round:0, score:0 };
+      setGameState('briefing');
+      setQuizStep(0);
+      setScore(0);
+      loadLevel(0);
+    } 
+  }, [isActive, loadLevel, startTracking]);
+
+  useEffect(() => {
+    if (!isActive || gameState !== 'playing') {
+      clearInterval(levelTimerRef.current);
+      clearInterval(satTimerRef.current);
+      return;
+    }
+
+    const lvl = LEVELS[stateRef.current.round];
+    if (!lvl) return;
+
+    setLevelTimeLeft(lvl.timeLimit);
+    levelTimerRef.current = setInterval(() => {
+      setLevelTimeLeft(prev => {
+        if (prev <= 1) {
+          clearInterval(levelTimerRef.current);
+          const r = stateRef.current.round;
+          if (r + 1 < effectiveMaxRounds) loadLevel(r + 1); else transitionToQuiz();
+          return 0;
+        }
+        return prev - 1;
+      });
+    }, 1000);
+
+    satTimerRef.current = setInterval(() => {
+        const newSats = { ...satsRef.current };
+        let changed = false;
+        stateRef.current.targets.forEach(t => {
+          if (!t.active) return;
+          const prev = newSats[t.id] ?? 100;
+          const next = Math.max(0, prev - SAT_DECAY);
+          if (next !== prev) { newSats[t.id] = next; changed = true; }
+        });
+        if (changed) {
+          satsRef.current = newSats;
+          setSats({ ...newSats });
+          
+          const inv = stateRef.current.inventory;
+          const expiredTargets = stateRef.current.targets.map(t => (t.active && (newSats[t.id] ?? 100) <= 0 && (!inv || inv.id !== t.id)) ? { ...t, active:false } : t);
+          if (expiredTargets.some((t, i) => t.active !== stateRef.current.targets[i].active)) {
+            stateRef.current.targets = expiredTargets;
+            setTargets([...expiredTargets]);
+            if (expiredTargets.every(t => !t.active) && !inv) {
+              const r = stateRef.current.round;
+              if (r+1 < effectiveMaxRounds) loadLevel(r+1); else transitionToQuiz();
+            }
+          }
+        }
+      }, 1000);
+
+    return () => {
+        clearInterval(levelTimerRef.current);
+        clearInterval(satTimerRef.current);
+    };
+  }, [isActive, gameState, round, loadLevel, transitionToQuiz, effectiveMaxRounds]);
+
+  const move = useCallback((dir) => {
+    if (!isActive || gameState !== 'playing') return;
+    const { player:p, energy:eng, targets:tgt, inventory:inv, round:r, score:sc } = stateRef.current;
+    
+    const lvl = LEVELS[r];
+    const walls = new Set(lvl.walls);
+
+    if (eng <= 0 && lvl.energyDrain > 0) {
+      recordError();
+      setFuelEmpty(true);
+      clearInterval(levelTimerRef.current);
+      setTimeout(() => {
+        setFuelEmpty(false);
+        if (r+1 < effectiveMaxRounds) loadLevel(r+1); else transitionToQuiz();
+      }, 2000);
+      return;
+    }
+
+    let nx=p.x, ny=p.y;
+    if (dir==='up') ny=Math.max(0,p.y-1);
+    if (dir==='down') ny=Math.min(GRID-1,p.y+1);
+    if (dir==='left') nx=Math.max(0,p.x-1);
+    if (dir==='right') nx=Math.min(GRID-1,p.x+1);
+    if (walls.has(`${nx},${ny}`) || (nx===p.x && ny===p.y)) return;
+
+    let newEnergy = Math.max(0, eng - lvl.energyDrain);
+    if (lvl.stations.some(s=>s.x===nx&&s.y===ny)) {
+      if (eng < 100) {
+        setShowChargeAnim(true);
+        setTimeout(() => setShowChargeAnim(false), 900);
+        try { playMemoryFlash(); } catch (error) { void error; }
+      }
+      newEnergy = 100;
+    }
+
+    let newInv=inv, newTargets=[...tgt], newScore=sc;
+    if (!newInv) {
+      const hit = newTargets.find(t=>t.active&&t.x===nx&&t.y===ny);
+        if (hit) {
+        newInv=hit; 
+        newTargets=newTargets.map(t=>t.id===hit.id?{...t,active:false}:t);
+        try { playMemoryClick(); } catch (error) { void error; }
+        setShowPickupAnim(true);
+        setTimeout(() => setShowPickupAnim(false), 800);
+      }
+    } else {
+      if (nx===newInv.dropZone.x && ny===newInv.dropZone.y) {
+        const sat = satsRef.current[newInv.id] ?? 0;
+        newScore += Math.round(newInv.points * Math.max(0.1, sat/100)); 
+        newInv = null;
+        try { playMemoryFlash(); } catch (error) { void error; }
+        setShowDeliverAnim(true);
+        setTimeout(() => setShowDeliverAnim(false), 900);
+      }
+    }
+    
+    const newState = { player:{x:nx,y:ny}, energy:newEnergy, inventory:newInv, targets:newTargets, score:newScore };
+    stateRef.current = { ...stateRef.current, ...newState };
+    setPlayer(newState.player); setEnergy(newState.energy); setInventory(newState.inventory); setTargets(newState.targets); setScore(newState.score);
+
+    if (newEnergy <= 0 && lvl.energyDrain > 0) {
+      setFuelEmpty(true);
+      clearInterval(levelTimerRef.current);
+      setTimeout(transitionToQuiz, 2000);
+      return;
+    }
+    
+    if (newTargets.every(t=>!t.active) && !newInv) {
+      if (r+1 < effectiveMaxRounds) loadLevel(r+1); else transitionToQuiz();
+    }
+  }, [isActive, gameState, loadLevel, transitionToQuiz, recordError, effectiveMaxRounds]);
+
+  const handleKeyDown = useCallback((e) => {
+    const map = { ArrowUp:'up', ArrowDown:'down', ArrowLeft:'left', ArrowRight:'right', w:'up', s:'down', a:'left', d:'right' };
+    if (!map[e.key]) return;
+    e.preventDefault();
+    move(map[e.key]);
+  }, [move]);
+
+  useEffect(() => { window.addEventListener('keydown',handleKeyDown); return ()=>window.removeEventListener('keydown',handleKeyDown); }, [handleKeyDown]);
+
+  const handleQuizAnswer = (idx) => {
+    if (hasEndedRef.current) return;
+    if (idx===QUIZ[quizStep].correct) quizScoreRef.current+=1; else recordError();
+    if (quizStep+1<QUIZ.length) setQuizStep(p=>p+1); else finishGame();
+  };
+
+  const renderGrid = () => {
+    const lvl = LEVELS[round];
+    if (!lvl) return [];
+    const walls = new Set(lvl.walls);
+    const revealedDrop = inventory ? inventory.dropZone : null;
+    const cells = [];
+    for (let y=0; y<GRID; y++) {
+      for (let x=0; x<GRID; x++) {
+        const isWall = walls.has(`${x},${y}`);
+        const isPlayer = player.x===x && player.y===y;
+        const station = lvl.stations.find(s=>s.x===x&&s.y===y);
+        const target = targets.find(t=>t.active&&t.x===x&&t.y===y);
+        const isDrop = revealedDrop && revealedDrop.x===x && revealedDrop.y===y;
+
+        let bg = isWall ? '#1e293b' : 'rgba(241,245,249,0.5)';
+        let border = isWall ? '1px solid #0f172a' : '1px solid rgba(148,163,184,0.1)';
+        if (!isWall && isDrop) { bg=`${inventory.color}15`; border=`2px dashed ${inventory.color}80`; }
+        if (!isWall && station) { bg='rgba(254,240,138,0.3)'; border='1px solid rgba(234,179,8,0.4)'; }
+
+        let content = null;
+        if (isWall) content = null;
+        else if (station) content = <motion.span animate={{ scale: [1, 1.2, 1] }} transition={{ duration: 1.5, repeat: Infinity }} style={{ fontSize:'0.9rem' }}>⚡</motion.span>;
+        else if (isDrop) content = <motion.div animate={{ scale:[0.6,1,0.6], opacity: [0.4, 0.8, 0.4] }} transition={{ duration:2, repeat:Infinity }} style={{ width:'40%', height:'40%', borderRadius:'50%', background:inventory.color, border:`2px solid ${inventory.color}` }} />;
+
+        if (target) {
+          const sat = sats[target.id] ?? 100;
+          const satColor = sat >= 60 ? '#059669' : sat >= 30 ? '#d97706' : '#dc2626';
+          content = (
+            <motion.div initial={{ scale: 0 }} animate={{ scale: 1 }} style={{ position:'relative', width:'60%', height:'60%', background:target.color, borderRadius:'4px', boxShadow:`0 4px 6px -1px ${target.color}40`, display:'flex', alignItems:'center', justifyContent:'center' }}>
+              <span style={{ position:'absolute', top:'-16px', left:'50%', transform:'translateX(-50%)', fontSize:'9px', color:satColor, fontWeight:'800' }}>{sat}%</span>
+            </motion.div>
+          );
+        }
+
+        if (isPlayer) content = (
+          <motion.div layoutId="player" style={{ width:'70%', height:'70%', borderRadius:'8px', background:'#4f46e5', border:'2px solid #fff', boxShadow:'0 10px 15px -3px rgba(79,70,229,0.4)', zIndex: 10 }} />
+        );
+
+        cells.push(<div key={`${x}-${y}`} style={{ width:'34px', height:'32px', background:bg, border, display:'flex', justifyContent:'center', alignItems:'center', position:'relative', borderRadius: isWall ? '2px' : '0' }}>{content}</div>);
+      }
+    }
+    return cells;
+  };
+
+  const lastMoveRef = useRef(0);
+  const [flashDir, setFlashDir] = useState(null);
+  const ArrowBtn = ({ dir, label }) => (
+    <motion.button
+      whileTap={{ scale: 0.9 }}
+      onPointerDown={(e) => { e.preventDefault(); const now = Date.now(); if (now - lastMoveRef.current < 100) return; lastMoveRef.current = now; setFlashDir(dir); setTimeout(() => setFlashDir(null), 150); move(dir); }}
+      style={{ width:44, height:44, background: flashDir === dir ? '#4f46e5' : 'rgba(255,255,255,0.8)', border: `1px solid ${flashDir === dir ? '#4f46e5' : 'rgba(99,102,241,0.2)'}`, borderRadius:'12px', fontSize:'1.2rem', color: flashDir === dir ? '#fff' : '#1e1b4b', cursor:'pointer', display:'flex', alignItems:'center', justifyContent:'center', boxShadow: '0 4px 6px -1px rgba(0,0,0,0.1)' }}
+    >{label}</motion.button>
+  );
+
+  const avgSat = targets.length ? Math.round(Object.entries(sats).filter(([id]) => targets.find(t=>t.id===parseInt(id)&&t.active)).reduce((s,[,v])=>s+v,0) / Math.max(1, targets.filter(t=>t.active).length)) : 100;
+  const satColor = avgSat >= 60 ? '#059669' : avgSat >= 30 ? '#d97706' : '#dc2626';
+
+  if (!isActive) {
+      return (
+          <motion.div initial={{ opacity:0 }} animate={{ opacity:1 }} className="glass-panel" style={{ padding:'40px', textAlign:'center', border:'2px solid #059669' }}>
+            <div style={{ color:'#059669', fontSize:'2rem', marginBottom:'12px', fontWeight:'800' }}>[ FLOW SYNC ]</div>
+            <p style={{ color:'#6b7280', textTransform:'uppercase', letterSpacing:'2px', fontSize:'0.85rem' }}>Optimizing Resource Allocation...</p>
+          </motion.div>
+      )
+  }
+
+  const lvlData = LEVELS[round];
+
+  return (
+    <div style={{ width:'100%', minHeight:'640px', display:'flex', flexDirection:'column', alignItems:'center', justifyContent:'center', padding:'12px', gap:'12px', position:'relative' }}>
+      <AnimatePresence>
+        {gameState === 'playing' && (
+          <motion.div initial={{ opacity:0, y:20 }} animate={{ opacity:1, y:0 }} exit={{ opacity:0 }} className="glass-panel" style={{ padding:'20px', display:'flex', flexDirection:'column', alignItems:'center', gap:'12px', background: 'rgba(255,255,255,0.9)', backdropFilter: 'blur(8px)' }}>
+            <div style={{ display:'flex', justifyContent:'space-between', width:'100%', color:'#1e1b4b', textTransform:'uppercase', letterSpacing:'1px', fontSize:'0.8rem', fontWeight:'800', gap:'20px' }}>
+              <span>Round {round+1}/{effectiveMaxRounds}</span>
+              <span style={{ color: levelTimeLeft<10?'#dc2626':'#059669' }}>⏱ {levelTimeLeft}s</span>
+              {lvlData.energyDrain>0 && <span style={{ color: energy<30?'#dc2626':'#1e1b4b' }}>⚡ {energy}%</span>}
+              <span style={{ color:satColor }}>★ {avgSat}%</span>
+              <span style={{ color:'#4f46e5' }}>Pts: {score}</span>
+            </div>
+            
+            <div style={{ position:'relative', padding:'8px', border:'1px solid rgba(99,102,241,0.1)', borderRadius:'12px', background:'#f8fafc', boxShadow: 'inset 0 2px 4px rgba(0,0,0,0.05)' }}>
+              {showPickupAnim && (
+                <motion.div initial={{ y:10, opacity:0 }} animate={{ y:-30, opacity:1 }} exit={{ opacity:0 }} style={{ position: 'absolute', left: '50%', transform: 'translateX(-50%)', zIndex: 30, background: '#1e293b', padding: '6px 16px', borderRadius: 20, color: '#fff', fontWeight: 700, fontSize: '0.8rem' }}>
+                  {language === 'es' ? '+ RECOGIDO' : '+ COLLECTED'}
+                </motion.div>
+              )}
+              {showDeliverAnim && (
+                <motion.div initial={{ scale:0.8, opacity:0 }} animate={{ scale:1.1, opacity:1 }} exit={{ opacity:0 }} style={{ position: 'absolute', left: '50%', top: '40%', transform: 'translate(-50%, -50%)', zIndex: 30, background: 'linear-gradient(135deg, #10b981, #059669)', padding: '12px 24px', borderRadius: 12, color: '#fff', fontWeight: 900, boxShadow: '0 10px 15px -3px rgba(0,0,0,0.2)' }}>
+                  {language === 'es' ? 'ENTREGADO' : 'DELIVERED'}
+                </motion.div>
+              )}
+              {showChargeAnim && (
+                <motion.div initial={{ scale:0.5, opacity:0 }} animate={{ scale:1, opacity:1 }} exit={{ opacity:0 }} style={{ position: 'absolute', right: '10px', top: '10px', zIndex: 30, background: '#fbbf24', padding: '6px 12px', borderRadius: 8, color: '#000', fontWeight: 800, fontSize: '0.75rem' }}>
+                  ⚡ RECARGA
+                </motion.div>
+              )}
+              {showDeliverAnim && (<div style={{ position: 'absolute', inset: 0, pointerEvents: 'none', zIndex: 40 }}><Confetti count={12} spread={70} duration={1} /></div>)}
+              <div style={{ display:'grid', gridTemplateColumns:`repeat(${GRID}, 34px)`, gap:'1px' }}>{renderGrid()}</div>
+            </div>
+
+            <div style={{ width: '100%', display: 'flex', justifyContent: 'center', gap: '24px', alignItems: 'center' }}>
+               <div style={{ display:'flex', flexDirection:'column', alignItems:'center', gap:'4px' }}>
+                <ArrowBtn dir="up" label="↑" />
+                <div style={{ display:'flex', gap:'4px' }}>
+                  <ArrowBtn dir="left" label="←" /><ArrowBtn dir="down" label="↓" /><ArrowBtn dir="right" label="→" />
+                </div>
+              </div>
+              
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', minWidth: '140px' }}>
+                <div style={{ fontSize: '0.7rem', color: '#64748b', fontWeight: 700, textTransform: 'uppercase' }}>{language === 'es' ? 'Inventario' : 'Inventory'}</div>
+                {inventory ? (
+                  <motion.div initial={{ x:-10, opacity:0 }} animate={{ x:0, opacity:1 }} style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '10px', background: 'rgba(99,102,241,0.05)', borderRadius: '8px', border: `1px solid ${inventory.color}40` }}>
+                    <div style={{ width:'12px', height:'12px', background:inventory.color, borderRadius:'3px' }}/>
+                    <span style={{ fontSize: '0.85rem', fontWeight: 700 }}>{language === 'es' ? 'Listo' : 'Ready'}</span>
+                  </motion.div>
+                ) : (
+                  <div style={{ fontSize: '0.8rem', color: '#94a3b8', fontStyle: 'italic' }}>{language === 'es' ? 'Vacío' : 'Empty'}</div>
+                )}
+              </div>
+            </div>
+
+            {fuelEmpty && <motion.div initial={{ scale:0.9, opacity:0 }} animate={{ scale:1, opacity:1 }} style={{ padding:'10px 24px', background:'#dc2626', color:'white', borderRadius:'12px', fontWeight:'900', fontSize:'0.9rem', boxShadow: '0 10px 15px -3px rgba(220,38,38,0.3)' }}>{language === 'es' ? '⚠ SIN ENERGÍA' : '⚠ NO ENERGY'}</motion.div>}
+          </motion.div>
+        )}
+
+        {gameState === 'briefing' && briefing && (
+          <motion.div initial={{ opacity:0 }} animate={{ opacity:1 }} exit={{ opacity:0 }} style={{ position:'absolute', inset:0, background:'rgba(15,23,42,0.6)', backdropFilter: 'blur(4px)', display:'flex', alignItems:'center', justifyContent:'center', zIndex: 80, borderRadius: '16px' }}>
+            <motion.div initial={{ y:20, scale:0.95 }} animate={{ y:0, scale:1 }} style={{ background:'#ffffff', padding:'32px', borderRadius:'20px', maxWidth:'440px', textAlign:'center', border:'1px solid rgba(15,23,42,0.1)', boxShadow:'0 25px 50px -12px rgba(0,0,0,0.25)' }}>
+              <div style={{ color: '#4f46e5', fontSize: '0.75rem', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '2px', marginBottom: '8px' }}>
+                {language === 'es' ? 'Protocolo de Red' : 'Network Protocol'}
+              </div>
+              <h4 style={{ margin: 0, fontSize:'1.4rem', color:'#1e1b4b', fontWeight: 800 }}>{briefing.title}</h4>
+              <p style={{ margin:'16px 0 24px', color:'#475569', lineHeight:1.7, fontSize: '0.95rem' }}>{briefing.body}</p>
+              <button className="btn btn-primary" onClick={() => setGameState('playing')} style={{ width: '100%', padding: '14px' }}>
+                {language === 'es' ? 'Iniciar Operación' : 'Start Operation'}
+              </button>
+            </motion.div>
+          </motion.div>
+        )}
+
+        {gameState === 'quiz' && (
+          <motion.div initial={{ scale:0.95, opacity:0 }} animate={{ scale:1, opacity:1 }} className="glass-panel" style={{ padding:'40px', maxWidth:'520px', textAlign:'center' }}>
+            <div style={{ color:'#7c3aed', fontSize:'0.85rem', textTransform:'uppercase', letterSpacing:'3px', marginBottom:'12px', fontWeight:'800' }}>Network Check</div>
+            <p style={{ color:'#1e1b4b', marginBottom:'32px', fontSize:'1.1rem', fontWeight: '500' }}>{QUIZ[quizStep].q}</p>
+            <div style={{ display:'flex', flexDirection:'column', gap:'12px' }}>
+              {QUIZ[quizStep].opts.map((opt, i) => (
+                <motion.button 
+                  key={i} 
+                  whileHover={{ x: 5, backgroundColor: 'rgba(124,58,237,0.1)' }}
+                  className="btn" 
+                  onClick={() => handleQuizAnswer(i)} 
+                  style={{ padding:'14px 20px', textAlign:'left', display:'flex', gap:'12px', borderRadius: '12px' }}
+                >
+                  <span style={{ opacity:0.5 }}>{i+1}.</span><span>{opt}</span>
+                </motion.button>
+              ))}
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </div>
+  );
+};
+
+export default GridFlowGame;

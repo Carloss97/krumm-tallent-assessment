@@ -26,35 +26,35 @@ const GAME_CATALOG = [
     },
     icon: Zap,
     difficulty: 'intermediate',
-    duration: 60,
+    duration: 45,
     category: { es: 'Comportamiento', en: 'Behavioral' },
     skills: ['Risk Assessment', 'Decision Making'],
     enabled: true
   },
   {
     id: 'grid',
-    name: { es: 'Optimizar Rejilla', en: 'Grid Optimizer' },
+    name: { es: 'Grid Flow', en: 'Grid Flow' },
     description: {
-      es: 'Razonamiento espacial y planificación estratégica',
-      en: 'Spatial reasoning and strategic planning'
+      es: 'Optimización de ruteo y flujo de red',
+      en: 'Routing and network flow optimization'
     },
     icon: Grid3x3,
     difficulty: 'intermediate',
-    duration: 75,
+    duration: 90,
     category: { es: 'Cognitivo', en: 'Cognitive' },
-    skills: ['Spatial Reasoning', 'Planning'],
+    skills: ['Routing', 'Planning'],
     enabled: true
   },
   {
     id: 'laser',
-    name: { es: 'Puzzle Láser', en: 'Laser Puzzle' },
+    name: { es: 'Láser y espejos', en: 'Laser & mirrors' },
     description: {
-      es: 'Resolución de problemas y pensamiento lógico',
-      en: 'Problem-solving and logical thinking'
+      es: 'Redirecciona haces con espejos y bifurcadores',
+      en: 'Redirect beams with mirrors and bifurcators'
     },
     icon: Lightbulb,
     difficulty: 'hard',
-    duration: 60,
+    duration: 75,
     category: { es: 'Cognitivo', en: 'Cognitive' },
     skills: ['Problem Solving', 'Logic'],
     enabled: true
@@ -149,11 +149,20 @@ const getDifficultyLabel = (difficulty, language) => {
   return labels[difficulty] || difficulty;
 };
 
-const GameGallery = ({ selectedGames = [], onSelectionChange, maxGames = 8 }) => {
+const GameGallery = ({
+  selectedGames = [],
+  onSelectionChange,
+  maxGames = 8,
+  availableGameIds = null,
+  lockedLabel = null,
+  lockSelection = false,
+}) => {
   const { language } = useLanguage();
   const [filterCategory, setFilterCategory] = useState(null);
 
   const toggleGameSelection = (gameId) => {
+    if (lockSelection) return;
+    if (Array.isArray(availableGameIds) && !availableGameIds.includes(gameId)) return;
     if (selectedGames.includes(gameId)) {
       onSelectionChange(selectedGames.filter(id => id !== gameId));
     } else if (selectedGames.length < maxGames) {
@@ -199,8 +208,13 @@ const GameGallery = ({ selectedGames = [], onSelectionChange, maxGames = 8 }) =>
         <AnimatePresence>
           {filteredGames.map((game) => {
             const isSelected = selectedGames.includes(game.id);
-            const isDisabled = !isSelected && selectedGames.length >= maxGames;
+            const isAvailable = !Array.isArray(availableGameIds) || availableGameIds.includes(game.id);
+            const isLimitReached = !isSelected && selectedGames.length >= maxGames;
+            const isDisabled = !isAvailable || isLimitReached;
             const IconComponent = game.icon;
+            const disabledMessage = !isAvailable
+              ? (lockedLabel || (language === 'es' ? 'No disponible en demo' : 'Not available in demo'))
+              : (language === 'es' ? 'Límite alcanzado' : 'Limit reached');
 
             return (
               <motion.div
@@ -212,6 +226,7 @@ const GameGallery = ({ selectedGames = [], onSelectionChange, maxGames = 8 }) =>
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: -20 }}
+                aria-disabled={isDisabled}
               >
                 {isSelected && (
                   <div className="selection-badge">
@@ -247,7 +262,7 @@ const GameGallery = ({ selectedGames = [], onSelectionChange, maxGames = 8 }) =>
                 {isDisabled && (
                   <div className="disabled-overlay">
                     <AlertCircle size={20} />
-                    <span>{language === 'es' ? 'Límite alcanzado' : 'Limit reached'}</span>
+                    <span>{disabledMessage}</span>
                   </div>
                 )}
               </motion.div>

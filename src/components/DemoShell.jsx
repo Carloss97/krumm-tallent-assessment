@@ -6,7 +6,7 @@ import { useTelemetry } from '../TelemetryContext';
 import { useLanguage } from '../context/LanguageContext';
 // Prefer prototype games for a higher-fidelity demo experience
 import ProtoBalloon from '../games/BalloonGame';
-import GridOptimizerGame from '../games/GridOptimizerGame';
+import GridFlowGame from '../games/GridFlowGame';
 import LaserPuzzleGame from '../games/LaserPuzzleGame';
 import ProtoGoNoGo from '../games/GoNoGoGame';
 import ProtoNBack from '../games/NBackGame';
@@ -23,9 +23,9 @@ import './DemoShell.css';
 
 // Adapter wrappers so DemoShell can call games with the expected onComplete() callback
 // For the demo we intentionally allow full-mode versions
-const BalloonProtoWrapper = ({ onComplete, est }) => <ProtoBalloon isActive={true} isDemo={false} timeLimit={est} onEndGame={() => onComplete && onComplete()} />;
-const GridProtoWrapper = ({ onComplete, est }) => <GridOptimizerGame isActive={true} isDemo={false} timeLimit={est} onEndGame={() => onComplete && onComplete()} />;
-const LaserProtoWrapper = ({ onComplete, est }) => <LaserPuzzleGame isActive={true} isDemo={false} timeLimit={est} onEndGame={() => onComplete && onComplete()} />;
+const BalloonProtoWrapper = ({ onComplete, est }) => <ProtoBalloon isActive={true} isDemo={true} timeLimit={est} onEndGame={() => onComplete && onComplete()} />;
+const GridProtoWrapper = ({ onComplete, est }) => <GridFlowGame isActive={true} isDemo={true} timeLimit={est} onEndGame={() => onComplete && onComplete()} />;
+const LaserProtoWrapper = ({ onComplete, est }) => <LaserPuzzleGame isActive={true} isDemo={true} timeLimit={est} onEndGame={() => onComplete && onComplete()} />;
 const GoNoGoProtoWrapper = ({ onComplete, est }) => <ProtoGoNoGo isActive={true} isDemo={false} timeLimit={est} onEndGame={() => onComplete && onComplete()} />;
 const NBackProtoWrapper = ({ onComplete, est }) => <ProtoNBack isActive={true} isDemo={false} timeLimit={est} onEndGame={() => onComplete && onComplete()} />;
 const MemoryProtoWrapper = ({ onComplete, est }) => <MemoryGame isActive={true} isDemo={false} timeLimit={est} onEndGame={() => onComplete && onComplete()} />;
@@ -42,27 +42,30 @@ const ALL_GAMES = {
       en: 'Pump the balloon carefully. Each pump increases the chance of popping. Press start to begin.'
     },
     component: BalloonProtoWrapper,
-    est: 60
+    est: 60,
+    telemetryId: 'game4'
   },
   grid: {
     id: 'grid',
-    title: { es: 'Optimizar rejilla', en: 'Optimize grid' },
+    title: { es: 'Grid Flow', en: 'Grid Flow' },
     instructions: {
-      es: 'Lleva los bloques de color a su destino lo antes posible. En niveles superiores evita quedarte sin energía. Pulsa comenzar para iniciar.',
-      en: 'Carry colored blocks to their destination as quickly as possible. In higher levels avoid running out of energy. Press start to begin.'
+      es: 'Optimiza el flujo de paquetes en la red. Recógelos y llévalos a su destino antes de que expire su satisfacción. Gestiona tu energía. Pulsa comenzar para iniciar.',
+      en: 'Optimize packet flow in the network. Collect and deliver them to their destination before satisfaction expires. Manage your energy. Press start to begin.'
     },
     component: GridProtoWrapper,
-    est: 75
+    est: 110,
+    telemetryId: 'game6'
   },
   laser: {
     id: 'laser',
-    title: { es: 'Puzzle láser', en: 'Laser puzzle' },
+    title: { es: 'Láser y espejos', en: 'Laser & mirrors' },
     instructions: {
-      es: 'Resuelve el puzzle láser dirigiendo los haces para alcanzar el objetivo. Reflectores desvían el haz, bifurcadores lo dividen en dos y portales teletransportan el haz a la otra entrada. Pulsa comenzar para iniciar.',
-      en: 'Solve the laser puzzle by directing beams to reach the target. Reflectors change the beam direction, bifurcators split the beam into two paths, and portals teleport the beam to the paired portal. Press start to begin.'
+      es: 'Guia el láser con espejos para iluminar todas las antenas. Luego aparece el bifurcador para dividir el haz. Pulsa comenzar para iniciar.',
+      en: 'Guide the laser with mirrors to light all antennas. Then a bifurcator appears to split the beam. Press start to begin.'
     },
     component: LaserProtoWrapper,
-    est: 60
+    est: 100,
+    telemetryId: 'game7'
   },
   gng: {
     id: 'gng',
@@ -116,8 +119,9 @@ const ALL_GAMES = {
   }
 };
 
-// Default selection (5 games)
-const DEFAULT_ACTIVITIES = ['balloon', 'grid', 'laser', 'gng', 'nback'];
+const DEMO_FIXED_IDS = ['balloon', 'laser', 'grid'];
+// Default selection (short demo)
+const DEFAULT_ACTIVITIES = DEMO_FIXED_IDS;
 
 const DemoShell = () => {
   const [gameSelectionMode, setGameSelectionMode] = useState(true);
@@ -164,6 +168,8 @@ const DemoShell = () => {
     es: {
       interactiveDemo: 'Demo interactiva',
       selectGames: 'Selecciona tus juegos',
+      demoLockNotice: 'Demo corta: solo 3 juegos disponibles.',
+      lockedGameLabel: 'No disponible en demo',
       activitiesLabel: 'actividades',
       timeRemaining: 'Tiempo restante:',
       progressTitle: 'Progreso',
@@ -184,6 +190,8 @@ const DemoShell = () => {
     en: {
       interactiveDemo: 'Interactive demo',
       selectGames: 'Select your games',
+      demoLockNotice: 'Short demo: only 3 games available.',
+      lockedGameLabel: 'Not available in demo',
       activitiesLabel: 'activities',
       timeRemaining: 'Time remaining:',
       progressTitle: 'Progress',
@@ -209,8 +217,8 @@ const DemoShell = () => {
     setTimeLeft(TOTAL_TIME);
   };
 
-  const handleGameSelectionChange = (newSelection) => {
-    setSelectedGameIds(newSelection);
+  const handleGameSelectionChange = () => {
+    setSelectedGameIds(DEMO_FIXED_IDS);
   };
 
   const startedAtRef = useRef(0);
@@ -229,6 +237,7 @@ const DemoShell = () => {
       est: activity.est,
       order: index + 1,
       status: completedIds.includes(activity.id) ? 'completed' : 'not_completed',
+      telemetryId: activity.telemetryId || activity.id,
     }));
 
     const telemetryReport = analyzeDemoTelemetry(sessionData, activityRows);
@@ -380,92 +389,130 @@ const DemoShell = () => {
 
   return (
     <div className="demo-shell">
-      {/* GAME SELECTION SCREEN */}
-      {gameSelectionMode ? (
-        <div className="demo-selection">
-          <header className="selection-header">
-            <h1>{demoCopy[language]?.interactiveDemo || demoCopy.es.interactiveDemo}</h1>
-            <p>{demoCopy[language]?.selectGames || demoCopy.es.selectGames}</p>
-          </header>
-
-          <main className="selection-main">
-            <GameGallery
-              selectedGames={selectedGameIds}
-              onSelectionChange={handleGameSelectionChange}
-              maxGames={8}
-            />
-
-            {selectedGameIds.length > 0 && (
-              <div className="selection-actions">
-                <button
-                  className="btn btn-primary"
-                  onClick={handleStartDemo}
-                >
-                  {demoCopy[language]?.continueButton || demoCopy.es.continueButton}
-                  {' '}
-                  ({ACTIVITIES.length} {demoCopy[language]?.activitiesLabel || demoCopy.es.activitiesLabel})
-                </button>
+      <AnimatePresence mode="wait">
+        {/* GAME SELECTION SCREEN */}
+        {gameSelectionMode ? (
+          <motion.div 
+            key="selection"
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -20 }}
+            className="demo-selection"
+          >
+            <header className="selection-header" style={{ background: 'linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%)', borderRadius: '24px', margin: '0 0 40px 0', padding: '60px 24px' }}>
+              <h1 style={{ fontSize: '3.5rem', marginBottom: '16px' }}>{demoCopy[language]?.interactiveDemo || demoCopy.es.interactiveDemo}</h1>
+              <p style={{ fontSize: '1.25rem', opacity: 0.9 }}>{demoCopy[language]?.selectGames || demoCopy.es.selectGames}</p>
+              <div style={{ marginTop: 24, display: 'inline-flex', padding: '8px 20px', background: 'rgba(255,255,255,0.1)', borderRadius: '999px', fontSize: '0.9rem', fontWeight: 600 }}>
+                {demoCopy[language]?.demoLockNotice || demoCopy.es.demoLockNotice}
               </div>
-            )}
-          </main>
-        </div>
-      ) : (
-        <>
-          {/* DEMO PLAYTHROUGH SCREEN */}
-          <header className="demo-header">
-            <div className="header-top">
-              <h2>{demoCopy[language]?.interactiveDemo || demoCopy.es.interactiveDemo} • {ACTIVITIES.length} {demoCopy[language]?.activitiesLabel || demoCopy.es.activitiesLabel}</h2>
-              <div className="demo-timer">
-                {demoCopy[language]?.timeRemaining || demoCopy.es.timeRemaining} {Math.floor((timeLeft || TOTAL_TIME) / 60)}:{String((timeLeft || TOTAL_TIME) % 60).padStart(2, '0')}
-              </div>
-            </div>
-            
-            <ProgressTracker
-              completed={Object.keys(completed)}
-              total={ACTIVITIES.length}
-              currentId={ACTIVITIES[step]?.id}
-              games={ACTIVITIES}
-            />
-          </header>
+            </header>
 
-          <main className="demo-main">
-            <section className="demo-activity">
-              <LiveDemoTelemetryHud
-                activeGameId={ACTIVITIES[step]?.id}
-                activeGameLabel={(ACTIVITIES[step]?.title && typeof ACTIVITIES[step].title === 'object')
-                  ? (ACTIVITIES[step].title[language] || ACTIVITIES[step].title.es)
-                  : ACTIVITIES[step]?.title}
+            <main className="selection-main">
+              <GameGallery
+                selectedGames={selectedGameIds}
+                onSelectionChange={handleGameSelectionChange}
+                maxGames={DEMO_FIXED_IDS.length}
+                availableGameIds={DEMO_FIXED_IDS}
+                lockedLabel={demoCopy[language]?.lockedGameLabel || demoCopy.es.lockedGameLabel}
+                lockSelection={true}
               />
-              {toast && <div className="demo-toast">{toast}</div>}
-              <h3>{(ACTIVITIES[step]?.title && typeof ACTIVITIES[step].title === 'object') ? (ACTIVITIES[step].title[language] || ACTIVITIES[step].title.es) : ACTIVITIES[step]?.title}</h3>
-              <div className="demo-activity-meta">{demoCopy[language]?.estLabel || demoCopy.es.estLabel} {Math.floor(ACTIVITIES[step]?.est / 60)}:{String(ACTIVITIES[step]?.est % 60).padStart(2, '0')}</div>
 
-              <PermissionModal open={showPermission} onClose={() => setShowPermission(false)} onRequest={requestPermissions} />
+              {selectedGameIds.length > 0 && (
+                <div className="selection-actions" style={{ border: 'none', marginTop: '48px' }}>
+                  <motion.button
+                    whileHover={{ scale: 1.05, boxShadow: '0 20px 40px -10px rgba(99,102,241,0.5)' }}
+                    whileTap={{ scale: 0.95 }}
+                    className="btn btn-primary"
+                    onClick={handleStartDemo}
+                    style={{ padding: '20px 60px', fontSize: '1.2rem', borderRadius: '20px', background: 'linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%)' }}
+                  >
+                    {demoCopy[language]?.continueButton || demoCopy.es.continueButton}
+                    {' '}
+                    ({ACTIVITIES.length} {demoCopy[language]?.activitiesLabel || demoCopy.es.activitiesLabel})
+                  </motion.button>
+                </div>
+              )}
+            </main>
+          </motion.div>
+        ) : (
+          <motion.div 
+            key="playing"
+            initial={{ opacity: 0, x: 20 }}
+            animate={{ opacity: 1, x: 0 }}
+            exit={{ opacity: 0, x: -20 }}
+          >
+            {/* DEMO PLAYTHROUGH SCREEN */}
+            <header className="demo-header" style={{ borderRadius: '20px', border: '1px solid rgba(99,102,241,0.1)', padding: '20px 24px', marginBottom: '32px' }}>
+              <div className="header-top">
+                <h2 style={{ color: '#1e1b4b', fontWeight: 800 }}>{demoCopy[language]?.interactiveDemo || demoCopy.es.interactiveDemo}</h2>
+                <div className="demo-timer" style={{ background: '#f1f5f9', padding: '8px 16px', borderRadius: '12px', fontWeight: 700, color: timeLeft < 30 ? '#dc2626' : '#475569' }}>
+                  {demoCopy[language]?.timeRemaining || demoCopy.es.timeRemaining} {Math.floor((timeLeft || TOTAL_TIME) / 60)}:{String((timeLeft || TOTAL_TIME) % 60).padStart(2, '0')}
+                </div>
+              </div>
+              
+              <ProgressTracker
+                completed={Object.keys(completed)}
+                total={ACTIVITIES.length}
+                currentId={ACTIVITIES[step]?.id}
+                games={ACTIVITIES}
+              />
+            </header>
 
-              {showInstructions && (
-                <div className="instructions-overlay">
-                  <div className="instructions-box">
-                    <h4>{demoCopy[language]?.instructionsTitle || demoCopy.es.instructionsTitle}</h4>
-                    <p>{(ACTIVITIES[step]?.instructions && ACTIVITIES[step].instructions[language]) || (ACTIVITIES[step]?.instructions && ACTIVITIES[step].instructions.es) || (ACTIVITIES[step]?.title && typeof ACTIVITIES[step].title === 'object' ? (ACTIVITIES[step].title[language] || ACTIVITIES[step].title.es) : ACTIVITIES[step]?.title)}</p>
-                    <div style={{ marginTop: 12 }}>
-                      <button className="btn" onClick={() => { setShowInstructions(false); setActivityStarted(true); }}>{demoCopy[language]?.startButton || demoCopy.es.startButton}</button>
+            <main className="demo-main">
+              <section className="demo-activity" style={{ borderRadius: '24px', boxShadow: '0 10px 15px -3px rgba(0,0,0,0.05)', border: '1px solid #f1f5f9', padding: '32px' }}>
+                <LiveDemoTelemetryHud
+                  activeGameId={ACTIVITIES[step]?.id}
+                  activeGameLabel={(ACTIVITIES[step]?.title && typeof ACTIVITIES[step].title === 'object')
+                    ? (ACTIVITIES[step].title[language] || ACTIVITIES[step].title.es)
+                    : ACTIVITIES[step]?.title}
+                />
+                {toast && <motion.div initial={{ opacity:0, y:20 }} animate={{ opacity:1, y:0 }} className="demo-toast">{toast}</motion.div>}
+                
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>
+                  <h3 style={{ margin: 0, fontSize: '1.75rem', fontWeight: 800, color: '#1e1b4b' }}>{(ACTIVITIES[step]?.title && typeof ACTIVITIES[step].title === 'object') ? (ACTIVITIES[step].title[language] || ACTIVITIES[step].title.es) : ACTIVITIES[step]?.title}</h3>
+                  <div className="demo-activity-meta" style={{ margin: 0, background: 'rgba(99,102,241,0.06)', padding: '6px 14px', borderRadius: '999px', fontSize: '0.85rem' }}>{demoCopy[language]?.estLabel || demoCopy.es.estLabel} {Math.floor(ACTIVITIES[step]?.est / 60)}:{String(ACTIVITIES[step]?.est % 60).padStart(2, '0')}</div>
+                </div>
+
+                <PermissionModal open={showPermission} onClose={() => setShowPermission(false)} onRequest={requestPermissions} />
+
+                <AnimatePresence>
+                  {showInstructions && (
+                    <motion.div 
+                      initial={{ opacity: 0 }}
+                      animate={{ opacity: 1 }}
+                      exit={{ opacity: 0 }}
+                      className="instructions-overlay" 
+                      style={{ background: 'rgba(15,23,42,0.6)', backdropFilter: 'blur(4px)', borderRadius: '24px' }}
+                    >
+                      <motion.div 
+                        initial={{ scale: 0.9, y: 20 }}
+                        animate={{ scale: 1, y: 0 }}
+                        className="instructions-box" 
+                        style={{ borderRadius: '24px', padding: '40px', maxWidth: '540px', textAlign: 'center' }}
+                      >
+                        <div style={{ color: '#6366f1', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '2px', fontSize: '0.75rem', marginBottom: '12px' }}>{demoCopy[language]?.instructionsTitle || demoCopy.es.instructionsTitle}</div>
+                        <p style={{ fontSize: '1.1rem', lineHeight: 1.7, color: '#334155', marginBottom: '32px' }}>{(ACTIVITIES[step]?.instructions && ACTIVITIES[step].instructions[language]) || (ACTIVITIES[step]?.instructions && ACTIVITIES[step].instructions.es) || (ACTIVITIES[step]?.title && typeof ACTIVITIES[step].title === 'object' ? (ACTIVITIES[step].title[language] || ACTIVITIES[step].title.es) : ACTIVITIES[step]?.title)}</p>
+                        <button className="btn btn-primary" style={{ width: '100%', padding: '16px', borderRadius: '16px' }} onClick={() => { setShowInstructions(false); setActivityStarted(true); }}>{demoCopy[language]?.startButton || demoCopy.es.startButton}</button>
+                      </motion.div>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+
+                <div style={{ minHeight: '580px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                  {activityStarted && ACTIVITIES[step] ? (() => {
+                    const ActivityComponent = ACTIVITIES[step].component;
+                    return <ActivityComponent onComplete={() => onComplete(ACTIVITIES[step].id)} est={ACTIVITIES[step].est} />;
+                  })() : (
+                    <div style={{ padding: 28, textAlign: 'center', color: '#6b7280' }}>
+                      <p>{demoCopy[language]?.readyMessage || demoCopy.es.readyMessage}</p>
                     </div>
-                  </div>
+                  )}
                 </div>
-              )}
-
-              {activityStarted && ACTIVITIES[step] ? (() => {
-                const ActivityComponent = ACTIVITIES[step].component;
-                return <ActivityComponent onComplete={() => onComplete(ACTIVITIES[step].id)} est={ACTIVITIES[step].est} />;
-              })() : (
-                <div style={{ padding: 28, textAlign: 'center', color: '#6b7280' }}>
-                  <p>{demoCopy[language]?.readyMessage || demoCopy.es.readyMessage}</p>
-                </div>
-              )}
-            </section>
-          </main>
-        </>
-      )}
+              </section>
+            </main>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       <div id="demo-live-announcer" className="sr-only" role="status" aria-live="polite" />
     </div>

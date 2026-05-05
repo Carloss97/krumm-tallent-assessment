@@ -6,121 +6,123 @@ import Confetti from '../components/Confetti';
 import { useGameTimer } from '../hooks/useGameTimer';
 import { useLanguage } from '../context/LanguageContext';
 
-const CELL = 40;
+const CELL = 44; // Slightly larger for better tap targets
 
-const SHIP_ARROW = { right:'>', left:'<', up:'^', down:'v' };
-const DEFLECT_NE = { right:'up', left:'down', up:'right', down:'left' }; 
-const DEFLECT_NW = { right:'down', left:'up', up:'left', down:'right' };
-const BIFURCATE = { right:['up','down'], left:['up','down'], up:['left','right'], down:['left','right'] };
+const SHIP_ARROW = { right: '→', left: '←', up: '↑', down: '↓' };
+const DEFLECT_NE = { right: 'up', left: 'down', up: 'right', down: 'left' };
+const DEFLECT_NW = { right: 'down', left: 'up', up: 'left', down: 'right' };
+const BIFURCATE = { right: ['up', 'down'], left: ['up', 'down'], up: ['left', 'right'], down: ['left', 'right'] };
 const DIRS = { right: [1, 0], left: [-1, 0], up: [0, -1], down: [0, 1] };
 
-const generateLevel = (levelIdx) => {
-  const cols = 10, rows = 8;
-  let valid = false;
-  let bestLevel = null;
-  
-  while(!valid) {
-    const layout = [];
-    const pathCells = new Set();
-    const shipY = Math.floor(Math.random() * 4) + 2;
-    layout.push({ x:0, y:shipY, type:'ship', dir:'right' });
-    pathCells.add(`0,${shipY}`);
-    
-    let pieces = [];
-    let heads = [{ x:0, y:shipY, dir:'right' }];
-    let antennas = 0;
-    let iters = 0;
-    
-    while(heads.length > 0 && iters < 50) {
-      iters++;
-      let h = heads.shift();
-      let cx = h.x, cy = h.y, cdir = h.dir;
-      
-      let steps = Math.floor(Math.random() * 3) + 2;
-      let nx = cx, ny = cy;
-      for(let s=0; s<steps; s++){
-         nx += DIRS[cdir][0];
-         ny += DIRS[cdir][1];
-         pathCells.add(`${nx},${ny}`);
-      }
-      
-      if (nx <= 0 || ny <= 0 || nx >= cols-1 || ny >= rows-1 || pieces.length > (levelIdx+2)) {
-         nx = Math.max(0, Math.min(cols-1, nx));
-         ny = Math.max(0, Math.min(rows-1, ny));
-         layout.push({ x:nx, y:ny, type:'antenna', id:`a${antennas++}` });
-         pathCells.add(`${nx},${ny}`);
-         continue;
-      }
-      
-      if (layout.find(l => l.x === nx && l.y === ny)) {
-         layout.push({ x:nx, y:ny, type:'antenna', id:`a${antennas++}` });
-         continue;
-      }
-      
-      let ptype = Math.random() > 0.5 ? 'reflector_ne' : 'reflector_nw';
-      if (levelIdx > 0 && Math.random() > 0.7) ptype = 'bifurcator';
-      
-      if (levelIdx > 1 && Math.random() > 0.8 && !pieces.find(p=>p.type==='portal_blue')) {
-          ptype = 'portal_blue';
-          let dropx, dropy, dropTries = 0, isGoodDrop = false;
-          do {
-            dropx = Math.floor(Math.random() * (cols-2)) + 1;
-            dropy = Math.floor(Math.random() * (rows-2)) + 1;
-            dropTries++;
-            if (!pathCells.has(`${dropx},${dropy}`) && !layout.find(l=>l.x===dropx && l.y===dropy)) isGoodDrop = true;
-          } while (!isGoodDrop && dropTries < 20);
-          
-          if (isGoodDrop) {
-             layout.push({ x:nx, y:ny, type:'portal_blue', portalId: 1, isSolution: true });
-             layout.push({ x:dropx, y:dropy, type:'portal_blue', portalId: 2, isSolution: true });
-             pieces.push({ type:'portal_blue' }, { type:'portal_blue' });
-             heads.push({ x:dropx, y:dropy, dir: cdir }); 
-             continue;
-          }
-      }
-      
-      layout.push({ x:nx, y:ny, type:ptype, isSolution: true });
-      pieces.push({ type:ptype });
-      if (ptype === 'bifurcator') {
-         heads.push({ x:nx, y:ny, dir: BIFURCATE[cdir][0] });
-         heads.push({ x:nx, y:ny, dir: BIFURCATE[cdir][1] });
-      } else {
-         heads.push({ x:nx, y:ny, dir: ptype === 'reflector_ne' ? DEFLECT_NE[cdir] : DEFLECT_NW[cdir] });
-      }
+const DEMO_BRIEFINGS = {
+  es: [
+    {
+      title: 'Fase I: Alineación de Haz',
+      body: 'Iniciando calibración óptica. El objetivo es guiar el haz de fotones hacia los receptores utilizando las unidades de reflexión (/). Arrastra las unidades para cambiar la trayectoria.'
+    },
+    {
+      title: 'Fase II: Distribución de Señal',
+      body: 'Nuevos nodos de recepción detectados. Utiliza el módulo de bifurcación (+) para dividir el flujo de luz y cubrir múltiples objetivos simultáneamente.'
+    },
+    {
+      title: 'Fase III: Puentes Cuánticos',
+      body: 'Obstrucciones detectadas en el Sector Gamma. Los portales (P) permiten trasladar el haz de luz a través de vacíos espaciales. Planifica el salto para superar los bloqueos de roca.'
     }
-    
-    if (antennas > 0 && pieces.length >= (levelIdx===0 ? 1 : 2)) {
-      const gameLayout = layout.filter(l => !l.isSolution); 
-      const emptyFunc = () => {
-         let rx, ry, sanity = 0;
-         while(sanity < 100) {
-            rx = Math.floor(Math.random() * cols); ry = Math.floor(Math.random() * rows);
-            if (!gameLayout.find(l => l.x===rx && l.y===ry) && !pathCells.has(`${rx},${ry}`)) return {x:rx, y:ry};
-            sanity++;
-         }
-         return null;
-      };
-      
-      let piecePlacedOk = true;
-      pieces.forEach(p => {
-         let empty = emptyFunc();
-         if (empty) gameLayout.push({ x:empty.x, y:empty.y, type:p.type, movable:true });
-         else piecePlacedOk = false;
-      });
-      if (!piecePlacedOk) continue;
-      
-      let numRocks = 4 + levelIdx * 2;
-      for(let r=0; r<numRocks; r++){
-         let empty = emptyFunc();
-         if (empty) gameLayout.push({ x:empty.x, y:empty.y, type:'rock' });
-      }
-
-      bestLevel = { name: `Sector ${levelIdx+1}`, cols, rows, par: pieces.length, hint: 'Guide the beam to all antennas. Portals preserve the beam direction.', cells: gameLayout, quiz: [{ q:'What element preserves the direction of the beam and teleports it?', opts:['Reflector','Portal','Bifurcator','Antenna'], correct:1 }, { q:'How does a Bifurcator modify the laser beam?', opts:['It speeds it up', 'It splits it into two paths', 'It changes its color', 'It stops the beam'], correct:1 }] };
-      valid = true;
+  ],
+  en: [
+    {
+      title: 'Phase I: Beam Alignment',
+      body: 'Starting optical calibration. The objective is to guide the photon beam towards the receivers using reflection units (/). Drag the units to change the trajectory.'
+    },
+    {
+      title: 'Phase II: Signal Distribution',
+      body: 'New reception nodes detected. Use the bifurcation module (+) to split the light flow and cover multiple targets simultaneously.'
+    },
+    {
+      title: 'Phase III: Quantum Bridges',
+      body: 'Obstructions detected in Sector Gamma. Portals (P) allow transferring the light beam through spatial voids. Plan the jump to overcome rock blockages.'
     }
-  }
-  return bestLevel;
+  ]
 };
+
+const getBriefing = (idx, language) => {
+  const pack = DEMO_BRIEFINGS[language] || DEMO_BRIEFINGS.es;
+  return pack[idx] || null;
+};
+
+const DEMO_LEVELS = [
+  {
+    name: 'Sector Alpha',
+    cols: 8,
+    rows: 6,
+    par: 2,
+    timeLimit: 40,
+    hint: {
+      es: 'Refleja la luz hacia arriba.',
+      en: 'Reflect the light upwards.'
+    },
+    cells: [
+      { x: 0, y: 4, type: 'ship', dir: 'right' },
+      { x: 6, y: 1, type: 'antenna' },
+      { x: 3, y: 5, type: 'reflector_ne', movable: true },
+      { x: 5, y: 3, type: 'reflector_ne', movable: true },
+    ],
+    quiz: [],
+  },
+  {
+    name: 'Sector Beta',
+    cols: 8,
+    rows: 6,
+    par: 3,
+    timeLimit: 50,
+    hint: {
+      es: 'Divide el haz para llegar a ambos lados.',
+      en: 'Split the beam to reach both sides.'
+    },
+    cells: [
+      { x: 0, y: 3, type: 'ship', dir: 'right' },
+      { x: 7, y: 1, type: 'antenna' },
+      { x: 7, y: 5, type: 'antenna' },
+      { x: 3, y: 2, type: 'bifurcator', movable: true },
+      { x: 5, y: 1, type: 'reflector_ne', movable: true },
+      { x: 5, y: 5, type: 'reflector_nw', movable: true },
+    ],
+    quiz: [],
+  },
+  {
+    name: 'Sector Gamma',
+    cols: 8,
+    rows: 8,
+    par: 4,
+    timeLimit: 60,
+    hint: {
+      es: 'Usa el portal para atravesar el muro.',
+      en: 'Use the portal to cross the wall.'
+    },
+    cells: [
+      { x: 0, y: 1, type: 'ship', dir: 'right' },
+      { x: 7, y: 7, type: 'antenna' },
+      { x: 3, y: 1, type: 'portal_blue', portalId: 1 },
+      { x: 3, y: 5, type: 'portal_blue', portalId: 2 },
+      { x: 1, y: 4, type: 'rock' },
+      { x: 2, y: 4, type: 'rock' },
+      { x: 3, y: 4, type: 'rock' },
+      { x: 4, y: 4, type: 'rock' },
+      { x: 5, y: 4, type: 'rock' },
+      { x: 5, y: 1, type: 'reflector_ne', movable: true },
+      { x: 5, y: 7, type: 'reflector_ne', movable: true },
+      { x: 2, y: 7, type: 'reflector_nw', movable: true },
+      { x: 2, y: 2, type: 'reflector_nw', movable: true },
+    ],
+    quiz: [
+      {
+        q: '¿Qué componente permite saltar obstáculos?',
+        opts: ['Reflector', 'Bifurcador', 'Portal', 'Roca'],
+        correct: 2
+      },
+    ],
+  },
+];
 
 function traceBeam(grid, cols, rows) {
   const shipEntry = Object.entries(grid).find(([, c]) => c.type === 'ship');
@@ -155,6 +157,7 @@ function traceBeam(grid, cols, rows) {
       const otherPortalKey = Object.keys(grid).find(k => k !== cellKey && grid[k].type === 'portal_blue');
       if (otherPortalKey) { const [px, py] = otherPortalKey.split(',').map(Number); queue.push({ x:px, y:py, dir }); }
     } else if (type === 'antenna') { beamCells.add(cellKey); litAntennas.add(cellKey); }
+    else if (type === 'rock') { /* blocks beam */ }
   }
   return { beamCells, litAntennas };
 }
@@ -175,9 +178,11 @@ const LaserPuzzleGame = ({ isActive, onEndGame, isDemo, timeLimit }) => {
   const [moves, setMoves] = useState(0);
   const [totalMoves, setTotalMoves] = useState(0);
   const [gamePhase, setGamePhase] = useState('playing'); 
+  const [briefing, setBriefing] = useState(null);
   const [quizStep, setQuizStep] = useState(0);
   const quizScore = useRef(0);
   const hasEndedRef = useRef(false);
+  const currentLevel = procLevels ? procLevels[levelIdx] : null;
 
   const finishGame = useCallback((tm) => {
     if(hasEndedRef.current) return;
@@ -198,38 +203,39 @@ const LaserPuzzleGame = ({ isActive, onEndGame, isDemo, timeLimit }) => {
       setLevelIdx(next);
       setGrid(buildGrid(procLevels[next]));
       setMoves(0);
-      setGamePhase('playing');
+      setBriefing(isDemo ? getBriefing(next, language) : null);
+      setGamePhase(isDemo ? 'briefing' : 'playing');
     } else {
       const q = procLevels[procLevels.length - 1].quiz;
       if (q && q.length > 0) setGamePhase('quiz');
       else finishGame(totalMoves);
     }
-  }, [levelIdx, totalMoves, procLevels, finishGame]);
+  }, [levelIdx, totalMoves, procLevels, finishGame, isDemo, language]);
   
-  const timeLeft = useGameTimer({ isActive: isActive && gamePhase === 'playing', timeLimit, onEnd: advanceLevel });
+  const levelTimeLimit = isDemo && currentLevel?.timeLimit ? currentLevel.timeLimit : timeLimit;
+  const timeLeft = useGameTimer({ isActive: isActive && gamePhase === 'playing', timeLimit: levelTimeLimit, onEnd: advanceLevel });
 
   useEffect(() => {
     if (isActive) {
         hasEndedRef.current = false;
         startTracking();
         quizScore.current = 0;
-        // generate levels asynchronously to avoid blocking the main thread during heavy generation
         setProcLevels(null);
         setLevelIdx(0);
         setGrid({});
         setMoves(0);
         setTotalMoves(0);
-        setGamePhase('playing');
+        setGamePhase(isDemo ? 'briefing' : 'playing');
         setQuizStep(0);
 
         setTimeout(() => {
-          const levels = isDemo ? [generateLevel(0)] : [generateLevel(0), generateLevel(1), generateLevel(2), generateLevel(3)];
-          setProcLevels(levels);
+          setProcLevels(DEMO_LEVELS);
           setLevelIdx(0);
-          setGrid(buildGrid(levels[0]));
+          setGrid(buildGrid(DEMO_LEVELS[0]));
+          setBriefing(isDemo ? getBriefing(0, language) : null);
         }, 0);
     }
-  }, [isActive, isDemo, startTracking]);
+  }, [isActive, isDemo, startTracking, language]);
   
   const handleCellClick = useCallback((x, y) => {
     if (gamePhase !== 'playing') return;
@@ -245,6 +251,7 @@ const LaserPuzzleGame = ({ isActive, onEndGame, isDemo, timeLimit }) => {
         setGrid(g => { const n = { ...g }; delete n[selKey]; n[key] = piece; return n; });
         setMoves(m => m + 1); setTotalMoves(tm => tm + 1);
         setSelected(null);
+        try { playMemoryClick(); } catch (error) { void error; }
       } else if (cell?.movable) setSelected({ x, y });
       else setSelected(null);
     } else {
@@ -309,97 +316,139 @@ const LaserPuzzleGame = ({ isActive, onEndGame, isDemo, timeLimit }) => {
     const isLit = litAntennas.has(key);
     const isSel = selected?.x === x && selected?.y === y;
     const type = cell?.type;
-    let bg = 'rgba(213,219,245,0.38)', border = '1px solid rgba(150,160,200,0.15)', cursor = 'default', content = null;
+    let bg = 'rgba(213,219,245,0.25)', border = '1px solid rgba(150,160,200,0.1)', cursor = 'default', content = null;
 
-    if (type === 'ship') { bg = '#4f46e5'; border = '2px solid #6366f1'; content = <span style={{ color:'white', fontSize:'1.2rem', fontWeight:'900', lineHeight:1 }}>{SHIP_ARROW[cell.dir]}</span>; }
-    else if (type === 'rock') { bg = '#475569'; border = '1px solid #334155'; content = <div style={{ width:'72%', height:'72%', background:'#334155', borderRadius:'3px' }} />; }
-    else if (type === 'reflector_ne') { bg = isSel ? '#bbf7d0' : 'rgba(34,197,94,0.14)'; border = isSel ? '2px solid #22c55e' : '1px solid rgba(34,197,94,0.4)'; cursor = 'pointer'; content = <span style={{ color:'#15803d', fontSize:'1.6rem', fontWeight:'900', lineHeight:1, transform:'rotate(0deg)' }}>/</span>; }
-    else if (type === 'reflector_nw') { bg = isSel ? '#a7f3d0' : 'rgba(20,184,166,0.14)'; border = isSel ? '2px solid #14b8a6' : '1px solid rgba(20,184,166,0.4)'; cursor = 'pointer'; content = <span style={{ color:'#0d9488', fontSize:'1.6rem', fontWeight:'900', lineHeight:1 }}>\</span>; }
-    else if (type === 'bifurcator') { bg = isSel ? '#fed7aa' : 'rgba(249,115,22,0.13)'; border = isSel ? '2px solid #f97316' : '1px solid rgba(249,115,22,0.40)'; cursor = 'pointer'; content = <span style={{ color:'#ea580c', fontSize:'1.15rem', fontWeight:'900' }}>+</span>; }
-    else if (type === 'portal_blue') { bg = isSel ? '#c7d2fe' : 'rgba(99,102,241,0.1)'; border = isSel ? '2px solid #6366f1' : '1px dashed rgba(99,102,241,0.6)'; cursor = 'pointer'; content = <span style={{ color:'#4f46e5', fontSize:'1.2rem', fontWeight:'900' }}>P</span>; }
-    else if (type === 'antenna') { bg = isLit ? 'rgba(16,185,129,0.25)' : 'rgba(217,70,239,0.13)'; border = isLit ? '2px solid #10b981' : '1px solid rgba(217,70,239,0.5)'; content = <span style={{ fontSize:'1rem' }}>{isLit ? 'OK' : 'O'}</span>; }
+    if (type === 'ship') { 
+      bg = '#4f46e5'; border = '2px solid #6366f1'; 
+      content = <motion.span animate={{ scale: [1, 1.1, 1] }} transition={{ duration: 2, repeat: Infinity }} style={{ color:'white', fontSize:'1.2rem', fontWeight:'900' }}>{SHIP_ARROW[cell.dir]}</motion.span>; 
+    }
+    else if (type === 'rock') { bg = '#334155'; border = '1px solid #1e293b'; content = <div style={{ width:'60%', height:'60%', background:'#475569', borderRadius:'4px' }} />; }
+    else if (type === 'reflector_ne') { bg = isSel ? '#bbf7d0' : 'rgba(34,197,94,0.1)'; border = isSel ? '2px solid #22c55e' : '1px solid rgba(34,197,94,0.3)'; cursor = 'pointer'; content = <span style={{ color:'#15803d', fontSize:'1.6rem', fontWeight:'900' }}>/</span>; }
+    else if (type === 'reflector_nw') { bg = isSel ? '#a7f3d0' : 'rgba(20,184,166,0.1)'; border = isSel ? '2px solid #14b8a6' : '1px solid rgba(20,184,166,0.3)'; cursor = 'pointer'; content = <span style={{ color:'#0d9488', fontSize:'1.6rem', fontWeight:'900' }}>\</span>; }
+    else if (type === 'bifurcator') { bg = isSel ? '#fed7aa' : 'rgba(249,115,22,0.1)'; border = isSel ? '2px solid #f97316' : '1px solid rgba(249,115,22,0.3)'; cursor = 'pointer'; content = <span style={{ color:'#ea580c', fontSize:'1.4rem', fontWeight:'900' }}>+</span>; }
+    else if (type === 'portal_blue') { bg = isSel ? '#c7d2fe' : 'rgba(99,102,241,0.08)'; border = isSel ? '2px solid #6366f1' : '1px dashed rgba(99,102,241,0.5)'; cursor = 'pointer'; content = <span style={{ color:'#4f46e5', fontSize:'1.2rem', fontWeight:'900' }}>P</span>; }
+    else if (type === 'antenna') { 
+      bg = isLit ? 'rgba(16,185,129,0.2)' : 'rgba(217,70,239,0.1)'; 
+      border = isLit ? '2px solid #10b981' : '1px solid rgba(217,70,239,0.4)'; 
+      content = isLit ? <motion.div initial={{ scale:0 }} animate={{ scale:1.2 }} style={{ color:'#059669', fontWeight:'900' }}>OK</motion.div> : <span style={{ color:'#a21caf' }}>○</span>; 
+    }
 
     if (cell?.movable && !isSel) cursor = 'pointer';
 
     return (
-      <div
+      <motion.div
         key={key}
-        role="button"
-        tabIndex={0}
-        aria-label={`${type ? type : 'empty'} cell ${x} ${y}`}
+        whileHover={cell?.movable ? { scale: 1.05, backgroundColor: 'rgba(99,102,241,0.1)' } : {}}
         onClick={() => handleCellClick(x, y)}
-        onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); handleCellClick(x, y); } }}
-        style={{ width: CELL, height: CELL, background: bg, border, cursor, display: 'flex', alignItems: 'center', justifyContent: 'center', position: 'relative', boxShadow: isSel ? '0 0 0 3px rgba(99,102,241,0.5)' : 'none', transition: 'background 0.1s, box-shadow 0.1s' }}
+        style={{ width: CELL, height: CELL, background: bg, border, cursor, display: 'flex', alignItems: 'center', justifyContent:'center', position: 'relative', borderRadius: '4px', boxShadow: isSel ? '0 0 0 3px rgba(99,102,241,0.4)' : 'none', transition: 'all 0.15s' }}
       >
-        {isBeam && type !== 'rock' && type !== 'ship' && <div style={{ position:'absolute', inset:0, background:'rgba(251,191,36,0.28)', pointerEvents:'none', zIndex:0 }} />}
-        {isBeam && !type && <div style={{ position:'absolute', width:10, height:10, borderRadius:'50%', background:'rgba(251,191,36,0.75)', zIndex:1, pointerEvents:'none' }} />}
+        {isBeam && type !== 'rock' && type !== 'ship' && (
+          <motion.div 
+            initial={{ opacity: 0 }} 
+            animate={{ opacity: 1 }} 
+            style={{ position:'absolute', inset:0, background:'rgba(251,191,36,0.15)', pointerEvents:'none', zIndex:0 }} 
+          />
+        )}
+        {isBeam && !type && (
+          <motion.div 
+            animate={{ scale: [1, 1.4, 1], opacity: [0.7, 1, 0.7] }}
+            transition={{ duration: 1.5, repeat: Infinity }}
+            style={{ position:'absolute', width:8, height:8, borderRadius:'50%', background:'#f59e0b', zIndex:1, pointerEvents:'none', boxShadow: '0 0 8px #f59e0b' }} 
+          />
+        )}
         <div style={{ position:'relative', zIndex:2 }}>{content}</div>
-      </div>
+      </motion.div>
     );
   };
   
   if (!isActive) {
       return (
           <motion.div key="done" initial={{ opacity:0 }} animate={{ opacity:1 }} className="glass-panel" style={{ padding:'40px', textAlign:'center', border:'2px solid #059669' }}>
-            <div style={{ color:'#059669', fontSize:'2rem', fontWeight:'800', marginBottom:'12px' }}>[ ROUTING COMPLETE ]</div>
-            <p style={{ color:'#6b7280', textTransform:'uppercase', letterSpacing:'2px', fontSize:'0.85rem' }}>Uploading Spatial Analysis...</p>
+            <div style={{ color:'#059669', fontSize:'2rem', fontWeight:'800', marginBottom:'12px' }}>[ ANALYSIS SYNC ]</div>
+            <p style={{ color:'#6b7280', textTransform:'uppercase', letterSpacing:'2px', fontSize:'0.85rem' }}>Processing Spatial Competencies...</p>
           </motion.div>
       )
   }
 
-  const level = procLevels ? procLevels[levelIdx] : null;
+  const level = currentLevel;
+  const levelTypes = useMemo(() => {
+    if (!level?.cells) return new Set();
+    return new Set(level.cells.map((cell) => cell.type));
+  }, [level]);
+  const hintText = level
+    ? (typeof level.hint === 'object' ? (level.hint[language] || level.hint.es) : level.hint)
+    : '';
   const allAntennas = level ? Object.keys(grid).filter(k => grid[k].type === 'antenna') : [];
   const litCount = allAntennas.filter(k => litAntennas.has(k)).length;
-  const satColor = timeLeft < 30 ? '#dc2626' : timeLeft < 60 ? '#f59e0b' : '#059669';
+  const satColor = timeLeft < 15 ? '#dc2626' : timeLeft < 30 ? '#f59e0b' : '#059669';
 
   return (
-    <div style={{ width:'100%', minHeight:'620px', display:'flex', flexDirection:'column', alignItems:'center', justifyContent:'center', padding:'12px', gap:'10px' }}>
+    <div style={{ width:'100%', minHeight:'620px', display:'flex', flexDirection:'column', alignItems:'center', justifyContent:'center', padding:'12px', gap:'10px', position:'relative' }}>
       <AnimatePresence mode="wait">
         {(gamePhase === 'playing' || gamePhase === 'levelComplete') && level && (
-          <motion.div key={`level-${levelIdx}`} initial={{ opacity:0, y:10 }} animate={{ opacity:1, y:0 }} exit={{ opacity:0 }} className="glass-panel" style={{ padding:'16px', display:'flex', flexDirection:'column', alignItems:'center', gap:'10px' }}>
-            <div style={{ display:'flex', justifyContent:'space-between', width:'100%', fontSize:'0.8rem', fontWeight:'600', color:'#1e1b4b', textTransform:'uppercase', letterSpacing:'1px', gap:'16px' }}>
-              <span>{level.name} <span style={{ color:'#7c3aed' }}>({levelIdx+1}/{procLevels?.length||3})</span></span>
-              <span style={{ color:satColor }}>T {timeLeft}s</span>
-              <span>Moves: <span style={{ color:'#4f46e5' }}>{moves}</span> / par {level.par}</span>
-              <span>Antennas: <span style={{ color: litCount === allAntennas.length ? '#059669' : '#374151' }}>{litCount}/{allAntennas.length}</span></span>
+          <motion.div key={`level-${levelIdx}`} initial={{ opacity:0, y:20 }} animate={{ opacity:1, y:0 }} exit={{ opacity:0 }} className="glass-panel" style={{ padding:'20px', display:'flex', flexDirection:'column', alignItems:'center', gap:'12px' }}>
+            <div style={{ display:'flex', justifyContent:'space-between', width:'100%', fontSize:'0.85rem', fontWeight:'700', color:'#1e1b4b', textTransform:'uppercase', letterSpacing:'1px', gap:'20px' }}>
+              <span>{level.name}</span>
+              <span style={{ color:satColor }}>⏱ {timeLeft}s</span>
+              <span>Moves: <span style={{ color:'#4f46e5' }}>{moves}</span></span>
+              <span>Antennas: <span style={{ color: litCount === allAntennas.length ? '#059669' : '#b91c1c' }}>{litCount}/{allAntennas.length}</span></span>
             </div>
-            <div style={{ display:'flex', gap:'14px', fontSize:'0.68rem', color:'#64748b', flexWrap:'wrap', justifyContent:'center' }}>
-              <span><span style={{color:'#4f46e5',fontWeight:'900'}}>{'>'}</span> {language === 'es' ? 'Emisor' : 'Emitter'} — {language === 'es' ? 'Genera el haz' : 'Emits the beam'}</span>
-              <span><span style={{color:'#15803d',fontWeight:'900'}}>/</span> {language === 'es' ? 'Reflector' : 'Reflector'} — {language === 'es' ? 'Desvía el haz 90°' : 'Turns the beam 90°'}</span>
-              <span><span style={{color:'#ea580c',fontWeight:'900'}}>+</span> {language === 'es' ? 'Bifurcador' : 'Bifurcator'} — {language === 'es' ? 'Divide el haz en dos rutas' : 'Splits the beam into two paths'}</span>
-              <span><span style={{color:'#4f46e5',fontWeight:'900'}}>P</span> {language === 'es' ? 'Portal' : 'Portal'} — {language === 'es' ? 'Teletransporta el haz a su portal emparejado' : 'Teleports the beam to its paired portal'}</span>
-              <span><span style={{color:'#475569',fontWeight:'700'}}>#</span> {language === 'es' ? 'Roca' : 'Rock'}</span>
-              <span><span style={{color:'#7c3aed'}}>O</span> {language === 'es' ? 'Antena' : 'Antenna'} — {language === 'es' ? 'Objetivo que debe ser iluminado' : 'Target that must be lit'}</span>
-            </div>
-            <div style={{ border:'1px solid rgba(99,102,241,0.2)', borderRadius:'8px', background:'rgba(220,225,255,0.45)', padding:'4px', overflow:'auto' }}>
-              <div style={{ display:'grid', gridTemplateColumns:`repeat(${level.cols}, ${CELL}px)`, gap:'2px' }}>
+            
+            <div style={{ border:'1px solid rgba(99,102,241,0.15)', borderRadius:'12px', background:'rgba(248,250,252,0.8)', padding:'8px', boxShadow: 'inset 0 2px 4px rgba(0,0,0,0.05)' }}>
+              <div style={{ display:'grid', gridTemplateColumns:`repeat(${level.cols}, ${CELL}px)`, gap:'4px' }}>
                 {Array.from({ length:level.rows }, (_, y) => Array.from({ length:level.cols }, (_, x) => renderCell(x, y)))}
               </div>
             </div>
-            <div style={{ display:'flex', gap:'12px', alignItems:'center', width:'100%', justifyContent:'space-between' }}>
-              <span style={{ fontSize:'0.75rem', color:'#64748b', fontStyle:'italic' }}>Hint: {level.hint}</span>
-              <button onClick={handleReset} style={{ background:'rgba(99,102,241,0.1)', border:'1px solid rgba(99,102,241,0.3)', color:'#4f46e5', borderRadius:'8px', padding:'6px 14px', cursor:'pointer', fontSize:'0.8rem', fontWeight:'600', whiteSpace:'nowrap' }}>Reset Level</button>
+
+            <div style={{ display:'flex', gap:'12px', alignItems:'center', width:'100%', justifyContent:'space-between', marginTop: '4px' }}>
+              <span style={{ fontSize:'0.75rem', color:'#64748b', fontStyle:'italic' }}>{language === 'es' ? 'Pista:' : 'Hint:'} {hintText}</span>
+              <button onClick={handleReset} className="btn" style={{ padding: '6px 12px', fontSize: '0.75rem' }}>Reset</button>
             </div>
-            {gamePhase === 'levelComplete' && <motion.div initial={{ opacity:0 }} animate={{ opacity:1 }} style={{ padding:'10px 24px', background:'rgba(16,185,129,0.15)', border:'2px solid #10b981', borderRadius:'10px', color:'#059669', fontWeight:'800', fontSize:'0.95rem', textTransform:'uppercase', letterSpacing:'2px' }}>✔ Level Complete!</motion.div>}
           </motion.div>
         )}
         {gamePhase === 'quiz' && (
           <motion.div key="quiz" initial={{ scale:0.9, opacity:0 }} animate={{ scale:1, opacity:1 }} className="glass-panel" style={{ padding:'40px', maxWidth:'580px', textAlign:'center' }}>
-            <div style={{ color:'#7c3aed', fontSize:'0.85rem', textTransform:'uppercase', letterSpacing:'3px', marginBottom:'12px', fontWeight:'700' }}>Spatial Attention Check</div>
-            <p style={{ color:'#1e1b4b', marginBottom:'32px', fontSize:'1.05rem', lineHeight:'1.65' }}>{procLevels[levelIdx].quiz[quizStep].q}</p>
-            <div style={{ display:'flex', flexDirection:'column', gap:'10px' }}>
-              {procLevels[levelIdx].quiz[quizStep].opts.map((opt, i) => <button key={i} className="btn" onClick={() => handleQuizAnswer(i)} style={{ padding:'13px 18px', textAlign:'left', display:'flex', gap:'12px' }}><span style={{ opacity:0.65 }}>[{i+1}]</span><span>{opt}</span></button>)}
+            <div style={{ color:'#7c3aed', fontSize:'0.85rem', textTransform:'uppercase', letterSpacing:'3px', marginBottom:'12px', fontWeight:'700' }}>Spatial Insight</div>
+            <p style={{ color:'#1e1b4b', marginBottom:'32px', fontSize:'1.1rem', fontWeight: '500' }}>{procLevels[levelIdx].quiz[quizStep].q}</p>
+            <div style={{ display:'flex', flexDirection:'column', gap:'12px' }}>
+              {procLevels[levelIdx].quiz[quizStep].opts.map((opt, i) => (
+                <motion.button 
+                  key={i} 
+                  whileHover={{ x: 5, backgroundColor: 'rgba(124,58,237,0.1)' }}
+                  className="btn" 
+                  onClick={() => handleQuizAnswer(i)} 
+                  style={{ padding:'14px 20px', textAlign:'left', display:'flex', gap:'12px', borderRadius: '12px' }}
+                >
+                  <span style={{ opacity:0.5 }}>{i+1}.</span><span>{opt}</span>
+                </motion.button>
+              ))}
             </div>
           </motion.div>
         )}
       </AnimatePresence>
-      {gamePhase === 'levelComplete' && (
-        <motion.div initial={{ scale: 0.6, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} transition={{ duration: 0.6 }} style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', pointerEvents: 'none', zIndex: 60 }}>
-          <motion.div initial={{ scale: 0.8, rotate: 0 }} animate={{ scale: 1.12, rotate: 8 }} transition={{ duration: 0.9, yoyo: Infinity }} style={{ padding: '20px 36px', background: 'rgba(16,185,129,0.12)', border: '3px solid #10b981', borderRadius: 14, color: '#059669', fontWeight: 900, fontSize: '1.25rem', textTransform: 'uppercase', letterSpacing: '2px' }}>
-            {language === 'es' ? '¡Nivel completado!' : 'Level complete!'}
+
+      {gamePhase === 'briefing' && briefing && (
+        <motion.div initial={{ opacity:0 }} animate={{ opacity:1 }} style={{ position:'absolute', inset:0, background:'rgba(15,23,42,0.6)', backdropFilter: 'blur(4px)', display:'flex', alignItems:'center', justifyContent:'center', zIndex: 80, borderRadius: '16px' }}>
+          <motion.div initial={{ y:20, scale:0.95 }} animate={{ y:0, scale:1 }} style={{ background:'#ffffff', padding:'32px', borderRadius:'20px', maxWidth:'480px', textAlign:'center', border:'1px solid rgba(15,23,42,0.1)', boxShadow:'0 25px 50px -12px rgba(0,0,0,0.25)' }}>
+            <div style={{ color: '#6366f1', fontSize: '0.75rem', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '2px', marginBottom: '8px' }}>
+              {language === 'es' ? 'Briefing del Sistema' : 'System Briefing'}
+            </div>
+            <h4 style={{ margin: 0, fontSize:'1.4rem', color:'#1e1b4b', fontWeight: 800 }}>{briefing.title}</h4>
+            <p style={{ margin:'16px 0 24px', color:'#475569', lineHeight:1.7, fontSize: '0.95rem' }}>{briefing.body}</p>
+            <button className="btn btn-primary" onClick={() => setGamePhase('playing')} style={{ width: '100%', padding: '14px' }}>
+              {language === 'es' ? 'Activar Sistema' : 'Activate System'}
+            </button>
           </motion.div>
-          <Confetti count={14} spread={80} duration={1.2} />
         </motion.div>
+      )}
+
+      {gamePhase === 'levelComplete' && (
+        <div style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', pointerEvents: 'none', zIndex: 60 }}>
+          <motion.div initial={{ scale: 0.5, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 1.5, opacity: 0 }} style={{ padding: '24px 48px', background: 'rgba(16,185,129,0.95)', border: '2px solid #fff', borderRadius: 16, color: '#fff', fontWeight: 900, fontSize: '1.5rem', textTransform: 'uppercase', letterSpacing: '4px', boxShadow: '0 20px 25px -5px rgba(0,0,0,0.1)' }}>
+            {language === 'es' ? '¡ÓPTIMO!' : 'OPTIMIZED!'}
+          </motion.div>
+          <Confetti count={20} spread={100} duration={1.5} />
+        </div>
       )}
     </div>
   );

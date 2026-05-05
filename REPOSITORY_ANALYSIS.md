@@ -59,7 +59,7 @@ Cada juego implementa state management diferente sin patrón unificado:
 
 **Patrón A: useRef + useState combo**
 ```jsx
-// GridOptimizerGame.jsx
+// GridFlowGame.jsx
 const stateRef = useRef({ player:{x:0,y:0}, energy:100, round:0 });
 const quizScoreRef = useRef(0);
 const [gameState, setGameState] = useState('idle');
@@ -135,7 +135,7 @@ Files with tests:
 
 SIN TESTS:
 - LaserPuzzleGame.jsx
-- GridOptimizerGame.jsx
+- GridFlowGame.jsx
 - FrustrationGame.jsx
 - GoNoGoGame.jsx
 - MentalRotationGame.jsx
@@ -164,7 +164,7 @@ SIN TESTS:
 
 ```jsx
 // LaserPuzzleGame.jsx ~ 400+ líneas
-// GridOptimizerGame.jsx ~ 350+ líneas
+// GridFlowGame.jsx ~ 350+ líneas
 // HRRHGames.jsx ~ 700+ líneas (¡DEMASIADO!)
 ```
 
@@ -281,7 +281,7 @@ recordError(); // ¿Qué error? ¿Dónde?
 DemoShell Orchestrator
 ├── 8 Juegos seleccionados
 │   ├── Balloon (riesgo/reward)
-│   ├── Grid Optimizer (spatial)
+│   ├── Grid Flow (spatial)
 │   ├── Laser Puzzle (reasoning)
 │   ├── Go/No-Go (impulse control)
 │   ├── N-Back (working memory)
@@ -363,7 +363,7 @@ DemoShell Orchestrator
 ## 🚀 RECOMENDACIONES INICIALES
 
 ### **Fase 1: Estabilidad (1-2 semanas)**
-1. Fijar React Hook violations en top 5 juegos (GridOptimizer, LaserPuzzle, FrustrationGame)
+1. Fijar React Hook violations en top 5 juegos (GridFlow, LaserPuzzle, FrustrationGame)
 2. Agregar error handling decente con Pino logging
 3. Escribir tests para 5 juegos críticos
 

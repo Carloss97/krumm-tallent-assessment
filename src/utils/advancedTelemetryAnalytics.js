@@ -33,7 +33,8 @@ export function analyzeDemoTelemetry(sessionData = {}, activities = []) {
   const completedActivities = activities.filter((a) => a.status === 'completed').length;
 
   const perGame = activities.map((activity) => {
-    const snap = getSnapshot(sessionData, activity.id);
+    const sessionKey = activity.telemetryId || activity.id;
+    const snap = getSnapshot(sessionData, sessionKey);
     const liveInsight = snap ? buildEdgeLocalLiveInsight(snap) : null;
     const durationMs = Number.isFinite(snap?.duration) ? snap.duration : 0;
     const cursorEvents = snap?.mouseMovements?.length || 0;

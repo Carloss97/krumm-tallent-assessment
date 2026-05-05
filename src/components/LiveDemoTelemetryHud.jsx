@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useTelemetry } from '../TelemetryContext';
 import { buildEdgeLocalLiveInsight } from '../services/edgeLocalInferenceService';
+import { useLanguage } from '../context/LanguageContext';
 import './LiveDemoTelemetryHud.css';
 
 const formatClock = (seconds) => {
@@ -18,8 +19,20 @@ const MetricPill = ({ label, value, tone = 'neutral' }) => (
 ); 
 
 const LiveDemoTelemetryHud = ({ activeGameId = null, activeGameLabel = '' }) => {
+  const { language } = useLanguage();
   const { getCurrentTelemetry } = useTelemetry();
   const [snapshot, setSnapshot] = useState(null);
+  const copy = {
+    es: {
+      badge: 'Informe en vivo',
+      subtitle: 'Generando informe con telemetria local',
+    },
+    en: {
+      badge: 'Live report',
+      subtitle: 'Generating report with local telemetry',
+    }
+  };
+  const c = copy[language] || copy.es;
 
   useEffect(() => {
     const tick = () => {
@@ -39,12 +52,12 @@ const LiveDemoTelemetryHud = ({ activeGameId = null, activeGameLabel = '' }) => 
   return (
     <aside className="demo-hud" aria-label="Live telemetry insights">
       <div className="demo-hud-topline">
-        <span className="demo-hud-badge">Local only</span>
+        <span className="demo-hud-badge">{c.badge}</span>
         <span className="demo-hud-elapsed">{formatClock(snapshot.elapsedSec)}</span>
       </div>
 
       <div className="demo-hud-title">{activeGameLabel || 'Demo activity'}</div>
-      <div className="demo-hud-subtitle">Processing telemetry on-device</div>
+      <div className="demo-hud-subtitle">{c.subtitle}</div>
 
       <div className="demo-hud-grid">
         <MetricPill label="Coverage" value={`${snapshot.coverageScore}%`} tone="blue" />

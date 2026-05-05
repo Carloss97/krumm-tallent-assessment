@@ -20,7 +20,7 @@ A comprehensive, scientifically-validated cognitive assessment platform featurin
 3. **Memory Game** - Working Memory
 4. **Balloon Game** - Risk Assessment
 5. **Vigilance Game** - Sustained Attention
-6. **Grid Optimizer** - Planning & Logic
+6. **Grid Flow** - Planning & Logic
 7. **Laser Puzzle** - Spatial Reasoning
 8. **N-Back Task** - Working Memory
 9. **Tower of London** - Planning & Problem Solving
@@ -227,7 +227,7 @@ The public site includes a footer with contact information: `info@krumm.cl` and 
 The platform evaluates:
 - **Working Memory** (N-Back, Memory Game)
 - **Cognitive Flexibility** (Color Word, Wisconsin Card Sorting)
-- **Planning & Problem Solving** (Tower of London, Grid Optimizer)
+- **Planning & Problem Solving** (Tower of London, Grid Flow)
 - **Response Inhibition** (Go/No-Go Task)
 - **Processing Speed** (Trail Making Test)
 - **Spatial Reasoning** (Laser Puzzle, Mental Rotation)

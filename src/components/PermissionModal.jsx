@@ -8,17 +8,17 @@ const PermissionModal = ({ open, onClose, onRequest }) => {
   const copy = {
     es: {
       title: 'Permisos de cámara y micrófono',
-      body: 'Para mejorar la experiencia, solicitamos permiso para usar la cámara y el micrófono (no se usarán aquí realmente).',
+      body: 'Para generar el informe de la demo, solicitamos permiso para usar la cámara y el micrófono durante la sesión.',
       continue: 'Continuar sin permisos',
       request: 'Solicitar permisos',
-      note: 'Puedes rechazar y seguir con la demo.'
+      note: 'Puedes rechazar y seguir con la demo, pero el informe será menos preciso.'
     },
     en: {
       title: 'Camera & microphone permissions',
-      body: 'To improve the experience, we ask for permission to use your camera and microphone (we will not actually use them here).',
+      body: 'To generate the demo report, we request permission to use your camera and microphone during the session.',
       continue: 'Continue without permissions',
       request: 'Request permissions',
-      note: 'You can decline and continue with the demo.'
+      note: 'You can decline and continue, but the report will be less precise.'
     }
   };
 

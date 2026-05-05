@@ -1,14 +1,14 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { playBalloonPump, playBalloonPop, playMemoryFlash } from '../utils/audio';
+import { playBalloonPump, playBalloonPop, playMemoryFlash, playMemoryClick } from '../utils/audio';
 import Confetti from '../components/Confetti';
 import { useTelemetry } from '../TelemetryContext';
 import { useLanguage } from '../context/LanguageContext';
 
 const BalloonGame = ({ isActive, onEndGame, isDemo }) => {
   const MAX_ROUNDS = isDemo ? 3 : 10;
-  const MIN_PUMPS = 7;
-  const { startTracking, stopTracking } = useTelemetry();
+  const MIN_PUMPS = 6;
+  const { startTracking, stopTracking, recordError } = useTelemetry();
   const { language } = useLanguage();
 
   const [round, setRound] = useState(1);
@@ -18,6 +18,8 @@ const BalloonGame = ({ isActive, onEndGame, isDemo }) => {
   const [explosionPoint, setExplosionPoint] = useState(0);
   const [gameState, setGameState] = useState('playing'); // playing, exploded, banked
   const [showConfetti, setShowConfetti] = useState(false);
+  const [shake, setShake] = useState(0);
+  const [briefing, setBriefing] = useState(isDemo);
 
   const totalPointsRef = useRef(0);
   const popsRef = useRef(0);
@@ -28,7 +30,7 @@ const BalloonGame = ({ isActive, onEndGame, isDemo }) => {
     setCurrentRoundPoints(0);
     setGameState('playing');
     // explosion threshold between 7 and 18 inclusive
-    const MIN_THRESHOLD = 7;
+    const MIN_THRESHOLD = 8;
     const MAX_THRESHOLD = 18;
     const threshold = Math.floor(Math.random() * (MAX_THRESHOLD - MIN_THRESHOLD + 1)) + MIN_THRESHOLD;
     setExplosionPoint(threshold);
@@ -57,43 +59,42 @@ const BalloonGame = ({ isActive, onEndGame, isDemo }) => {
       setRound(1);
       setTotalPoints(0);
       initRound();
+      if (isDemo) setBriefing(true);
     }
-  }, [isActive, initRound, startTracking]);
+  }, [isActive, initRound, startTracking, isDemo]);
 
-  // Keyboard shortcuts for demo accessibility: Space = pump, Enter = bank
   useEffect(() => {
     const onKeyDown = (e) => {
-      if (!isActive || hasEndedRef.current) return;
-      // prefer semantic button clicks to reuse existing logic
-      const pumpBtn = document.querySelector('.balloon-pump-btn');
-      const bankBtn = document.querySelector('.balloon-bank-btn');
-      if ((e.code === 'Space' || e.key === ' ') && pumpBtn) {
+      if (!isActive || hasEndedRef.current || briefing) return;
+      if ((e.code === 'Space' || e.key === ' ')) {
         e.preventDefault();
-        pumpBtn.click();
+        handlePump();
       }
-      if (e.code === 'Enter' && bankBtn) {
+      if (e.code === 'Enter') {
         e.preventDefault();
-        bankBtn.click();
+        handleBank();
       }
     };
     window.addEventListener('keydown', onKeyDown);
     return () => window.removeEventListener('keydown', onKeyDown);
-  }, [isActive]);
+  }, [isActive, gameState, currentBalloonSize, briefing]);
 
   const handlePump = () => {
-    if (gameState !== 'playing' || hasEndedRef.current) return;
+    if (gameState !== 'playing' || hasEndedRef.current || briefing) return;
 
     const newSize = currentBalloonSize + 1;
+    setShake(prev => prev + 1);
 
-    // Disable any chance of an "early" pop until the minimum pump threshold is reached
-    const earlyPopChance = currentBalloonSize >= MIN_PUMPS ? Math.min(0.15, currentBalloonSize * 0.02) : 0;
+    // Disable early pop chance for first few pumps
+    const earlyPopChance = currentBalloonSize >= MIN_PUMPS ? Math.min(0.2, (currentBalloonSize - MIN_PUMPS) * 0.05) : 0;
     const isEarlyPop = Math.random() < earlyPopChance;
 
     if (newSize >= explosionPoint || isEarlyPop) {
       playBalloonPop();
       setGameState('exploded');
       popsRef.current += 1;
-      setTimeout(() => advanceRound(), 1500);
+      recordError(); // Record "error" for pop
+      setTimeout(() => advanceRound(), 1800);
     } else {
       playBalloonPump();
       setCurrentBalloonSize(newSize);
@@ -102,39 +103,43 @@ const BalloonGame = ({ isActive, onEndGame, isDemo }) => {
   };
 
   const handleBank = () => {
-    if (gameState !== 'playing' || currentBalloonSize === 1 || hasEndedRef.current) return;
+    if (gameState !== 'playing' || currentBalloonSize === 1 || hasEndedRef.current || briefing) return;
     
     totalPointsRef.current += currentRoundPoints;
     setTotalPoints(totalPointsRef.current);
     setGameState('banked');
     try { playMemoryFlash(); } catch (error) { void error; }
     setShowConfetti(true);
-    setTimeout(() => setShowConfetti(false), 1200);
-    setTimeout(() => advanceRound(), 1500);
+    setTimeout(() => setShowConfetti(false), 1400);
+    setTimeout(() => advanceRound(), 1800);
   };
 
   const copy = {
     es: {
-      trialLabel: 'RONDA',
-      bankTitle: 'BANCO',
-      awaiting: 'Esperando la siguiente secuencia...',
+      trialLabel: 'Ronda',
+      bankTitle: 'Banco',
       criticalFailure: '[ EXPLOSIÓN ]',
-      yieldSecured: 'PUNTOS ASEGURADOS',
-      pumpLabel: 'EXPANDIR GLOBO',
-      bankBtn: 'ASEGURAR PUNTOS',
-      ariaPump: 'Expandir globo (Barra espaciadora)',
-      ariaBank: 'Asegurar puntos (Enter)'
+      yieldSecured: 'Puntos Asegurados',
+      pumpLabel: 'Inflar',
+      bankBtn: 'Asegurar',
+      ariaPump: 'Inflar globo (Barra espaciadora)',
+      ariaBank: 'Asegurar puntos (Enter)',
+      briefTitle: 'Evaluación de Riesgo',
+      briefBody: 'Infla el globo para ganar puntos. Cuanto más grande, más puntos, pero mayor es el riesgo de que explote y pierdas lo acumulado en la ronda. ¡Usa el botón Asegurar para guardar tus puntos!',
+      startBtn: 'Comenzar'
     },
     en: {
-      trialLabel: 'TRIAL',
-      bankTitle: 'BANK',
-      awaiting: 'Awaiting next sequence...',
+      trialLabel: 'Round',
+      bankTitle: 'Bank',
       criticalFailure: '[ CRITICAL FAILURE ]',
-      yieldSecured: 'YIELD SECURED',
-      pumpLabel: 'PUMP BALLOON',
-      bankBtn: 'BANK POINTS',
+      yieldSecured: 'Yield Secured',
+      pumpLabel: 'Pump',
+      bankBtn: 'Bank',
       ariaPump: 'Pump balloon (Spacebar)',
-      ariaBank: 'Bank points (Enter)'
+      ariaBank: 'Bank points (Enter)',
+      briefTitle: 'Risk Assessment',
+      briefBody: 'Pump the balloon to earn points. The larger it gets, the more points you earn, but the higher the risk of it popping and losing everything for the round. Use the Bank button to save your points!',
+      startBtn: 'Start'
     }
   };
 
@@ -142,56 +147,82 @@ const BalloonGame = ({ isActive, onEndGame, isDemo }) => {
 
   if (!isActive) {
     return (
-      <motion.div
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        className="glass-panel"
-        style={{ padding: '40px', textAlign: 'center', border: '1px solid #10b981' }}
-      >
-        <div style={{ color: '#10b981', fontSize: '2rem', marginBottom: '16px' }}>[ STAGE COMPLETE ]</div>
-        <p style={{ color: '#64748b', textTransform: 'uppercase', letterSpacing: '2px' }}>Awaiting Next Sequence...</p>
+      <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="glass-panel" style={{ padding: '40px', textAlign: 'center', border: '2px solid #10b981' }}>
+        <div style={{ color: '#059669', fontSize: '2rem', fontWeight: '800', marginBottom: '12px' }}>[ ANALYSIS SYNC ]</div>
+        <p style={{ color: '#6b7280', textTransform: 'uppercase', letterSpacing: '2px', fontSize: '0.85rem' }}>Processing Risk Tolerance Data...</p>
       </motion.div>
     );
   }
 
-  const maxScale = 2.0;
-  const rawScale = 1 + (currentBalloonSize * 0.09);
-  const visualScale = Math.min(rawScale, maxScale);
+  const rawScale = 1 + (currentBalloonSize * 0.12);
+  const visualScale = Math.min(rawScale, 2.8);
+  
+  // Dynamic color based on size (risk)
+  const hue = Math.max(0, 240 - (currentBalloonSize * 15)); // Starts blue, goes to red
+  const balloonColor = `hsl(${hue}, 70%, 50%)`;
+  const balloonGradient = `radial-gradient(circle at 35% 35%, hsl(${hue}, 60%, 75%) 0%, ${balloonColor} 50%, hsl(${hue}, 80%, 25%) 100%)`;
 
   return (
-    <div className="flex-center" style={{ width: '100%', minHeight: '520px', display: 'flex', flexDirection: 'column', alignItems: 'center', backgroundColor: 'transparent', fontFamily: '"Courier New", Courier, monospace', position: 'relative', overflow: 'hidden' }}>
-      <div style={{ position: 'absolute', top: '30px', left: '40px', fontSize: '1.5rem', color: '#374151', zIndex: 50, background: 'rgba(255,255,255,0.82)', backdropFilter:'blur(8px)', padding: '8px 18px', borderRadius: '8px', border: '1px solid rgba(99,102,241,0.2)', fontWeight:'600' }}>
-        {t.trialLabel}: <span style={{color: '#4f46e5', fontWeight: 'bold'}}>{round}</span> / {MAX_ROUNDS}
-      </div>
-      <div style={{ position: 'absolute', top: '30px', right: '40px', fontSize: '1.5rem', color: '#374151', zIndex: 50, background: 'rgba(255,255,255,0.82)', backdropFilter:'blur(8px)', padding: '8px 18px', borderRadius: '8px', border: '1px solid rgba(99,102,241,0.2)', fontWeight:'600' }}>
-        {t.bankTitle}: <span style={{ color: '#059669', fontWeight: 'bold' }}>{totalPoints}</span>
+    <div style={{ width: '100%', minHeight: '600px', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '20px', gap: '20px', position: 'relative', overflow: 'hidden' }}>
+      
+      <AnimatePresence>
+        {briefing && (
+          <motion.div initial={{ opacity:0 }} animate={{ opacity:1 }} exit={{ opacity:0 }} style={{ position:'absolute', inset:0, background:'rgba(15,23,42,0.6)', backdropFilter: 'blur(4px)', display:'flex', alignItems:'center', justifyContent:'center', zIndex: 200, borderRadius: '16px' }}>
+            <motion.div initial={{ y:20, scale:0.95 }} animate={{ y:0, scale:1 }} style={{ background:'#ffffff', padding:'32px', borderRadius:'20px', maxWidth:'440px', textAlign:'center', border:'1px solid rgba(15,23,42,0.1)', boxShadow:'0 25px 50px -12px rgba(0,0,0,0.25)' }}>
+              <div style={{ color: '#4f46e5', fontSize: '0.75rem', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '2px', marginBottom: '8px' }}>
+                {t.briefTitle}
+              </div>
+              <h4 style={{ margin: 0, fontSize:'1.4rem', color:'#1e1b4b', fontWeight: 800 }}>Protocolo de Riesgo</h4>
+              <p style={{ margin:'16px 0 24px', color:'#475569', lineHeight:1.7, fontSize: '0.95rem' }}>{t.briefBody}</p>
+              <button className="btn btn-primary" onClick={() => setBriefing(false)} style={{ width: '100%', padding: '14px' }}>
+                {t.startBtn}
+              </button>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      <div style={{ display: 'flex', justifyContent: 'space-between', width: '100%', maxWidth: '500px', padding: '0 20px', position: 'absolute', top: '40px', zIndex: 10 }}>
+        <div className="glass-panel" style={{ padding: '10px 20px', display: 'flex', flexDirection: 'column', alignItems: 'center', border: '1px solid rgba(99,102,241,0.15)', background: 'rgba(255,255,255,0.8)' }}>
+          <span style={{ fontSize: '0.7rem', color: '#64748b', textTransform: 'uppercase', fontWeight: 800 }}>{t.trialLabel}</span>
+          <span style={{ fontSize: '1.4rem', fontWeight: 900, color: '#1e1b4b' }}>{round}<span style={{ color: '#94a3b8', fontSize: '1rem', fontWeight: 500 }}>/{MAX_ROUNDS}</span></span>
+        </div>
+        <div className="glass-panel" style={{ padding: '10px 20px', display: 'flex', flexDirection: 'column', alignItems: 'center', border: '1px solid rgba(16,185,129,0.15)', background: 'rgba(255,255,255,0.8)' }}>
+          <span style={{ fontSize: '0.7rem', color: '#64748b', textTransform: 'uppercase', fontWeight: 800 }}>{t.bankTitle}</span>
+          <span style={{ fontSize: '1.4rem', fontWeight: 900, color: '#059669' }}>{totalPoints}</span>
+        </div>
       </div>
 
       <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', width: '100%', position: 'relative' }}>
-        <AnimatePresence>
+        <AnimatePresence mode="wait">
           {gameState === 'playing' && (
             <motion.div
               key="balloon"
-              initial={{ scale: 0 }}
-              animate={{ scale: visualScale }}
-              transition={{ type: 'spring', stiffness: 300, damping: 20 }}
+              animate={{ scale: visualScale, x: [0, -2, 2, -2, 2, 0][shake % 6] }}
+              transition={{ type: 'spring', stiffness: 500, damping: 15 }}
               style={{
-                width: '100px',
-                height: '100px',
-                borderRadius: '50%',
-                background: 'radial-gradient(circle at 35% 35%, #6ee7b7 0%, #3b82f6 40%, #1e3a8a 80%)',
-                boxShadow: 'inset -15px -15px 30px rgba(0,0,0,0.6), 0 10px 30px rgba(0,0,0,0.4)',
-                border: '1px solid rgba(255,255,255,0.2)',
+                width: '80px',
+                height: '95px',
+                borderRadius: '50% 50% 50% 50% / 40% 40% 60% 60%',
+                background: balloonGradient,
+                boxShadow: `inset -10px -10px 20px rgba(0,0,0,0.3), 0 25px 40px -10px ${balloonColor}66`,
+                border: '1px solid rgba(255,255,255,0.3)',
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
                 color: 'white',
-                fontWeight: 'bold',
-                textShadow: '0 2px 4px rgba(0,0,0,0.5)',
-                fontSize: `${1.0 / visualScale}rem` // Keep text readable
+                fontWeight: 900,
+                textShadow: '0 2px 4px rgba(0,0,0,0.4)',
+                fontSize: `${0.9 / Math.sqrt(visualScale)}rem`,
+                position: 'relative'
               }}
             >
-              +{currentRoundPoints}
+              <div style={{ textAlign: 'center' }}>
+                <motion.div initial={{ scale: 0.8 }} animate={{ scale: 1 }} key={currentRoundPoints}>
+                   +{currentRoundPoints}
+                </motion.div>
+              </div>
+              <div style={{ position: 'absolute', bottom: '-10px', left: '50%', transform: 'translateX(-50%)', width: '12px', height: '12px', background: balloonColor, clipPath: 'polygon(50% 0%, 0% 100%, 100% 100%)' }} />
             </motion.div>
           )}
           
@@ -199,61 +230,76 @@ const BalloonGame = ({ isActive, onEndGame, isDemo }) => {
             <motion.div
               key="exploded"
               initial={{ scale: 0.5, opacity: 1 }}
-              animate={{ scale: 2, opacity: 0 }}
-              transition={{ duration: 0.4 }}
+              animate={{ scale: 4, opacity: 0 }}
+              transition={{ duration: 0.4, ease: "easeOut" }}
               style={{
                 position: 'absolute',
-                color: '#ef4444',
-                fontSize: '2rem',
-                fontWeight: 'bold',
-                textShadow: '0 0 20px rgba(239, 68, 68, 0.8)',
-                letterSpacing: '4px'
+                color: '#dc2626',
+                fontSize: '3rem',
+                fontWeight: 950,
+                textTransform: 'uppercase',
+                letterSpacing: '8px',
+                filter: 'drop-shadow(0 0 10px rgba(220,38,38,0.5))'
               }}
             >
-              [ CRITICAL FAILURE ]
+              {language === 'es' ? '¡BOOM!' : 'POP!'}
             </motion.div>
           )}
 
           {gameState === 'banked' && (
             <motion.div
               key="banked"
-              initial={{ y: 0, opacity: 0 }}
-              animate={{ y: -50, opacity: 1 }}
+              initial={{ y: 20, opacity: 0, scale: 0.8 }}
+              animate={{ y: -80, opacity: 1, scale: 1.3 }}
               exit={{ opacity: 0 }}
               style={{
                 position: 'absolute',
-                color: '#10b981',
-                fontSize: '1.5rem',
-                fontWeight: 'bold',
-                letterSpacing: '2px'
+                color: '#fff',
+                fontSize: '1.8rem',
+                fontWeight: 900,
+                letterSpacing: '2px',
+                textTransform: 'uppercase',
+                background: 'linear-gradient(135deg, #10b981, #059669)',
+                padding: '12px 32px',
+                borderRadius: '16px',
+                boxShadow: '0 15px 30px -10px rgba(5,150,105,0.4)',
+                zIndex: 50
               }}
             >
-              +{currentRoundPoints} YIELD SECURED
+              +{currentRoundPoints}
             </motion.div>
           )}
         </AnimatePresence>
-        {showConfetti && <Confetti count={18} spread={70} duration={1.1} />}
+        {showConfetti && <Confetti count={25} spread={100} duration={1.5} />}
       </div>
 
-        <div style={{ position: 'absolute', bottom: '36px', left: '50%', transform: 'translateX(-50%)', display: 'flex', gap: '24px', zIndex: 200 }}>
-        <button
-          className="btn balloon-pump-btn"
+      <div style={{ position: 'absolute', bottom: '60px', left: '50%', transform: 'translateX(-50%)', display: 'flex', gap: '20px', zIndex: 100 }}>
+        <motion.button
+          whileHover={{ scale: 1.05, boxShadow: '0 10px 20px -5px rgba(79,70,229,0.4)' }}
+          whileTap={{ scale: 0.95 }}
+          className="btn btn-primary"
           aria-label={t.ariaPump}
           onClick={handlePump}
-          disabled={gameState !== 'playing'}
-          style={{ width: 'auto', minWidth: '160px', padding: '12px 18px', textAlign: 'center', backgroundColor: 'rgba(59, 130, 246, 0.1)', border: '1px solid #3b82f6', color: '#3b82f6', backgroundImage: 'none', boxShadow: gameState === 'playing' ? '0 0 15px rgba(59, 130, 246, 0.2)' : 'none', whiteSpace: 'nowrap' }}
+          disabled={gameState !== 'playing' || briefing}
+          style={{ width: '160px', padding: '18px', borderRadius: '20px', fontWeight: 800, fontSize: '1.1rem', background: 'linear-gradient(135deg, #6366f1, #4f46e5)' }}
         >
           {t.pumpLabel}
-        </button>
-        <button
-          className="btn balloon-bank-btn"
+        </motion.button>
+        <motion.button
+          whileHover={{ scale: 1.05, background: 'rgba(16,185,129,0.05)' }}
+          whileTap={{ scale: 0.95 }}
+          className="btn"
           aria-label={t.ariaBank}
           onClick={handleBank}
-          disabled={gameState !== 'playing' || currentBalloonSize === 1}
-          style={{ width: 'auto', minWidth: '160px', padding: '12px 18px', textAlign: 'center', backgroundColor: 'rgba(16, 185, 129, 0.1)', border: '1px solid #10b981', color: '#10b981', backgroundImage: 'none', boxShadow: (gameState === 'playing' && currentBalloonSize > 1) ? '0 0 15px rgba(16, 185, 129, 0.2)' : 'none', whiteSpace: 'nowrap' }}
+          disabled={gameState !== 'playing' || currentBalloonSize === 1 || briefing}
+          style={{ width: '160px', padding: '18px', borderRadius: '20px', fontWeight: 800, fontSize: '1.1rem', border: '2px solid #10b981', color: '#059669', background: 'transparent' }}
         >
           {t.bankBtn}
-        </button>
+        </motion.button>
+      </div>
+
+      <div style={{ position: 'absolute', bottom: '20px', fontSize: '0.75rem', color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '1.5px', fontWeight: 600 }}>
+        {language === 'es' ? 'ESPACIO: INFLAR • ENTER: ASEGURAR' : 'SPACE: PUMP • ENTER: BANK'}
       </div>
     </div>
   );
