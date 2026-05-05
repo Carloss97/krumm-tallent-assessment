@@ -334,21 +334,28 @@ const DemoShell = () => {
   // Only the first activity uses the instructions gate; later rounds auto-start.
   useEffect(() => {
     completingRef.current = null; // Unlock for next activity
+    console.log(`[DEMO-TRACE] step useEffect fired: step=${step}, ACTIVITIES.length=${ACTIVITIES.length}`);
 
     if (step === 0) {
+      console.log(`[DEMO-TRACE] Showing instructions for first activity`);
       setShowInstructions(true);
       setActivityStarted(false);
       return;
     }
 
-    setShowInstructions(false);
-    setActivityStarted(true);
-  }, [step]);
+    if (step < ACTIVITIES.length) {
+      console.log(`[DEMO-TRACE] Auto-starting activity at step ${step}`);
+      setShowInstructions(false);
+      setActivityStarted(true);
+    }
+  }, [step, ACTIVITIES.length]);
 
   const onComplete = (id) => {
     // Prevent double-counting or race conditions
     if (completed[id] || completingRef.current === id) return;
     completingRef.current = id;
+
+    console.log(`[DEMO-TRACE] onComplete called for: ${id}, current step: ${step}, activities remaining: ${ACTIVITIES.length - (Object.keys(completed).length + 1)}`);
 
     try {
       recordTrialEvent && recordTrialEvent({ event: 'demo_activity_complete', payload: { id, step } });
@@ -361,14 +368,20 @@ const DemoShell = () => {
     setCompleted((prev) => {
       const next = { ...prev, [id]: true };
       const doneCount = Object.keys(next).length;
+      console.log(`[DEMO-TRACE] Game completed count: ${doneCount}/${ACTIVITIES.length}`);
       
       // Use a slight delay to allow game completion animation before showing transition
       setTimeout(() => {
         if (doneCount >= ACTIVITIES.length) {
+          console.log(`[DEMO-TRACE] All activities complete, showing report`);
           handleDemoComplete(next, 'completed');
         } else {
+          console.log(`[DEMO-TRACE] Advancing to next activity: step ${step} → ${step + 1}`);
           setToast(isEn ? 'Preparing next assessment module...' : 'Preparando siguiente módulo...');
-          setStep(prevStep => prevStep + 1);
+          setStep(prevStep => {
+            console.log(`[DEMO-TRACE] setStep callback: ${prevStep} → ${prevStep + 1}`);
+            return prevStep + 1;
+          });
         }
       }, 1500);
       

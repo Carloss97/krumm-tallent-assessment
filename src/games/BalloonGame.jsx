@@ -37,18 +37,28 @@ const BalloonGame = ({ isActive, onEndGame, isDemo, showBriefing = true }) => {
   }, []);
 
   const advanceRound = useCallback(() => {
-    if (hasEndedRef.current) return;
-    
-    if (round >= MAX_ROUNDS) {
-      hasEndedRef.current = true;
-      stopTracking('game4', totalPointsRef.current, popsRef.current, { pops: popsRef.current });
-      onEndGame(totalPointsRef.current, popsRef.current);
-    } else {
-      const next = round + 1;
-      setRound(next);
-      initRound();
+    if (hasEndedRef.current) {
+      console.log(`[BALLOON-TRACE] advanceRound called but hasEnded=true, ignoring`);
+      return;
     }
-  }, [round, MAX_ROUNDS, onEndGame, initRound, stopTracking]);
+    
+    // Use a functional update to get the latest round value
+    setRound(prevRound => {
+      const nextRound = prevRound + 1;
+      console.log(`[BALLOON-TRACE] advanceRound: current=${prevRound}, MAX=${MAX_ROUNDS}, nextRound=${nextRound}`);
+      
+      if (nextRound > MAX_ROUNDS) {
+        console.log(`[BALLOON-TRACE] Game ending: nextRound ${nextRound} > MAX ${MAX_ROUNDS}`);
+        hasEndedRef.current = true;
+        stopTracking('game4', totalPointsRef.current, popsRef.current, { pops: popsRef.current });
+        onEndGame(totalPointsRef.current, popsRef.current);
+        return prevRound; // Don't update round state
+      } else {
+        console.log(`[BALLOON-TRACE] Starting round ${nextRound}`);
+        return nextRound;
+      }
+    });
+  }, [MAX_ROUNDS, onEndGame, initRound, stopTracking]);
 
   const handlePump = useCallback(() => {
     if (gameState !== 'playing' || hasEndedRef.current || briefing) return;
@@ -95,6 +105,7 @@ const BalloonGame = ({ isActive, onEndGame, isDemo, showBriefing = true }) => {
 
   useEffect(() => {
     if (isActive) {
+      console.log(`[BALLOON-TRACE] Game activated in ${isDemo ? 'DEMO' : 'FULL'} mode, MAX_ROUNDS=${MAX_ROUNDS}`);
       hasEndedRef.current = false;
       totalPointsRef.current = 0;
       popsRef.current = 0;

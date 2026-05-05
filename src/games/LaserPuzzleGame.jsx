@@ -167,7 +167,7 @@ const buildGrid = (level) => {
   return g;
 };
 
-const LaserPuzzleGame = ({ isActive, onEndGame, isDemo, timeLimit, showBriefing = true }) => {
+const LaserPuzzleGame = ({ isActive, onEndGame, isDemo, showBriefing = true, timeLimit }) => {
   const { recordError, startTracking, stopTracking, recordTrialEvent } = useTelemetry();
   const { language } = useLanguage();
   const [procLevels, setProcLevels] = useState(null);
