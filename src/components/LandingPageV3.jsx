@@ -774,28 +774,6 @@ const LandingPageV3 = () => {
         </div>
       </section>
 
-      <section className="lv3-section lv3-project-signals section--brand-dark">
-        <div className="lv3-container">
-          <div className="lv3-panel">
-            <div className="lv3-section-head">
-              <h2 className="lv3-section-title"><TrendingUp size={20} aria-hidden="true" /> <span>{t.signalsTitle}</span></h2>
-              <p>{t.signalsIntro}</p>
-            </div>
-            <div className="lv3-signal-grid">
-              {projectSignals.map((signal) => (
-                <article key={signal.title.es} className="lv3-signal-card">
-                  <h3>
-                    <signal.icon size={18} aria-hidden="true" />
-                    <span>{signal.title[language]}</span>
-                  </h3>
-                  <p>{signal.text[language]}</p>
-                </article>
-              ))}
-            </div>
-          </div>
-        </div>
-      </section>
-
       <section className="lv3-section lv3-process section--white">
         <div className="lv3-container">
           <div className="lv3-panel">
@@ -847,6 +825,28 @@ const LandingPageV3 = () => {
                       </li>
                     ))}
                   </ul>
+                </article>
+              ))}
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section className="lv3-section lv3-project-signals section--brand-dark">
+        <div className="lv3-container">
+          <div className="lv3-panel">
+            <div className="lv3-section-head">
+              <h2 className="lv3-section-title"><TrendingUp size={20} aria-hidden="true" /> <span>{t.signalsTitle}</span></h2>
+              <p>{t.signalsIntro}</p>
+            </div>
+            <div className="lv3-signal-grid">
+              {projectSignals.map((signal) => (
+                <article key={signal.title.es} className="lv3-signal-card">
+                  <h3>
+                    <signal.icon size={18} aria-hidden="true" />
+                    <span>{signal.title[language]}</span>
+                  </h3>
+                  <p>{signal.text[language]}</p>
                 </article>
               ))}
             </div>

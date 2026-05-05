@@ -3,6 +3,9 @@
   --lv3-brand: #6366f1;
   --lv3-brand-dark: #1e1b4b;
   --lv3-brand-gradient: linear-gradient(135deg, #6366f1 0%, #4f46e5 100%);
+  --lv3-accent: #0f766e;
+  --lv3-body: var(--font-main);
+  --lv3-display: var(--font-display);
   --lv3-bg: #ffffff;
   --lv3-gray: #f8fafc;
   --lv3-text: #1e293b;
@@ -15,7 +18,7 @@
 }
 
 .landing-v3 {
-  font-family: 'Inter', -apple-system, sans-serif;
+  font-family: var(--lv3-body);
   color: var(--lv3-text);
   background-color: var(--lv3-bg);
   min-height: 100vh;
@@ -24,12 +27,13 @@
 }
 
 .lv3-lang-corner {
-  position: absolute;
+  position: fixed;
   top: 24px;
   right: 32px;
-  z-index: 100;
+  z-index: 400;
   display: flex;
   background: rgba(255, 255, 255, 0.5);
+  -webkit-backdrop-filter: blur(8px);
   backdrop-filter: blur(8px);
   padding: 4px;
   border-radius: 12px;
@@ -84,6 +88,7 @@
 }
 
 .lv3-copy h1 {
+  font-family: var(--lv3-display);
   font-size: 4rem;
   line-height: 1.1;
   font-weight: 900;
@@ -240,6 +245,7 @@
 }
 
 .lv3-section-title {
+  font-family: var(--lv3-display);
   display: inline-flex;
   align-items: center;
   gap: 12px;
@@ -290,6 +296,7 @@
   position: fixed;
   inset: 0;
   background: rgba(15, 23, 42, 0.6);
+  -webkit-backdrop-filter: blur(12px);
   backdrop-filter: blur(12px);
   z-index: 1000;
   display: flex;
@@ -350,4 +357,132 @@
   .lv3-copy h1 { font-size: 2.8rem; }
   .lv3-copy p { font-size: 1.15rem; }
   .lv3-brand-stage { padding: 40px; }
+}
+
+.lv3-cap-grid,
+.lv3-signal-grid,
+.lv3-process-grid,
+.lv3-usecase-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: 28px;
+}
+
+.lv3-cap-card,
+.lv3-process-card,
+.lv3-usecase-card {
+  background: #ffffff;
+  border: 1px solid var(--lv3-border);
+  border-radius: 28px;
+  padding: 32px;
+  box-shadow: var(--lv3-shadow-sm);
+  transition: transform 0.25s ease, box-shadow 0.25s ease, border-color 0.25s ease;
+}
+
+.lv3-cap-card:hover,
+.lv3-process-card:hover,
+.lv3-usecase-card:hover {
+  transform: translateY(-6px);
+  box-shadow: var(--lv3-shadow);
+  border-color: rgba(15, 118, 110, 0.3);
+}
+
+.lv3-cap-card h3,
+.lv3-process-card h3,
+.lv3-usecase-card h3,
+.lv3-signal-card h3 {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 1.25rem;
+  font-weight: 850;
+  margin-bottom: 14px;
+}
+
+.lv3-cap-card p,
+.lv3-process-card p,
+.lv3-usecase-card p {
+  color: var(--lv3-text-muted);
+  line-height: 1.6;
+  font-size: 1rem;
+}
+
+.lv3-step-number {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 46px;
+  height: 46px;
+  border-radius: 16px;
+  background: rgba(15, 118, 110, 0.12);
+  color: var(--lv3-accent);
+  font-weight: 900;
+  letter-spacing: 0.08em;
+  margin-bottom: 18px;
+  font-size: 0.9rem;
+}
+
+.lv3-usecase-card > svg {
+  width: 32px;
+  height: 32px;
+  color: var(--lv3-accent);
+  margin-bottom: 16px;
+}
+
+.lv3-usecase-bullets {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.lv3-usecase-bullets li {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  font-size: 0.98rem;
+  color: var(--lv3-text);
+  font-weight: 600;
+}
+
+.lv3-usecase-bullets svg { color: var(--lv3-accent); margin-top: 3px; }
+
+.lv3-project-signals {
+  background:
+    radial-gradient(circle at 12% 20%, rgba(99, 102, 241, 0.18), transparent 45%),
+    radial-gradient(circle at 88% 78%, rgba(15, 118, 110, 0.2), transparent 46%),
+    var(--lv3-brand-dark);
+}
+
+.lv3-signal-card {
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  border-radius: 28px;
+  padding: 32px;
+  -webkit-backdrop-filter: blur(10px);
+  backdrop-filter: blur(10px);
+  color: #f8fafc;
+  transition: transform 0.25s ease, border-color 0.25s ease;
+}
+
+.lv3-signal-card:hover { transform: translateY(-6px); border-color: rgba(255, 255, 255, 0.3); }
+
+.lv3-signal-card p { color: rgba(226, 232, 240, 0.8); line-height: 1.6; }
+
+.section--brand-dark .lv3-section-title,
+.section--brand-dark .lv3-section-title span {
+  color: #f8fafc;
+}
+
+.section--brand-dark .lv3-section-head p {
+  color: rgba(226, 232, 240, 0.75);
+}
+
+@media (max-width: 768px) {
+  .lv3-lang-corner { top: 16px; right: 16px; }
+  .lv3-section { padding: 72px 22px; }
+  .lv3-action-buttons { flex-direction: column; }
+  .lv3-action-btn { width: 100%; justify-content: center; }
 }

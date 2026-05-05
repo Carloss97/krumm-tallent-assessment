@@ -2,6 +2,47 @@ import React, { createContext, useContext, useState, useRef, useCallback, useEff
 
 const TelemetryContext = createContext(null);
 
+const isDevEnv = () => typeof import.meta !== 'undefined' && import.meta.env?.DEV === true;
+
+const resolveApiBaseUrl = () => {
+  if (typeof window !== 'undefined' && typeof window.__API_BASE_URL === 'string') {
+    return window.__API_BASE_URL;
+  }
+  if (typeof import.meta !== 'undefined' && import.meta.env?.VITE_API_BASE_URL) {
+    return import.meta.env.VITE_API_BASE_URL;
+  }
+  return '';
+};
+
+const normalizeBaseUrl = (baseUrl) => baseUrl.replace(/\/$/, '');
+
+const isAllowedDevHost = () => {
+  if (typeof window === 'undefined') return false;
+  const host = (window.location.hostname || '').toLowerCase();
+  const raw = (typeof import.meta !== 'undefined' && import.meta.env?.VITE_ALLOWED_DEV_HOSTS)
+    ? import.meta.env.VITE_ALLOWED_DEV_HOSTS
+    : 'localhost,127.0.0.1,::1,dev.krumm.cl';
+  const allowed = raw.split(',').map((item) => item.trim().toLowerCase()).filter(Boolean);
+  const matchesAllowed = allowed.includes(host) || allowed.some((pattern) => {
+    if (!pattern.startsWith('*.')) return false;
+    return host.endsWith(pattern.replace('*.', ''));
+  });
+  const isLocalSuffix = host.endsWith('.local');
+  const isVitePort = window.location.port === '5173';
+  return matchesAllowed || isLocalSuffix || isVitePort;
+};
+
+const getRuntimeApiUrl = (path) => {
+  const baseUrl = resolveApiBaseUrl();
+  if (baseUrl) {
+    return `${normalizeBaseUrl(baseUrl)}${path}`;
+  }
+  if (isDevEnv() && isAllowedDevHost()) {
+    return path;
+  }
+  return '';
+};
+
 // eslint-disable-next-line react-refresh/only-export-components
 export const useTelemetry = () => useContext(TelemetryContext);
 
@@ -74,14 +115,10 @@ export const TelemetryProvider = ({ children }) => {
   }, []);
 
   // Fetch runtime feature flags and apply a percentage-based rollout for hero demo.
-  // NOTE: avoid calling runtime backend flags in preview/production static serve
-  // when the API may not be available (e.g. `vite preview`). Only fetch
-  // runtime flags during local development to prevent proxy/ECONNREFUSED
-  // logs when backend is not running.
+  // Avoid calling runtime flags unless a backend is configured or we are on a dev host.
   useEffect(() => {
-    if (!(typeof import.meta !== 'undefined' && import.meta.env?.DEV)) {
-      return undefined;
-    }
+    const flagsUrl = getRuntimeApiUrl('/api/feature-flags');
+    if (!flagsUrl) return undefined;
     let mounted = true;
 
     const simpleHash = (s) => {
@@ -96,7 +133,7 @@ export const TelemetryProvider = ({ children }) => {
 
     const applyRuntimeFlags = async () => {
       try {
-        const res = await fetch('/api/feature-flags', { cache: 'no-store' });
+        const res = await fetch(flagsUrl, { cache: 'no-store' });
         if (!mounted) return;
         if (!res.ok) return;
         const data = await res.json();
@@ -267,16 +304,18 @@ export const TelemetryProvider = ({ children }) => {
     try {
       const evName = String(event?.event || '').toLowerCase();
       if (evName.includes('demo') || evName.includes('cta_demo')) {
+        const telemetryUrl = getRuntimeApiUrl('/api/telemetry');
+        if (!telemetryUrl) return;
         (async () => {
           try {
-            await fetch('/api/telemetry', {
+            await fetch(telemetryUrl, {
               method: 'POST',
               headers: { 'Content-Type': 'application/json' },
               body: JSON.stringify({
                 event: evName,
                 payload: enriched,
                 demo: isDemo,
-                participantId: participantProfile?.participantId || null,
+                participantId: participantProfile?.participantId || undefined,
                 timestamp: Date.now()
               })
             });
