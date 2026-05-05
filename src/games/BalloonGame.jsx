@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { playBalloonPump, playBalloonPop, playMemoryFlash, playMemoryClick, playSuccessSound, playErrorSound } from '../utils/audio';
+import { playBalloonPump, playBalloonPop, playSuccessSound, playErrorSound } from '../utils/audio';
 import Confetti from '../components/Confetti';
 import { useTelemetry } from '../TelemetryContext';
 import { useLanguage } from '../context/LanguageContext';
@@ -8,7 +8,7 @@ import { useLanguage } from '../context/LanguageContext';
 const BalloonGame = ({ isActive, onEndGame, isDemo }) => {
   const MAX_ROUNDS = isDemo ? 3 : 10;
   const MIN_PUMPS = 6;
-  const { startTracking, stopTracking, recordError } = useTelemetry();
+  const { startTracking, stopTracking, recordError, recordTrialEvent } = useTelemetry();
   const { language } = useLanguage();
 
   const [round, setRound] = useState(1);
@@ -29,7 +29,7 @@ const BalloonGame = ({ isActive, onEndGame, isDemo }) => {
     setCurrentBalloonSize(1);
     setCurrentRoundPoints(0);
     setGameState('playing');
-    // explosion threshold between 7 and 18 inclusive
+    // explosion threshold between 8 and 18 inclusive
     const MIN_THRESHOLD = 8;
     const MAX_THRESHOLD = 18;
     const threshold = Math.floor(Math.random() * (MAX_THRESHOLD - MIN_THRESHOLD + 1)) + MIN_THRESHOLD;
@@ -49,6 +49,49 @@ const BalloonGame = ({ isActive, onEndGame, isDemo }) => {
       initRound();
     }
   }, [round, MAX_ROUNDS, onEndGame, initRound, stopTracking]);
+
+  const handlePump = useCallback(() => {
+    if (gameState !== 'playing' || hasEndedRef.current || briefing) return;
+
+    const newSize = currentBalloonSize + 1;
+    setShake(prev => prev + 1);
+
+    // Disable early pop chance for first few pumps
+    const earlyPopChance = currentBalloonSize >= MIN_PUMPS ? Math.min(0.2, (currentBalloonSize - MIN_PUMPS) * 0.05) : 0;
+    const isEarlyPop = Math.random() < earlyPopChance;
+
+    // Record pump event
+    recordTrialEvent({ event: 'pump', payload: { size: newSize } });
+
+    if (newSize >= explosionPoint || isEarlyPop) {
+      playBalloonPop();
+      playErrorSound();
+      setGameState('exploded');
+      popsRef.current += 1;
+      recordError(); // Record "error" for pop
+      setTimeout(() => advanceRound(), 1800);
+    } else {
+      playBalloonPump();
+      setCurrentBalloonSize(newSize);
+      setCurrentRoundPoints(p => p + 10);
+    }
+  }, [currentBalloonSize, gameState, briefing, explosionPoint, MIN_PUMPS, advanceRound, recordError, recordTrialEvent]);
+
+  const handleBank = useCallback(() => {
+    if (gameState !== 'playing' || currentBalloonSize === 1 || hasEndedRef.current || briefing) return;
+    
+    totalPointsRef.current += currentRoundPoints;
+    setTotalPoints(totalPointsRef.current);
+    setGameState('banked');
+
+    // Record bank event
+    recordTrialEvent({ event: 'bank', payload: { points: currentRoundPoints } });
+
+    try { playSuccessSound(); } catch (error) { void error; }
+    setShowConfetti(true);
+    setTimeout(() => setShowConfetti(false), 1400);
+    setTimeout(() => advanceRound(), 1800);
+  }, [currentBalloonSize, currentRoundPoints, gameState, briefing, advanceRound, recordTrialEvent]);
 
   useEffect(() => {
     if (isActive) {
@@ -77,50 +120,7 @@ const BalloonGame = ({ isActive, onEndGame, isDemo }) => {
     };
     window.addEventListener('keydown', onKeyDown);
     return () => window.removeEventListener('keydown', onKeyDown);
-  }, [isActive, gameState, currentBalloonSize, briefing]);
-
-  const handlePump = () => {
-    if (gameState !== 'playing' || hasEndedRef.current || briefing) return;
-
-    const newSize = currentBalloonSize + 1;
-    setShake(prev => prev + 1);
-
-    // Disable early pop chance for first few pumps
-    const earlyPopChance = currentBalloonSize >= MIN_PUMPS ? Math.min(0.2, (currentBalloonSize - MIN_PUMPS) * 0.05) : 0;
-    const isEarlyPop = Math.random() < earlyPopChance;
-
-    // Record pump event
-    recordTrialEvent({ event: 'pump', payload: { size: newSize } });
-
-    if (newSize >= explosionPoint || isEarlyPop) {
-      playBalloonPop();
-      playErrorSound();
-      setGameState('exploded');
-      popsRef.current += 1;
-      recordError(); // Record "error" for pop
-      setTimeout(() => advanceRound(), 1800);
-    } else {
-      playBalloonPump();
-      setCurrentBalloonSize(newSize);
-      setCurrentRoundPoints(p => p + 10);
-    }
-  };
-
-  const handleBank = () => {
-    if (gameState !== 'playing' || currentBalloonSize === 1 || hasEndedRef.current || briefing) return;
-    
-    totalPointsRef.current += currentRoundPoints;
-    setTotalPoints(totalPointsRef.current);
-    setGameState('banked');
-
-    // Record bank event
-    recordTrialEvent({ event: 'bank', payload: { points: currentRoundPoints } });
-
-    try { playSuccessSound(); } catch (error) { void error; }
-    setShowConfetti(true);
-    setTimeout(() => setShowConfetti(false), 1400);
-    setTimeout(() => advanceRound(), 1800);
-  };
+  }, [isActive, briefing, handlePump, handleBank]);
 
   const copy = {
     es: {

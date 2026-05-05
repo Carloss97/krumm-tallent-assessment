@@ -29,7 +29,7 @@ const ProgressTracker = ({
     return (
       <div className="progress-tracker-compact">
         <div className="progress-games-compact">
-          {games.map((game, index) => {
+          {games.map((game) => {
             const isCompleted = completed.includes(game.id);
             const isCurrent = currentId === game.id;
             return (

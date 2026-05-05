@@ -182,7 +182,10 @@ const LaserPuzzleGame = ({ isActive, onEndGame, isDemo, timeLimit }) => {
   const [quizStep, setQuizStep] = useState(0);
   const quizScore = useRef(0);
   const hasEndedRef = useRef(false);
-  const currentLevel = procLevels ? procLevels[levelIdx] : null;
+  
+  const currentLevel = useMemo(() => {
+    return procLevels ? procLevels[levelIdx] : null;
+  }, [procLevels, levelIdx]);
 
   const finishGame = useCallback((tm) => {
     if(hasEndedRef.current) return;
@@ -264,7 +267,7 @@ const LaserPuzzleGame = ({ isActive, onEndGame, isDemo, timeLimit }) => {
     } else {
       if (cell?.movable) setSelected({ x, y });
     }
-  }, [selected, grid, gamePhase]);
+  }, [selected, grid, gamePhase, recordTrialEvent]);
 
   const handleReset = () => {
     if (procLevels) setGrid(buildGrid(procLevels[levelIdx]));
@@ -378,10 +381,6 @@ const LaserPuzzleGame = ({ isActive, onEndGame, isDemo, timeLimit }) => {
   }
 
   const level = currentLevel;
-  const levelTypes = useMemo(() => {
-    if (!level?.cells) return new Set();
-    return new Set(level.cells.map((cell) => cell.type));
-  }, [level]);
   const hintText = level
     ? (typeof level.hint === 'object' ? (level.hint[language] || level.hint.es) : level.hint)
     : '';

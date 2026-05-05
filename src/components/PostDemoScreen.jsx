@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useLanguage } from '../context/LanguageContext';
 import { CheckCircle2, ArrowRight, Mail, RefreshCcw } from 'lucide-react';
@@ -7,7 +7,6 @@ import Report from '../Report';
 const PostDemoScreen = ({ summary = null, onRestart }) => {
   const { language } = useLanguage();
   const [showFullReport, setShowReport] = useState(false);
-  const isEn = language === 'en';
 
   const copy = {
     es: {

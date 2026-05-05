@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useTelemetry } from '../TelemetryContext';
-import { playMemoryClick, playMemoryFlash, playSuccessSound, playLevelUpSound, playErrorSound } from '../utils/audio';
+import { playMemoryClick, playSuccessSound, playLevelUpSound } from '../utils/audio';
 import Confetti from '../components/Confetti';
 import { useLanguage } from '../context/LanguageContext';
 
@@ -84,7 +84,7 @@ const DEMO_BRIEFINGS = {
   ]
 };
 
-const GridFlowGame = ({ isActive, onEndGame, isDemo }) => {
+const GridFlowGame = ({ isActive, onEndGame }) => {
   const { recordError, startTracking, stopTracking, recordTrialEvent } = useTelemetry();
   const { language } = useLanguage();
 
@@ -302,7 +302,7 @@ const GridFlowGame = ({ isActive, onEndGame, isDemo }) => {
     if (newTargets.every(t=>!t.active) && !newInv) {
       if (r+1 < effectiveMaxRounds) loadLevel(r+1); else transitionToQuiz();
     }
-  }, [isActive, gameState, loadLevel, transitionToQuiz, recordError, effectiveMaxRounds]);
+  }, [isActive, gameState, loadLevel, transitionToQuiz, recordError, effectiveMaxRounds, recordTrialEvent]);
 
   const handleKeyDown = useCallback((e) => {
     const map = { ArrowUp:'up', ArrowDown:'down', ArrowLeft:'left', ArrowRight:'right', w:'up', s:'down', a:'left', d:'right' };
