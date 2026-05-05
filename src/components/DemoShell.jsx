@@ -26,8 +26,8 @@ import './DemoShell.css';
 // Adapter wrappers so DemoShell can call games with the expected onComplete() callback
 // For the demo we intentionally allow full-mode versions
 const BalloonProtoWrapper = ({ onComplete, est }) => <ProtoBalloon isActive={true} isDemo={true} showBriefing={false} timeLimit={est} onEndGame={() => onComplete('balloon')} />;
-const GridProtoWrapper = ({ onComplete, est }) => <GridFlowGame isActive={true} isDemo={true} timeLimit={est} onEndGame={() => onComplete('grid')} />;
-const LaserProtoWrapper = ({ onComplete, est }) => <LaserPuzzleGame isActive={true} isDemo={true} timeLimit={est} onEndGame={() => onComplete('laser')} />;
+const GridProtoWrapper = ({ onComplete, est }) => <GridFlowGame isActive={true} isDemo={true} showBriefing={false} timeLimit={est} onEndGame={() => onComplete('grid')} />;
+const LaserProtoWrapper = ({ onComplete, est }) => <LaserPuzzleGame isActive={true} isDemo={true} showBriefing={false} timeLimit={est} onEndGame={() => onComplete('laser')} />;
 const GoNoGoProtoWrapper = ({ onComplete, est }) => <ProtoGoNoGo isActive={true} isDemo={false} timeLimit={est} onEndGame={() => onComplete('gng')} />;
 const NBackProtoWrapper = ({ onComplete, est }) => <ProtoNBack isActive={true} isDemo={false} timeLimit={est} onEndGame={() => onComplete('nback')} />;
 const MemoryProtoWrapper = ({ onComplete, est }) => <MemoryGame isActive={true} isDemo={false} timeLimit={est} onEndGame={() => onComplete('memory')} />;

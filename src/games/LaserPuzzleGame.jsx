@@ -167,7 +167,7 @@ const buildGrid = (level) => {
   return g;
 };
 
-const LaserPuzzleGame = ({ isActive, onEndGame, isDemo, timeLimit }) => {
+const LaserPuzzleGame = ({ isActive, onEndGame, isDemo, timeLimit, showBriefing = true }) => {
   const { recordError, startTracking, stopTracking, recordTrialEvent } = useTelemetry();
   const { language } = useLanguage();
   const [procLevels, setProcLevels] = useState(null);
@@ -205,8 +205,8 @@ const LaserPuzzleGame = ({ isActive, onEndGame, isDemo, timeLimit }) => {
       setLevelIdx(next);
       setGrid(buildGrid(procLevels[next]));
       setMoves(0);
-      setBriefing(isDemo ? getBriefing(next, language) : null);
-      setGamePhase(isDemo ? 'briefing' : 'playing');
+      setBriefing(isDemo && showBriefing ? getBriefing(next, language) : null);
+      setGamePhase(isDemo && !showBriefing ? 'playing' : (isDemo ? 'briefing' : 'playing'));
       try { playLevelUpSound(); } catch (error) { void error; }
     } else {
       const q = procLevels[procLevels.length - 1].quiz;
@@ -235,7 +235,7 @@ const LaserPuzzleGame = ({ isActive, onEndGame, isDemo, timeLimit }) => {
           setProcLevels(DEMO_LEVELS);
           setLevelIdx(0);
           setGrid(buildGrid(DEMO_LEVELS[0]));
-          setBriefing(isDemo ? getBriefing(0, language) : null);
+          setBriefing(isDemo && showBriefing ? getBriefing(0, language) : null);
         }, 0);
     }
   }, [isActive, isDemo, startTracking, language]);

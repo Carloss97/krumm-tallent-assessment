@@ -90,7 +90,7 @@ const DEMO_BRIEFINGS = {
   ]
 };
 
-const GridFlowGame = ({ isActive, onEndGame }) => {
+const GridFlowGame = ({ isActive, onEndGame, isDemo, showBriefing = true }) => {
   const { recordError, startTracking, stopTracking, recordTrialEvent } = useTelemetry();
   const { language } = useLanguage();
 
@@ -168,8 +168,8 @@ const GridFlowGame = ({ isActive, onEndGame }) => {
     setTargets(newState.targets);
     
     const pack = DEMO_BRIEFINGS[language] || DEMO_BRIEFINGS.es;
-    setBriefing(pack[idx] || null);
-    setGameState('briefing');
+    setBriefing(isDemo && showBriefing ? pack[idx] || null : null);
+    setGameState(isDemo && !showBriefing ? 'playing' : 'briefing');
 
   }, [transitionToQuiz, effectiveMaxRounds, language]);
 
@@ -179,7 +179,7 @@ const GridFlowGame = ({ isActive, onEndGame }) => {
       startTracking();
       quizScoreRef.current = 0;
       stateRef.current = { player:{x:0,y:0}, inventory:null, targets:[], energy:100, round:0, score:0, totalMoves:0 };
-      setGameState('briefing');
+      setGameState(isDemo && !showBriefing ? 'playing' : 'briefing');
       setQuizStep(0);
       setScore(0);
       loadLevel(0);

@@ -34,7 +34,7 @@ const LiveDemoTelemetryHud = ({ activeGameId = null, activeGameLabel = '' }) => 
       stability: 'Estabilidad',
       fatigue: 'Fatiga',
       readiness: 'Aptitud',
-      percentHint: 'Cobertura = densidad de datos. Estabilidad = consistencia del movimiento. Fatiga = deriva temporal. Signal % = calidad de webcam.',
+      percentHint: 'Cobertura = densidad de datos.\nEstabilidad = consistencia del movimiento.\nFatiga = deriva temporal.\nAptitud = capacidad estimada para continuar.\nSignal % = calidad de webcam.',
       noConsent: 'Sin permisos de datos',
       active: 'Analizando...',
       tooltips: {
@@ -53,7 +53,7 @@ const LiveDemoTelemetryHud = ({ activeGameId = null, activeGameLabel = '' }) => 
       stability: 'Stability',
       fatigue: 'Fatigue',
       readiness: 'Readiness',
-      percentHint: 'Coverage = data density. Stability = movement consistency. Fatigue = time drift. Signal % = webcam quality.',
+      percentHint: 'Coverage = data density.\nStability = movement consistency.\nFatigue = time drift.\nReadiness = estimated ability to continue.\nSignal % = webcam quality.',
       noConsent: 'No data consent',
       active: 'Analyzing...',
       tooltips: {
