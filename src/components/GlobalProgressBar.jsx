@@ -26,7 +26,7 @@ const GlobalProgressBar = () => {
   return (
     <div className="header-bar">
       <div style={{ fontWeight: '600', color: '#3730a3', letterSpacing: '1px', fontSize: '0.85rem' }}>
-        {language === 'en' ? 'ASSESSMENT PROGRESS' : 'PROGRESO DE EVALUACION'}
+        {language === 'en' ? 'ASSESSMENT PROGRESS' : 'PROGRESO DE EVALUACIÓN'}
       </div>
       <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
         <div className="progress-container">

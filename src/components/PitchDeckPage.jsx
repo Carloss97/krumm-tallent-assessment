@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
   ArrowLeft,
@@ -16,9 +16,16 @@ import {
   Users,
   Zap,
   ChevronLeft,
-  ChevronRight
+  ChevronRight,
+  TrendingUp,
+  Activity,
+  Layers,
+  Scale,
+  MousePointer2,
+  CheckCircle2
 } from 'lucide-react';
 import { useLanguage } from '../context/LanguageContext';
+import { motion, AnimatePresence } from 'framer-motion';
 import logo from '../assets/logo.jpg';
 import './PitchDeckPage.css';
 
@@ -26,11 +33,11 @@ const coreCards = [
   {
     icon: Target,
     title: {
-      es: 'Problema estructural en contratacion',
+      es: 'Problema estructural en contratación',
       en: 'Structural hiring problem'
     },
     text: {
-      es: 'La seleccion tradicional sigue dependiendo de senales subjetivas y entrevistas extensas con baja capacidad predictiva.',
+      es: 'La selección tradicional sigue dependiendo de señales subjetivas y entrevistas extensas con baja capacidad predictiva.',
       en: 'Traditional selection still depends on subjective signals and long interviews with weak predictive power.'
     }
   },
@@ -41,18 +48,18 @@ const coreCards = [
       en: 'KRUMM thesis'
     },
     text: {
-      es: 'Medimos conducta observable en un entorno gamificado para estimar desempeno real en contexto laboral.',
+      es: 'Medimos conducta observable en un entorno gamificado para estimar desempeño real en contexto laboral.',
       en: 'We measure observable behavior in a gamified environment to estimate real performance in work contexts.'
     }
   },
   {
     icon: CircleDollarSign,
     title: {
-      es: 'Impacto economico',
+      es: 'Impacto económico',
       en: 'Economic impact'
     },
     text: {
-      es: 'Atacamos ineficiencias multimillonarias del mercado HR Tech con decisiones mas rapidas y basadas en evidencia.',
+      es: 'Atacamos ineficiencias multimillonarias del mercado HR Tech con decisiones más rápidas y basadas en evidencia.',
       en: 'We target multi-billion HR Tech inefficiencies with faster, evidence-based decisions.'
     }
   }
@@ -66,14 +73,14 @@ const processSteps = [
       en: 'Immersive experience'
     },
     text: {
-      es: 'El candidato avanza por retos breves disenados para activar habilidades cognitivas clave.',
+      es: 'El candidato avanza por retos breves diseñados para activar habilidades cognitivas clave.',
       en: 'Candidates progress through short challenges designed to activate key cognitive skills.'
     }
   },
   {
     icon: Eye,
     title: {
-      es: 'Telemetria conductual',
+      es: 'Telemetría conductual',
       en: 'Behavioral telemetry'
     },
     text: {
@@ -88,7 +95,7 @@ const processSteps = [
       en: 'Actionable report'
     },
     text: {
-      es: 'Entregamos senales claras para seleccion, desarrollo y movilidad interna.',
+      es: 'Entregamos señales claras para selección, desarrollo y movilidad interna.',
       en: 'We deliver clear signals for selection, development, and internal mobility.'
     }
   }
@@ -102,18 +109,18 @@ const edgeBenefits = [
       en: 'Low latency'
     },
     text: {
-      es: 'Inferencia local para experiencia fluida durante toda la bateria.',
+      es: 'Inferencia local para experiencia fluida durante toda la batería.',
       en: 'Local inference for a smooth experience across the full battery.'
     }
   },
   {
     icon: ShieldCheck,
     title: {
-      es: 'Privacidad por diseno',
+      es: 'Privacidad por diseño',
       en: 'Privacy by design'
     },
     text: {
-      es: 'Datos sensibles permanecen en el dispositivo; solo viajan senales derivadas.',
+      es: 'Datos sensibles permanecen en el dispositivo; solo viajan señales derivadas.',
       en: 'Sensitive data stays on-device; only derived signals travel.'
     }
   },
@@ -138,7 +145,7 @@ const moatItems = [
       en: 'Living proprietary dataset'
     },
     text: {
-      es: 'Cada evaluacion retroalimenta la calibracion del modelo y mejora su robustez.',
+      es: 'Cada evaluación retroalimenta la calibración del modelo y mejora su robustez.',
       en: 'Every assessment feeds back into model calibration and improves robustness.'
     }
   },
@@ -149,7 +156,7 @@ const moatItems = [
       en: 'Entry barrier'
     },
     text: {
-      es: 'La senal conductual contextualizada es dificil de replicar por soluciones tradicionales.',
+      es: 'La señal conductual contextualizada es difícil de replicar por soluciones tradicionales.',
       en: 'Contextual behavioral signal is hard to replicate by traditional solutions.'
     }
   }
@@ -159,6 +166,7 @@ const marketRows = [
   {
     label: { es: 'TAM', en: 'TAM' },
     value: '$32B',
+    icon: Globe2,
     text: {
       es: 'Mercado global de HR Tech.',
       en: 'Global HR Tech market.'
@@ -167,16 +175,18 @@ const marketRows = [
   {
     label: { es: 'SAM', en: 'SAM' },
     value: '$2.5B',
+    icon: Activity,
     text: {
-      es: 'Segmentos de reclutamiento critico a escala global.',
+      es: 'Segmentos de reclutamiento crítico a escala global.',
       en: 'Critical recruitment segments at global scale.'
     }
   },
   {
     label: { es: 'SOM', en: 'SOM' },
     value: '$100M',
+    icon: Target,
     text: {
-      es: 'Objetivo inicial LatAm en industrias de alta rotacion.',
+      es: 'Objetivo inicial LatAm en industrias de alta rotación.',
       en: 'Initial LatAm target in high-turnover industries.'
     }
   }
@@ -184,36 +194,40 @@ const marketRows = [
 
 const comparisonRows = [
   {
-    metric: { es: 'Tipo de senal', en: 'Signal type' },
-    ats: { es: 'Subjetiva', en: 'Subjective' },
-    avatars: { es: 'Declarativa', en: 'Declarative' },
-    krumm: { es: 'Empirica', en: 'Empirical' }
+    metric: { es: 'Tipo de señal', en: 'Signal type' },
+    icon: Activity,
+    ats: { es: '❌ Subjetiva', en: '❌ Subjective' },
+    avatars: { es: '⚠️ Declarativa', en: '⚠️ Declarative' },
+    krumm: { es: '✅ Empírica', en: '✅ Empirical' }
   },
   {
     metric: { es: 'Privacidad', en: 'Privacy' },
-    ats: { es: 'Media', en: 'Medium' },
-    avatars: { es: 'Riesgo cloud', en: 'Cloud risk' },
-    krumm: { es: 'Edge-first', en: 'Edge-first' }
+    icon: ShieldCheck,
+    ats: { es: '⚠️ Media', en: '⚠️ Medium' },
+    avatars: { es: '❌ Riesgo cloud', en: '❌ Cloud risk' },
+    krumm: { es: '✅ Edge-first', en: '✅ Edge-first' }
   },
   {
     metric: { es: 'Experiencia candidato', en: 'Candidate experience' },
-    ats: { es: 'Friccion alta', en: 'High friction' },
-    avatars: { es: 'Incomoda', en: 'Uncomfortable' },
-    krumm: { es: 'Inmersiva', en: 'Immersive' }
+    icon: Gamepad2,
+    ats: { es: '❌ Fricción alta', en: '❌ High friction' },
+    avatars: { es: '⚠️ Incómoda', en: '⚠️ Uncomfortable' },
+    krumm: { es: '✅ Inmersiva', en: '✅ Immersive' }
   },
   {
-    metric: { es: 'Valor para decision', en: 'Decision value' },
-    ats: { es: 'Limitado', en: 'Limited' },
-    avatars: { es: 'Parcial', en: 'Partial' },
-    krumm: { es: 'Accionable', en: 'Actionable' }
+    metric: { es: 'Valor para decisión', en: 'Decision value' },
+    icon: TrendingUp,
+    ats: { es: '⚠️ Limitado', en: '⚠️ Limited' },
+    avatars: { es: '⚠️ Parcial', en: '⚠️ Partial' },
+    krumm: { es: '✅ Accionable', en: '✅ Actionable' }
   }
 ];
 
 const teamMembers = [
   {
-    name: 'Nicolas Cowley',
+    name: 'Nicolás Cowley',
     role: {
-      es: 'CEO y Direccion Comercial',
+      es: 'CEO y Dirección Comercial',
       en: 'CEO and Commercial Director'
     },
     text: {
@@ -228,7 +242,7 @@ const teamMembers = [
       en: 'CTO'
     },
     text: {
-      es: 'Especialista en biometria, procesamiento de senales y arquitectura tecnica de producto.',
+      es: 'Especialista en biometría, procesamiento de señales y arquitectura técnica de producto.',
       en: 'Specialist in biometrics, signal processing, and product technical architecture.'
     }
   },
@@ -239,7 +253,7 @@ const teamMembers = [
       en: 'CPO'
     },
     text: {
-      es: 'Conduce investigacion aplicada, diseno de experiencia y enfoque gamificado de evaluacion.',
+      es: 'Conduce investigación aplicada, diseño de experiencia y enfoque gamificado de evaluación.',
       en: 'Leads applied research, experience design, and gamified assessment approach.'
     }
   }
@@ -249,18 +263,18 @@ const pageCopy = {
   es: {
     heroTitle: 'La verdad conductual para decisiones de talento B2B',
     heroText:
-      'Esta vista resume la tesis de producto, traccion esperada y modelo de captura de valor de KRUMM para reclutamiento y desarrollo.',
+      'Esta vista resume la tesis de producto, tracción esperada y modelo de captura de valor de KRUMM para reclutamiento y desarrollo.',
     sectionProblem: 'Problema y propuesta',
-    sectionProcess: 'Como funciona',
+    sectionProcess: 'Cómo funciona',
     sectionEdge: 'Ventaja Edge AI',
     sectionMoat: 'Foso defensivo',
     sectionMarket: 'Mercado objetivo',
-    sectionComparison: 'Comparativa estrategica',
+    sectionComparison: 'Comparativa estratégica',
     sectionTeam: 'Equipo core',
     roiTitle: 'Modelo de captura de valor',
-    roiText: 'Por cada $10 de ahorro generado al cliente, KRUMM captura aproximadamente $1 via SaaS B2B.',
-    sectionMilestone: 'Proximo hito',
-    milestoneText: 'Buscamos smart capital para acelerar go-to-market, calibracion final y expansion comercial.',
+    roiText: 'Por cada $10 de ahorro generado al cliente, KRUMM captura aproximadamente $1 vía SaaS B2B.',
+    sectionMilestone: 'Próximo hito',
+    milestoneText: 'Buscamos smart capital para acelerar go-to-market, calibración final y expansión comercial.',
     milestoneArr: 'Meta a 36 meses: $10M+ ARR'
   },
   en: {
@@ -289,7 +303,7 @@ function PitchDeckPage() {
   const [currentSlide, setCurrentSlide] = useState(0);
 
   useEffect(() => {
-    document.title = language === 'en' ? 'KRUMM | Pitch Presentation' : 'KRUMM | Presentacion';
+    document.title = language === 'en' ? 'KRUMM | Pitch Presentation' : 'KRUMM | Presentación';
   }, [language]);
 
   const slides = [
@@ -298,16 +312,47 @@ function PitchDeckPage() {
       render: () => (
         <div className="pitch-slide-hero">
           <aside className="pitch-logo-card-hero" aria-label="KRUMM brand">
-            <img src={logo} alt="KRUMM" />
-            <h2>KRUMM</h2>
-            <p>Behavioral Intelligence</p>
+            <motion.img 
+              src={logo} 
+              alt="KRUMM"
+              initial={{ scale: 0.8, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              transition={{ duration: 0.6 }}
+            />
+            <motion.h2
+              initial={{ y: 20, opacity: 0 }}
+              animate={{ y: 0, opacity: 1 }}
+              transition={{ duration: 0.6, delay: 0.2 }}
+            >KRUMM</motion.h2>
+            <motion.p
+              initial={{ y: 20, opacity: 0 }}
+              animate={{ y: 0, opacity: 1 }}
+              transition={{ duration: 0.6, delay: 0.3 }}
+            >Behavioral Intelligence</motion.p>
           </aside>
           <article className="pitch-hero-content">
-            <h1>{t.heroTitle}</h1>
-            <p>{t.heroText}</p>
-            <div className="pitch-slide-footer-text">
+            <motion.h1 
+              initial={{ opacity: 0, x: 20 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ duration: 0.6, delay: 0.4 }}
+            >
+              {t.heroTitle}
+            </motion.h1>
+            <motion.p
+              initial={{ opacity: 0, x: 20 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ duration: 0.6, delay: 0.6 }}
+            >
+              {t.heroText}
+            </motion.p>
+            <motion.div 
+              className="pitch-slide-footer-text"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 0.5 }}
+              transition={{ delay: 1 }}
+            >
               {language === 'es' ? 'Desliza para comenzar ->' : 'Swipe to begin ->'}
-            </div>
+            </motion.div>
           </article>
         </div>
       )
@@ -370,17 +415,17 @@ function PitchDeckPage() {
     }
   ];
 
-  const goNext = () => {
+  const goNext = useCallback(() => {
     if (currentSlide < slides.length - 1) {
       setCurrentSlide(currentSlide + 1);
     }
-  };
+  }, [currentSlide, slides.length]);
 
-  const goPrev = () => {
+  const goPrev = useCallback(() => {
     if (currentSlide > 0) {
       setCurrentSlide(currentSlide - 1);
     }
-  };
+  }, [currentSlide]);
 
   useEffect(() => {
     const handleKeyDown = (e) => {
@@ -391,7 +436,7 @@ function PitchDeckPage() {
 
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [currentSlide, navigate]);
+  }, [currentSlide, navigate, goNext, goPrev]);
 
   const slide = slides[currentSlide];
 
@@ -421,90 +466,168 @@ function PitchDeckPage() {
       </header>
 
       <main className="pitch-pres-main">
-        <div className={`pitch-slide ${slide.variant || ''}`} key={currentSlide}>
-          {slide.type === 'hero' && slide.render()}
+        <AnimatePresence mode="wait">
+          <motion.div 
+            className={`pitch-slide ${slide.variant || ''}`} 
+            key={currentSlide}
+            initial={{ opacity: 0, x: 40 }}
+            animate={{ opacity: 1, x: 0 }}
+            exit={{ opacity: 0, x: -40 }}
+            transition={{ duration: 0.4, ease: 'easeOut' }}
+          >
+            {slide.type === 'hero' && slide.render()}
 
-          {slide.type === 'cards' && (
-            <>
-              <h2>{slide.title}</h2>
-              <div className={`pitch-card-grid pitch-grid-${slide.columns}`}>
-                {slide.cards.map((card, idx) => {
-                  const Icon = card.icon;
-                  const role = slide.variant === 'team' ? card.role : null;
-                  return (
-                    <article key={idx} className={`pitch-card ${slide.variant || ''}`}>
-                      <Icon size={24} aria-hidden="true" />
-                      <h3>{card.title[language]}</h3>
-                      {role && <p className="pitch-role">{role[language]}</p>}
-                      <p>{card.text[language]}</p>
-                    </article>
-                  );
-                })}
-              </div>
-            </>
-          )}
+            {slide.type === 'cards' && (
+              <>
+                <motion.h2 
+                  initial={{ opacity: 0, y: -20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                >{slide.title}</motion.h2>
+                <div className={`pitch-card-grid pitch-grid-${slide.columns}`}>
+                  {slide.cards.map((card, idx) => {
+                    const Icon = card.icon;
+                    const role = slide.variant === 'team' ? card.role : null;
+                    return (
+                      <motion.article 
+                        key={idx} 
+                        className={`pitch-card ${slide.variant || ''}`}
+                        initial={{ opacity: 0, y: 20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ delay: idx * 0.1 }}
+                      >
+                        <div className="pitch-card-icon">
+                          <Icon size={32} strokeWidth={2.5} />
+                        </div>
+                        <h3>{card.title[language]}</h3>
+                        {role && <p className="pitch-role">{role[language]}</p>}
+                        <p>{card.text[language]}</p>
+                      </motion.article>
+                    );
+                  })}
+                </div>
+              </>
+            )}
 
-          {slide.type === 'market' && (
-            <>
-              <h2>{slide.title}</h2>
-              <div className="pitch-market-grid-slide">
-                {slide.data.map((row, idx) => (
-                  <article key={idx} className="pitch-market-card-slide">
-                    <span>{row.label[language]}</span>
-                    <strong>{row.value}</strong>
-                    <p>{row.text[language]}</p>
-                  </article>
-                ))}
-              </div>
-            </>
-          )}
+            {slide.type === 'market' && (
+              <>
+                <motion.h2 initial={{ opacity: 0 }} animate={{ opacity: 1 }}>{slide.title}</motion.h2>
+                <div className="pitch-market-grid-slide">
+                  {slide.data.map((row, idx) => {
+                    const Icon = row.icon;
+                    return (
+                      <motion.article 
+                        key={idx} 
+                        className="pitch-market-card-slide"
+                        initial={{ scale: 0.9, opacity: 0 }}
+                        animate={{ scale: 1, opacity: 1 }}
+                        transition={{ delay: idx * 0.15 }}
+                      >
+                        <Icon size={32} style={{ color: '#60a5fa', marginBottom: '16px' }} />
+                        <span>{row.label[language]}</span>
+                        <strong>{row.value}</strong>
+                        <p>{row.text[language]}</p>
+                      </motion.article>
+                    );
+                  })}
+                </div>
+              </>
+            )}
 
-          {slide.type === 'comparison' && (
-            <>
-              <h2>{slide.title}</h2>
-              <div className="pitch-table-slide">
-                <table>
-                  <thead>
-                    <tr>
-                      <th>{language === 'es' ? 'Criterio' : 'Criteria'}</th>
-                      <th>ATS</th>
-                      <th>{language === 'es' ? 'IA Avatares' : 'AI Avatars'}</th>
-                      <th>KRUMM</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {slide.data.map((row, idx) => (
-                      <tr key={idx}>
-                        <td>{row.metric[language]}</td>
-                        <td>{row.ats[language]}</td>
-                        <td>{row.avatars[language]}</td>
-                        <td className="pitch-td-highlight">{row.krumm[language]}</td>
+            {slide.type === 'comparison' && (
+              <>
+                <motion.h2 initial={{ opacity: 0 }} animate={{ opacity: 1 }}>{slide.title}</motion.h2>
+                <div className="pitch-table-slide">
+                  <table>
+                    <thead>
+                      <tr>
+                        <th>{language === 'es' ? 'Criterio' : 'Criteria'}</th>
+                        <th>ATS</th>
+                        <th>{language === 'es' ? 'IA Avatares' : 'AI Avatars'}</th>
+                        <th>KRUMM</th>
                       </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            </>
-          )}
-
-          {slide.type === 'milestone' && (
-            <div className="pitch-milestone-slide">
-              <div className="pitch-milestone-content">
-                <h2>{slide.title}</h2>
-                <p>{slide.text}</p>
-                <p className="pitch-milestone-emphasis">{slide.milestoneText}</p>
-                <div className="pitch-milestone-arr">
-                  <Globe2 size={32} />
-                  <div>
-                    <p>{slide.cta}</p>
-                    <strong>$10M+</strong>
-                    <span>ARR</span>
+                    </thead>
+                    <tbody>
+                      {slide.data.map((row, idx) => {
+                        const Icon = row.icon;
+                        return (
+                          <motion.tr 
+                            key={idx}
+                            initial={{ opacity: 0, x: -20 }}
+                            animate={{ opacity: 1, x: 0 }}
+                            transition={{ delay: idx * 0.1 }}
+                          >
+                            <td className="pitch-metric-cell">
+                              <Icon size={20} style={{ marginRight: '12px', opacity: 0.8, color: '#60a5fa' }} />
+                              {row.metric[language]}
+                            </td>
+                            <td>{row.ats[language]}</td>
+                            <td>{row.avatars[language]}</td>
+                            <td className="pitch-td-highlight">
+                              <motion.span
+                                initial={{ opacity: 0 }}
+                                animate={{ opacity: 1 }}
+                                transition={{ delay: 0.5 }}
+                              >
+                                {row.krumm[language]}
+                              </motion.span>
+                            </td>
+                          </motion.tr>
+                        );
+                      })}
+                    </tbody>
+                  </table>
+                </div>
+                <div style={{ marginTop: '32px', display: 'flex', gap: '24px' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '0.8rem', color: 'rgba(255,255,255,0.6)' }}>
+                    <Gamepad2 size={16} /> <span>Inmersivo</span>
+                  </div>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '0.8rem', color: 'rgba(255,255,255,0.6)' }}>
+                    <ShieldCheck size={16} /> <span>Privacidad Edge</span>
+                  </div>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '0.8rem', color: 'rgba(255,255,255,0.6)' }}>
+                    <TrendingUp size={16} /> <span>Datos Empíricos</span>
                   </div>
                 </div>
+              </>
+            )}
+
+            {slide.type === 'milestone' && (
+              <div className="pitch-milestone-slide">
+                <motion.div 
+                  className="pitch-milestone-content"
+                  initial={{ opacity: 0, scale: 0.9 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  transition={{ duration: 0.5 }}
+                >
+                  <Layers size={56} style={{ color: '#60a5fa', marginBottom: '24px' }} />
+                  <h2>{slide.title}</h2>
+                  <p>{slide.text}</p>
+                  
+                  <div style={{ margin: '40px 0', display: 'flex', justifyContent: 'center', gap: '48px' }}>
+                    <div className="milestone-stat">
+                      <Scale size={32} color="#60a5fa" />
+                      <strong style={{ fontSize: '2.5rem', display: 'block' }}>10:1</strong>
+                      <span style={{ fontSize: '0.8rem', color: 'rgba(255,255,255,0.6)', textTransform: 'uppercase' }}>ROI Savings</span>
+                    </div>
+                    <div className="milestone-stat">
+                      <TrendingUp size={32} color="#60a5fa" />
+                      <strong style={{ fontSize: '2.5rem', display: 'block' }}>$10M+</strong>
+                      <span style={{ fontSize: '0.8rem', color: 'rgba(255,255,255,0.6)', textTransform: 'uppercase' }}>ARR Target</span>
+                    </div>
+                  </div>
+
+                  <p className="pitch-milestone-emphasis">{slide.milestoneText}</p>
+                  <div className="pitch-milestone-arr" style={{ marginTop: '32px' }}>
+                    <Globe2 size={32} />
+                    <div>
+                      <p>{slide.cta}</p>
+                    </div>
+                  </div>
+                </motion.div>
               </div>
-            </div>
-          )}
-        </div>
+            )}
+          </motion.div>
+        </AnimatePresence>
       </main>
 
       <footer className="pitch-pres-footer">
@@ -515,7 +638,7 @@ function PitchDeckPage() {
         </div>
 
         <div className="pitch-footer-center">
-          {language === 'es' ? 'Usa flechas o botones para navegar' : 'Use arrows or buttons to navigate'}
+          {language === 'es' ? 'Usa flechas del teclado o los botones para navegar' : 'Use keyboard arrows or buttons to navigate'}
         </div>
 
         <div className="pitch-footer-right">

@@ -21,7 +21,7 @@ const PostDemoScreen = ({ summary = null, onRestart }) => {
       metricsTitle: 'Métricas de la Sesión',
       timeUsed: 'Tiempo utilizado',
       coverage: 'Cobertura de datos'
-    },
+      },
     en: {
       title: 'Simulation Completed!',
       subtitle: 'We have analyzed your behavioral profile during the demo.',

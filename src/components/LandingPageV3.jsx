@@ -22,7 +22,7 @@ import {
 import { useTelemetry } from '../TelemetryContext';
 import { useLanguage } from '../context/LanguageContext';
 import { authenticateParticipant } from '../services/backendService';
-import { GAME_FLOW, DEMO_GAME_IDS } from '../utils/gameFlow';
+import { GAME_FLOW } from '../utils/gameFlow';
 import { getQaMode } from '../utils/qaMode';
 import logo from '../assets/logo.jpg';
 import './LandingPageV3.css';
@@ -800,7 +800,7 @@ const LandingPageV3 = () => {
         <div className="lv3-container">
           <div className="lv3-panel">
             <div className="lv3-section-head">
-              <h2 className="lv3-section-title"><FlaskConical size={20} aria-hidden="true" /> <span>{language === 'es' ? 'Cómo funciona' : 'How it works'}</span></h2>
+              <h2 className="lv3-section-title"><FlaskConical size={20} aria-hidden="true" /> <span>{language === 'es' ? 'Cómo funciona' : 'Cómo funciona'}</span></h2>
               <p>
                 {language === 'es'
                   ? 'Un flujo simple, medible y fácil de operar para equipos de talento.'

@@ -51,25 +51,25 @@ const Intro = () => {
         className="glass-panel"
         style={{ padding: '60px', textAlign: 'center', maxWidth: '800px' }}
       >
-        <h1 className="text-gradient" style={{ fontSize: '3rem', marginBottom: '16px' }}>{isEn ? 'Cognitive Assessment' : 'Evaluacion Cognitiva'}</h1>
+        <h1 className="text-gradient" style={{ fontSize: '3rem', marginBottom: '16px' }}>{isEn ? 'Cognitive Assessment' : 'Evaluación Cognitiva'}</h1>
         <p style={{ marginBottom: '40px', color: '#374151', lineHeight: '1.8', fontSize: '1.1rem' }}>
           {isEn
             ? `Welcome to the HR-focused cognitive assessment platform. You will complete ${GAME_FLOW.length} evidence-based tasks designed to evaluate memory, inhibition, flexibility, attention, decision quality under pressure, judgment, calibration, prioritization, agility, coordination, resilience, and uncertainty management.`
-            : `Bienvenido a la plataforma de evaluacion cognitiva para RRHH. Completaras ${GAME_FLOW.length} tareas basadas en evidencia para evaluar memoria, inhibicion, flexibilidad, atencion, calidad de decision bajo presion, juicio, calibracion, priorizacion, agilidad, coordinacion, resiliencia y manejo de incertidumbre.`}
+            : `Bienvenido a la plataforma de evaluación cognitiva para RRHH. Completarás ${GAME_FLOW.length} tareas basadas en evidencia para evaluar memoria, inhibición, flexibilidad, atención, calidad de decisión bajo presión, juicio, calibración, priorización, agilidad, coordinación, resiliencia y manejo de incertidumbre.`}
         </p>
 
         <div style={{ display: 'flex', gap: '24px', justifyContent: 'center', flexWrap: 'wrap', alignItems: 'center', marginBottom: '30px' }}>
           <button className="btn" style={{ fontSize: '1.2rem', padding: '16px 36px' }} onClick={() => handleStart(false)}>
-            {isEn ? 'Begin Assessment' : 'Comenzar evaluacion'}
+            {isEn ? 'Begin Assessment' : 'Comenzar evaluación'}
           </button>
           <button className="btn" style={{ fontSize: '1.2rem', padding: '16px 36px', background: 'rgba(124, 58, 237, 0.1)', color: '#7c3aed', border: '1px solid #7c3aed' }} onClick={() => handleStart(true)}>
-            {isEn ? 'Quick Demo' : 'Demo rapida'}
+            {isEn ? 'Quick Demo' : 'Demo rápida'}
           </button>
           <button className="btn" style={{ fontSize: '1.2rem', padding: '16px 36px', background: 'rgba(16, 185, 129, 0.1)', color: '#10b981', border: '1px solid #10b981' }} onClick={handleViewDummyReport}>
             {isEn ? 'View Demo Report' : 'Ver reporte demo'}
           </button>
           <button className="btn" style={{ fontSize: '1.2rem', padding: '16px 36px', background: 'rgba(14, 165, 233, 0.12)', color: '#0369a1', border: '1px solid #0284c7' }} onClick={handleComplementaryBattery}>
-            {isEn ? 'Complementary Battery (6 Games)' : 'Bateria complementaria (6 juegos)'}
+            {isEn ? 'Complementary Battery (6 Games)' : 'Batería complementaria (6 juegos)'}
           </button>
         </div>
 
@@ -111,7 +111,7 @@ const Intro = () => {
                 }}
                 onClick={handleFutureLabAccess}
               >
-                {isEn ? 'Open Future Assessment Lab (High Priority Modules)' : 'Abrir laboratorio de evaluaciones futuras (modulos prioritarios)'}
+                {isEn ? 'Open Future Assessment Lab (High Priority Modules)' : 'Abrir laboratorio de evaluaciones futuras (módulos prioritarios)'}
               </button>
             </div>
             <div style={{

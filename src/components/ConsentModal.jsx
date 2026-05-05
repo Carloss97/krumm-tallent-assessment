@@ -39,7 +39,7 @@ const ConsentModal = ({ isOpen, onConsentsReady, isDemo = false, language: langu
       continue: 'Continuar con la Evaluación',
       revokeAnytime: 'Puedes revocar este consentimiento en cualquier momento.',
       webcamDenied: 'No se pudo acceder a la cámara. Continuaremos solo con telemetría de cursor.'
-    },
+      },
     en: {
       title: 'Evaluation Consent',
       intro: 'To improve your assessment quality, we\'d like to capture some data about your interaction:',
@@ -64,7 +64,7 @@ const ConsentModal = ({ isOpen, onConsentsReady, isDemo = false, language: langu
     if (!hasReadPrivacy && !isDemo) {
       alert(selectedLanguage === 'en'
         ? 'Please confirm you have read the privacy policy.'
-        : 'Por favor, confirma que has leido la politica de privacidad.');
+        : 'Por favor, confirma que has leído la política de privacidad.');
       return;
     }
 
@@ -80,7 +80,7 @@ const ConsentModal = ({ isOpen, onConsentsReady, isDemo = false, language: langu
         webcamAllowed = false;
         setPermissionError(selectedLanguage === 'en'
           ? 'Camera access was denied. We will continue with cursor telemetry only.'
-          : 'No se pudo acceder a la camara. Continuaremos solo con telemetria de cursor.');
+          : 'No se pudo acceder a la cámara. Continuaremos solo con telemetría de cursor.');
       }
     }
 

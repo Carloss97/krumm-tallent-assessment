@@ -918,7 +918,7 @@ export function generateHeuristicReport(sessionData, language = 'en') {
     if (score >= 7) {
       strengths.push(isEn ? `Strong ${gameNames[game]}` : `Fortaleza en ${gameNames[game]}`);
     } else if (score >= 5) {
-      strengths.push(isEn ? `Solid ${gameNames[game]}` : `Nivel solido en ${gameNames[game]}`);
+      strengths.push(isEn ? `Solid ${gameNames[game]}` : `Nivel sólido en ${gameNames[game]}`);
     }
   });
   
@@ -932,7 +932,7 @@ export function generateHeuristicReport(sessionData, language = 'en') {
     if (score < 5) {
       const gameKey = game;
       const baseName = gameNames[gameKey];
-      areasToMonitor.push(isEn ? `Develop ${baseName} through targeted practice` : `Desarrollar ${baseName} mediante practica focalizada`);
+      areasToMonitor.push(isEn ? `Develop ${baseName} through targeted practice` : `Desarrollar ${baseName} mediante práctica focalizada`);
     }
   });
   
@@ -944,11 +944,11 @@ export function generateHeuristicReport(sessionData, language = 'en') {
   if (overallScore >= 8) {
     recommendation = 'STRONG ALIGNMENT';
     profileTierEn = 'demonstrates consistently strong performance';
-    profileTierEs = 'muestra desempeno consistentemente fuerte';
+    profileTierEs = 'muestra desempeño consistentemente fuerte';
   } else if (overallScore >= 6.5) {
     recommendation = 'SOLID ALIGNMENT WITH COACHING';
     profileTierEn = 'shows solid fundamentals with specific growth areas';
-    profileTierEs = 'muestra fundamentos solidos con areas especificas de mejora';
+    profileTierEs = 'muestra fundamentos sólidos con áreas específicas de mejora';
   } else if (overallScore >= 4.5) {
     recommendation = 'CONDITIONAL ALIGNMENT';
     profileTierEn = 'indicates potential but requires targeted development';
@@ -956,12 +956,12 @@ export function generateHeuristicReport(sessionData, language = 'en') {
   } else {
     recommendation = 'EXPLORATORY FIT - NEEDS MORE DATA';
     profileTierEn = 'may benefit from additional assessment or targeted development';
-    profileTierEs = 'podria beneficiarse de evaluacion adicional o desarrollo dirigido';
+    profileTierEs = 'podría beneficiarse de evaluación adicional o desarrollo dirigido';
   }
 
   const summary = isEn
     ? `Executive summary: the profile ${profileTierEn} across core cognitive and workplace judgment domains. This is a developmental signal combining cognitive capacity, decision-making, learning agility, and workplace judgment. Interpret as one input among interviews, experience, and domain expertise for holistic talent decisions.`
-    : `Resumen ejecutivo: el perfil ${profileTierEs} en dominios nucleares de cognicion y juicio laboral. Esta es una senal de desarrollo que combina capacidad cognitiva, toma de decisiones, agilidad de aprendizaje y juicio situacional. Debe interpretarse como un insumo junto con entrevistas, experiencia y conocimiento del dominio para decisiones integrales.`;
+    : `Resumen ejecutivo: el perfil ${profileTierEs} en dominios nucleares de cognición y juicio laboral. Esta es una señal de desarrollo que combina capacidad cognitiva, toma de decisiones, agilidad de aprendizaje y juicio situacional. Debe interpretarse como un insumo junto con entrevistas, experiencia y conocimiento del dominio para decisiones integrales.`;
   
   return {
     summary,
@@ -991,30 +991,30 @@ function generateCareerRecommendations(normalized, language = 'en') {
   // High learning agility + rule shift = strong strategic/innovation fit
   if ((normalized.game3 || 0) >= 7 && (normalized.game6 || 0) >= 7) {
     recommendations.push({
-      role: isEn ? 'Strategic Analyst / Change Manager' : 'Analista estrategico / Gestor de cambio',
+      role: isEn ? 'Strategic Analyst / Change Manager' : 'Analista estratégico / Gestor de cambio',
       fit: isEn
         ? 'Strong learning agility and adaptation make this profile valuable for rapidly changing environments and innovation roles'
-        : 'La agilidad de aprendizaje y adaptacion hacen valioso este perfil para entornos cambiantes y roles de innovacion'
+        : 'La agilidad de aprendizaje y adaptación hacen valioso este perfil para entornos cambiantes y roles de innovación'
     });
   }
   
   // High attention + decision-making = operations/coordination fit
   if ((normalized.game4 || 0) >= 7 && (normalized.game5 || 0) >= 6.5) {
     recommendations.push({
-      role: isEn ? 'Operations / Process Coordination' : 'Operaciones / Coordinacion de procesos',
+      role: isEn ? 'Operations / Process Coordination' : 'Operaciones / Coordinación de procesos',
       fit: isEn
         ? 'Reliable attention and sound judgment under pressure suit execution-focused roles with complex workflows'
-        : 'La atencion consistente y el buen juicio bajo presion encajan con roles de ejecucion y flujos complejos'
+        : 'La atención consistente y el buen juicio bajo presión encajan con roles de ejecución y flujos complejos'
     });
   }
   
   // High SJT + working memory = leadership potential
   if ((normalized.game7 || 0) >= 7 && (normalized.game1 || 0) >= 6 && (normalized.game2 || 0) >= 6) {
     recommendations.push({
-      role: isEn ? 'Team Lead / Middle Management' : 'Lider de equipo / Gestion media',
+      role: isEn ? 'Team Lead / Middle Management' : 'Líder de equipo / Gestión media',
       fit: isEn
         ? 'Strong workplace judgment combined with reliable executive function and impulse control suggest readiness for collaborative leadership'
-        : 'El juicio laboral fuerte junto con funciones ejecutivas confiables sugieren preparacion para liderazgo colaborativo'
+        : 'El juicio laboral fuerte junto con funciones ejecutivas confiables sugieren preparación para liderazgo colaborativo'
     });
   }
   
@@ -1022,16 +1022,16 @@ function generateCareerRecommendations(normalized, language = 'en') {
   if (recommendations.length === 0) {
     recommendations.push(
       {
-        role: isEn ? 'Analytical/Technical Specialist' : 'Especialista analitico/tecnico',
+        role: isEn ? 'Analytical/Technical Specialist' : 'Especialista analítico/técnico',
         fit: isEn
           ? 'Profile suggests value in roles emphasizing focused analysis and technical depth'
-          : 'El perfil sugiere valor en roles que exigen analisis focalizado y profundidad tecnica'
+          : 'El perfil sugiere valor en roles que exigen análisis focalizado y profundidad técnica'
       },
       {
         role: isEn ? 'Collaborative Team Member' : 'Miembro colaborativo de equipo',
         fit: isEn
           ? 'Adaptability and judgment align with team-based problem-solving environments'
-          : 'La adaptabilidad y el juicio se alinean con entornos de resolucion colaborativa de problemas'
+          : 'La adaptabilidad y el juicio se alinean con entornos de resolución colaborativa de problemas'
       }
     );
   }

@@ -117,7 +117,7 @@ export const GAME_FLOW = [
     instruction: {
       type: 'Metacognitive Calibration',
       title: 'Calibration Under Uncertainty',
-      description: 'Responde escenarios y regula tu nivel de certeza. Mide alineacion entre confianza y precision real.',
+      description: 'Responde escenarios y regula tu nivel de certeza. Mide alineación entre confianza y precisión real.',
     },
     timeLimit: { full: 210, demo: 90 },
   },
@@ -143,7 +143,7 @@ export const GAME_FLOW = [
     instruction: {
       type: 'Learning Agility',
       title: 'Adaptive Rule Learning',
-      description: 'Ajusta tu estrategia cuando cambian las reglas y evalua velocidad de adaptacion.',
+      description: 'Ajusta tu estrategia cuando cambian las reglas y evalúa velocidad de adaptación.',
     },
     timeLimit: { full: 180, demo: 75 },
   },
@@ -156,7 +156,7 @@ export const GAME_FLOW = [
     instruction: {
       type: 'Social Coordination',
       title: 'Cross-team Coordination',
-      description: 'Gestiona conflictos entre equipos y selecciona acciones de alineacion colaborativa.',
+      description: 'Gestiona conflictos entre equipos y selecciona acciones de alineación colaborativa.',
     },
     timeLimit: { full: 180, demo: 75 },
   },
@@ -169,7 +169,7 @@ export const GAME_FLOW = [
     instruction: {
       type: 'Cognitive Resilience',
       title: 'Resilience Under Interruptions',
-      description: 'Mantiene desempeno consistente cuando aumenta la carga y aparecen interrupciones.',
+      description: 'Mantiene desempeño consistente cuando aumenta la carga y aparecen interrupciones.',
     },
     timeLimit: { full: 180, demo: 75 },
   },
@@ -182,7 +182,7 @@ export const GAME_FLOW = [
     instruction: {
       type: 'Risk Under Uncertainty',
       title: 'Decision Risk Framing',
-      description: 'Selecciona estrategias de riesgo y cobertura cuando la informacion es incompleta.',
+      description: 'Selecciona estrategias de riesgo y cobertura cuando la información es incompleta.',
     },
     timeLimit: { full: 180, demo: 75 },
   },

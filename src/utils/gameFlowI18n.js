@@ -1,17 +1,17 @@
 const GAME_FLOW_ES_META = {
-  1: { mission: 'Sostener ritmo entre calculo y memoria de trabajo.', strategy: 'Evita apresurarte: primero exactitud, luego velocidad.', rewardHint: 'Insignia foco por rachas limpias.', varietyHint: 'La complejidad del estimulo escala por set.' },
-  2: { mission: 'Responder rapido sin perder control inhibitorio.', strategy: 'Micro-pausa despues de GO rapidos.', rewardHint: 'Escudo de impulso por inhibiciones limpias.', varietyHint: 'La cadencia GO/STOP cambia por tramo.' },
-  3: { mission: 'Cambiar regla sin perder contexto.', strategy: 'Confirma regla activa antes de responder.', rewardHint: 'Combo adaptativo por cambios consistentes.', varietyHint: 'Estimulos y reglas rotan por trial.' },
+  1: { mission: 'Sostener ritmo entre cálculo y memoria de trabajo.', strategy: 'Evita apresurarte: primero exactitud, luego velocidad.', rewardHint: 'Insignia foco por rachas limpias.', varietyHint: 'La complejidad del estímulo escala por set.' },
+  2: { mission: 'Responder rápido sin perder control inhibitorio.', strategy: 'Micro-pausa después de GO rápidos.', rewardHint: 'Escudo de impulso por inhibiciones limpias.', varietyHint: 'La cadencia GO/STOP cambia por tramo.' },
+  3: { mission: 'Cambiar regla sin perder contexto.', strategy: 'Confirma regla activa antes de responder.', rewardHint: 'Combo adaptativo por cambios consistentes.', varietyHint: 'Estímulos y reglas rotan por trial.' },
   4: { mission: 'Gestionar riesgo y recompensa en condiciones de incertidumbre.', strategy: 'Analiza el ritmo de expansión: asegura puntos antes del umbral crítico.', rewardHint: 'Insignia de navegante de riesgo por asegurar rachas.', varietyHint: 'El umbral de explosión se calibra dinámicamente.' },
   5: { mission: 'Elegir trade-offs robustos bajo presión.', strategy: 'Prioriza impacto, urgencia y reversibilidad.', rewardHint: 'Insignia de decisión de calidad.', varietyHint: 'Escenarios cambian por dominio operativo.' },
   6: { mission: 'Optimizar ruteo y gestión de recursos en red.', strategy: 'Planifica la recarga energética antes de tramos críticos.', rewardHint: 'Emblema de eficiencia de flujo por ruteo óptimo.', varietyHint: 'La densidad de red y consumo escalan por nivel.' },
   7: { mission: 'Resolver problemas espaciales complejos mediante lógica óptica.', strategy: 'Utiliza la bifurcación para cubrir múltiples nodos con un solo haz.', rewardHint: 'Token de precisión espacial por niveles limpios.', varietyHint: 'Obstáculos y portales cuánticos se activan por fase.' },
-  8: { mission: 'Alinear confianza con calidad de evidencia.', strategy: 'Cuando hay ambiguedad, calibrar certeza.', rewardHint: 'Medalla de calibracion.', varietyHint: 'Ambiguedad de evidencia cambia por item.' },
-  9: { mission: 'Secuenciar tareas para maximo impacto.', strategy: 'Resolver bloqueos antes de cascadas.', rewardHint: 'Insignia de comando operativo.', varietyHint: 'Dependencias y deadlines se remezclan.' },
-  10: { mission: 'Detectar deriva de reglas y adaptarte.', strategy: 'Probar hipotesis cortas por ronda.', rewardHint: 'Cadena de agilidad por pivotes exitosos.', varietyHint: 'Los cambios de regla no siguen patron fijo.' },
-  11: { mission: 'Orquestar coordinacion entre equipos.', strategy: 'Buscar compromisos verificables.', rewardHint: 'Escudo de coordinacion multi-equipo.', varietyHint: 'Roles y fricciones cambian por escenario.' },
-  12: { mission: 'Conservar calidad bajo interrupciones.', strategy: 'Recuperar contexto rapido tras cortes.', rewardHint: 'Nucleo de resiliencia por recuperacion estable.', varietyHint: 'Cadencia e intensidad de interrupcion varian.' },
-  13: { mission: 'Balancear upside y downside.', strategy: 'Preferir decision con cobertura explicita.', rewardHint: 'Insignia de navegacion de riesgo.', varietyHint: 'Volatilidad y confianza rotan por turno.' },
+  8: { mission: 'Alinear confianza con calidad de evidencia.', strategy: 'Cuando hay ambigüedad, calibrar certeza.', rewardHint: 'Medalla de calibración.', varietyHint: 'Ambigüedad de evidencia cambia por ítem.' },
+  9: { mission: 'Secuenciar tareas para máximo impacto.', strategy: 'Resolver bloqueos antes de cascadas.', rewardHint: 'Insignia de comando operativo.', varietyHint: 'Dependencias y deadlines se remezclan.' },
+  10: { mission: 'Detectar deriva de reglas y adaptarte.', strategy: 'Probar hipótesis cortas por ronda.', rewardHint: 'Cadena de agilidad por pivotes exitosos.', varietyHint: 'Los cambios de regla no siguen patrón fijo.' },
+  11: { mission: 'Orquestar coordinación entre equipos.', strategy: 'Buscar compromisos verificables.', rewardHint: 'Escudo de coordinación multi-equipo.', varietyHint: 'Roles y fricciones cambian por escenario.' },
+  12: { mission: 'Conservar calidad bajo interrupciones.', strategy: 'Recuperar contexto rápido tras cortes.', rewardHint: 'Núcleo de resiliencia por recuperación estable.', varietyHint: 'Cadencia e intensidad de interrupción varían.' },
+  13: { mission: 'Balancear upside y downside.', strategy: 'Preferir decisión con cobertura explícita.', rewardHint: 'Insignia de navegación de riesgo.', varietyHint: 'Volatilidad y confianza rotan por turno.' },
 };
 
 export const GAME_FLOW_EN = {
@@ -160,4 +160,3 @@ export const getLocalizedGameInstruction = (game, language = 'es') => {
     varietyHint: fallback.varietyHint || source.varietyHint || '',
   };
 };
-

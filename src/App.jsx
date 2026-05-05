@@ -1,5 +1,5 @@
 import React, { lazy, Suspense } from 'react';
-import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import { TelemetryProvider } from './TelemetryContext';
 import { VariantProvider } from './contexts/VariantContext';
 import { LanguageProvider } from './context/LanguageContext';
@@ -15,7 +15,6 @@ const DevControls = import.meta.env.DEV ? lazy(() => import('./components/DevCon
 import Footer from './components/Footer';
 import PortalButton from './components/PortalButton';
 import PostulantesLogin from './components/PostulantesLogin';
-import CandidateLogin from './components/CandidateLogin';
 
 // Lazy load components for code splitting
 const Report = lazy(() => import('./Report'));
@@ -28,8 +27,11 @@ const PitchDeckPage = lazy(() => import('./components/PitchDeckPage'));
 
 // Main App Router and State
 function AppContent() {
+  const location = useLocation();
+  const isHome = location.pathname === '/';
+
   return (
-    <div className="app-layout">
+    <div className="app-layout" style={{ height: '100vh', overflow: 'hidden' }}>
       {/* Background effects */}
       <div style={{
         position: 'absolute', top: '-10%', left: '-10%', width: '40%', height: '40%',
@@ -48,10 +50,16 @@ function AppContent() {
         </Suspense>
       )}
 
-      <div style={{ flex: 1, position: 'relative', overflowY: 'auto', overflowX: 'hidden' }}>
+      <div style={{ 
+        flex: 1, 
+        position: 'relative', 
+        overflowY: isHome ? 'auto' : 'hidden', 
+        overflowX: 'hidden',
+        height: '100%'
+      }}>
         <Suspense fallback={<div className="loading-spinner">Loading...</div>}>
           <Routes>
-            <Route path="/" element={<LandingPage />} />
+            <Route path="/" element={<><LandingPage /><Footer /></>} />
             <Route path="/intro" element={<Intro />} />
             {GAME_FLOW.map(game => (
               <Route
@@ -72,8 +80,6 @@ function AppContent() {
           </Routes>
         </Suspense>
       </div>
-
-      <Footer />
     </div>
   );
 }
