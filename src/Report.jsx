@@ -30,15 +30,15 @@ import {
 import { getExperimentConfig } from './utils/abTesting';
 import './Report.css';
 
-const Report = () => {
+const Report = ({ isDummy = false, demoSummary = null }) => {
   const { sessionData, participantProfile, getSessionMetadata } = useTelemetry();
   const { language } = useLanguage();
   const isEn = language === 'en';
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   
-  // Initialize modes from URL params (useful for deterministic QA scenarios).
-  const initialDummyMode = searchParams.get('dummy') === 'true';
+  // Initialize modes from URL params or props.
+  const initialDummyMode = isDummy || searchParams.get('dummy') === 'true';
   const initialAiMode = searchParams.get('ai') !== 'false';
   
   const [isAnalyzing, setIsAnalyzing] = useState(true);
@@ -76,14 +76,29 @@ const Report = () => {
 
   const isDevBuild = typeof import.meta !== 'undefined' && import.meta.env?.DEV;
 
+  // Use passed demo data if available, otherwise fallback to sessionData
+  const effectiveSessionData = useMemo(() => {
+    if (demoSummary && demoSummary.activities) {
+      // Reconstruct session data from demo activities
+      const reconstructed = {};
+      demoSummary.activities.forEach(act => {
+        if (act.analytics) {
+          reconstructed[act.telemetryId || act.id] = act.analytics;
+        }
+      });
+      return reconstructed;
+    }
+    return sessionData;
+  }, [demoSummary, sessionData]);
+
   // Check if we have sufficient data or should use dummy data
-  const hasRealData = hasMinimumAssessmentData(sessionData);
+  const hasRealData = hasMinimumAssessmentData(effectiveSessionData);
   // Support demo-specific dummy subsets via ?demoCount=5 to show only N dummy games
   const demoCountParam = searchParams.get('demoCount');
   const demoCount = demoCountParam ? Number(demoCountParam) : null;
 
   const reportData = useMemo(() => {
-    const base = (useDummyData || !hasRealData) ? generateDummyReportData() : sessionData;
+    const base = (useDummyData || !hasRealData) ? generateDummyReportData() : effectiveSessionData;
     if (useDummyData && demoCount && typeof base === 'object' && Object.keys(base).length > 0) {
       const entries = Object.keys(base).filter((k) => k !== 'futureModules');
       const subsetKeys = entries.slice(0, Math.max(0, Math.floor(demoCount)));
@@ -93,7 +108,7 @@ const Report = () => {
       return filtered;
     }
     return base;
-  }, [useDummyData, hasRealData, sessionData, demoCount]);
+  }, [useDummyData, hasRealData, effectiveSessionData, demoCount]);
 
   const experimentConfig = useMemo(() => (
     getExperimentConfig('report-insight-panel-v1', participantProfile?.participantId || 'anonymous')

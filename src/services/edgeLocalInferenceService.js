@@ -700,13 +700,34 @@ function formatPercent(value) {
 
 export function buildEdgeLocalLiveInsight(currentTelemetry = {}, options = {}) {
   if (!currentTelemetry || !currentTelemetry.startTime) {
-    return null;
+    // If telemetry hasn't started, return a skeleton with zeros instead of null
+    // to avoid UI flicker in the HUD
+    return {
+      elapsedSec: 0,
+      cursorEvents: 0,
+      clickEvents: 0,
+      trialEvents: 0,
+      webcamFrames: 0,
+      qualityFlags: 0,
+      hesitationCount: 0,
+      avgVelocity: 0,
+      webcamQuality: 0,
+      coverageScore: 0,
+      stabilityScore: 0,
+      fatigueScore: 0,
+      readinessScore: 0,
+      signals: ['Initializing sensors...'],
+      calibration: resolveCalibration(options),
+    };
   }
 
   const elapsedSec = Math.max(1, Math.round((Date.now() - currentTelemetry.startTime) / 1000));
   const cursorEvents = currentTelemetry.mouseMovements?.length || 0;
   const clickEvents = currentTelemetry.clicks?.length || 0;
   const trialEvents = currentTelemetry.trialEvents?.length || 0;
+  const moveEvents = currentTelemetry.trialEvents?.filter(e => 
+    ['move', 'pump', 'bank', 'click', 'decision', 'select'].includes(e.event)
+  ).length || 0;
   const webcamFrames = currentTelemetry.webcamFrames?.length || 0;
   const qualityFlags = currentTelemetry.qualityFlags?.length || 0;
   const hesitationCount = currentTelemetry.cursorMetrics?.hesitationCount || 0;
@@ -714,42 +735,42 @@ export function buildEdgeLocalLiveInsight(currentTelemetry = {}, options = {}) {
   const webcamQuality = Number.isFinite(currentTelemetry.webcamQualityScore) ? currentTelemetry.webcamQualityScore : 0;
 
   const eventDensity = (cursorEvents + clickEvents + trialEvents + webcamFrames) / elapsedSec;
-  const coverageScore = clamp(eventDensity * 10, 0, 100);
+  const coverageScore = clamp(eventDensity * 12, 0, 100); // Slightly boosted for better feedback
   const motionQualityScore = normalizeTargetBand(avgVelocity, 250, 1300, 50, 2200);
   const stabilityScore = clamp(
     (motionQualityScore * 0.28)
     + (webcamQuality * 0.24)
-    + ((100 - Math.min(hesitationCount * 3.2, 100)) * 0.3)
-    + ((100 - Math.min(qualityFlags * 12, 100)) * 0.18),
+    + ((100 - Math.min(hesitationCount * 3.5, 100)) * 0.3)
+    + ((100 - Math.min(qualityFlags * 15, 100)) * 0.18),
     0,
     100
   );
   const fatigueScore = clamp(
-    (elapsedSec * 1.5)
-    + (qualityFlags * 10)
-    + ((100 - webcamQuality) * 0.22)
-    + (hesitationCount * 1.4),
+    (elapsedSec * 1.2)
+    + (qualityFlags * 12)
+    + ((100 - webcamQuality) * 0.2)
+    + (hesitationCount * 1.5),
     0,
     100
   );
   const readinessScore = clamp(
-    (coverageScore * 0.32)
-    + (stabilityScore * 0.44)
-    + ((100 - fatigueScore) * 0.18)
-    + (webcamQuality * 0.06),
+    (coverageScore * 0.35)
+    + (stabilityScore * 0.45)
+    + ((100 - fatigueScore) * 0.15)
+    + (webcamQuality * 0.05),
     0,
     100
   );
 
   const signals = [];
-  if (qualityFlags > 0) signals.push('Quality flags active');
-  if (webcamQuality > 0 && webcamQuality < 60) signals.push('Webcam quality is low');
-  if (hesitationCount > 5) signals.push('Hesitation is increasing');
-  if (elapsedSec > 60 && fatigueScore > 55) signals.push('Fatigue trend is visible');
+  if (qualityFlags > 0) signals.push('Señales de inestabilidad detectadas');
+  if (webcamQuality > 0 && webcamQuality < 60) signals.push('Baja calidad de captura visual');
+  if (hesitationCount > 8) signals.push('Patrones de hesitación detectados');
+  if (elapsedSec > 45 && fatigueScore > 50) signals.push('Tendencia de carga cognitiva alta');
 
   return {
     elapsedSec,
-    cursorEvents,
+    cursorEvents: cursorEvents + moveEvents, // Combine raw mouse and active game actions
     clickEvents,
     trialEvents,
     webcamFrames,

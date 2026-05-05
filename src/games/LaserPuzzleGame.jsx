@@ -169,7 +169,7 @@ const buildGrid = (level) => {
 };
 
 const LaserPuzzleGame = ({ isActive, onEndGame, isDemo, timeLimit }) => {
-  const { recordError, startTracking, stopTracking } = useTelemetry();
+  const { recordError, startTracking, stopTracking, recordTrialEvent } = useTelemetry();
   const { language } = useLanguage();
   const [procLevels, setProcLevels] = useState(null);
   const [levelIdx, setLevelIdx] = useState(0);
@@ -253,6 +253,12 @@ const LaserPuzzleGame = ({ isActive, onEndGame, isDemo, timeLimit }) => {
         setMoves(m => m + 1); setTotalMoves(tm => tm + 1);
         setSelected(null);
         try { playMemoryClick(); } catch (error) { void error; }
+        
+        // Record event for HUD and telemetry
+        recordTrialEvent({ 
+          event: 'move', 
+          payload: { x, y, type: piece.type } 
+        });
       } else if (cell?.movable) setSelected({ x, y });
       else setSelected(null);
     } else {

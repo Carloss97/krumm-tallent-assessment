@@ -3,15 +3,19 @@
   margin: 0;
   padding: 0;
   background: #f8fafc;
-  min-height: 100vh;
+  height: 100%;
+  min-height: 100%;
   display: flex;
   flex-direction: column;
+  overflow: hidden;
 }
 
 .demo-selection {
   max-width: 1100px;
   margin: 0 auto;
   width: 100%;
+  height: 100%;
+  overflow-y: auto;
 }
 
 .demo-game-container {
@@ -19,12 +23,13 @@
   flex-direction: column;
   flex: 1;
   width: 100%;
-  height: 100vh;
+  height: 100%;
+  max-height: 100%;
   overflow: hidden;
 }
 
 .demo-floating-header {
-  position: fixed;
+  position: absolute; /* Changed from fixed to absolute to stay within parent */
   top: 0;
   left: 0;
   right: 0;
@@ -56,6 +61,9 @@
   padding-top: 60px; /* Space for header */
   position: relative;
   width: 100%;
+  height: 100%;
+  max-height: 100%;
+  overflow: hidden;
 }
 
 .game-stage {
@@ -64,17 +72,10 @@
   align-items: center;
   justify-content: center;
   width: 100%;
+  height: calc(100% - 60px);
   background: #ffffff;
   position: relative;
-  overflow: auto;
-}
-
-/* Redefine demo-activity for game container context */
-.demo-activity {
-  width: 100%;
-  height: 100%;
-  display: flex;
-  flex-direction: column;
+  overflow: hidden;
 }
 
 .instructions-overlay {
@@ -128,7 +129,7 @@
 }
 
 .demo-toast {
-  position: fixed;
+  position: absolute;
   top: 80px;
   right: 24px;
   z-index: 200;
@@ -155,8 +156,17 @@
 
 /* Adjust HUD position in fullscreen */
 .demo-fullscreen-main .demo-hud {
-  top: 80px;
+  position: absolute;
+  top: 20px;
   right: 24px;
+  max-height: calc(100% - 40px);
+}
+
+.demo-fullscreen-main .demo-hud.minimized {
+  width: auto;
+  top: 20px;
+  right: 24px;
+  overflow: hidden;
 }
 
 @media (max-width: 768px) {

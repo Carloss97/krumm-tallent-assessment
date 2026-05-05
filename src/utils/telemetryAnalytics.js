@@ -25,6 +25,13 @@ export function analyzeTelemetry(sessionData = {}) {
     acc.cursorEvents += snap.mouseMovements?.length || 0;
     acc.clickEvents += snap.clicks?.length || 0;
     acc.trialEvents += snap.trialEvents?.length || 0;
+    
+    // Count active game decisions as high-value trials
+    const activeMoves = snap.trialEvents?.filter(e => 
+      ['move', 'pump', 'bank', 'click', 'decision', 'select'].includes(e.event)
+    ).length || 0;
+    acc.activeMoves += activeMoves;
+
     acc.webcamFrames += snap.webcamFrames?.length || 0;
     acc.hesitationCount += snap.cursorMetrics?.hesitationCount || 0;
     acc.qualityFlags += snap.qualityFlags?.length || 0;
@@ -33,6 +40,7 @@ export function analyzeTelemetry(sessionData = {}) {
     cursorEvents: 0,
     clickEvents: 0,
     trialEvents: 0,
+    activeMoves: 0,
     webcamFrames: 0,
     hesitationCount: 0,
     qualityFlags: 0,
@@ -53,8 +61,10 @@ export function analyzeTelemetry(sessionData = {}) {
     : 0;
 
   const completionRate = GAME_KEYS.length > 0 ? round((snapshots.length / GAME_KEYS.length) * 100, 1) : 0;
+  
+  // Density counts moves + clicks + frames per trial
   const telemetryDensity = totals.trialEvents > 0
-    ? round((totals.cursorEvents + totals.clickEvents + totals.webcamFrames) / totals.trialEvents, 2)
+    ? round((totals.cursorEvents + totals.clickEvents + totals.webcamFrames + (totals.activeMoves * 5)) / totals.trialEvents, 2)
     : 0;
 
   const attentionStabilityScore = Math.max(0, Math.min(100,

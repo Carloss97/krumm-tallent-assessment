@@ -89,6 +89,9 @@ const BalloonGame = ({ isActive, onEndGame, isDemo }) => {
     const earlyPopChance = currentBalloonSize >= MIN_PUMPS ? Math.min(0.2, (currentBalloonSize - MIN_PUMPS) * 0.05) : 0;
     const isEarlyPop = Math.random() < earlyPopChance;
 
+    // Record pump event
+    recordTrialEvent({ event: 'pump', payload: { size: newSize } });
+
     if (newSize >= explosionPoint || isEarlyPop) {
       playBalloonPop();
       playErrorSound();
@@ -109,6 +112,10 @@ const BalloonGame = ({ isActive, onEndGame, isDemo }) => {
     totalPointsRef.current += currentRoundPoints;
     setTotalPoints(totalPointsRef.current);
     setGameState('banked');
+
+    // Record bank event
+    recordTrialEvent({ event: 'bank', payload: { points: currentRoundPoints } });
+
     try { playSuccessSound(); } catch (error) { void error; }
     setShowConfetti(true);
     setTimeout(() => setShowConfetti(false), 1400);

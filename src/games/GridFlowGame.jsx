@@ -85,7 +85,7 @@ const DEMO_BRIEFINGS = {
 };
 
 const GridFlowGame = ({ isActive, onEndGame, isDemo }) => {
-  const { recordError, startTracking, stopTracking } = useTelemetry();
+  const { recordError, startTracking, stopTracking, recordTrialEvent } = useTelemetry();
   const { language } = useLanguage();
 
   const effectiveMaxRounds = LEVELS.length;
@@ -285,6 +285,12 @@ const GridFlowGame = ({ isActive, onEndGame, isDemo }) => {
     const newState = { player:{x:nx,y:ny}, energy:newEnergy, inventory:newInv, targets:newTargets, score:newScore };
     stateRef.current = { ...stateRef.current, ...newState };
     setPlayer(newState.player); setEnergy(newState.energy); setInventory(newState.inventory); setTargets(newState.targets); setScore(newState.score);
+
+    // Record event for HUD and telemetry
+    recordTrialEvent({ 
+      event: 'move', 
+      payload: { x: nx, y: ny, energy: newEnergy, hasInventory: !!newInv } 
+    });
 
     if (newEnergy <= 0 && lvl.energyDrain > 0) {
       setFuelEmpty(true);

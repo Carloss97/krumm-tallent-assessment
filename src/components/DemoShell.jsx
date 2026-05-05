@@ -20,18 +20,19 @@ import GameGallery from './GameGallery';
 import ProgressTracker from './ProgressTracker';
 import LiveDemoTelemetryHud from './LiveDemoTelemetryHud';
 import { analyzeDemoTelemetry } from '../utils/advancedTelemetryAnalytics';
+import { useWebcamCapture } from '../hooks/useWebcamCapture';
 import './DemoShell.css';
 
 // Adapter wrappers so DemoShell can call games with the expected onComplete() callback
 // For the demo we intentionally allow full-mode versions
-const BalloonProtoWrapper = ({ onComplete, est }) => <ProtoBalloon isActive={true} isDemo={true} timeLimit={est} onEndGame={() => onComplete && onComplete()} />;
-const GridProtoWrapper = ({ onComplete, est }) => <GridFlowGame isActive={true} isDemo={true} timeLimit={est} onEndGame={() => onComplete && onComplete()} />;
-const LaserProtoWrapper = ({ onComplete, est }) => <LaserPuzzleGame isActive={true} isDemo={true} timeLimit={est} onEndGame={() => onComplete && onComplete()} />;
-const GoNoGoProtoWrapper = ({ onComplete, est }) => <ProtoGoNoGo isActive={true} isDemo={false} timeLimit={est} onEndGame={() => onComplete && onComplete()} />;
-const NBackProtoWrapper = ({ onComplete, est }) => <ProtoNBack isActive={true} isDemo={false} timeLimit={est} onEndGame={() => onComplete && onComplete()} />;
-const MemoryProtoWrapper = ({ onComplete, est }) => <MemoryGame isActive={true} isDemo={false} timeLimit={est} onEndGame={() => onComplete && onComplete()} />;
-const ColorWordProtoWrapper = ({ onComplete, est }) => <ColorWordGame isActive={true} isDemo={false} timeLimit={est} onEndGame={() => onComplete && onComplete()} />;
-const TrailProtoWrapper = ({ onComplete, est }) => <TrailMakingGame isActive={true} isDemo={false} timeLimit={est} onEndGame={() => onComplete && onComplete()} />;
+const BalloonProtoWrapper = ({ onComplete, est }) => <ProtoBalloon isActive={true} isDemo={true} timeLimit={est} onEndGame={() => onComplete('balloon')} />;
+const GridProtoWrapper = ({ onComplete, est }) => <GridFlowGame isActive={true} isDemo={true} timeLimit={est} onEndGame={() => onComplete('grid')} />;
+const LaserProtoWrapper = ({ onComplete, est }) => <LaserPuzzleGame isActive={true} isDemo={true} timeLimit={est} onEndGame={() => onComplete('laser')} />;
+const GoNoGoProtoWrapper = ({ onComplete, est }) => <ProtoGoNoGo isActive={true} isDemo={false} timeLimit={est} onEndGame={() => onComplete('gng')} />;
+const NBackProtoWrapper = ({ onComplete, est }) => <ProtoNBack isActive={true} isDemo={false} timeLimit={est} onEndGame={() => onComplete('nback')} />;
+const MemoryProtoWrapper = ({ onComplete, est }) => <MemoryGame isActive={true} isDemo={false} timeLimit={est} onEndGame={() => onComplete('memory')} />;
+const ColorWordProtoWrapper = ({ onComplete, est }) => <ColorWordGame isActive={true} isDemo={false} timeLimit={est} onEndGame={() => onComplete('colorword')} />;
+const TrailProtoWrapper = ({ onComplete, est }) => <TrailMakingGame isActive={true} isDemo={false} timeLimit={est} onEndGame={() => onComplete('trails')} />;
 
 // Complete game catalog for demo selection
 const ALL_GAMES = {
@@ -137,8 +138,14 @@ const DemoShell = () => {
   const [activityStarted, setActivityStarted] = useState(false);
   const [showReport, setShowReport] = useState(false);
   const [demoSummary, setDemoSummary] = useState(null);
-  const { sessionData, setIsDemo, startTracking, stopTracking, recordTrialEvent } = useTelemetry();
+  const { sessionData, setIsDemo, startTracking, stopTracking, recordTrialEvent, recordWebcamFrame, setConsent } = useTelemetry();
   const { language } = useLanguage();
+
+  const videoRef = useWebcamCapture({
+    isActive: !gameSelectionMode && !showReport,
+    shouldCapture: !gameSelectionMode && !showReport,
+    onFrameCapture: recordWebcamFrame
+  });
 
   // Build ACTIVITIES from selected games
   const ACTIVITIES = useMemo(() => {
@@ -328,24 +335,27 @@ const DemoShell = () => {
   }, [step]);
 
   const onComplete = (id) => {
+    // Prevent double-counting the same activity
+    if (completed[id]) return;
+
     try {
       recordTrialEvent && recordTrialEvent({ event: 'demo_activity_complete', payload: { id, step } });
     } catch {
       // noop
     }
-    // brief success toast with accessible announcer
-    const a = document.getElementById('demo-live-announcer');
-    if (a) a.textContent = (demoCopy[language]?.activityCompletedTemplate || demoCopy.es.activityCompletedTemplate).replace('{id}', id);
 
     setToast(demoCopy[language]?.activityCompletedShort || demoCopy.es.activityCompletedShort);
 
-    setCompleted((c) => {
-      const next = { ...c, [id]: true };
+    setCompleted((prev) => {
+      const next = { ...prev, [id]: true };
       const doneCount = Object.keys(next).length;
+      
       if (doneCount >= ACTIVITIES.length) {
-        handleDemoComplete(next, 'completed');
+        // Use a slight delay to allow any pending game animations to finish before showing report
+        setTimeout(() => handleDemoComplete(next, 'completed'), 800);
       } else {
-        setStep((s) => Math.min(ACTIVITIES.length - 1, s + 1));
+        // Sync step update with completed state to avoid race conditions
+        setStep(prevStep => prevStep + 1);
       }
       return next;
     });
@@ -372,16 +382,25 @@ const DemoShell = () => {
   }
 
   const requestPermissions = async () => {
+    let cursorConsent = true; // Assume cursor consent if they proceed
+    let webcamConsent = false;
+    
     if (typeof navigator !== 'undefined' && navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
       try {
-        const s = await navigator.mediaDevices.getUserMedia({ audio: true, video: true });
-        if (s && s.getTracks) s.getTracks().forEach(t => t.stop());
+        const s = await navigator.mediaDevices.getUserMedia({ audio: false, video: true });
+        if (s) {
+          webcamConsent = true;
+          if (s.getTracks) s.getTracks().forEach(t => t.stop());
+        }
       } catch (error) {
-        console.warn('Permissions denied or unavailable:', error);
+        console.warn('Webcam permission denied:', error);
       }
     }
+    
+    setConsent(cursorConsent, webcamConsent);
     setShowPermission(false);
-    setShowInstructions(true); // Show instructions AFTER permissions
+    setShowInstructions(true);
+    setActivityStarted(false);
   };
 
   return (
@@ -506,6 +525,7 @@ const DemoShell = () => {
       </AnimatePresence>
 
       <div id="demo-live-announcer" className="sr-only" role="status" aria-live="polite" />
+      <video ref={videoRef} style={{ display: 'none' }} playsInline muted />
     </div>
   );
 };
