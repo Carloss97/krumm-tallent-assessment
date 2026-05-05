@@ -108,7 +108,7 @@ const GridFlowGame = ({ isActive, onEndGame }) => {
   const [showChargeAnim, setShowChargeAnim] = useState(false);
 
   const quizScoreRef = useRef(0);
-  const stateRef = useRef({ player:{x:0,y:0}, inventory:null, targets:[], energy:100, round:0, score:0 });
+  const stateRef = useRef({ player:{x:0,y:0}, inventory:null, targets:[], energy:100, round:0, score:0, totalMoves:0 });
   const satsRef = useRef({});
   const levelTimerRef = useRef(null);
   const satTimerRef = useRef(null);
@@ -117,7 +117,16 @@ const GridFlowGame = ({ isActive, onEndGame }) => {
     if (hasEndedRef.current) return;
     hasEndedRef.current = true;
     setGameState('done');
-    stopTracking('game6', stateRef.current.score, quizScoreRef.current, { score: stateRef.current.score, quizScore: quizScoreRef.current });
+    
+    const totalPossiblePoints = LEVELS.reduce((sum, lvl) => sum + lvl.targets.reduce((s, t) => s + t.points, 0), 0);
+    const efficiency = Math.min(100, Math.round((stateRef.current.score / Math.max(1, totalPossiblePoints)) * 100));
+
+    stopTracking('game6', stateRef.current.score, quizScoreRef.current, { 
+      score: stateRef.current.score, 
+      quizScore: quizScoreRef.current,
+      efficiency,
+      totalMoves: stateRef.current.totalMoves
+    });
     onEndGame(stateRef.current.score, quizScoreRef.current);
   }, [onEndGame, stopTracking]);
 
@@ -163,7 +172,7 @@ const GridFlowGame = ({ isActive, onEndGame }) => {
       hasEndedRef.current = false;
       startTracking();
       quizScoreRef.current = 0;
-      stateRef.current = { player:{x:0,y:0}, inventory:null, targets:[], energy:100, round:0, score:0 };
+      stateRef.current = { player:{x:0,y:0}, inventory:null, targets:[], energy:100, round:0, score:0, totalMoves:0 };
       setGameState('briefing');
       setQuizStep(0);
       setScore(0);
@@ -228,7 +237,7 @@ const GridFlowGame = ({ isActive, onEndGame }) => {
 
   const move = useCallback((dir) => {
     if (!isActive || gameState !== 'playing') return;
-    const { player:p, energy:eng, targets:tgt, inventory:inv, round:r, score:sc } = stateRef.current;
+    const { player:p, energy:eng, targets:tgt, inventory:inv, round:r, score:sc, totalMoves: tm } = stateRef.current;
     
     const lvl = LEVELS[r];
     const walls = new Set(lvl.walls);
@@ -282,9 +291,13 @@ const GridFlowGame = ({ isActive, onEndGame }) => {
       }
     }
     
-    const newState = { player:{x:nx,y:ny}, energy:newEnergy, inventory:newInv, targets:newTargets, score:newScore };
+    const newState = { player:{x:nx,y:ny}, energy:newEnergy, inventory:newInv, targets:newTargets, score:newScore, totalMoves: tm + 1 };
     stateRef.current = { ...stateRef.current, ...newState };
-    setPlayer(newState.player); setEnergy(newState.energy); setInventory(newState.inventory); setTargets(newState.targets); setScore(newState.score);
+    setPlayer(newState.player); 
+    setEnergy(newState.energy); 
+    setInventory(newState.inventory); 
+    setTargets(newState.targets); 
+    setScore(newState.score);
 
     // Record event for HUD and telemetry
     recordTrialEvent({ 
@@ -347,7 +360,7 @@ const GridFlowGame = ({ isActive, onEndGame }) => {
           const sat = sats[target.id] ?? 100;
           const satColor = sat >= 60 ? '#059669' : sat >= 30 ? '#d97706' : '#dc2626';
           content = (
-            <motion.div initial={{ scale: 0 }} animate={{ scale: 1 }} style={{ position:'relative', width:'60%', height:'60%', background:target.color, borderRadius:'4px', boxShadow:`0 4px 6px -1px ${target.color}40`, display:'flex', alignItems:'center', justifyContent:'center' }}>
+            <motion.div initial={{ scale: 0 }} animate={{ scale: 1 }} style={{ position:'relative', width:'60%', height:'60%', background:target.color, borderRadius:'4px', boxShadow:`0 4px 66px -1px ${target.color}40`, display:'flex', alignItems:'center', justifyContent:'center' }}>
               <span style={{ position:'absolute', top:'-16px', left:'50%', transform:'translateX(-50%)', fontSize:'9px', color:satColor, fontWeight:'800' }}>{sat}%</span>
             </motion.div>
           );

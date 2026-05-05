@@ -51,8 +51,8 @@ const ALL_GAMES = {
     id: 'grid',
     title: { es: 'Grid Flow', en: 'Grid Flow' },
     instructions: {
-      es: 'Optimiza el flujo de paquetes en la red. Recógelos y llévalos a su destino antes de que expire su satisfacción. Gestiona tu energía. Pulsa comenzar para iniciar.',
-      en: 'Optimize packet flow in the network. Collect and deliver them to their destination before satisfaction expires. Manage your energy. Press start to begin.'
+      es: 'Iniciando protocolo de optimización de ruteo logístico. Debe asegurar la integridad de los paquetes de datos y transferirlos a los nodos de descarga correspondientes antes de que la latencia (satisfacción) degrade la operación. Gestione el consumo energético del sistema. Pulsa comenzar para iniciar.',
+      en: 'Initiating logistic routing optimization protocol. You must ensure data packet integrity and transfer them to the corresponding download nodes before latency (satisfaction) degrades the operation. Manage system energy consumption. Press start to begin.'
     },
     component: GridProtoWrapper,
     est: 110,
@@ -60,10 +60,10 @@ const ALL_GAMES = {
   },
   laser: {
     id: 'laser',
-    title: { es: 'Láser y espejos', en: 'Laser & mirrors' },
+    title: { es: 'Laser Puzzle', en: 'Laser Puzzle' },
     instructions: {
-      es: 'Guia el láser con espejos para iluminar todas las antenas. Luego aparece el bifurcador para dividir el haz. Pulsa comenzar para iniciar.',
-      en: 'Guide the laser with mirrors to light all antennas. Then a bifurcator appears to split the beam. Press start to begin.'
+      es: 'Iniciando fase de calibración óptica. Utilice las unidades de reflexión para alinear el haz de fotones con los receptores de señal. Despliegue el módulo de bifurcación para cubrir múltiples objetivos. Optimice la secuencia de ruteo para máxima precisión. Pulsa comenzar para iniciar.',
+      en: 'Starting optical calibration phase. Use reflection units to align the photon beam with signal receivers. Deploy the bifurcation module to cover multiple targets. Optimize routing sequence for maximum precision. Press start to begin.'
     },
     component: LaserProtoWrapper,
     est: 100,

@@ -87,31 +87,42 @@
   width: min(1100px, 96%);
   height: min(820px, 94%);
   background: #fff;
-  border-radius: 12px;
+  border-radius: 32px; /* Match the new premium design */
   box-shadow: 0 40px 120px rgba(2,6,23,0.6);
   overflow: hidden;
   z-index: 12010;
   display: flex;
   flex-direction: column;
   animation: demoPop 360ms cubic-bezier(.21,.9,.27,1) both;
+  border: 1px solid rgba(255, 255, 255, 0.1);
 }
 .demo-overlay__close {
   position: absolute;
-  right: 10px;
-  top: 10px;
-  background: transparent;
+  right: 20px;
+  top: 20px;
+  background: rgba(15, 23, 42, 0.05);
   border: none;
-  color: #222;
+  color: #1e1b4b;
   font-size: 20px;
-  padding: 8px;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   cursor: pointer;
   z-index: 12020;
+  transition: all 0.2s;
+}
+.demo-overlay__close:hover {
+  background: rgba(15, 23, 42, 0.1);
+  transform: scale(1.1);
 }
 .demo-overlay__content {
   flex: 1 1 auto;
-  overflow: auto;
-  background: linear-gradient(180deg, #ffffff 0%, #fbfdff 100%);
-  padding: 18px;
+  overflow: hidden; /* Prevent inner scroll */
+  background: #f8fafc;
+  padding: 0; /* Remove padding to avoid 100% height overflow */
 }
 
 @keyframes demoPop {
