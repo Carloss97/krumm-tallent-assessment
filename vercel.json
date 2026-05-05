@@ -4,28 +4,6 @@
   "outputDirectory": "dist",
   "framework": "vite",
   
-  "env": {
-    "VITE_API_BASE_URL": {
-      "description": "Backend API endpoint (e.g., https://krumm-backend.onrender.com)"
-    },
-    "VITE_GEMINI_MODEL": {
-      "default": "gemini-2.5-flash",
-      "description": "Gemini model for AI report generation"
-    },
-    "VITE_USE_BACKEND_GEMINI_PROXY": {
-      "default": "true",
-      "description": "Use backend Gemini proxy (recommended for security)"
-    },
-    "VITE_ALLOW_BROWSER_GEMINI_FALLBACK": {
-      "default": "false",
-      "description": "Allow direct Gemini API fallback if backend proxy fails"
-    },
-    "VITE_BASE_PATH": {
-      "default": "/",
-      "description": "Base path for app routing (e.g., / for root, /app for subdirectory)"
-    }
-  },
-  
   "headers": [
     {
       "source": "/api/:path*",
