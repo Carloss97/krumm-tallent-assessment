@@ -399,6 +399,14 @@
   margin-bottom: 14px;
 }
 
+.lv3-cap-card h3 svg,
+.lv3-process-card h3 svg,
+.lv3-usecase-card h3 svg {
+  width: 22px;
+  height: 22px;
+  flex-shrink: 0;
+}
+
 .lv3-cap-card p,
 .lv3-process-card p,
 .lv3-usecase-card p {

@@ -280,11 +280,11 @@ const DemoShell = () => {
 
   useEffect(() => {
     // Only start timer if demo is running
-    if (gameSelectionMode || !ACTIVITIES.length) return;
+    if (gameSelectionMode || !ACTIVITIES.length || showPermission || !activityStarted) return;
     
     const t = setInterval(() => setTimeLeft((s) => Math.max(0, s - 1)), 1000);
     return () => clearInterval(t);
-  }, [gameSelectionMode, ACTIVITIES.length]);
+  }, [gameSelectionMode, ACTIVITIES.length, showPermission, activityStarted]);
 
   useEffect(() => {
     if (gameSelectionMode || !timeLeft || timeLeft > 0) return;
@@ -411,6 +411,13 @@ const DemoShell = () => {
     setActivityStarted(false);
   };
 
+  const continueWithoutPermissions = () => {
+    setConsent(true, false);
+    setShowPermission(false);
+    setShowInstructions(true);
+    setActivityStarted(false);
+  };
+
   return (
     <div className="demo-shell">
       <AnimatePresence mode="wait">
@@ -493,7 +500,11 @@ const DemoShell = () => {
               
               {toast && <motion.div initial={{ opacity:0, y:20 }} animate={{ opacity:1, y:0 }} className="demo-toast">{toast}</motion.div>}
 
-              <PermissionModal open={showPermission} onClose={() => setShowPermission(false)} onRequest={requestPermissions} />
+              <PermissionModal
+                open={showPermission}
+                onClose={continueWithoutPermissions}
+                onRequest={requestPermissions}
+              />
 
               <AnimatePresence>
                 {showInstructions && !showPermission && (

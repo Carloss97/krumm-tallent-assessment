@@ -511,24 +511,57 @@ function PitchDeckPage() {
             {slide.type === 'market' && (
               <>
                 <motion.h2 initial={{ opacity: 0 }} animate={{ opacity: 1 }}>{slide.title}</motion.h2>
-                <div className="pitch-market-grid-slide">
-                  {slide.data.map((row, idx) => {
-                    const Icon = row.icon;
-                    return (
-                      <motion.article 
-                        key={idx} 
-                        className="pitch-market-card-slide"
-                        initial={{ scale: 0.9, opacity: 0 }}
-                        animate={{ scale: 1, opacity: 1 }}
-                        transition={{ delay: idx * 0.15 }}
-                      >
-                        <Icon size={32} style={{ color: '#60a5fa', marginBottom: '16px' }} />
-                        <span>{row.label[language]}</span>
-                        <strong>{row.value}</strong>
-                        <p>{row.text[language]}</p>
-                      </motion.article>
-                    );
-                  })}
+                <div className="pitch-market-slide-layout">
+                  <div className="pitch-market-diagram" aria-hidden="true">
+                    <div className="pitch-circle pitch-circle-tam">
+                      <span>TAM</span>
+                      <strong>{slide.data[0]?.value}</strong>
+                    </div>
+                    <div className="pitch-circle pitch-circle-sam">
+                      <span>SAM</span>
+                      <strong>{slide.data[1]?.value}</strong>
+                    </div>
+                    <div className="pitch-circle pitch-circle-som">
+                      <span>SOM</span>
+                      <strong>{slide.data[2]?.value}</strong>
+                    </div>
+                    <div className="pitch-market-diagram-label">
+                      <TrendingUp size={16} />
+                      <span>{language === 'es' ? 'Mercado por capas' : 'Layered market view'}</span>
+                    </div>
+                  </div>
+
+                  <div className="pitch-market-copy">
+                    <p className="pitch-market-lead">
+                      {language === 'es'
+                        ? 'Lectura visual del mercado objetivo para mostrar alcance, foco y aterrizaje comercial.'
+                        : 'Visual market reading to show reach, focus, and commercial landing zone.'}
+                    </p>
+                    <div className="pitch-market-stack">
+                      {slide.data.map((row, idx) => {
+                        const Icon = row.icon;
+                        const toneClass = idx === 0 ? 'tone-blue' : idx === 1 ? 'tone-indigo' : 'tone-emerald';
+                        return (
+                          <motion.article 
+                            key={idx} 
+                            className={`pitch-market-card-slide pitch-market-card-compact ${toneClass}`}
+                            initial={{ scale: 0.96, opacity: 0 }}
+                            animate={{ scale: 1, opacity: 1 }}
+                            transition={{ delay: idx * 0.12 }}
+                          >
+                            <div className="pitch-market-card-top">
+                              <div className="pitch-market-card-icon">
+                                <Icon size={22} />
+                              </div>
+                              <span>{row.label[language]}</span>
+                            </div>
+                            <strong>{row.value}</strong>
+                            <p>{row.text[language]}</p>
+                          </motion.article>
+                        );
+                      })}
+                    </div>
+                  </div>
                 </div>
               </>
             )}

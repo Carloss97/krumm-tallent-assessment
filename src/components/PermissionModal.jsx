@@ -1,5 +1,6 @@
 import React from 'react';
 import { useLanguage } from '../context/LanguageContext';
+import './PermissionModal.css';
 
 const PermissionModal = ({ open, onClose, onRequest }) => {
   const { language } = useLanguage();
@@ -25,13 +26,14 @@ const PermissionModal = ({ open, onClose, onRequest }) => {
   const c = copy[language] || copy.es;
 
   return (
-    <div className="permission-overlay">
+    <div className="permission-overlay" role="dialog" aria-modal="true" aria-labelledby="permission-modal-title">
       <div className="permission-modal">
-        <h3>{c.title}</h3>
+        <div className="permission-badge">KRUMM DEMO</div>
+        <h3 id="permission-modal-title">{c.title}</h3>
         <p>{c.body}</p>
         <div style={{ display: 'flex', gap: 10, marginTop: 12 }}>
-          <button className="btn btn-ghost" onClick={onClose}>{c.continue}</button>
-          <button className="btn" onClick={onRequest}>{c.request}</button>
+          <button type="button" className="btn btn-ghost" onClick={onClose}>{c.continue}</button>
+          <button type="button" className="btn" onClick={onRequest}>{c.request}</button>
         </div>
         <p style={{ marginTop: 10, color: '#6b7280' }}>{c.note}</p>
       </div>

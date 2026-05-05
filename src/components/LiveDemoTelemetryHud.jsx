@@ -153,7 +153,9 @@ const LiveDemoTelemetryHud = ({ activeGameId = null, activeGameLabel = '' }) => 
       {Array.isArray(snapshot.signals) && snapshot.signals.length > 0 && (
         <div className="demo-hud-signals">
           {snapshot.signals.slice(0, 2).map((signal) => (
-            <span key={signal}>{signal}</span>
+            <span key={typeof signal === 'string' ? signal : JSON.stringify(signal)}>
+              {typeof signal === 'string' ? signal : (signal?.label || signal?.title || 'signal')}
+            </span>
           ))}
         </div>
       )}

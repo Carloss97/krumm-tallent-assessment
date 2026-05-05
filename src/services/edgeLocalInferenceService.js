@@ -133,7 +133,29 @@ function calculateBiometricQuality(data, games) {
 export function buildEdgeLocalLiveInsight(rawTelemetry) {
   if (!rawTelemetry) return null;
 
-  const { elapsedSec, cursorEvents, clickEvents, trialEvents, webcamFrames, webcamQuality } = rawTelemetry;
+  const toCount = (value, fallbackKeys = []) => {
+    if (Number.isFinite(value)) return value;
+    if (Array.isArray(value)) return value.length;
+
+    for (const key of fallbackKeys) {
+      const candidate = rawTelemetry?.[key];
+      if (Number.isFinite(candidate)) return candidate;
+      if (Array.isArray(candidate)) return candidate.length;
+    }
+
+    return 0;
+  };
+
+  const elapsedSec = Number.isFinite(rawTelemetry.elapsedSec) ? rawTelemetry.elapsedSec : 0;
+  const cursorEvents = toCount(rawTelemetry.cursorEvents, ['mouseMovements']);
+  const clickEvents = toCount(rawTelemetry.clickEvents, ['clicks']);
+  const trialEvents = toCount(rawTelemetry.trialEvents);
+  const webcamFrames = toCount(rawTelemetry.webcamFrames);
+  const webcamQuality = Number.isFinite(rawTelemetry.webcamQuality)
+    ? rawTelemetry.webcamQuality
+    : Number.isFinite(rawTelemetry.webcamQualityScore)
+      ? rawTelemetry.webcamQualityScore
+      : 0;
   
   // Heuristic: readiness is a composite of activity levels vs time
   const activityDensity = (cursorEvents + (clickEvents * 5) + (trialEvents * 10)) / Math.max(1, elapsedSec);

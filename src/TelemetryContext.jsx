@@ -16,6 +16,17 @@ const resolveApiBaseUrl = () => {
 
 const normalizeBaseUrl = (baseUrl) => baseUrl.replace(/\/$/, '');
 
+const isSameOriginBaseUrl = (baseUrl) => {
+  if (!baseUrl || typeof window === 'undefined') return false;
+
+  try {
+    const resolved = new URL(baseUrl, window.location.origin);
+    return resolved.origin === window.location.origin;
+  } catch {
+    return false;
+  }
+};
+
 const isAllowedDevHost = () => {
   if (typeof window === 'undefined') return false;
   const host = (window.location.hostname || '').toLowerCase();
@@ -34,7 +45,7 @@ const isAllowedDevHost = () => {
 
 const getRuntimeApiUrl = (path) => {
   const baseUrl = resolveApiBaseUrl();
-  if (baseUrl) {
+  if (baseUrl && isSameOriginBaseUrl(baseUrl)) {
     return `${normalizeBaseUrl(baseUrl)}${path}`;
   }
   if (isDevEnv() && isAllowedDevHost()) {
