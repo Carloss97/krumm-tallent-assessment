@@ -2,6 +2,7 @@
 // TODO: Fix React Hook dependencies properly in a future refactor
 // This file uses complex state management patterns that require careful dependency array handling
 import React, { useState, useEffect, useRef, useMemo } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
 import { useTelemetry } from '../TelemetryContext';
 import { useLanguage } from '../context/LanguageContext';
 // Prefer prototype games for a higher-fidelity demo experience

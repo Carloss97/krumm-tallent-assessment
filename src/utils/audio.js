@@ -45,6 +45,21 @@ const playTone = (freq, type, duration, vol=0.1, freqSlide=null) => {
 export const playMemoryFlash = () => playTone(523.25, 'sine', 0.3, 0.03); // C5 soft
 export const playMemoryClick = () => playTone(659.25, 'sine', 0.15, 0.03); // E5 soft click
 
+export const playSuccessSound = () => {
+  playTone(523.25, 'sine', 0.1, 0.05); // C5
+  setTimeout(() => playTone(659.25, 'sine', 0.1, 0.05), 100); // E5
+  setTimeout(() => playTone(783.99, 'sine', 0.3, 0.05), 200); // G5
+};
+
+export const playLevelUpSound = () => {
+  playTone(392.00, 'square', 0.1, 0.04); // G4
+  setTimeout(() => playTone(523.25, 'square', 0.2, 0.04), 100); // C5
+};
+
+export const playErrorSound = () => {
+  playTone(220, 'sawtooth', 0.2, 0.04); // A3 low buzz
+};
+
 export const playBalloonPump = () => playTone(200, 'triangle', 0.15, 0.05, 300); // Low pitch sliding up
 export const playBalloonPop = () => {
   try {
