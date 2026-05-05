@@ -119,6 +119,17 @@
   letter-spacing: 0.5px;
 }
 
+.demo-hud-explainer {
+  margin-top: 14px;
+  padding: 10px 12px;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  color: #cbd5e1;
+  font-size: 0.68rem;
+  line-height: 1.5;
+}
+
 .demo-hud-signals {
   display: flex;
   flex-direction: column;

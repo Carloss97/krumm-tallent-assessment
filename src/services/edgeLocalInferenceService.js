@@ -146,7 +146,11 @@ export function buildEdgeLocalLiveInsight(rawTelemetry) {
     return 0;
   };
 
-  const elapsedSec = Number.isFinite(rawTelemetry.elapsedSec) ? rawTelemetry.elapsedSec : 0;
+  const elapsedSec = Number.isFinite(rawTelemetry.elapsedSec)
+    ? rawTelemetry.elapsedSec
+    : Number.isFinite(rawTelemetry.startTime)
+      ? Math.max(0, (Date.now() - rawTelemetry.startTime) / 1000)
+      : 0;
   const cursorEvents = toCount(rawTelemetry.cursorEvents, ['mouseMovements']);
   const clickEvents = toCount(rawTelemetry.clickEvents, ['clicks']);
   const trialEvents = toCount(rawTelemetry.trialEvents);

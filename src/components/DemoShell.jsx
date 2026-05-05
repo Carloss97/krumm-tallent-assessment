@@ -25,7 +25,7 @@ import './DemoShell.css';
 
 // Adapter wrappers so DemoShell can call games with the expected onComplete() callback
 // For the demo we intentionally allow full-mode versions
-const BalloonProtoWrapper = ({ onComplete, est }) => <ProtoBalloon isActive={true} isDemo={true} timeLimit={est} onEndGame={() => onComplete('balloon')} />;
+const BalloonProtoWrapper = ({ onComplete, est }) => <ProtoBalloon isActive={true} isDemo={true} showBriefing={false} timeLimit={est} onEndGame={() => onComplete('balloon')} />;
 const GridProtoWrapper = ({ onComplete, est }) => <GridFlowGame isActive={true} isDemo={true} timeLimit={est} onEndGame={() => onComplete('grid')} />;
 const LaserProtoWrapper = ({ onComplete, est }) => <LaserPuzzleGame isActive={true} isDemo={true} timeLimit={est} onEndGame={() => onComplete('laser')} />;
 const GoNoGoProtoWrapper = ({ onComplete, est }) => <ProtoGoNoGo isActive={true} isDemo={false} timeLimit={est} onEndGame={() => onComplete('gng')} />;
@@ -331,11 +331,18 @@ const DemoShell = () => {
     };
   }, []);
 
-  // show instructions at the start of each activity
+  // Only the first activity uses the instructions gate; later rounds auto-start.
   useEffect(() => {
-    setShowInstructions(true);
-    setActivityStarted(false);
     completingRef.current = null; // Unlock for next activity
+
+    if (step === 0) {
+      setShowInstructions(true);
+      setActivityStarted(false);
+      return;
+    }
+
+    setShowInstructions(false);
+    setActivityStarted(true);
   }, [step]);
 
   const onComplete = (id) => {

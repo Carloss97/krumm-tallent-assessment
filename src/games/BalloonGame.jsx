@@ -5,7 +5,7 @@ import Confetti from '../components/Confetti';
 import { useTelemetry } from '../TelemetryContext';
 import { useLanguage } from '../context/LanguageContext';
 
-const BalloonGame = ({ isActive, onEndGame, isDemo }) => {
+const BalloonGame = ({ isActive, onEndGame, isDemo, showBriefing = true }) => {
   const MAX_ROUNDS = isDemo ? 3 : 10;
   const MIN_PUMPS = 6;
   const { startTracking, stopTracking, recordError, recordTrialEvent } = useTelemetry();
@@ -19,7 +19,7 @@ const BalloonGame = ({ isActive, onEndGame, isDemo }) => {
   const [gameState, setGameState] = useState('playing'); // playing, exploded, banked
   const [showConfetti, setShowConfetti] = useState(false);
   const [shake, setShake] = useState(0);
-  const [briefing, setBriefing] = useState(isDemo);
+  const [briefing, setBriefing] = useState(Boolean(isDemo && showBriefing));
 
   const totalPointsRef = useRef(0);
   const popsRef = useRef(0);
@@ -102,9 +102,9 @@ const BalloonGame = ({ isActive, onEndGame, isDemo }) => {
       setRound(1);
       setTotalPoints(0);
       initRound();
-      if (isDemo) setBriefing(true);
+      setBriefing(Boolean(isDemo && showBriefing));
     }
-  }, [isActive, initRound, startTracking, isDemo]);
+  }, [isActive, initRound, startTracking, isDemo, showBriefing]);
 
   useEffect(() => {
     const onKeyDown = (e) => {

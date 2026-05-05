@@ -27,13 +27,14 @@ const LiveDemoTelemetryHud = ({ activeGameId = null, activeGameLabel = '' }) => 
   const copy = {
     es: {
       badge: 'Informe en vivo',
-      subtitle: 'Análisis de comportamiento en tiempo real',
+      subtitle: 'Análisis de comportamiento en tiempo real y puntajes derivados',
       maximize: 'Maximizar',
       minimize: 'Minimizar',
       coverage: 'Cobertura',
       stability: 'Estabilidad',
       fatigue: 'Fatiga',
       readiness: 'Aptitud',
+      percentHint: 'Cobertura = densidad de datos. Estabilidad = consistencia del movimiento. Fatiga = deriva temporal. Signal % = calidad de webcam.',
       noConsent: 'Sin permisos de datos',
       active: 'Analizando...',
       tooltips: {
@@ -45,13 +46,14 @@ const LiveDemoTelemetryHud = ({ activeGameId = null, activeGameLabel = '' }) => 
     },
     en: {
       badge: 'Live report',
-      subtitle: 'Real-time behavioral analysis',
+      subtitle: 'Real-time behavioral analysis and derived scores',
       maximize: 'Maximize',
       minimize: 'Minimize',
       coverage: 'Coverage',
       stability: 'Stability',
       fatigue: 'Fatigue',
       readiness: 'Readiness',
+      percentHint: 'Coverage = data density. Stability = movement consistency. Fatigue = time drift. Signal % = webcam quality.',
       noConsent: 'No data consent',
       active: 'Analyzing...',
       tooltips: {
@@ -141,7 +143,11 @@ const LiveDemoTelemetryHud = ({ activeGameId = null, activeGameLabel = '' }) => 
         <div className="mini-stat"><span>Clicks</span> <strong>{snapshot.clickEvents}</strong></div>
         <div className="mini-stat"><span>Trials</span> <strong>{snapshot.trialEvents}</strong></div>
         <div className="mini-stat"><span>Frames</span> <strong>{snapshot.webcamFrames}</strong></div>
-        <div className="mini-stat"><span>Signal</span> <strong>{snapshot.webcamQuality}%</strong></div>
+        <div className="mini-stat"><span>Signal %</span> <strong>{snapshot.webcamQuality}%</strong></div>
+      </div>
+
+      <div className="demo-hud-explainer">
+        {c.percentHint}
       </div>
 
       <div style={{ marginTop: '14px', fontSize: '0.6rem', color: '#64748b', fontStyle: 'italic', borderTop: '1px solid rgba(255,255,255,0.05)', paddingTop: '10px' }}>
