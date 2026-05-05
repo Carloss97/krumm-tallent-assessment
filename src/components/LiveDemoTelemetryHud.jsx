@@ -22,14 +22,20 @@ const LiveDemoTelemetryHud = ({ activeGameId = null, activeGameLabel = '' }) => 
   const { language } = useLanguage();
   const { getCurrentTelemetry } = useTelemetry();
   const [snapshot, setSnapshot] = useState(null);
+  const [isMinimized, setIsMinimized] = useState(false);
+  
   const copy = {
     es: {
       badge: 'Informe en vivo',
       subtitle: 'Generando informe con telemetria local',
+      maximize: 'Maximizar',
+      minimize: 'Minimizar',
     },
     en: {
       badge: 'Live report',
       subtitle: 'Generating report with local telemetry',
+      maximize: 'Maximize',
+      minimize: 'Minimize',
     }
   };
   const c = copy[language] || copy.es;
@@ -49,10 +55,27 @@ const LiveDemoTelemetryHud = ({ activeGameId = null, activeGameLabel = '' }) => 
     return null;
   }
 
+  if (isMinimized) {
+    return (
+      <aside className="demo-hud minimized" onClick={() => setIsMinimized(false)} style={{ cursor: 'pointer' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+          <span className="demo-hud-badge" style={{ fontSize: '0.6rem' }}>{c.badge}</span>
+          <span style={{ fontSize: '0.7rem', fontWeight: 800 }}>{snapshot.readinessScore}% READY</span>
+        </div>
+      </aside>
+    );
+  }
+
   return (
     <aside className="demo-hud" aria-label="Live telemetry insights">
       <div className="demo-hud-topline">
         <span className="demo-hud-badge">{c.badge}</span>
+        <button 
+          onClick={() => setIsMinimized(true)}
+          style={{ background: 'none', border: 'none', color: '#94a3b8', cursor: 'pointer', fontSize: '0.7rem', fontWeight: 700 }}
+        >
+          {c.minimize}
+        </button>
         <span className="demo-hud-elapsed">{formatClock(snapshot.elapsedSec)}</span>
       </div>
 

@@ -153,14 +153,12 @@ const DemoShell = () => {
   // Initialize timeLeft when TOTAL_TIME changes
   useEffect(() => {
     if (timeLeft === null) {
-       
       setTimeLeft(TOTAL_TIME);
     }
   }, [TOTAL_TIME, timeLeft]);
 
   useEffect(() => {
     if (step >= ACTIVITIES.length && ACTIVITIES.length > 0) {
-       
       setStep(0);
     }
   }, [step, ACTIVITIES.length]);
@@ -214,8 +212,10 @@ const DemoShell = () => {
 
   const handleStartDemo = () => {
     setGameSelectionMode(false);
-    setShowPermission(true);
+    setShowPermission(true); // Always ask for permissions when demo starts
     setTimeLeft(TOTAL_TIME);
+    setActivityStarted(false);
+    setShowInstructions(false); // Hide instructions until permissions are handled
   };
 
   const handleGameSelectionChange = () => {
@@ -323,9 +323,7 @@ const DemoShell = () => {
 
   // show instructions at the start of each activity
   useEffect(() => {
-     
     setShowInstructions(true);
-     
     setActivityStarted(false);
   }, [step]);
 
@@ -378,14 +376,12 @@ const DemoShell = () => {
       try {
         const s = await navigator.mediaDevices.getUserMedia({ audio: true, video: true });
         if (s && s.getTracks) s.getTracks().forEach(t => t.stop());
-      } catch {
-        // ignore permission errors
+      } catch (error) {
+        console.warn('Permissions denied or unavailable:', error);
       }
     }
     setShowPermission(false);
-    // once permissions are handled, ensure the instructions overlay is visible for the next activity
-    setShowInstructions(true);
-    setActivityStarted(false);
+    setShowInstructions(true); // Show instructions AFTER permissions
   };
 
   return (
@@ -400,10 +396,10 @@ const DemoShell = () => {
             exit={{ opacity: 0, y: -20 }}
             className="demo-selection"
           >
-            <header className="selection-header" style={{ background: 'linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%)', borderRadius: '24px', margin: '0 0 40px 0', padding: '60px 24px' }}>
-              <h1 style={{ fontSize: '3.5rem', marginBottom: '16px' }}>{demoCopy[language]?.interactiveDemo || demoCopy.es.interactiveDemo}</h1>
-              <p style={{ fontSize: '1.25rem', opacity: 0.9 }}>{demoCopy[language]?.selectGames || demoCopy.es.selectGames}</p>
-              <div style={{ marginTop: 24, display: 'inline-flex', padding: '8px 20px', background: 'rgba(255,255,255,0.1)', borderRadius: '999px', fontSize: '0.9rem', fontWeight: 600 }}>
+            <header className="selection-header" style={{ background: 'linear-gradient(135deg, #1e1b4b 0%, #312e81 100%)', borderRadius: '0 0 48px 48px', margin: '0 0 40px 0', padding: '80px 24px' }}>
+              <h1 style={{ fontSize: '3.5rem', marginBottom: '16px', color: 'white' }}>{demoCopy[language]?.interactiveDemo || demoCopy.es.interactiveDemo}</h1>
+              <p style={{ fontSize: '1.25rem', opacity: 0.9, color: 'white' }}>{demoCopy[language]?.selectGames || demoCopy.es.selectGames}</p>
+              <div style={{ marginTop: 24, display: 'inline-flex', padding: '8px 20px', background: 'rgba(255,255,255,0.1)', borderRadius: '999px', fontSize: '0.9rem', fontWeight: 600, color: 'white' }}>
                 {demoCopy[language]?.demoLockNotice || demoCopy.es.demoLockNotice}
               </div>
             </header>
@@ -425,7 +421,7 @@ const DemoShell = () => {
                     whileTap={{ scale: 0.95 }}
                     className="btn btn-primary"
                     onClick={handleStartDemo}
-                    style={{ padding: '20px 60px', fontSize: '1.2rem', borderRadius: '20px', background: 'linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%)' }}
+                    style={{ padding: '20px 60px', fontSize: '1.2rem', borderRadius: '20px' }}
                   >
                     {demoCopy[language]?.continueButton || demoCopy.es.continueButton}
                     {' '}
@@ -438,78 +434,72 @@ const DemoShell = () => {
         ) : (
           <motion.div 
             key="playing"
-            initial={{ opacity: 0, x: 20 }}
-            animate={{ opacity: 1, x: 0 }}
-            exit={{ opacity: 0, x: -20 }}
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="demo-game-container"
           >
-            {/* DEMO PLAYTHROUGH SCREEN */}
-            <header className="demo-header" style={{ borderRadius: '20px', border: '1px solid rgba(99,102,241,0.1)', padding: '20px 24px', marginBottom: '32px' }}>
-              <div className="header-top">
-                <h2 style={{ color: '#1e1b4b', fontWeight: 800 }}>{demoCopy[language]?.interactiveDemo || demoCopy.es.interactiveDemo}</h2>
-                <div className="demo-timer" style={{ background: '#f1f5f9', padding: '8px 16px', borderRadius: '12px', fontWeight: 700, color: timeLeft < 30 ? '#dc2626' : '#475569' }}>
-                  {demoCopy[language]?.timeRemaining || demoCopy.es.timeRemaining} {Math.floor((timeLeft || TOTAL_TIME) / 60)}:{String((timeLeft || TOTAL_TIME) % 60).padStart(2, '0')}
+            {/* COMPACT FLOATING HEADER */}
+            <div className="demo-floating-header">
+              <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
+                <h2 style={{ fontSize: '0.9rem', fontWeight: 800, margin: 0 }}>{demoCopy[language]?.interactiveDemo || demoCopy.es.interactiveDemo}</h2>
+                <div className="demo-timer-compact" style={{ color: timeLeft < 30 ? '#ef4444' : '#64748b' }}>
+                  {Math.floor((timeLeft || TOTAL_TIME) / 60)}:{String((timeLeft || TOTAL_TIME) % 60).padStart(2, '0')}
                 </div>
               </div>
-              
               <ProgressTracker
                 completed={Object.keys(completed)}
                 total={ACTIVITIES.length}
                 currentId={ACTIVITIES[step]?.id}
                 games={ACTIVITIES}
+                compact={true}
               />
-            </header>
+            </div>
 
-            <main className="demo-main">
-              <section className="demo-activity" style={{ borderRadius: '24px', boxShadow: '0 10px 15px -3px rgba(0,0,0,0.05)', border: '1px solid #f1f5f9', padding: '32px' }}>
-                <LiveDemoTelemetryHud
-                  activeGameId={ACTIVITIES[step]?.id}
-                  activeGameLabel={(ACTIVITIES[step]?.title && typeof ACTIVITIES[step].title === 'object')
-                    ? (ACTIVITIES[step].title[language] || ACTIVITIES[step].title.es)
-                    : ACTIVITIES[step]?.title}
-                />
-                {toast && <motion.div initial={{ opacity:0, y:20 }} animate={{ opacity:1, y:0 }} className="demo-toast">{toast}</motion.div>}
-                
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>
-                  <h3 style={{ margin: 0, fontSize: '1.75rem', fontWeight: 800, color: '#1e1b4b' }}>{(ACTIVITIES[step]?.title && typeof ACTIVITIES[step].title === 'object') ? (ACTIVITIES[step].title[language] || ACTIVITIES[step].title.es) : ACTIVITIES[step]?.title}</h3>
-                  <div className="demo-activity-meta" style={{ margin: 0, background: 'rgba(99,102,241,0.06)', padding: '6px 14px', borderRadius: '999px', fontSize: '0.85rem' }}>{demoCopy[language]?.estLabel || demoCopy.es.estLabel} {Math.floor(ACTIVITIES[step]?.est / 60)}:{String(ACTIVITIES[step]?.est % 60).padStart(2, '0')}</div>
-                </div>
+            <main className="demo-fullscreen-main">
+              <LiveDemoTelemetryHud
+                activeGameId={ACTIVITIES[step]?.id}
+                activeGameLabel={(ACTIVITIES[step]?.title && typeof ACTIVITIES[step].title === 'object')
+                  ? (ACTIVITIES[step].title[language] || ACTIVITIES[step].title.es)
+                  : ACTIVITIES[step]?.title}
+              />
+              
+              {toast && <motion.div initial={{ opacity:0, y:20 }} animate={{ opacity:1, y:0 }} className="demo-toast">{toast}</motion.div>}
 
-                <PermissionModal open={showPermission} onClose={() => setShowPermission(false)} onRequest={requestPermissions} />
+              <PermissionModal open={showPermission} onClose={() => setShowPermission(false)} onRequest={requestPermissions} />
 
-                <AnimatePresence>
-                  {showInstructions && (
+              <AnimatePresence>
+                {showInstructions && !showPermission && (
+                  <motion.div 
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    exit={{ opacity: 0 }}
+                    className="instructions-overlay"
+                  >
                     <motion.div 
-                      initial={{ opacity: 0 }}
-                      animate={{ opacity: 1 }}
-                      exit={{ opacity: 0 }}
-                      className="instructions-overlay" 
-                      style={{ background: 'rgba(15,23,42,0.6)', backdropFilter: 'blur(4px)', borderRadius: '24px' }}
+                      initial={{ scale: 0.9, y: 20 }}
+                      animate={{ scale: 1, y: 0 }}
+                      className="instructions-box"
                     >
-                      <motion.div 
-                        initial={{ scale: 0.9, y: 20 }}
-                        animate={{ scale: 1, y: 0 }}
-                        className="instructions-box" 
-                        style={{ borderRadius: '24px', padding: '40px', maxWidth: '540px', textAlign: 'center' }}
-                      >
-                        <div style={{ color: '#6366f1', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '2px', fontSize: '0.75rem', marginBottom: '12px' }}>{demoCopy[language]?.instructionsTitle || demoCopy.es.instructionsTitle}</div>
-                        <p style={{ fontSize: '1.1rem', lineHeight: 1.7, color: '#334155', marginBottom: '32px' }}>{(ACTIVITIES[step]?.instructions && ACTIVITIES[step].instructions[language]) || (ACTIVITIES[step]?.instructions && ACTIVITIES[step].instructions.es) || (ACTIVITIES[step]?.title && typeof ACTIVITIES[step].title === 'object' ? (ACTIVITIES[step].title[language] || ACTIVITIES[step].title.es) : ACTIVITIES[step]?.title)}</p>
-                        <button className="btn btn-primary" style={{ width: '100%', padding: '16px', borderRadius: '16px' }} onClick={() => { setShowInstructions(false); setActivityStarted(true); }}>{demoCopy[language]?.startButton || demoCopy.es.startButton}</button>
-                      </motion.div>
+                      <div style={{ color: '#6366f1', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '2px', fontSize: '0.75rem', marginBottom: '12px' }}>{demoCopy[language]?.instructionsTitle || demoCopy.es.instructionsTitle}</div>
+                      <h4 style={{ margin: '0 0 16px 0', fontSize: '1.5rem', fontWeight: 850 }}>{(ACTIVITIES[step]?.title && typeof ACTIVITIES[step].title === 'object' ? (ACTIVITIES[step].title[language] || ACTIVITIES[step].title.es) : ACTIVITIES[step]?.title)}</h4>
+                      <p style={{ fontSize: '1.1rem', lineHeight: 1.7, color: '#334155', marginBottom: '32px' }}>{(ACTIVITIES[step]?.instructions && ACTIVITIES[step].instructions[language]) || (ACTIVITIES[step]?.instructions && ACTIVITIES[step].instructions.es)}</p>
+                      <button className="btn btn-primary" style={{ width: '100%', padding: '18px', borderRadius: '16px' }} onClick={() => { setShowInstructions(false); setActivityStarted(true); }}>{demoCopy[language]?.startButton || demoCopy.es.startButton}</button>
                     </motion.div>
-                  )}
-                </AnimatePresence>
+                  </motion.div>
+                )}
+              </AnimatePresence>
 
-                <div style={{ minHeight: '580px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                  {activityStarted && ACTIVITIES[step] ? (() => {
-                    const ActivityComponent = ACTIVITIES[step].component;
-                    return <ActivityComponent onComplete={() => onComplete(ACTIVITIES[step].id)} est={ACTIVITIES[step].est} />;
-                  })() : (
-                    <div style={{ padding: 28, textAlign: 'center', color: '#6b7280' }}>
-                      <p>{demoCopy[language]?.readyMessage || demoCopy.es.readyMessage}</p>
-                    </div>
-                  )}
-                </div>
-              </section>
+              <div className="game-stage">
+                {activityStarted && ACTIVITIES[step] && !showInstructions && !showPermission ? (() => {
+                  const ActivityComponent = ACTIVITIES[step].component;
+                  return <ActivityComponent onComplete={() => onComplete(ACTIVITIES[step].id)} est={ACTIVITIES[step].est} />;
+                })() : (
+                  <div style={{ textAlign: 'center', color: '#64748b' }}>
+                    {showPermission ? null : <p>{demoCopy[language]?.readyMessage || demoCopy.es.readyMessage}</p>}
+                  </div>
+                )}
+              </div>
             </main>
           </motion.div>
         )}

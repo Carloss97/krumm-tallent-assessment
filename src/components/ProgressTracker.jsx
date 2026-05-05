@@ -8,7 +8,8 @@ const ProgressTracker = ({
   completed = [], 
   total = 0, 
   currentId = null,
-  games = []
+  games = [],
+  compact = false
 }) => {
   const { language } = useLanguage();
 
@@ -19,10 +20,33 @@ const ProgressTracker = ({
   const getGameName = (id) => {
     const game = games.find(g => g.id === id);
     if (!game) return id;
-    return game.name && typeof game.name === 'object' 
-      ? (game.name[language] || game.name.es)
-      : game.name;
+    return game.title && typeof game.title === 'object' 
+      ? (game.title[language] || game.title.es)
+      : (game.name || id);
   };
+
+  if (compact) {
+    return (
+      <div className="progress-tracker-compact">
+        <div className="progress-games-compact">
+          {games.map((game, index) => {
+            const isCompleted = completed.includes(game.id);
+            const isCurrent = currentId === game.id;
+            return (
+              <div 
+                key={game.id} 
+                className={`game-dot ${isCompleted ? 'completed' : ''} ${isCurrent ? 'current' : ''}`}
+                title={getGameName(game.id)}
+              >
+                {isCompleted && <CheckCircle2 size={12} className="dot-icon" />}
+              </div>
+            );
+          })}
+        </div>
+        <div className="progress-percentage-compact">{completionPercentage}%</div>
+      </div>
+    );
+  }
 
   return (
     <div className="progress-tracker">
@@ -30,7 +54,7 @@ const ProgressTracker = ({
       <div className="progress-main">
         <div className="progress-info">
           <span className="progress-label">
-            {language === 'es' ? 'Progreso' : 'Progress'}
+            {language === 'es' ? 'Progreso de Evaluación' : 'Assessment Progress'}
           </span>
           <span className="progress-count">
             {completed.length} / {total}
@@ -44,9 +68,6 @@ const ProgressTracker = ({
             animate={{ width: `${completionPercentage}%` }}
             transition={{ duration: 0.8, ease: 'easeOut' }}
           />
-          <span className="progress-percentage">
-            {completionPercentage}%
-          </span>
         </div>
       </div>
 
@@ -68,20 +89,19 @@ const ProgressTracker = ({
               >
                 <div className="indicator-circle">
                   {isCompleted ? (
-                    <CheckCircle2 size={20} className="check-icon" />
+                    <CheckCircle2 size={18} className="check-icon" />
                   ) : (
-                    <Circle size={20} className={isCurrent ? 'current-icon' : 'pending-icon'} />
+                    <Circle size={18} className={isCurrent ? 'current-icon' : 'pending-icon'} />
+                  )}
+                  {isCurrent && (
+                    <motion.div
+                      className="current-pulse"
+                      animate={{ opacity: [0.3, 0.8, 0.3], scale: [1, 1.3, 1] }}
+                      transition={{ duration: 2, repeat: Infinity }}
+                    />
                   )}
                 </div>
                 <span className="indicator-label">{index + 1}</span>
-                
-                {isCurrent && (
-                  <motion.div
-                    className="current-pulse"
-                    animate={{ opacity: [0.5, 1, 0.5] }}
-                    transition={{ duration: 1.5, repeat: Infinity }}
-                  />
-                )}
               </motion.div>
             );
           })}
@@ -90,29 +110,19 @@ const ProgressTracker = ({
 
       {/* Stats summary */}
       <div className="progress-stats">
-        <motion.div
-          className="stat-item"
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ delay: 0.3 }}
-        >
+        <div className="stat-item">
           <span className="stat-label">
             {language === 'es' ? 'Completadas' : 'Completed'}
           </span>
           <span className="stat-value">{completed.length}</span>
-        </motion.div>
+        </div>
         
-        <motion.div
-          className="stat-item"
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ delay: 0.4 }}
-        >
+        <div className="stat-item">
           <span className="stat-label">
             {language === 'es' ? 'Restantes' : 'Remaining'}
           </span>
           <span className="stat-value">{Math.max(0, total - completed.length)}</span>
-        </motion.div>
+        </div>
       </div>
     </div>
   );

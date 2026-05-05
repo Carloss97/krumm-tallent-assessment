@@ -138,6 +138,15 @@
   line-height: 1.4;
 }
 
+.demo-hud.minimized {
+  width: auto;
+  padding: 8px 16px;
+  border-radius: 999px;
+  background: rgba(15, 23, 42, 0.9);
+  top: 80px;
+  right: 24px;
+}
+
 @media (max-width: 768px) {
   .demo-hud {
     position: fixed;

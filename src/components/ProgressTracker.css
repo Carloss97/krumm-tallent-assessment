@@ -211,6 +211,53 @@
   color: #1e293b;
 }
 
+/* Compact mode for floating header */
+.progress-tracker-compact {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.progress-games-compact {
+  display: flex;
+  gap: 8px;
+}
+
+.game-dot {
+  width: 24px;
+  height: 24px;
+  border-radius: 6px;
+  background: #f1f5f9;
+  border: 1px solid #e2e8f0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.3s ease;
+}
+
+.game-dot.completed {
+  background: #10b981;
+  border-color: #059669;
+  color: white;
+}
+
+.game-dot.current {
+  background: #6366f1;
+  border-color: #4f46e5;
+  box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.2);
+}
+
+.progress-percentage-compact {
+  font-size: 0.85rem;
+  font-weight: 800;
+  color: #1e1b4b;
+  min-width: 40px;
+}
+
+.dot-icon {
+  color: white;
+}
+
 /* Responsive */
 @media (max-width: 640px) {
   .progress-tracker {
