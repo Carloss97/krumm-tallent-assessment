@@ -14,8 +14,8 @@ const sessionSchema = {
         email: { type: 'string', format: 'email' },
         fullName: { type: 'string' }
       },
-      required: ['participantId', 'email'],
-        additionalProperties: false
+      required: ['participantId'],
+      additionalProperties: false
     },
       sessionData: {
         type: 'object',

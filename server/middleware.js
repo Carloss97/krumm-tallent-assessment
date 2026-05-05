@@ -4,20 +4,21 @@ import { logger, sendToCollector } from './logger.js';
 const requestBuckets = new Map();
 
 // Redis client (optional, for production)
-let redisClient = null;
+let redisClient;
 
 /**
  * Initialize Redis client if Upstash credentials are available
  * Falls back to in-memory rate limiting if Redis is not configured
  */
 const initializeRedis = async () => {
-  if (redisClient) return; // Already initialized
+  if (redisClient !== undefined) return; // Already attempted
   
   const redisUrl = process.env.UPSTASH_REDIS_REST_URL;
   const redisToken = process.env.UPSTASH_REDIS_REST_TOKEN;
   
   if (!redisUrl || !redisToken) {
     console.log('[Middleware] Redis not configured. Using in-memory rate limiting (single instance only).');
+    redisClient = false;
     return;
   }
 
@@ -35,7 +36,7 @@ const initializeRedis = async () => {
   } catch (err) {
     console.error('[Middleware] Failed to initialize Redis:', err.message);
     console.log('[Middleware] Falling back to in-memory rate limiting');
-    redisClient = null;
+    redisClient = false;
   }
 };
 
@@ -46,7 +47,7 @@ export const requestLogger = (req, res, next) => {
   const start = Date.now();
   res.on('finish', () => {
     const durationMs = Date.now() - start;
-    const rid = req.requestId || null;
+    const rid = req.requestId || undefined;
 
     const log = {
       event: 'http_request',

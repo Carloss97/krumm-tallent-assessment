@@ -184,7 +184,7 @@ SIN TESTS:
 BalloonGame.jsx (ProtoBalloon wrapper)
 ProtoGoNoGo
 ProtoNBack
-GridOptimizerGame
+GridFlowGame
 LaserPuzzleGame
 GoNoGoGame (duplicado conceptual con ProtoGoNoGo)
 ColorWordGame

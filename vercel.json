@@ -61,7 +61,5 @@
     "server/**/*.js": {
       "runtime": "nodejs20.x"
     }
-  },
-  
-  "buildOutputDirectory": "dist"
+  }
 }

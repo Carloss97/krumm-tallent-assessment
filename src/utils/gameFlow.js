@@ -190,4 +190,4 @@ export const GAME_FLOW = [
 
 // DEMO_GAME_IDS defines a short sequence of game ids used for the public demo
 // Choose a compact subset that results in ~4-5 minutes in demo mode
-export const DEMO_GAME_IDS = [4, 10, 13];
+export const DEMO_GAME_IDS = [4, 6, 7];
