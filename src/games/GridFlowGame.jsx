@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useTelemetry } from '../TelemetryContext';
-import { playMemoryClick, playMemoryFlash } from '../utils/audio';
+import { playMemoryClick, playMemoryFlash, playSuccessSound, playLevelUpSound, playErrorSound } from '../utils/audio';
 import Confetti from '../components/Confetti';
 import { useLanguage } from '../context/LanguageContext';
 
@@ -256,7 +256,7 @@ const GridFlowGame = ({ isActive, onEndGame, isDemo }) => {
       if (eng < 100) {
         setShowChargeAnim(true);
         setTimeout(() => setShowChargeAnim(false), 900);
-        try { playMemoryFlash(); } catch (error) { void error; }
+        try { playLevelUpSound(); } catch (error) { void error; }
       }
       newEnergy = 100;
     }
@@ -276,7 +276,7 @@ const GridFlowGame = ({ isActive, onEndGame, isDemo }) => {
         const sat = satsRef.current[newInv.id] ?? 0;
         newScore += Math.round(newInv.points * Math.max(0.1, sat/100)); 
         newInv = null;
-        try { playMemoryFlash(); } catch (error) { void error; }
+        try { playSuccessSound(); } catch (error) { void error; }
         setShowDeliverAnim(true);
         setTimeout(() => setShowDeliverAnim(false), 900);
       }

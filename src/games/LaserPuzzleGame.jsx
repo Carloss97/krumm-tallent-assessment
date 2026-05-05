@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef, useMemo, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useTelemetry } from '../TelemetryContext';
-import { playMemoryClick, playMemoryFlash } from '../utils/audio';
+import { playMemoryClick, playMemoryFlash, playSuccessSound, playLevelUpSound } from '../utils/audio';
 import Confetti from '../components/Confetti';
 import { useGameTimer } from '../hooks/useGameTimer';
 import { useLanguage } from '../context/LanguageContext';
@@ -190,7 +190,7 @@ const LaserPuzzleGame = ({ isActive, onEndGame, isDemo, timeLimit }) => {
     const parTotal = procLevels ? procLevels.reduce((s, l) => s + l.par, 0) : 6;
     const efficiency = Math.min(100, Math.round((parTotal / Math.max(1, tm)) * 100));
     setGamePhase('done');
-    try { playMemoryFlash(); } catch (error) { void error; }
+    try { playSuccessSound(); } catch (error) { void error; }
     stopTracking('game7', efficiency, quizScore.current, { efficiency, quizScore: quizScore.current, totalMoves: tm });
     onEndGame(efficiency, quizScore.current);
   }, [procLevels, onEndGame, stopTracking]);
@@ -205,6 +205,7 @@ const LaserPuzzleGame = ({ isActive, onEndGame, isDemo, timeLimit }) => {
       setMoves(0);
       setBriefing(isDemo ? getBriefing(next, language) : null);
       setGamePhase(isDemo ? 'briefing' : 'playing');
+      try { playLevelUpSound(); } catch (error) { void error; }
     } else {
       const q = procLevels[procLevels.length - 1].quiz;
       if (q && q.length > 0) setGamePhase('quiz');

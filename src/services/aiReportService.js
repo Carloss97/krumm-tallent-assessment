@@ -620,17 +620,17 @@ function prepareGameAnalysis(sessionData) {
     };
   }
   
-  // Game 4: CPT (Sustained Attention)
+  // Game 4: Balloon Risk Task (Risk Assessment)
   const game4 = getGame('cpt_game_4', 'game4');
   if (game4) {
     games.game4 = {
-      name: 'Continuous Performance Test',
-      metric: 'Sustained Attention',
+      name: 'Balloon Risk Task',
+      metric: 'Risk Calibration and Uncertainty Management',
       score: game4.score,
       errors: game4.errors,
-      interpretation: game4.errors <= 2 ? 'Consistent sustained attention' :
-                      game4.errors <= 6 ? 'Moderate sustained attention' :
-                      'Attention lapses detected'
+      interpretation: game4.errors === 0 ? 'Optimal risk-reward calibration' :
+                      game4.errors <= 2 ? 'Calculated risk-taking behavior' :
+                      'Propensity for high-risk decisions under uncertainty'
     };
   }
   
@@ -648,31 +648,31 @@ function prepareGameAnalysis(sessionData) {
     };
   }
   
-  // Game 6: Rule Shift
+  // Game 6: Grid Flow (Planning & Logic)
   const game6 = getGame('rsh_game_6', 'game6');
   if (game6) {
     games.game6 = {
-      name: 'Rule Shift + Exceptions',
-      metric: 'Adaptation to Rule Changes',
+      name: 'Grid Flow',
+      metric: 'Planning and Resource Optimization',
       score: game6.score,
       errors: game6.errors,
-      interpretation: game6.errors <= 2 ? 'Strong adaptation and exception handling' :
-                      game6.errors <= 5 ? 'Moderate adaptation capacity' :
-                      'Rule-shift adaptation may require coaching'
+      interpretation: game6.score >= 400 ? 'High strategic planning efficiency' :
+                      game6.score >= 250 ? 'Effective operational ruteo' :
+                      'Resource optimization may benefit from structured planning'
     };
   }
   
-  // Game 7: SJT
+  // Game 7: Laser Puzzle (Spatial Reasoning)
   const game7 = getGame('sjt_game_7', 'game7');
   if (game7) {
     games.game7 = {
-      name: 'Situational Judgment Test',
-      metric: 'Workplace Judgment and Values Alignment',
+      name: 'Laser Puzzle',
+      metric: 'Spatial Logic and Sequence Optimization',
       score: game7.score,
       errors: game7.errors,
-      interpretation: game7.details?.accuracy >= 80 ? 'Strong situational judgment' :
-                      game7.details?.accuracy >= 60 ? 'Acceptable situational judgment' :
-                      'Judgment consistency may require follow-up'
+      interpretation: game7.score >= 85 ? 'Superior spatial problem solving' :
+                      game7.score >= 65 ? 'Consistent spatial reasoning' :
+                      'Spatial logic tasks may require more deliberate processing'
     };
   }
 
@@ -899,17 +899,17 @@ export function generateHeuristicReport(sessionData, language = 'en') {
     .slice(0, 3);
   
   const gameNames = {
-    game1: isEn ? 'Working memory and dual-task management' : 'memoria de trabajo y gestion de doble tarea',
-    game2: isEn ? 'Response inhibition and impulse control' : 'inhibicion de respuesta y control de impulsos',
+    game1: isEn ? 'Working memory and dual-task management' : 'memoria de trabajo y gestión de doble tarea',
+    game2: isEn ? 'Response inhibition and impulse control' : 'inhibición de respuesta y control de impulsos',
     game3: isEn ? 'Cognitive flexibility and learning agility' : 'flexibilidad cognitiva y agilidad de aprendizaje',
-    game4: isEn ? 'Sustained attention and reliability' : 'atencion sostenida y confiabilidad',
-    game5: isEn ? 'Decision quality under time pressure' : 'calidad de decision bajo presion de tiempo',
-    game6: isEn ? 'Rule adaptation and exception handling' : 'adaptacion a reglas y manejo de excepciones',
-    game7: isEn ? 'Workplace judgment and situational awareness' : 'juicio laboral y conciencia situacional',
-    game8: isEn ? 'Updating and metacognitive calibration' : 'actualizacion y calibracion metacognitiva',
-    game9: isEn ? 'Planning and operational sequencing' : 'planificacion y secuenciacion operativa',
+    game4: isEn ? 'Risk calibration and uncertainty management' : 'calibración de riesgo y gestión de incertidumbre',
+    game5: isEn ? 'Decision quality under time pressure' : 'calidad de decisión bajo presión de tiempo',
+    game6: isEn ? 'Strategic planning and resource optimization' : 'planificación estratégica y optimización de recursos',
+    game7: isEn ? 'Spatial reasoning and sequence optimization' : 'razonamiento espacial y optimización de secuencias',
+    game8: isEn ? 'Updating and metacognitive calibration' : 'actualización y calibración metacognitiva',
+    game9: isEn ? 'Planning and operational sequencing' : 'planificación y secuenciación operativa',
     game10: isEn ? 'Learning agility and rule discovery' : 'agilidad de aprendizaje y descubrimiento de reglas',
-    game11: isEn ? 'Inhibition consistency under repetition' : 'consistencia inhibitoria bajo repeticion',
+    game11: isEn ? 'Inhibition consistency under repetition' : 'consistencia inhibitoria bajo repetición',
     game12: isEn ? 'Processing speed and cognitive switching' : 'velocidad de procesamiento y cambio cognitivo',
     game13: isEn ? 'Visuospatial working memory capacity' : 'capacidad de memoria de trabajo visoespacial'
   };

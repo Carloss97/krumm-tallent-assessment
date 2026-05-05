@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { playBalloonPump, playBalloonPop, playMemoryFlash, playMemoryClick } from '../utils/audio';
+import { playBalloonPump, playBalloonPop, playMemoryFlash, playMemoryClick, playSuccessSound, playErrorSound } from '../utils/audio';
 import Confetti from '../components/Confetti';
 import { useTelemetry } from '../TelemetryContext';
 import { useLanguage } from '../context/LanguageContext';
@@ -91,6 +91,7 @@ const BalloonGame = ({ isActive, onEndGame, isDemo }) => {
 
     if (newSize >= explosionPoint || isEarlyPop) {
       playBalloonPop();
+      playErrorSound();
       setGameState('exploded');
       popsRef.current += 1;
       recordError(); // Record "error" for pop
@@ -108,7 +109,7 @@ const BalloonGame = ({ isActive, onEndGame, isDemo }) => {
     totalPointsRef.current += currentRoundPoints;
     setTotalPoints(totalPointsRef.current);
     setGameState('banked');
-    try { playMemoryFlash(); } catch (error) { void error; }
+    try { playSuccessSound(); } catch (error) { void error; }
     setShowConfetti(true);
     setTimeout(() => setShowConfetti(false), 1400);
     setTimeout(() => advanceRound(), 1800);
