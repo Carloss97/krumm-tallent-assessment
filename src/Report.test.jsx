@@ -87,7 +87,7 @@ describe('Report Component', () => {
         expect(
           titleText.includes('Assessment') ||
           titleText.includes('Evaluation') ||
-          titleText.includes('Evaluacion') ||
+          titleText.includes('Evaluación') ||
           titleText.includes('habilidades')
         ).toBeTruthy();
       },
@@ -109,7 +109,7 @@ describe('Report Component', () => {
           element && (
             content.includes('Cognitive') ||
             content.includes('Assessment') ||
-            content.includes('Evaluacion') ||
+            content.includes('Evaluación') ||
             content.includes('habilidades')
           )
         );
@@ -143,7 +143,7 @@ describe('Report Component', () => {
         const reportText = container.textContent;
         expect(
           reportText.includes('Skills and Talent Signal') ||
-          reportText.includes('Matriz de evaluacion de habilidades') ||
+          reportText.includes('Matriz de evaluación de habilidades') ||
           reportText.includes('Executive Capability Snapshot') ||
           reportText.includes('Resumen ejecutivo de capacidades')
         ).toBeTruthy();

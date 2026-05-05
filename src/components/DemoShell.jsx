@@ -38,10 +38,10 @@ const TrailProtoWrapper = ({ onComplete, est }) => <TrailMakingGame isActive={tr
 const ALL_GAMES = {
   balloon: {
     id: 'balloon',
-    title: { es: 'Inflar el globo', en: 'Inflate the balloon' },
+    title: { es: 'Balloon Risk Task', en: 'Balloon Risk Task' },
     instructions: {
-      es: 'Infla el globo con cuidado. Cada inflado aumenta el riesgo de explotar. Pulsa comenzar para iniciar.',
-      en: 'Pump the balloon carefully. Each pump increases the chance of popping. Press start to begin.'
+      es: 'Iniciando protocolo de evaluación de riesgo. Debe gestionar el equilibrio entre recompensa acumulada y probabilidad de colapso del sistema (explosión). Optimice el ratio de captura de puntos. Pulsa comenzar para iniciar.',
+      en: 'Initiating risk assessment protocol. You must manage the balance between accumulated reward and the probability of system collapse (pop). Optimize the point capture ratio. Press start to begin.'
     },
     component: BalloonProtoWrapper,
     est: 60,
@@ -140,6 +140,9 @@ const DemoShell = () => {
   const [demoSummary, setDemoSummary] = useState(null);
   const { sessionData, setIsDemo, startTracking, stopTracking, recordTrialEvent, recordWebcamFrame, setConsent } = useTelemetry();
   const { language } = useLanguage();
+  
+  // Use a ref as a lock to prevent double-incrementing step
+  const completingRef = useRef(null);
 
   const videoRef = useWebcamCapture({
     isActive: !gameSelectionMode && !showReport,
@@ -332,11 +335,13 @@ const DemoShell = () => {
   useEffect(() => {
     setShowInstructions(true);
     setActivityStarted(false);
+    completingRef.current = null; // Unlock for next activity
   }, [step]);
 
   const onComplete = (id) => {
-    // Prevent double-counting the same activity
-    if (completed[id]) return;
+    // Prevent double-counting or race conditions
+    if (completed[id] || completingRef.current === id) return;
+    completingRef.current = id;
 
     try {
       recordTrialEvent && recordTrialEvent({ event: 'demo_activity_complete', payload: { id, step } });
@@ -344,19 +349,22 @@ const DemoShell = () => {
       // noop
     }
 
-    setToast(demoCopy[language]?.activityCompletedShort || demoCopy.es.activityCompletedShort);
+    setToast(isEn ? `Protocol ${id} completed` : `Protocolo ${id} completado`);
 
     setCompleted((prev) => {
       const next = { ...prev, [id]: true };
       const doneCount = Object.keys(next).length;
       
-      if (doneCount >= ACTIVITIES.length) {
-        // Use a slight delay to allow any pending game animations to finish before showing report
-        setTimeout(() => handleDemoComplete(next, 'completed'), 800);
-      } else {
-        // Sync step update with completed state to avoid race conditions
-        setStep(prevStep => prevStep + 1);
-      }
+      // Use a slight delay to allow game completion animation before showing transition
+      setTimeout(() => {
+        if (doneCount >= ACTIVITIES.length) {
+          handleDemoComplete(next, 'completed');
+        } else {
+          setToast(isEn ? 'Preparing next assessment module...' : 'Preparando siguiente módulo...');
+          setStep(prevStep => prevStep + 1);
+        }
+      }, 1500);
+      
       return next;
     });
   };
@@ -512,7 +520,7 @@ const DemoShell = () => {
               <div className="game-stage">
                 {activityStarted && ACTIVITIES[step] && !showInstructions && !showPermission ? (() => {
                   const ActivityComponent = ACTIVITIES[step].component;
-                  return <ActivityComponent onComplete={() => onComplete(ACTIVITIES[step].id)} est={ACTIVITIES[step].est} />;
+                  return <ActivityComponent key={ACTIVITIES[step].id} onComplete={() => onComplete(ACTIVITIES[step].id)} est={ACTIVITIES[step].est} />;
                 })() : (
                   <div style={{ textAlign: 'center', color: '#64748b' }}>
                     {showPermission ? null : <p>{demoCopy[language]?.readyMessage || demoCopy.es.readyMessage}</p>}

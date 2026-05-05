@@ -124,30 +124,30 @@ const BalloonGame = ({ isActive, onEndGame, isDemo }) => {
 
   const copy = {
     es: {
-      trialLabel: 'Ronda',
-      bankTitle: 'Banco',
-      criticalFailure: '[ EXPLOSIÓN ]',
-      yieldSecured: 'Puntos Asegurados',
-      pumpLabel: 'Inflar',
-      bankBtn: 'Asegurar',
-      ariaPump: 'Inflar globo (Barra espaciadora)',
-      ariaBank: 'Asegurar puntos (Enter)',
-      briefTitle: 'Evaluación de Riesgo',
-      briefBody: 'Infla el globo para ganar puntos. Cuanto más grande, más puntos, pero mayor es el riesgo de que explote y pierdas lo acumulado en la ronda. ¡Usa el botón Asegurar para guardar tus puntos!',
-      startBtn: 'Comenzar'
+      trialLabel: 'Fase',
+      bankTitle: 'Reserva',
+      criticalFailure: '[ COLAPSO DEL SISTEMA ]',
+      yieldSecured: 'Capital Capturado',
+      pumpLabel: 'Optimizar',
+      bankBtn: 'Capturar',
+      ariaPump: 'Ejecutar optimización (Barra espaciadora)',
+      ariaBank: 'Capturar puntos en reserva (Enter)',
+      briefTitle: 'Protocolo de Riesgo',
+      briefBody: 'Iniciando evaluación de captura de valor. Debe gestionar el crecimiento del activo mediante ciclos de optimización. Mayor volumen implica mayor recompensa, pero incrementa exponencialmente la probabilidad de colapso de la integridad. Utilice el comando Capturar para asegurar el rendimiento acumulado.',
+      startBtn: 'Iniciar Operación'
     },
     en: {
-      trialLabel: 'Round',
-      bankTitle: 'Bank',
-      criticalFailure: '[ CRITICAL FAILURE ]',
-      yieldSecured: 'Yield Secured',
-      pumpLabel: 'Pump',
-      bankBtn: 'Bank',
-      ariaPump: 'Pump balloon (Spacebar)',
-      ariaBank: 'Bank points (Enter)',
-      briefTitle: 'Risk Assessment',
-      briefBody: 'Pump the balloon to earn points. The larger it gets, the more points you earn, but the higher the risk of it popping and losing everything for the round. Use the Bank button to save your points!',
-      startBtn: 'Start'
+      trialLabel: 'Phase',
+      bankTitle: 'Reserve',
+      criticalFailure: '[ SYSTEM COLLAPSE ]',
+      yieldSecured: 'Capital Captured',
+      pumpLabel: 'Optimize',
+      bankBtn: 'Capture',
+      ariaPump: 'Execute optimization (Spacebar)',
+      ariaBank: 'Capture points to reserve (Enter)',
+      briefTitle: 'Risk Protocol',
+      briefBody: 'Initiating value capture assessment. You must manage asset growth through optimization cycles. Higher volume implies higher reward, but exponentially increases the probability of integrity collapse. Use the Capture command to secure accumulated yield.',
+      startBtn: 'Start Operation'
     }
   };
 

@@ -11,7 +11,7 @@ const DevQuickAccess = ({ t, language }) => {
   const ensureQuickAccessProfile = () => {
     setIsDemo(true);
     setParticipantProfile({
-      fullName: 'Acceso rapido dev',
+      fullName: 'Acceso rápido dev',
       // eslint-disable-next-line react-hooks/purity
       participantId: `DEV-${Date.now()}`,
       email: 'dev@krumm.local',

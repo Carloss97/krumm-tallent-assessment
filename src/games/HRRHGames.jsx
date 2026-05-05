@@ -12,16 +12,16 @@ const COLOR_LABELS = {
 };
 
 const SHAPE_LABELS = {
-  CIRCLE: { en: 'CIRCLE', es: 'CIRCULO' },
+  CIRCLE: { en: 'CIRCLE', es: 'CÍRCULO' },
   SQUARE: { en: 'SQUARE', es: 'CUADRADO' },
-  TRIANGLE: { en: 'TRIANGLE', es: 'TRIANGULO' },
+  TRIANGLE: { en: 'TRIANGLE', es: 'TRIÁNGULO' },
 };
 
 const displayColor = (value, isEn) => (isEn ? value : (COLOR_LABELS[value]?.es ?? value));
 const displayShape = (value, isEn) => (isEn ? value : (SHAPE_LABELS[value]?.es ?? value));
 
 /**
- * Stop-Signal Task (SST) - Inhibicion
+ * Stop-Signal Task (SST) - Inhibición
  */
 export const StopSignalGame = ({ isActive, onEndGame, isDemo, timeLimit, language = 'es' }) => {
   const isEn = language === 'en';
@@ -138,13 +138,13 @@ export const StopSignalGame = ({ isActive, onEndGame, isDemo, timeLimit, languag
         <div className="game-instruction-box">
           <h2>{isEn ? 'Impulse Control (SST)' : 'Control de impulso (SST)'}</h2>
           <p>
-            {isEn ? 'When you see ' : 'Cuando veas '}<strong>GO</strong>{isEn ? ', press quickly.' : ', presiona rapido.'}
+            {isEn ? 'When you see ' : 'Cuando veas '}<strong>GO</strong>{isEn ? ', press quickly.' : ', presiona rápido.'}
           </p>
           <p>
-            {isEn ? 'When you see ' : 'Cuando veas '}<strong>STOP</strong>{isEn ? ', do not press. The game advances automatically.' : ', no presiones. El juego avanza automaticamente.'}
+            {isEn ? 'When you see ' : 'Cuando veas '}<strong>STOP</strong>{isEn ? ', do not press. The game advances automatically.' : ', no presiones. El juego avanza automáticamente.'}
           </p>
           <p style={{ fontSize: '0.9rem', color: '#64748b' }}>
-            {isEn ? 'Tip: focus on accuracy first, then speed.' : 'Tip: prioriza precision primero y luego velocidad.'}
+            {isEn ? 'Tip: focus on accuracy first, then speed.' : 'Tip: prioriza precisión primero y luego velocidad.'}
           </p>
           <button onClick={beginGame} className="btn-start">{isEn ? 'Start' : 'Comenzar'}</button>
         </div>
@@ -161,7 +161,7 @@ export const StopSignalGame = ({ isActive, onEndGame, isDemo, timeLimit, languag
         </div>
         <div className="buttons-group">
           <button onClick={handleGoClick} className="btn btn-go">{isEn ? 'Press' : 'Presionar'}</button>
-          {!isStopTrial && <button onClick={handleMiss} className="btn btn-error">{isEn ? 'Missed GO' : 'No llegue a GO'}</button>}
+          {!isStopTrial && <button onClick={handleMiss} className="btn btn-error">{isEn ? 'Missed GO' : 'No llegué a GO'}</button>}
         </div>
         {isStopTrial && <p className="rule" style={{ marginTop: '10px' }}>{isEn ? 'STOP active: do not press.' : 'STOP activo: no presiones.'}</p>}
         <p className="score">Score: {score} | {isEn ? 'Correct' : 'Correctos'}: {correctGo + correctStop} | {isEn ? 'Tempo' : 'Ritmo'}: {tempoTag}</p>
@@ -242,7 +242,7 @@ export const TaskSwitchingGame = ({ isActive, onEndGame, isDemo, timeLimit, lang
         <div className="game-instruction-box">
           <h2>{isEn ? 'Task Switching' : 'Cambio de tarea'}</h2>
           <p>{isEn ? 'Each trial tells you the active rule. Follow ONLY that rule.' : 'Cada trial te indica la regla activa. Sigue SOLO esa regla.'}</p>
-          <p><strong>{isEn ? 'COLOR' : 'COLOR'}:</strong> {isEn ? 'choose RED/BLUE/GREEN.' : 'elige ROJO/AZUL/VERDE.'} <strong>{isEn ? 'SHAPE' : 'FORMA'}:</strong> {isEn ? 'choose CIRCLE/SQUARE/TRIANGLE.' : 'elige CIRCULO/CUADRADO/TRIANGULO.'}</p>
+          <p><strong>{isEn ? 'COLOR' : 'COLOR'}:</strong> {isEn ? 'choose RED/BLUE/GREEN.' : 'elige ROJO/AZUL/VERDE.'} <strong>{isEn ? 'SHAPE' : 'FORMA'}:</strong> {isEn ? 'choose CIRCLE/SQUARE/TRIANGLE.' : 'elige CÍRCULO/CUADRADO/TRIÁNGULO.'}</p>
           <button onClick={beginGame} className="btn-start">{isEn ? 'Start' : 'Comenzar'}</button>
         </div>
       </div>
@@ -257,7 +257,7 @@ export const TaskSwitchingGame = ({ isActive, onEndGame, isDemo, timeLimit, lang
           <p className="rule">{currentRule === 'COLOR' ? (isEn ? 'RULE: COLOR' : 'REGLA: COLOR') : (isEn ? 'RULE: SHAPE' : 'REGLA: FORMA')}</p>
           <div className="stimulus">{displayShape(stimulus.shape, isEn)} - {displayColor(stimulus.color, isEn)}</div>
           <p className="rule" style={{ marginTop: '8px', opacity: 0.9 }}>
-            {isEn ? 'Answer only by the current rule shown above.' : 'Responde solo segun la regla actual mostrada arriba.'}
+            {isEn ? 'Answer only by the current rule shown above.' : 'Responde solo según la regla actual mostrada arriba.'}
           </p>
         </div>
         <div className="buttons-group">
@@ -275,7 +275,7 @@ export const TaskSwitchingGame = ({ isActive, onEndGame, isDemo, timeLimit, lang
 };
 
 /**
- * CPT Corto - Atencion sostenida
+ * CPT Corto - Atención sostenida
  */
 export const CPTGame = ({ isActive, onEndGame, isDemo, timeLimit, language = 'es' }) => {
   const isEn = language === 'en';
@@ -351,7 +351,7 @@ export const CPTGame = ({ isActive, onEndGame, isDemo, timeLimit, language = 'es
       <div className="hrrh-game-container">
         <div className="game-instruction-box">
           <h2>Continuous Performance Test</h2>
-          <p>{isEn ? 'Watch the current target letter and decide fast.' : 'Observa la letra objetivo actual y decide rapido.'}</p>
+          <p>{isEn ? 'Watch the current target letter and decide fast.' : 'Observa la letra objetivo actual y decide rápido.'}</p>
           <p>{isEn ? 'If the displayed letter matches target, tap "I see". If not, tap "Not".' : 'Si la letra mostrada coincide con el objetivo, toca "Veo". Si no coincide, toca "No es".'}</p>
           <button onClick={beginGame} className="btn-start">{isEn ? 'Start' : 'Comenzar'}</button>
         </div>
@@ -389,19 +389,19 @@ export const DecisionGameHTMX = ({ isActive, onEndGame, isDemo, timeLimit, langu
 
   const scenarios = [
     {
-      domain: isEn ? 'Coordination' : 'Coordinacion',
+      domain: isEn ? 'Coordination' : 'Coordinación',
       textEn: 'A team member is not sharing key information before a deadline.',
-      textEs: 'Un miembro del equipo no comparte informacion clave antes de una entrega.',
+      textEs: 'Un miembro del equipo no comparte información clave antes de una entrega.',
       optionsEn: ['Escalate immediately', 'Clarify blockers first', 'Ignore and continue', 'Map impact and sequence owners'],
       optionsEs: ['Escalar de inmediato', 'Aclarar bloqueos y proponer plan', 'Ignorar el problema', 'Mapear impacto y definir responsables'],
       best: 1,
     },
     {
-      domain: isEn ? 'Prioritization' : 'Priorizacion',
+      domain: isEn ? 'Prioritization' : 'Priorización',
       textEn: 'Two urgent requests arrive simultaneously.',
       textEs: 'Llegan dos solicitudes urgentes al mismo tiempo.',
       optionsEn: ['Do both superficially', 'Prioritize by impact and deadline', 'Wait for more data', 'Split ownership by critical path'],
-      optionsEs: ['Hacer ambas superficialmente', 'Priorizar por impacto y fecha limite', 'Esperar mas datos sin actuar', 'Dividir responsables segun ruta critica'],
+      optionsEs: ['Hacer ambas superficialmente', 'Priorizar por impacto y fecha límite', 'Esperar más datos sin actuar', 'Dividir responsables según ruta crítica'],
       best: 1,
     },
     {
@@ -415,9 +415,9 @@ export const DecisionGameHTMX = ({ isActive, onEndGame, isDemo, timeLimit, langu
     {
       domain: isEn ? 'Incident' : 'Incidente',
       textEn: 'Critical bug appears minutes before release.',
-      textEs: 'Aparece un bug critico minutos antes del release.',
+      textEs: 'Aparece un bug crítico minutos antes del release.',
       optionsEn: ['Ship anyway', 'Contain scope and communicate plan', 'Delay indefinitely', 'Roll back and shadow-test fix'],
-      optionsEs: ['Lanzar igual', 'Acotar alcance y comunicar plan de accion', 'Retrasar indefinidamente', 'Hacer rollback y validar el fix en paralelo'],
+      optionsEs: ['Lanzar igual', 'Acotar alcance y comunicar plan de acción', 'Retrasar indefinidamente', 'Hacer rollback y validar el fix en paralelo'],
       best: 1,
     },
   ];
@@ -466,9 +466,9 @@ export const DecisionGameHTMX = ({ isActive, onEndGame, isDemo, timeLimit, langu
     return (
       <div className="hrrh-game-container">
         <div className="game-instruction-box">
-          <h2>{isEn ? 'Decision Making Under Pressure' : 'Toma de decisiones bajo presion'}</h2>
-          <p>{isEn ? 'Read the situation and choose the BEST action.' : 'Lee la situacion y elige la MEJOR accion.'}</p>
-          <p>{isEn ? 'Prioritize impact, feasibility and communication quality.' : 'Prioriza impacto, factibilidad y calidad de comunicacion.'}</p>
+          <h2>{isEn ? 'Decision Making Under Pressure' : 'Toma de decisiones bajo presión'}</h2>
+          <p>{isEn ? 'Read the situation and choose the BEST action.' : 'Lee la situación y elige la MEJOR acción.'}</p>
+          <p>{isEn ? 'Prioritize impact, feasibility and communication quality.' : 'Prioriza impacto, factibilidad y calidad de comunicación.'}</p>
           <button onClick={beginGame} className="btn-start">{isEn ? 'Start' : 'Comenzar'}</button>
         </div>
       </div>
@@ -487,7 +487,7 @@ export const DecisionGameHTMX = ({ isActive, onEndGame, isDemo, timeLimit, langu
           <p>{isEn ? currentScenario.textEn : currentScenario.textEs}</p>
         </div>
         <p className="rule" style={{ marginTop: '10px' }}>
-          {isEn ? 'Question: What should you do first?' : 'Pregunta: ¿Qué deberias hacer primero?'}
+          {isEn ? 'Question: What should you do first?' : 'Pregunta: ¿Qué deberías hacer primero?'}
         </p>
         <div className="buttons-group">
           {options.map((label, idx) => (
@@ -589,7 +589,7 @@ export const RuleShiftGame = ({ isActive, onEndGame, timeLimit, language = 'es' 
         </div>
         <div className="stimulus">{displayShape(stimulus.shape, isEn)} - {displayColor(stimulus.color, isEn)}</div>
           <p className="rule" style={{ marginTop: '8px', opacity: 0.9 }}>
-            {isEn ? 'Answer only by the current rule shown above.' : 'Responde solo segun la regla actual mostrada arriba.'}
+            {isEn ? 'Answer only by the current rule shown above.' : 'Responde solo según la regla actual mostrada arriba.'}
           </p>
         <div className="buttons-group">
           <button onClick={() => handleSelection('RED')} className="btn btn-option">{isEn ? 'RED' : 'ROJO'}</button>
@@ -619,17 +619,17 @@ export const SJTGame = ({ isActive, onEndGame, isDemo, timeLimit, language = 'es
     {
       domain: isEn ? 'Leadership' : 'Liderazgo',
       promptEn: 'Your lead assigns a task with an unrealistic deadline.',
-      promptEs: 'Tu lider asigna una tarea con un plazo poco realista.',
+      promptEs: 'Tu líder asigna una tarea con un plazo poco realista.',
       optionsEn: ['Accept blindly', 'Discuss constraints and propose plan', 'Decline without context', 'Escalate emotionally'],
-      optionsEs: ['Aceptar sin analizar', 'Conversar restricciones y proponer plan viable', 'Rechazar sin contexto', 'Escalar con reaccion emocional'],
+      optionsEs: ['Aceptar sin analizar', 'Conversar restricciones y proponer plan viable', 'Rechazar sin contexto', 'Escalar con reacción emocional'],
       best: 1,
     },
     {
-      domain: isEn ? 'Collaboration' : 'Colaboracion',
+      domain: isEn ? 'Collaboration' : 'Colaboración',
       promptEn: 'A peer repeatedly misses handoffs impacting your work.',
       promptEs: 'Un colega incumple handoffs y afecta tu trabajo.',
       optionsEn: ['Publicly blame', 'Set alignment meeting and clarify ownership', 'Ignore issue', 'Bypass peer without notice'],
-      optionsEs: ['Culpar publicamente', 'Alinear en reunion y clarificar responsables', 'Ignorar el problema', 'Evitar al colega sin avisar'],
+      optionsEs: ['Culpar públicamente', 'Alinear en reunión y clarificar responsables', 'Ignorar el problema', 'Evitar al colega sin avisar'],
       best: 1,
     },
     {
@@ -637,20 +637,20 @@ export const SJTGame = ({ isActive, onEndGame, isDemo, timeLimit, language = 'es
       promptEn: 'You detect a quality risk near launch date.',
       promptEs: 'Detectas un riesgo de calidad cerca del lanzamiento.',
       optionsEn: ['Hide it to ship on time', 'Communicate risk and mitigation options', 'Stop all work immediately', 'Wait silently'],
-      optionsEs: ['Ocultarlo para lanzar', 'Comunicar riesgo y opciones de mitigacion', 'Detener todo sin evaluar impacto', 'Esperar en silencio'],
+      optionsEs: ['Ocultarlo para lanzar', 'Comunicar riesgo y opciones de mitigación', 'Detener todo sin evaluar impacto', 'Esperar en silencio'],
       best: 1,
     },
     {
-      domain: isEn ? 'Prioritization' : 'Priorizacion',
+      domain: isEn ? 'Prioritization' : 'Priorización',
       promptEn: 'Two stakeholders request conflicting priorities.',
       promptEs: 'Dos stakeholders piden prioridades conflictivas.',
       optionsEn: ['Choose randomly', 'Align criteria and agree sequence', 'Say yes to both without plan', 'Escalate without data'],
-      optionsEs: ['Elegir al azar', 'Alinear criterios y acordar una secuencia', 'Decir que si a ambos sin plan', 'Escalar sin datos'],
+      optionsEs: ['Elegir al azar', 'Alinear criterios y acordar una secuencia', 'Decir que sí a ambos sin plan', 'Escalar sin datos'],
       best: 1,
     },
   ];
 
-  const MAX_SCENARIOS = isDemo ? 4 : 10;
+  const MAX_SCENARIOS = isDemo ? 2 : 10;
 
   const endGame = useCallback(() => {
     if (hasEndedRef.current) return;
@@ -696,7 +696,7 @@ export const SJTGame = ({ isActive, onEndGame, isDemo, timeLimit, language = 'es
         <div className="game-instruction-box">
           <h2>{isEn ? 'Situational Judgment Test' : 'Juicio situacional'}</h2>
           <p>{isEn ? 'Read each workplace scenario and choose the BEST first response.' : 'Lee cada escenario laboral y elige la MEJOR primera respuesta.'}</p>
-          <p>{isEn ? 'Prioritize collaboration, clarity and responsible execution.' : 'Prioriza colaboracion, claridad y ejecucion responsable.'}</p>
+          <p>{isEn ? 'Prioritize collaboration, clarity and responsible execution.' : 'Prioriza colaboración, claridad y ejecución responsable.'}</p>
           <button onClick={beginGame} className="btn-start">{isEn ? 'Start' : 'Comenzar'}</button>
         </div>
       </div>
@@ -712,10 +712,10 @@ export const SJTGame = ({ isActive, onEndGame, isDemo, timeLimit, language = 'es
         <h3>{isEn ? 'Scenario' : 'Escenario'} {scenario + 1} {isEn ? 'of' : 'de'} {MAX_SCENARIOS}</h3>
         <p className="rule">{isEn ? 'Domain' : 'Dominio'}: {currentScenario.domain}</p>
         <div className="sjt-scenario">
-          <p><strong>{isEn ? 'Situation:' : 'Situacion:'}</strong> {isEn ? currentScenario.promptEn : currentScenario.promptEs}</p>
+          <p><strong>{isEn ? 'Situation:' : 'Situación:'}</strong> {isEn ? currentScenario.promptEn : currentScenario.promptEs}</p>
         </div>
         <p className="rule" style={{ marginTop: '10px' }}>
-          {isEn ? 'Question: What should you do first?' : 'Pregunta: ¿Qué deberias hacer primero?'}
+          {isEn ? 'Question: What should you do first?' : 'Pregunta: ¿Qué deberías hacer primero?'}
         </p>
         <div className="buttons-group">
           {options.map((label, idx) => (
@@ -727,10 +727,3 @@ export const SJTGame = ({ isActive, onEndGame, isDemo, timeLimit, language = 'es
     </div>
   );
 };
-
-
-
-
-
-
-

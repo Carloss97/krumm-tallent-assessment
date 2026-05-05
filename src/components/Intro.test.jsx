@@ -25,7 +25,7 @@ describe('Intro Component', () => {
     );
     
     // Should display main heading
-    const heading = screen.getByRole('heading', { name: /cognitive assessment|evaluacion cognitiva/i });
+    const heading = screen.getByRole('heading', { name: /cognitive assessment|evaluación cognitiva/i });
     expect(heading).toBeTruthy();
   });
 

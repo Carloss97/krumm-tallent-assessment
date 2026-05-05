@@ -7,79 +7,85 @@ import { useLanguage } from '../context/LanguageContext';
 
 const GRID = 10;
 const SAT_DECAY = 2; // % per second
-
-const WALLS_L1 = [
-  '1,1','2,1','1,2','2,2', '4,1','5,1','4,2','5,2', '7,1','8,1','7,2','8,2',
-  '1,5','2,5','1,6','2,6', '4,5','5,5','4,6', '7,5','8,5','7,6','8,6',
-];
+const CELL = 60; // Larger cells for better screen occupancy
 
 const LEVELS = [
   { 
-    walls: WALLS_L1, 
+    walls: [], 
     targets: [
-      { id:1, x:2, y:0, color:'#ef4444', points:150, dropZone:{x:7,y:9} }, 
-      { id:2, x:0, y:4, color:'#3b82f6', points:100, dropZone:{x:9,y:7} }
+      { id:1, x:2, y:2, color:'#ef4444', points:150, dropZone:{x:8,y:8} }, 
     ], 
     stations: [], 
     energyDrain: 0, 
+    timeLimit: 45, 
+    startPos: { x:0, y:0 } 
+  },
+  { 
+    walls: ['4,0', '4,1', '4,2', '4,3', '4,4', '4,6', '4,7', '4,8', '4,9'], 
+    targets: [
+      { id:3, x:2, y:8, color:'#3b82f6', points:150, dropZone:{x:8,y:2} }
+    ], 
+    stations: [{ x:5, y:5 }], 
+    energyDrain: 3, 
     timeLimit: 60, 
     startPos: { x:0, y:0 } 
   },
   { 
-    walls: WALLS_L1, 
-    targets: [
-      { id:3, x:6, y:0, color:'#ef4444', points:150, dropZone:{x:3,y:9} }, 
-      { id:4, x:0, y:7, color:'#3b82f6', points:100, dropZone:{x:9,y:4} }
+    walls: [
+      '1,1','2,1','1,2','2,2', '4,1','5,1','4,2','5,2', '7,1','8,1','7,2','8,2',
+      '1,5','2,5','1,6','2,6', '4,5','5,5','4,6', '7,5','8,5','7,6','8,6',
     ], 
-    stations: [{ x:3, y:3 }, { x:6, y:6 }], 
-    energyDrain: 4, 
-    timeLimit: 75, 
-    startPos: { x:0, y:0 } 
-  },
-  { 
-    walls: WALLS_L1, 
     targets: [
-      { id:5, x:4, y:4, color:'#10b981', points:200, dropZone:{x:1,y:9} }
+      { id:5, x:4, y:4, color:'#10b981', points:200, dropZone:{x:0,y:9} },
+      { id:6, x:0, y:0, color:'#f59e0b', points:200, dropZone:{x:9,y:9} }
     ], 
-    stations: [{ x:5, y:5 }], 
+    stations: [{ x:5, y:4 }, { x:9, y:0 }], 
     energyDrain: 5, 
-    timeLimit: 45, 
-    startPos: { x:9, y:9 } 
+    timeLimit: 75, 
+    startPos: { x:5, y:9 } 
   },
 ];
 
 const QUIZ = [
-  { q: '¿Qué sucede con la satisfacción del objetivo con el tiempo?', opts: ['Aumenta', 'Se mantiene igual', 'Disminuye', 'Depende del color'], correct: 2 },
-  { q: '¿Para qué sirven las estaciones con rayo (⚡)?', opts: ['Aumentar puntos', 'Recargar energía', 'Teletransportarse', 'Ganar tiempo'], correct: 1 },
+  { 
+    q: '¿Qué sucede con la satisfacción del objetivo con el tiempo?', 
+    opts: ['Aumenta', 'Se mantiene igual', 'Disminuye', 'Depende del color'], 
+    correct: 2 
+  },
+  { 
+    q: '¿Para qué sirven las estaciones con rayo (⚡)?', 
+    opts: ['Aumentar puntos', 'Recargar energía', 'Teletransportarse', 'Ganar tiempo'], 
+    correct: 1 
+  },
 ];
 
 const DEMO_BRIEFINGS = {
   es: [
     {
       title: 'Protocolo I: Flujo Logístico',
-      body: 'Iniciando simulación de ruteo. Tu objetivo es interceptar los paquetes de datos y transferirlos a sus respectivos nodos de descarga. La precisión en la ruta es fundamental.'
+      body: 'Iniciando simulación de ruteo. Tu objetivo es interceptar los paquetes de datos y transferirlos a sus respectivos nodos de descarga. La precisión en la ruta es fundamental para evitar la pérdida de integridad.'
     },
     {
-      title: 'Protocolo II: Matriz Energética',
-      body: 'La red ahora presenta restricciones de consumo. Cada unidad de desplazamiento consume energía del sistema. Utiliza las estaciones de carga (⚡) para mantener la integridad de la operación.'
+      title: 'Protocolo II: Gestión Energética',
+      body: 'Se han activado restricciones de consumo. Cada desplazamiento consume energía del sistema. Utiliza las estaciones de carga (⚡) para reponer reservas antes de que el sistema se bloquee.'
     },
     {
-      title: 'Protocolo III: Optimización de Red',
-      body: 'Escenario de alta complejidad. El flujo de datos es inestable y el consumo energético es crítico. Planifica una secuencia de ruteo que maximice la eficiencia antes de que expire la ventana de tiempo.'
+      title: 'Protocolo III: Optimización Crítica',
+      body: 'Escenario de alta interferencia. La red presenta obstáculos estructurales y el flujo de datos es inestable. Planifica una ruta eficiente para múltiples paquetes minimizando el gasto energético.'
     }
   ],
   en: [
     {
       title: 'Protocol I: Logistic Flow',
-      body: 'Starting routing simulation. Your objective is to intercept data packets and transfer them to their respective download nodes. Routing precision is fundamental.'
+      body: 'Starting routing simulation. Your objective is to intercept data packets and transfer them to their respective download nodes. Routing precision is fundamental to prevent integrity loss.'
     },
     {
-      title: 'Protocol II: Energy Matrix',
-      body: 'The network now presents consumption restrictions. Each unit of movement consumes system energy. Use charging stations (⚡) to maintain the integrity of the operation.'
+      title: 'Protocol II: Energy Management',
+      body: 'Consumption restrictions have been activated. Each movement consumes system energy. Use charging stations (⚡) to replenish reserves before the system locks down.'
     },
     {
-      title: 'Protocol III: Network Optimization',
-      body: 'High complexity scenario. Data flow is unstable and energy consumption is critical. Plan a routing sequence that maximizes efficiency before the time window expires.'
+      title: 'Protocol III: Critical Optimization',
+      body: 'High interference scenario. The network has structural obstacles and data flow is unstable. Plan an efficient route for multiple packets while minimizing energy expenditure.'
     }
   ]
 };
@@ -301,7 +307,7 @@ const GridFlowGame = ({ isActive, onEndGame }) => {
 
     // Record event for HUD and telemetry
     recordTrialEvent({ 
-      event: 'move', 
+      type: 'move', 
       payload: { x: nx, y: ny, energy: newEnergy, hasInventory: !!newInv } 
     });
 
@@ -353,24 +359,24 @@ const GridFlowGame = ({ isActive, onEndGame }) => {
 
         let content = null;
         if (isWall) content = null;
-        else if (station) content = <motion.span animate={{ scale: [1, 1.2, 1] }} transition={{ duration: 1.5, repeat: Infinity }} style={{ fontSize:'0.9rem' }}>⚡</motion.span>;
+        else if (station) content = <motion.span animate={{ scale: [1, 1.2, 1] }} transition={{ duration: 1.5, repeat: Infinity }} style={{ fontSize:'1.4rem' }}>⚡</motion.span>;
         else if (isDrop) content = <motion.div animate={{ scale:[0.6,1,0.6], opacity: [0.4, 0.8, 0.4] }} transition={{ duration:2, repeat:Infinity }} style={{ width:'40%', height:'40%', borderRadius:'50%', background:inventory.color, border:`2px solid ${inventory.color}` }} />;
 
         if (target) {
           const sat = sats[target.id] ?? 100;
           const satColor = sat >= 60 ? '#059669' : sat >= 30 ? '#d97706' : '#dc2626';
           content = (
-            <motion.div initial={{ scale: 0 }} animate={{ scale: 1 }} style={{ position:'relative', width:'60%', height:'60%', background:target.color, borderRadius:'4px', boxShadow:`0 4px 66px -1px ${target.color}40`, display:'flex', alignItems:'center', justifyContent:'center' }}>
-              <span style={{ position:'absolute', top:'-16px', left:'50%', transform:'translateX(-50%)', fontSize:'9px', color:satColor, fontWeight:'800' }}>{sat}%</span>
+            <motion.div initial={{ scale: 0 }} animate={{ scale: 1 }} style={{ position:'relative', width:'60%', height:'60%', background:target.color, borderRadius:'8px', boxShadow:`0 6px 20px -1px ${target.color}60`, display:'flex', alignItems:'center', justifyContent:'center' }}>
+              <span style={{ position:'absolute', top:'-24px', left:'50%', transform:'translateX(-50%)', fontSize:'12px', color:satColor, fontWeight:'900' }}>{sat}%</span>
             </motion.div>
           );
         }
 
         if (isPlayer) content = (
-          <motion.div layoutId="player" style={{ width:'70%', height:'70%', borderRadius:'8px', background:'#4f46e5', border:'2px solid #fff', boxShadow:'0 10px 15px -3px rgba(79,70,229,0.4)', zIndex: 10 }} />
+          <motion.div layoutId="player" style={{ width:'80%', height:'80%', borderRadius:'12px', background:'#4f46e5', border:'3px solid #fff', boxShadow:'0 15px 25px -5px rgba(79,70,229,0.5)', zIndex: 10 }} />
         );
 
-        cells.push(<div key={`${x}-${y}`} style={{ width:'34px', height:'32px', background:bg, border, display:'flex', justifyContent:'center', alignItems:'center', position:'relative', borderRadius: isWall ? '2px' : '0' }}>{content}</div>);
+        cells.push(<div key={`${x}-${y}`} style={{ width:`${CELL}px`, height:`${CELL}px`, background:bg, border, display:'flex', justifyContent:'center', alignItems:'center', position:'relative', borderRadius: isWall ? '6px' : '0' }}>{content}</div>);
       }
     }
     return cells;
@@ -382,7 +388,7 @@ const GridFlowGame = ({ isActive, onEndGame }) => {
     <motion.button
       whileTap={{ scale: 0.9 }}
       onPointerDown={(e) => { e.preventDefault(); const now = Date.now(); if (now - lastMoveRef.current < 100) return; lastMoveRef.current = now; setFlashDir(dir); setTimeout(() => setFlashDir(null), 150); move(dir); }}
-      style={{ width:44, height:44, background: flashDir === dir ? '#4f46e5' : 'rgba(255,255,255,0.8)', border: `1px solid ${flashDir === dir ? '#4f46e5' : 'rgba(99,102,241,0.2)'}`, borderRadius:'12px', fontSize:'1.2rem', color: flashDir === dir ? '#fff' : '#1e1b4b', cursor:'pointer', display:'flex', alignItems:'center', justifyContent:'center', boxShadow: '0 4px 6px -1px rgba(0,0,0,0.1)' }}
+      style={{ width:64, height:64, background: flashDir === dir ? '#4f46e5' : 'rgba(255,255,255,0.85)', border: `2px solid ${flashDir === dir ? '#4f46e5' : 'rgba(99,102,241,0.25)'}`, borderRadius:'18px', fontSize:'1.6rem', color: flashDir === dir ? '#fff' : '#1e1b4b', cursor:'pointer', display:'flex', alignItems:'center', justifyContent:'center', boxShadow: '0 8px 12px -2px rgba(0,0,0,0.1)' }}
     >{label}</motion.button>
   );
 
@@ -401,11 +407,11 @@ const GridFlowGame = ({ isActive, onEndGame }) => {
   const lvlData = LEVELS[round];
 
   return (
-    <div style={{ width:'100%', minHeight:'640px', display:'flex', flexDirection:'column', alignItems:'center', justifyContent:'center', padding:'12px', gap:'12px', position:'relative' }}>
+    <div style={{ width:'100%', height:'100%', display:'flex', flexDirection:'column', alignItems:'center', justifyContent:'center', padding:'20px', gap:'20px', position:'relative' }}>
       <AnimatePresence>
         {gameState === 'playing' && (
-          <motion.div initial={{ opacity:0, y:20 }} animate={{ opacity:1, y:0 }} exit={{ opacity:0 }} className="glass-panel" style={{ padding:'20px', display:'flex', flexDirection:'column', alignItems:'center', gap:'12px', background: 'rgba(255,255,255,0.9)', backdropFilter: 'blur(8px)' }}>
-            <div style={{ display:'flex', justifyContent:'space-between', width:'100%', color:'#1e1b4b', textTransform:'uppercase', letterSpacing:'1px', fontSize:'0.8rem', fontWeight:'800', gap:'20px' }}>
+          <motion.div initial={{ opacity:0, y:20 }} animate={{ opacity:1, y:0 }} exit={{ opacity:0 }} className="glass-panel" style={{ padding:'40px', display:'flex', flexDirection:'column', alignItems:'center', gap:'32px', background: 'rgba(255,255,255,0.95)', backdropFilter: 'blur(12px)', width: 'auto' }}>
+            <div style={{ display:'flex', justifyContent:'space-between', width:'100%', color:'#1e1b4b', textTransform:'uppercase', letterSpacing:'3px', fontSize:'1rem', fontWeight:'900', gap:'60px' }}>
               <span>Round {round+1}/{effectiveMaxRounds}</span>
               <span style={{ color: levelTimeLeft<10?'#dc2626':'#059669' }}>⏱ {levelTimeLeft}s</span>
               {lvlData.energyDrain>0 && <span style={{ color: energy<30?'#dc2626':'#1e1b4b' }}>⚡ {energy}%</span>}
@@ -413,60 +419,60 @@ const GridFlowGame = ({ isActive, onEndGame }) => {
               <span style={{ color:'#4f46e5' }}>Pts: {score}</span>
             </div>
             
-            <div style={{ position:'relative', padding:'8px', border:'1px solid rgba(99,102,241,0.1)', borderRadius:'12px', background:'#f8fafc', boxShadow: 'inset 0 2px 4px rgba(0,0,0,0.05)' }}>
+            <div style={{ position:'relative', padding:'12px', border:'2px solid rgba(99,102,241,0.2)', borderRadius:'20px', background:'#f8fafc', boxShadow: 'inset 0 4px 12px rgba(0,0,0,0.1)' }}>
               {showPickupAnim && (
-                <motion.div initial={{ y:10, opacity:0 }} animate={{ y:-30, opacity:1 }} exit={{ opacity:0 }} style={{ position: 'absolute', left: '50%', transform: 'translateX(-50%)', zIndex: 30, background: '#1e293b', padding: '6px 16px', borderRadius: 20, color: '#fff', fontWeight: 700, fontSize: '0.8rem' }}>
+                <motion.div initial={{ y:10, opacity:0 }} animate={{ y:-50, opacity:1 }} exit={{ opacity:0 }} style={{ position: 'absolute', left: '50%', transform: 'translateX(-50%)', zIndex: 30, background: '#1e293b', padding: '12px 32px', borderRadius: 32, color: '#fff', fontWeight: 900, fontSize: '1.1rem' }}>
                   {language === 'es' ? '+ RECOGIDO' : '+ COLLECTED'}
                 </motion.div>
               )}
               {showDeliverAnim && (
-                <motion.div initial={{ scale:0.8, opacity:0 }} animate={{ scale:1.1, opacity:1 }} exit={{ opacity:0 }} style={{ position: 'absolute', left: '50%', top: '40%', transform: 'translate(-50%, -50%)', zIndex: 30, background: 'linear-gradient(135deg, #10b981, #059669)', padding: '12px 24px', borderRadius: 12, color: '#fff', fontWeight: 900, boxShadow: '0 10px 15px -3px rgba(0,0,0,0.2)' }}>
+                <motion.div initial={{ scale:0.8, opacity:0 }} animate={{ scale:1.3, opacity:1 }} exit={{ opacity:0 }} style={{ position: 'absolute', left: '50%', top: '40%', transform: 'translate(-50%, -50%)', zIndex: 30, background: 'linear-gradient(135deg, #10b981, #059669)', padding: '24px 48px', borderRadius: 20, color: '#fff', fontWeight: 950, fontSize: '1.5rem', boxShadow: '0 30px 60px -10px rgba(0,0,0,0.4)' }}>
                   {language === 'es' ? 'ENTREGADO' : 'DELIVERED'}
                 </motion.div>
               )}
               {showChargeAnim && (
-                <motion.div initial={{ scale:0.5, opacity:0 }} animate={{ scale:1, opacity:1 }} exit={{ opacity:0 }} style={{ position: 'absolute', right: '10px', top: '10px', zIndex: 30, background: '#fbbf24', padding: '6px 12px', borderRadius: 8, color: '#000', fontWeight: 800, fontSize: '0.75rem' }}>
+                <motion.div initial={{ scale:0.5, opacity:0 }} animate={{ scale:1, opacity:1 }} exit={{ opacity:0 }} style={{ position: 'absolute', right: '30px', top: '30px', zIndex: 30, background: '#fbbf24', padding: '10px 20px', borderRadius: 16, color: '#000', fontWeight: 950, fontSize: '1.1rem' }}>
                   ⚡ RECARGA
                 </motion.div>
               )}
-              {showDeliverAnim && (<div style={{ position: 'absolute', inset: 0, pointerEvents: 'none', zIndex: 40 }}><Confetti count={12} spread={70} duration={1} /></div>)}
-              <div style={{ display:'grid', gridTemplateColumns:`repeat(${GRID}, 34px)`, gap:'1px' }}>{renderGrid()}</div>
+              {showDeliverAnim && (<div style={{ position: 'absolute', inset: 0, pointerEvents: 'none', zIndex: 40 }}><Confetti count={30} spread={100} duration={1.5} /></div>)}
+              <div style={{ display:'grid', gridTemplateColumns:`repeat(${GRID}, ${CELL}px)`, gap:'3px' }}>{renderGrid()}</div>
             </div>
 
-            <div style={{ width: '100%', display: 'flex', justifyContent: 'center', gap: '24px', alignItems: 'center' }}>
-               <div style={{ display:'flex', flexDirection:'column', alignItems:'center', gap:'4px' }}>
+            <div style={{ width: '100%', display: 'flex', justifyContent: 'center', gap: '60px', alignItems: 'center' }}>
+               <div style={{ display:'flex', flexDirection:'column', alignItems:'center', gap:'12px' }}>
                 <ArrowBtn dir="up" label="↑" />
-                <div style={{ display:'flex', gap:'4px' }}>
+                <div style={{ display:'flex', gap:'12px' }}>
                   <ArrowBtn dir="left" label="←" /><ArrowBtn dir="down" label="↓" /><ArrowBtn dir="right" label="→" />
                 </div>
               </div>
               
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', minWidth: '140px' }}>
-                <div style={{ fontSize: '0.7rem', color: '#64748b', fontWeight: 700, textTransform: 'uppercase' }}>{language === 'es' ? 'Inventario' : 'Inventory'}</div>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', minWidth: '220px' }}>
+                <div style={{ fontSize: '1rem', color: '#64748b', fontWeight: 900, textTransform: 'uppercase', letterSpacing: '2px' }}>{language === 'es' ? 'Inventario' : 'Inventory'}</div>
                 {inventory ? (
-                  <motion.div initial={{ x:-10, opacity:0 }} animate={{ x:0, opacity:1 }} style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '10px', background: 'rgba(99,102,241,0.05)', borderRadius: '8px', border: `1px solid ${inventory.color}40` }}>
-                    <div style={{ width:'12px', height:'12px', background:inventory.color, borderRadius:'3px' }}/>
-                    <span style={{ fontSize: '0.85rem', fontWeight: 700 }}>{language === 'es' ? 'Listo' : 'Ready'}</span>
+                  <motion.div initial={{ x:-20, opacity:0 }} animate={{ x:0, opacity:1 }} style={{ display: 'flex', alignItems: 'center', gap: '16px', padding: '20px', background: 'rgba(99,102,241,0.1)', borderRadius: '16px', border: `2px solid ${inventory.color}60` }}>
+                    <div style={{ width:'20px', height:'20px', background:inventory.color, borderRadius:'6px' }}/>
+                    <span style={{ fontSize: '1.2rem', fontWeight: 900 }}>{language === 'es' ? 'Listo' : 'Ready'}</span>
                   </motion.div>
                 ) : (
-                  <div style={{ fontSize: '0.8rem', color: '#94a3b8', fontStyle: 'italic' }}>{language === 'es' ? 'Vacío' : 'Empty'}</div>
+                  <div style={{ fontSize: '1.2rem', color: '#94a3b8', fontStyle: 'italic', fontWeight: 600 }}>{language === 'es' ? 'Vacío' : 'Empty'}</div>
                 )}
               </div>
             </div>
 
-            {fuelEmpty && <motion.div initial={{ scale:0.9, opacity:0 }} animate={{ scale:1, opacity:1 }} style={{ padding:'10px 24px', background:'#dc2626', color:'white', borderRadius:'12px', fontWeight:'900', fontSize:'0.9rem', boxShadow: '0 10px 15px -3px rgba(220,38,38,0.3)' }}>{language === 'es' ? '⚠ SIN ENERGÍA' : '⚠ NO ENERGY'}</motion.div>}
+            {fuelEmpty && <motion.div initial={{ scale:0.9, opacity:0 }} animate={{ scale:1, opacity:1 }} style={{ padding:'20px 48px', background:'#dc2626', color:'white', borderRadius:'20px', fontWeight:'950', fontSize:'1.4rem', boxShadow: '0 20px 40px -10px rgba(220,38,38,0.5)' }}>{language === 'es' ? '⚠ SIN ENERGÍA' : '⚠ NO ENERGY'}</motion.div>}
           </motion.div>
         )}
 
         {gameState === 'briefing' && briefing && (
-          <motion.div initial={{ opacity:0 }} animate={{ opacity:1 }} exit={{ opacity:0 }} style={{ position:'absolute', inset:0, background:'rgba(15,23,42,0.6)', backdropFilter: 'blur(4px)', display:'flex', alignItems:'center', justifyContent:'center', zIndex: 80, borderRadius: '16px' }}>
-            <motion.div initial={{ y:20, scale:0.95 }} animate={{ y:0, scale:1 }} style={{ background:'#ffffff', padding:'32px', borderRadius:'20px', maxWidth:'440px', textAlign:'center', border:'1px solid rgba(15,23,42,0.1)', boxShadow:'0 25px 50px -12px rgba(0,0,0,0.25)' }}>
-              <div style={{ color: '#4f46e5', fontSize: '0.75rem', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '2px', marginBottom: '8px' }}>
+          <motion.div initial={{ opacity:0 }} animate={{ opacity:1 }} exit={{ opacity:0 }} style={{ position:'absolute', inset:0, background:'rgba(15,23,42,0.7)', backdropFilter: 'blur(10px)', display:'flex', alignItems:'center', justifyContent:'center', zIndex: 100, borderRadius: '32px' }}>
+            <motion.div initial={{ y:40, scale:0.95 }} animate={{ y:0, scale:1 }} style={{ background:'#ffffff', padding:'60px', borderRadius:'40px', maxWidth:'600px', textAlign:'center', border:'1px solid rgba(15,23,42,0.1)', boxShadow:'0 40px 80px -20px rgba(0,0,0,0.5)' }}>
+              <div style={{ color: '#4f46e5', fontSize: '1rem', fontWeight: 900, textTransform: 'uppercase', letterSpacing: '4px', marginBottom: '20px' }}>
                 {language === 'es' ? 'Protocolo de Red' : 'Network Protocol'}
               </div>
-              <h4 style={{ margin: 0, fontSize:'1.4rem', color:'#1e1b4b', fontWeight: 800 }}>{briefing.title}</h4>
-              <p style={{ margin:'16px 0 24px', color:'#475569', lineHeight:1.7, fontSize: '0.95rem' }}>{briefing.body}</p>
-              <button className="btn btn-primary" onClick={() => setGameState('playing')} style={{ width: '100%', padding: '14px' }}>
+              <h4 style={{ margin: 0, fontSize:'2.5rem', color:'#1e1b4b', fontWeight: 950, letterSpacing: '-0.04em' }}>{briefing.title}</h4>
+              <p style={{ margin:'32px 0 48px', color:'#475569', lineHeight:1.8, fontSize: '1.25rem', fontWeight: 500 }}>{briefing.body}</p>
+              <button className="btn btn-primary" onClick={() => setGameState('playing')} style={{ width: '100%', padding: '24px', fontSize: '1.4rem', borderRadius: '24px' }}>
                 {language === 'es' ? 'Iniciar Operación' : 'Start Operation'}
               </button>
             </motion.div>
@@ -474,19 +480,19 @@ const GridFlowGame = ({ isActive, onEndGame }) => {
         )}
 
         {gameState === 'quiz' && (
-          <motion.div initial={{ scale:0.95, opacity:0 }} animate={{ scale:1, opacity:1 }} className="glass-panel" style={{ padding:'40px', maxWidth:'520px', textAlign:'center' }}>
-            <div style={{ color:'#7c3aed', fontSize:'0.85rem', textTransform:'uppercase', letterSpacing:'3px', marginBottom:'12px', fontWeight:'800' }}>Network Check</div>
-            <p style={{ color:'#1e1b4b', marginBottom:'32px', fontSize:'1.1rem', fontWeight: '500' }}>{QUIZ[quizStep].q}</p>
-            <div style={{ display:'flex', flexDirection:'column', gap:'12px' }}>
+          <motion.div initial={{ scale:0.95, opacity:0 }} animate={{ scale:1, opacity:1 }} className="glass-panel" style={{ padding:'64px', maxWidth:'700px', textAlign:'center' }}>
+            <div style={{ color:'#7c3aed', fontSize:'1rem', textTransform:'uppercase', letterSpacing:'5px', marginBottom:'24px', fontWeight:'950' }}>Network Check</div>
+            <p style={{ color:'#1e1b4b', marginBottom:'60px', fontSize:'1.8rem', fontWeight: '900', lineHeight: 1.25 }}>{QUIZ[quizStep].q}</p>
+            <div style={{ display:'flex', flexDirection:'column', gap:'20px' }}>
               {QUIZ[quizStep].opts.map((opt, i) => (
                 <motion.button 
                   key={i} 
-                  whileHover={{ x: 5, backgroundColor: 'rgba(124,58,237,0.1)' }}
+                  whileHover={{ x: 12, backgroundColor: 'rgba(124,58,237,0.15)' }}
                   className="btn" 
                   onClick={() => handleQuizAnswer(i)} 
-                  style={{ padding:'14px 20px', textAlign:'left', display:'flex', gap:'12px', borderRadius: '12px' }}
+                  style={{ padding:'24px 36px', textAlign:'left', display:'flex', gap:'20px', borderRadius: '24px', fontSize: '1.3rem' }}
                 >
-                  <span style={{ opacity:0.5 }}>{i+1}.</span><span>{opt}</span>
+                  <span style={{ opacity:0.5, fontWeight: 950 }}>{i+1}.</span><span style={{ fontWeight: 800 }}>{opt}</span>
                 </motion.button>
               ))}
             </div>

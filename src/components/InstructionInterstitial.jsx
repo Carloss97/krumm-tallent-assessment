@@ -51,7 +51,7 @@ const InstructionInterstitial = ({ title, description, timeLimit, type, language
               {isEn ? "Focus" : "Enfoque"}
             </div>
             <div style={{ fontSize:"1.3rem", fontWeight:"800", color:"#2563eb" }}>
-              {isEn ? "Precision" : "Precision"}
+              {isEn ? "Precision" : "Precisión"}
             </div>
           </div>
         </div>
@@ -75,4 +75,3 @@ const InstructionInterstitial = ({ title, description, timeLimit, type, language
 };
 
 export default InstructionInterstitial;
-

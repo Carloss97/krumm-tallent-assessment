@@ -85,7 +85,11 @@ const LiveDemoTelemetryHud = ({ activeGameId = null, activeGameLabel = '' }) => 
 
   if (isMinimized) {
     return (
-      <aside className="demo-hud minimized" onClick={() => setIsMinimized(false)} style={{ cursor: 'pointer', pointerEvents: 'auto' }}>
+      <aside 
+        className="demo-hud minimized" 
+        onClick={() => setIsMinimized(false)} 
+        style={{ cursor: 'pointer', pointerEvents: 'auto', zIndex: 1000 }}
+      >
         <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
           <div className="status-indicator-dot pulse-green"></div>
           <span className="demo-hud-badge" style={{ fontSize: '0.65rem' }}>{c.badge}</span>
@@ -98,7 +102,7 @@ const LiveDemoTelemetryHud = ({ activeGameId = null, activeGameLabel = '' }) => 
   const hasData = snapshot.cursorEvents > 0 || snapshot.webcamFrames > 0;
 
   return (
-    <aside className="demo-hud" aria-label="Live telemetry insights" style={{ pointerEvents: 'auto' }}>
+    <aside className="demo-hud" aria-label="Live telemetry insights" style={{ pointerEvents: 'auto', zIndex: 1000 }}>
       <div className="demo-hud-topline">
         <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
           <div className={`status-indicator-dot ${hasData ? 'pulse-green' : 'gray'}`}></div>

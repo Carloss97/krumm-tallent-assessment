@@ -13,14 +13,14 @@ const assessmentTracks = [
   },
   {
     title: 'Control inhibitorio',
-    detail: 'Go/No-Go y Stop-Signal para observar precision bajo presion e impulsividad.'
+    detail: 'Go/No-Go y Stop-Signal para observar precisión bajo presión e impulsividad.'
   },
   {
     title: 'Flexibilidad cognitiva',
-    detail: 'Task Switching y Wisconsin para evaluar adaptacion a cambios y excepciones.'
+    detail: 'Task Switching y Wisconsin para evaluar adaptación a cambios y excepciones.'
   },
   {
-    title: 'Atencion sostenida',
+    title: 'Atención sostenida',
     detail: 'CPT y Vigilance para detectar consistencia, lapsos y fatiga operacional.'
   }
 ];
@@ -28,23 +28,23 @@ const assessmentTracks = [
 const processSteps = [
   {
     title: '1. Acceso del participante',
-    detail: 'Ingreso por credenciales, consentimiento y activacion de telemetria de sesion.'
+    detail: 'Ingreso por credenciales, consentimiento y activación de telemetría de sesión.'
   },
   {
-    title: '2. Bateria cognitiva',
-    detail: 'Juegos validados con registro de tiempos, precision, errores y trayectoria de respuesta.'
+    title: '2. Batería cognitiva',
+    detail: 'Juegos validados con registro de tiempos, precisión, errores y trayectoria de respuesta.'
   },
   {
-    title: '3. Analitica y reporte',
-    detail: 'Consolidacion de resultados, scoring por constructo y recomendacion para talento.'
+    title: '3. Analítica y reporte',
+    detail: 'Consolidación de resultados, scoring por constructo y recomendación para talento.'
   }
 ];
 
 const useCases = [
-  'Preseleccion de candidatos para roles criticos.',
+  'Preselección de candidatos para roles críticos.',
   'Mapeo de potencial para movilidad interna.',
-  'Programas de desarrollo con linea base cognitiva.',
-  'Comparacion objetiva entre cohortes de talento.'
+  'Programas de desarrollo con línea base cognitiva.',
+  'Comparación objetiva entre cohortes de talento.'
 ];
 
 const LandingPage = () => {
@@ -150,7 +150,7 @@ const LandingPage = () => {
           <h1>Evaluaciones cognitivas para decisiones de talento con evidencia</h1>
           <p className="krumm-subtitle">
             Krumm ayuda a equipos de RRHH a medir capacidades cognitivas clave con juegos validados,
-            telemetria conductual y reportes accionables para seleccion y desarrollo.
+            telemetría conductual y reportes accionables para selección y desarrollo.
           </p>
 
           <div className="krumm-metrics" role="list" aria-label="Diferenciales Krumm">
@@ -160,11 +160,11 @@ const LandingPage = () => {
             </div>
             <div role="listitem">
               <strong>360°</strong>
-              <span>Telemetria de sesion</span>
+              <span>Telemetría de sesión</span>
             </div>
             <div role="listitem">
               <strong>HR-Tech</strong>
-              <span>Diseno para reclutamiento</span>
+              <span>Diseño para reclutamiento</span>
             </div>
           </div>
         </motion.div>
@@ -200,7 +200,7 @@ const LandingPage = () => {
               required
             />
 
-            <label htmlFor="email">Correo electronico</label>
+            <label htmlFor="email">Correo electrónico</label>
             <input
               id="email"
               name="email"
@@ -211,7 +211,7 @@ const LandingPage = () => {
               required
             />
 
-            <label htmlFor="accessCode">Codigo de acceso</label>
+            <label htmlFor="accessCode">Código de acceso</label>
             <input
               id="accessCode"
               name="accessCode"
@@ -232,7 +232,7 @@ const LandingPage = () => {
 
           <div className="krumm-secondary-actions">
             <button type="button" className="krumm-secondary-button" onClick={handleStartDemo}>
-              Modo demo rapido
+              Modo demo rápido
             </button>
             <button type="button" className="krumm-secondary-button" onClick={handleViewDemoReport}>
               Ver reporte demo
@@ -244,21 +244,21 @@ const LandingPage = () => {
         </motion.aside>
       </section>
 
-      <section className="krumm-sections-wrap" aria-label="Informacion de producto Krumm">
+      <section className="krumm-sections-wrap" aria-label="Información de producto Krumm">
         <motion.article
           className="krumm-info-card"
           initial={{ opacity: 0, y: 16 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5, delay: 0.2 }}
         >
-          <h3>Que hacemos en Krumm</h3>
+          <h3>Qué hacemos en Krumm</h3>
           <p>
-            Combinamos ciencia cognitiva, diseno de experiencia y analitica HR-Tech para transformar pruebas
-            psicometricas tradicionales en una evaluacion digital, dinamica y trazable para equipos de talento.
+            Combinamos ciencia cognitiva, diseño de experiencia y analítica HR-Tech para transformar pruebas
+            psicométricas tradicionales en una evaluación digital, dinámica y trazable para equipos de talento.
           </p>
           <p>
-            Nuestra plataforma integra 14 experiencias de evaluacion con telemetria conductual y analisis
-            automatizado para apoyar decisiones de seleccion, calibracion y desarrollo profesional.
+            Nuestra plataforma integra 14 experiencias de evaluación con telemetría conductual y análisis
+            automatizado para apoyar decisiones de selección, calibración y desarrollo profesional.
           </p>
         </motion.article>
 
@@ -268,7 +268,7 @@ const LandingPage = () => {
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5, delay: 0.28 }}
         >
-          <h3>Que medimos</h3>
+          <h3>Qué medimos</h3>
           <div className="krumm-track-grid">
             {assessmentTracks.map((item) => (
               <div key={item.title} className="krumm-track-item">
@@ -285,7 +285,7 @@ const LandingPage = () => {
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5, delay: 0.34 }}
         >
-          <h3>Como funciona el flujo</h3>
+          <h3>Cómo funciona el flujo</h3>
           <div className="krumm-process-grid">
             {processSteps.map((step) => (
               <div key={step.title} className="krumm-process-item">
@@ -318,13 +318,13 @@ const LandingPage = () => {
         >
           <h3>Lo que recibe el equipo de talento</h3>
           <p>
-            Reporte por participante con constructos priorizados, fortalezas, alertas y recomendacion.
-            Ademas, una base estructurada para comparar cohortes, detectar patrones y mejorar decisiones.
+            Reporte por participante con constructos priorizados, fortalezas, alertas y recomendación.
+            Además, una base estructurada para comparar cohortes, detectar patrones y mejorar decisiones.
           </p>
           <div className="krumm-mini-tags" role="list" aria-label="Entregables">
             <span role="listitem">Scoring por juego</span>
-            <span role="listitem">Tiempos de reaccion</span>
-            <span role="listitem">Metricas de error</span>
+            <span role="listitem">Tiempos de reacción</span>
+            <span role="listitem">Métricas de error</span>
             <span role="listitem">Resumen ejecutivo</span>
           </div>
         </motion.article>

@@ -423,7 +423,7 @@ const Report = ({ isDummy = false, demoSummary = null }) => {
           </h3>
 
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: '16px', marginBottom: '32px' }}>
-            <TelemetryStatCard label={isEn ? 'Profile Signal' : 'Senal de perfil'} value={recommendationLabel || 'N/A'} />
+            <TelemetryStatCard label={isEn ? 'Profile Signal' : 'Señal de perfil'} value={recommendationLabel || 'N/A'} />
             <TelemetryStatCard label={isEn ? 'Confidence' : 'Confianza'} value={report.confidenceScore ? `${report.confidenceScore}%` : 'N/A'} />
             {
               (() => {

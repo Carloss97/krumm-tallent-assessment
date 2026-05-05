@@ -65,7 +65,7 @@ function MissionHeader({ language, title, subtitle, progress, rewardLabel }) {
   const pct = Math.max(0, Math.min(100, Math.round(progress)));
   return (
     <div style={{ marginBottom: '14px' }}>
-      <span style={missionBadgeStyle}>{isEn ? 'Mission Layer' : 'Capa de mision'}</span>
+      <span style={missionBadgeStyle}>{isEn ? 'Mission Layer' : 'Capa de misión'}</span>
       <h2 style={{ margin: '0 0 6px 0', color: '#0f172a' }}>{title}</h2>
       <p style={{ margin: '0 0 10px 0', color: '#334155' }}>{subtitle}</p>
       <div style={{ display: 'flex', gap: '10px', alignItems: 'center', flexWrap: 'wrap' }}>
@@ -87,10 +87,10 @@ export const MetacognitiveCalibrationGame = ({ language = 'es' }) => {
   const [answers, setAnswers] = useState([]);
 
   const questions = useMemo(() => [
-    { text: isEn ? 'Signal A rises 18% while B drops 5%, with stable quality. Prioritize A now?' : 'La senal A sube 18% y B cae 5%, con calidad estable. ¿Priorizar A ahora?', truth: 'yes' },
+    { text: isEn ? 'Signal A rises 18% while B drops 5%, with stable quality. Prioritize A now?' : 'La señal A sube 18% y B cae 5%, con calidad estable. ¿Priorizar A ahora?', truth: 'yes' },
     { text: isEn ? 'A report arrives on time but incomplete. Is quality high?' : 'Un reporte llega a tiempo pero incompleto. ¿La calidad es alta?', truth: 'no' },
     { text: isEn ? 'Two independent sources confirm the same trend. Is this strong evidence?' : 'Dos fuentes independientes confirman la misma tendencia. ¿Es evidencia fuerte?', truth: 'yes' },
-    { text: isEn ? 'One exception appears in data. Does it invalidate all previous history?' : 'Aparece una excepcion en los datos. ¿Invalida todo el historico previo?', truth: 'no' },
+    { text: isEn ? 'One exception appears in data. Does it invalidate all previous history?' : 'Aparece una excepción en los datos. ¿Invalida todo el histórico previo?', truth: 'no' },
   ], [isEn]);
 
   const evaluate = (choice) => {
@@ -118,10 +118,10 @@ export const MetacognitiveCalibrationGame = ({ language = 'es' }) => {
         <div style={cardStyle}>
           <MissionHeader
             language={language}
-            title={isEn ? 'Complementary Game 1: Metacognitive Calibration' : 'Juego complementario 1: calibracion metacognitiva'}
+            title={isEn ? 'Complementary Game 1: Metacognitive Calibration' : 'Juego complementario 1: calibración metacognitiva'}
             subtitle={isEn ? 'Align confidence, evidence quality, and response certainty.' : 'Alinea confianza, calidad de evidencia y certeza de respuesta.'}
             progress={0}
-            rewardLabel={isEn ? 'Reward: Calibration Medal' : 'Recompensa: Medalla de calibracion'}
+            rewardLabel={isEn ? 'Reward: Calibration Medal' : 'Recompensa: Medalla de calibración'}
           />
           <button className="btn" onClick={() => { start(); setStarted(true); }}>{isEn ? 'Start' : 'Comenzar'}</button>
         </div>
@@ -140,7 +140,7 @@ export const MetacognitiveCalibrationGame = ({ language = 'es' }) => {
           rewardLabel={isEn ? `Streak ${answers.filter((a) => a.correct).length}` : `Racha ${answers.filter((a) => a.correct).length}`}
         />
         <div style={rowStyle}>
-          <button className="btn" onClick={() => evaluate('yes')}>{isEn ? 'Yes' : 'Si'}</button>
+          <button className="btn" onClick={() => evaluate('yes')}>{isEn ? 'Yes' : 'Sí'}</button>
           <button className="btn" onClick={() => evaluate('depends')}>{isEn ? 'Depends' : 'Depende'}</button>
           <button className="btn" onClick={() => evaluate('no')}>{isEn ? 'No' : 'No'}</button>
         </div>
@@ -159,9 +159,9 @@ export const OperationalPrioritizationGame = ({ language = 'es' }) => {
 
   const items = useMemo(() => [
     { expectedPriority: 'critical', title: isEn ? 'Client escalation with legal risk' : 'Escalamiento de cliente con riesgo legal' },
-    { expectedPriority: 'high', title: isEn ? 'Weekly planning brief with executive review' : 'Informe semanal con revision ejecutiva' },
-    { expectedPriority: 'low', title: isEn ? 'Internal style consistency update' : 'Actualizacion interna de estilo' },
-    { expectedPriority: 'critical', title: isEn ? 'Production incident impacting revenue' : 'Incidente de produccion con impacto en ingresos' },
+    { expectedPriority: 'high', title: isEn ? 'Weekly planning brief with executive review' : 'Informe semanal con revisión ejecutiva' },
+    { expectedPriority: 'low', title: isEn ? 'Internal style consistency update' : 'Actualización interna de estilo' },
+    { expectedPriority: 'critical', title: isEn ? 'Production incident impacting revenue' : 'Incidente de producción con impacto en ingresos' },
   ], [isEn]);
 
   const choose = (assignedPriority) => {
@@ -198,7 +198,7 @@ export const OperationalPrioritizationGame = ({ language = 'es' }) => {
       <div style={shellStyle}><div style={cardStyle}>
         <MissionHeader
           language={language}
-          title={isEn ? 'Complementary Game 2: Operational Prioritization' : 'Juego complementario 2: priorizacion operativa'}
+          title={isEn ? 'Complementary Game 2: Operational Prioritization' : 'Juego complementario 2: priorización operativa'}
           subtitle={isEn ? 'Prioritize tasks balancing urgency, blockers, and business impact.' : 'Prioriza tareas equilibrando urgencia, bloqueos e impacto de negocio.'}
           progress={0}
           rewardLabel={isEn ? 'Reward: Ops Commander' : 'Recompensa: Comandante ops'}
@@ -218,7 +218,7 @@ export const OperationalPrioritizationGame = ({ language = 'es' }) => {
         rewardLabel={isEn ? `Perfect picks ${tasks.filter((t) => t.expectedPriority === t.assignedPriority).length}` : `Aciertos ${tasks.filter((t) => t.expectedPriority === t.assignedPriority).length}`}
       />
       <div style={rowStyle}>
-        <button className="btn" onClick={() => choose('critical')}>{isEn ? 'Critical' : 'Critica'}</button>
+        <button className="btn" onClick={() => choose('critical')}>{isEn ? 'Critical' : 'Crítica'}</button>
         <button className="btn" onClick={() => choose('high')}>{isEn ? 'High' : 'Alta'}</button>
         <button className="btn" onClick={() => choose('medium')}>{isEn ? 'Medium' : 'Media'}</button>
         <button className="btn" onClick={() => choose('low')}>{isEn ? 'Low' : 'Baja'}</button>
@@ -268,7 +268,7 @@ export const LearningAgilityGame = ({ language = 'es' }) => {
         <MissionHeader
           language={language}
           title={isEn ? 'Complementary Game 3: Learning Agility' : 'Juego complementario 3: agilidad de aprendizaje'}
-          subtitle={isEn ? 'Adapt rapidly as governing rules mutate each round.' : 'Adaptate rapido cuando las reglas cambian en cada ronda.'}
+          subtitle={isEn ? 'Adapt rapidly as governing rules mutate each round.' : 'Adáptate rápido cuando las reglas cambian en cada ronda.'}
           progress={0}
           rewardLabel={isEn ? 'Reward: Agility Chain' : 'Recompensa: Cadena de agilidad'}
         />
@@ -287,9 +287,9 @@ export const LearningAgilityGame = ({ language = 'es' }) => {
         rewardLabel={isEn ? `Combo ${records.filter((r) => r.quality === 'excellent').length}` : `Combo ${records.filter((r) => r.quality === 'excellent').length}`}
       />
       <div style={rowStyle}>
-        <button className="btn" onClick={() => handleResult('excellent')}>{isEn ? 'Correct adaptation' : 'Adaptacion correcta'}</button>
-        <button className="btn" onClick={() => handleResult('good')}>{isEn ? 'Partial adaptation' : 'Adaptacion parcial'}</button>
-        <button className="btn" onClick={() => handleResult('weak')}>{isEn ? 'Slow adaptation' : 'Adaptacion lenta'}</button>
+        <button className="btn" onClick={() => handleResult('excellent')}>{isEn ? 'Correct adaptation' : 'Adaptación correcta'}</button>
+        <button className="btn" onClick={() => handleResult('good')}>{isEn ? 'Partial adaptation' : 'Adaptación parcial'}</button>
+        <button className="btn" onClick={() => handleResult('weak')}>{isEn ? 'Slow adaptation' : 'Adaptación lenta'}</button>
         <button className="btn" onClick={() => handleResult('wrong')}>{isEn ? 'Rule conflict' : 'Conflicto de regla'}</button>
       </div>
     </div></div>
@@ -307,7 +307,7 @@ export const SocialCoordinationGame = ({ language = 'es' }) => {
   const scenarios = [
     isEn ? 'Team A is blocked by missing requirement from Team B.' : 'Equipo A bloqueado por requisito faltante de Equipo B.',
     isEn ? 'Two teams disagree on delivery order.' : 'Dos equipos no coinciden en el orden de entrega.',
-    isEn ? 'A critical bug appears before release while support queue rises.' : 'Aparece un error critico antes de la entrega mientras sube la cola de soporte.',
+    isEn ? 'A critical bug appears before release while support queue rises.' : 'Aparece un error crítico antes de la entrega mientras sube la cola de soporte.',
     isEn ? 'Support team overloaded with urgent tickets and unclear responsibilities.' : 'Soporte sobrecargado con tickets urgentes y responsabilidades difusas.',
   ];
 
@@ -327,10 +327,10 @@ export const SocialCoordinationGame = ({ language = 'es' }) => {
       <div style={shellStyle}><div style={cardStyle}>
         <MissionHeader
           language={language}
-          title={isEn ? 'Complementary Game 4: Social Coordination' : 'Juego complementario 4: coordinacion social'}
-          subtitle={isEn ? 'Resolve multi-team friction with actionable alignment moves.' : 'Resuelve friccion multi-equipo con acciones concretas de alineacion.'}
+          title={isEn ? 'Complementary Game 4: Social Coordination' : 'Juego complementario 4: coordinación social'}
+          subtitle={isEn ? 'Resolve multi-team friction with actionable alignment moves.' : 'Resuelve fricción multi-equipo con acciones concretas de alineación.'}
           progress={0}
-          rewardLabel={isEn ? 'Reward: Coordination Crest' : 'Recompensa: Escudo de coordinacion'}
+          rewardLabel={isEn ? 'Reward: Coordination Crest' : 'Recompensa: Escudo de coordinación'}
         />
         <button className="btn" onClick={() => { start(); setStarted(true); }}>{isEn ? 'Start' : 'Comenzar'}</button>
       </div></div>
@@ -344,13 +344,13 @@ export const SocialCoordinationGame = ({ language = 'es' }) => {
         title={isEn ? `Scenario ${step + 1}/${scenarios.length}` : `Escenario ${step + 1}/${scenarios.length}`}
         subtitle={scenarios[step]}
         progress={((step + 1) / scenarios.length) * 100}
-        rewardLabel={isEn ? `Alignment points ${score}` : `Puntos de alineacion ${score}`}
+        rewardLabel={isEn ? `Alignment points ${score}` : `Puntos de alineación ${score}`}
       />
       <div style={rowStyle}>
         <button className="btn" onClick={() => choose('align')}>{isEn ? 'Align teams' : 'Alinear equipos'}</button>
         <button className="btn" onClick={() => choose('mediate')}>{isEn ? 'Mediate commitments' : 'Mediar compromisos'}</button>
-        <button className="btn" onClick={() => choose('partial')}>{isEn ? 'Local optimization' : 'Optimizacion local'}</button>
-        <button className="btn" onClick={() => choose('defer')}>{isEn ? 'Defer decision' : 'Diferir decision'}</button>
+        <button className="btn" onClick={() => choose('partial')}>{isEn ? 'Local optimization' : 'Optimización local'}</button>
+        <button className="btn" onClick={() => choose('defer')}>{isEn ? 'Defer decision' : 'Diferir decisión'}</button>
         <button className="btn" onClick={() => choose('fracture')}>{isEn ? 'Escalate conflict' : 'Escalar conflicto'}</button>
       </div>
     </div></div>
@@ -386,7 +386,7 @@ export const CognitiveResilienceGame = ({ language = 'es' }) => {
           title={isEn ? 'Complementary Game 5: Cognitive Resilience' : 'Juego complementario 5: resiliencia cognitiva'}
           subtitle={isEn ? 'Maintain decision quality through interruptions and workload spikes.' : 'Mantener calidad de decisiones ante interrupciones y picos de carga.'}
           progress={0}
-          rewardLabel={isEn ? 'Reward: Resilience Core' : 'Recompensa: Nucleo de resiliencia'}
+          rewardLabel={isEn ? 'Reward: Resilience Core' : 'Recompensa: Núcleo de resiliencia'}
         />
         <button className="btn" onClick={() => { start(); setStarted(true); }}>{isEn ? 'Start' : 'Comenzar'}</button>
       </div></div>
@@ -398,15 +398,15 @@ export const CognitiveResilienceGame = ({ language = 'es' }) => {
       <MissionHeader
         language={language}
         title={isEn ? `Wave ${wave}/5` : `Ola ${wave}/5`}
-        subtitle={wave % 2 === 0 ? (isEn ? 'Interruption profile: high + frequent' : 'Perfil de interrupcion: alta + frecuente') : (isEn ? 'Interruption profile: moderate + irregular' : 'Perfil de interrupcion: moderada + irregular')}
+        subtitle={wave % 2 === 0 ? (isEn ? 'Interruption profile: high + frequent' : 'Perfil de interrupción: alta + frecuente') : (isEn ? 'Interruption profile: moderate + irregular' : 'Perfil de interrupción: moderada + irregular')}
         progress={(wave / 5) * 100}
-        rewardLabel={isEn ? `Recovery points ${score}` : `Puntos de recuperacion ${score}`}
+        rewardLabel={isEn ? `Recovery points ${score}` : `Puntos de recuperación ${score}`}
       />
       <div style={rowStyle}>
-        <button className="btn" onClick={() => respond('stable')}>{isEn ? 'Maintain performance' : 'Mantener desempeno'}</button>
-        <button className="btn" onClick={() => respond('recover')}>{isEn ? 'Recover quickly' : 'Recuperar rapido'}</button>
-        <button className="btn" onClick={() => respond('partial')}>{isEn ? 'Partial drop' : 'Caida parcial'}</button>
-        <button className="btn" onClick={() => respond('drop')}>{isEn ? 'Performance drop' : 'Caida de desempeno'}</button>
+        <button className="btn" onClick={() => respond('stable')}>{isEn ? 'Maintain performance' : 'Mantener desempeño'}</button>
+        <button className="btn" onClick={() => respond('recover')}>{isEn ? 'Recover quickly' : 'Recuperar rápido'}</button>
+        <button className="btn" onClick={() => respond('partial')}>{isEn ? 'Partial drop' : 'Caída parcial'}</button>
+        <button className="btn" onClick={() => respond('drop')}>{isEn ? 'Performance drop' : 'Caída de desempeño'}</button>
       </div>
     </div></div>
   );
@@ -450,8 +450,8 @@ export const RiskUnderUncertaintyGame = ({ language = 'es' }) => {
     <div style={shellStyle}><div style={cardStyle}>
       <MissionHeader
         language={language}
-        title={isEn ? `Decision turn ${turn}/4` : `Turno de decision ${turn}/4`}
-        subtitle={isEn ? 'Projected upside 18%, downside 9%, and confidence band is widening.' : 'Upside proyectado 18%, downside 9%, y la banda de confianza se amplia.'}
+        title={isEn ? `Decision turn ${turn}/4` : `Turno de decisión ${turn}/4`}
+        subtitle={isEn ? 'Projected upside 18%, downside 9%, and confidence band is widening.' : 'Upside proyectado 18%, downside 9%, y la banda de confianza se amplía.'}
         progress={(turn / 4) * 100}
         rewardLabel={isEn ? `Risk points ${score}` : `Puntos de riesgo ${score}`}
       />
@@ -460,9 +460,8 @@ export const RiskUnderUncertaintyGame = ({ language = 'es' }) => {
         <button className="btn" onClick={() => choose('adaptive')}>{isEn ? 'Adaptive split' : 'Ajuste adaptativo'}</button>
         <button className="btn" onClick={() => choose('aggressive')}>{isEn ? 'Aggressive push' : 'Impulso agresivo'}</button>
         <button className="btn" onClick={() => choose('conservative')}>{isEn ? 'Conservative hold' : 'Mantener postura conservadora'}</button>
-        <button className="btn" onClick={() => choose('avoidant')}>{isEn ? 'Avoid committing' : 'Evitar decision'}</button>
+        <button className="btn" onClick={() => choose('avoidant')}>{isEn ? 'Avoid committing' : 'Evitar decisión'}</button>
       </div>
     </div></div>
   );
 };
-

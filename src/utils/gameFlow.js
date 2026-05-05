@@ -59,7 +59,7 @@ export const GAME_FLOW = [
   {
     id: 4,
     path: '/game/4',
-    nextPath: '/game/5',
+    nextPath: '/game/7',
     component: lazy(() => import('../games/BalloonGame')),
     telemetryId: 'game4',
     instruction: {
@@ -85,7 +85,7 @@ export const GAME_FLOW = [
   {
     id: 6,
     path: '/game/6',
-    nextPath: '/game/7',
+    nextPath: '/report',
     component: lazy(() => import('../games/GridFlowGame')),
     telemetryId: 'game6',
     instruction: {
@@ -98,7 +98,7 @@ export const GAME_FLOW = [
   {
     id: 7,
     path: '/game/7',
-    nextPath: '/game/8',
+    nextPath: '/game/6',
     component: lazy(() => import('../games/LaserPuzzleGame')),
     telemetryId: 'game7',
     instruction: {
@@ -190,4 +190,4 @@ export const GAME_FLOW = [
 
 // DEMO_GAME_IDS defines a short sequence of game ids used for the public demo
 // Choose a compact subset that results in ~4-5 minutes in demo mode
-export const DEMO_GAME_IDS = [4, 6, 7];
+export const DEMO_GAME_IDS = [4, 7, 6];

@@ -8,12 +8,12 @@ const getMessages = (language) => {
   return {
     title: isEn ? 'Engagement Pulse' : 'Pulso de Engagement',
     subtitle: isEn ? 'Mission-based flow' : 'Flujo por misiones',
-    progressLabel: isEn ? 'Assessment progress' : 'Progreso de bateria',
+    progressLabel: isEn ? 'Assessment progress' : 'Progreso de batería',
     focusLabel: isEn ? 'Focus streak' : 'Racha de enfoque',
     focusUnit: isEn ? 's' : 's',
     neutralGuard: isEn
       ? 'No extra score for rushing: prioritize consistent accuracy.'
-      : 'No hay puntaje extra por correr: prioriza precision consistente.',
+      : 'No hay puntaje extra por correr: prioriza precisión consistente.',
     dismiss: isEn ? 'Hide' : 'Ocultar',
     milestoneUnlocked: isEn ? 'Milestone unlocked' : 'Hito desbloqueado',
     missionTemplates: isEn
@@ -23,9 +23,9 @@ const getMessages = (language) => {
           'Stay focused until the next transition.'
         ]
       : [
-          'Completa este modulo con ritmo estable.',
-          'Mantiene un ritmo de decision estable por 20s.',
-          'Sosten el enfoque hasta la siguiente transicion.'
+          'Completa este módulo con ritmo estable.',
+          'Mantén un ritmo de decisión estable por 20s.',
+          'Sostén el enfoque hasta la siguiente transición.'
         ],
     badges: isEn
       ? ['Warmup', 'Flow', 'Momentum', 'Consistency']
@@ -155,4 +155,3 @@ const EngagementPulse = ({
 };
 
 export default EngagementPulse;
-

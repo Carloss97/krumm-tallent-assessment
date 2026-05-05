@@ -213,14 +213,14 @@ const OSPANGame = ({ isActive, onEndGame, isDemo, timeLimit, language = 'es' }) 
       <div className="ospan-container">
         <div className="game-instruction">
           <h2>{isEn ? 'Working Memory - OSPAN' : 'Memoria de Trabajo - OSPAN'}</h2>
-          <p>{isEn ? 'You will:' : 'Deberas:'}</p>
+          <p>{isEn ? 'You will:' : 'Deberás:'}</p>
           <ol>
-            <li>{isEn ? 'Answer ' : 'Responder '}<strong>{isEn ? 'True/False' : 'Verdadero/Falso'}</strong>{isEn ? ' to math operations' : ' a operaciones matematicas'}</li>
-            <li>{isEn ? 'Then ' : 'Despues, '}<strong>{isEn ? 'memorize a letter' : 'memorizar una letra'}</strong></li>
+            <li>{isEn ? 'Answer ' : 'Responder '}<strong>{isEn ? 'True/False' : 'Verdadero/Falso'}</strong>{isEn ? ' to math operations' : ' a operaciones matemáticas'}</li>
+            <li>{isEn ? 'Then ' : 'Después, '}<strong>{isEn ? 'memorize a letter' : 'memorizar una letra'}</strong></li>
             <li>{isEn ? 'The cycle gains variety as sets increase' : 'El ciclo gana variedad conforme suben los sets'}</li>
             <li>{isEn ? 'Recall letters in order at each set end' : 'Recuerda letras en orden al final de cada set'}</li>
           </ol>
-          <p><strong>{isEn ? 'Goal:' : 'Objetivo:'}</strong> {isEn ? 'Stable precision with adaptive rhythm.' : 'Precision estable con ritmo adaptativo.'}</p>
+          <p><strong>{isEn ? 'Goal:' : 'Objetivo:'}</strong> {isEn ? 'Stable precision with adaptive rhythm.' : 'Precisión estable con ritmo adaptativo.'}</p>
           <button onClick={startFirstTrial} className="btn-start">{isEn ? 'Start' : 'Comenzar'}</button>
         </div>
       </div>
@@ -239,7 +239,7 @@ const OSPANGame = ({ isActive, onEndGame, isDemo, timeLimit, language = 'es' }) 
             <p className="operation-display">{operation}</p>
             <div className="operation-buttons">
               <button onClick={() => handleOperationResponse('true')} className="btn btn-true">{isEn ? 'True' : 'Verdadero'}</button>
-              <button onClick={() => handleOperationResponse('false')} className="btn btn-false">{isEn ? 'False' : 'Falso'}</button>
+              <button onClick={() => handleOperationResponse('false')} className="btn btn-false">{isEn ? 'Falso' : 'Falso'}</button>
             </div>
           </div>
 
@@ -291,7 +291,7 @@ const OSPANGame = ({ isActive, onEndGame, isDemo, timeLimit, language = 'es' }) 
           </div>
           <p className="recalled-sequence">{isEn ? 'Recalled' : 'Recordadas'}: {recallSequence.join(' ')}</p>
           <button onClick={() => handleRecallResponse(recallSequence)} className="btn btn-submit">{isEn ? 'Confirm' : 'Confirmar'}</button>
-          <button onClick={() => setRecallSequence(recallSequence.slice(0, -1))} className="btn btn-delete">{isEn ? 'Delete last' : 'Borrar ultima'}</button>
+          <button onClick={() => setRecallSequence(recallSequence.slice(0, -1))} className="btn btn-delete">{isEn ? 'Delete last' : 'Borrar última'}</button>
         </div>
       </div>
     );

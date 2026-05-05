@@ -1,556 +1,290 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
+import { 
+  BarChart3, 
+  Brain, 
+  ChevronRight, 
+  Clock, 
+  Database, 
+  Eye, 
+  Fingerprint, 
+  Globe, 
+  Layers, 
+  LineChart, 
+  Lock, 
+  ShieldCheck, 
+  Target, 
+  TrendingUp, 
+  Zap 
+} from 'lucide-react';
 import { useTelemetry } from '../TelemetryContext';
-import { authenticateParticipant } from '../services/backendService';
-import { GAME_FLOW } from '../utils/gameFlow';
+import { useLanguage } from '../context/LanguageContext';
 import logo from '../assets/logo.jpg';
 import './LandingPageV2.css';
 
-const features = [
-  { icon: '🧠', title: 'Ciencia Cognitiva', description: 'Basado en investigación psicométrica validada internacionalmente' },
-  { icon: '📊', title: 'Análisis Profundo', description: 'Telemetría conductual en tiempo real con scoring automático' },
-  { icon: '🔒', title: 'Seguridad Total', description: 'Datos encriptados E2E, GDPR/CCPA compliant' },
-  { icon: '⚡', title: 'Tecnología de Punta', description: 'Edge computing, inteligencia artificial integrada' },
-];
-
 const assessmentTracks = [
   {
-    id: 1,
-    icon: '🧠',
-    title: 'Memoria de Trabajo',
-    description: 'OSPAN y N-Back',
-    detail: 'Explora tu capacidad para procesar y mantener información simultáneamente',
-    color: '#667eea',
-    colorRgb: '102, 126, 234'
+    icon: Brain,
+    title: 'Memoria y cognición',
+    detail: 'Evaluamos retención activa y procesamiento de información bajo carga de trabajo.',
+    color: '#6366f1'
   },
   {
-    id: 2,
-    icon: '🛑',
-    title: 'Control Inhibitorio',
-    description: 'Go/No-Go y Stop-Signal',
-    detail: 'Descubre tu precisión bajo presión y tu manera de gestionar impulsos',
-    color: '#764ba2',
-    colorRgb: '118, 75, 162'
+    icon: Eye,
+    title: 'Atención y control',
+    detail: 'Descubre tu precisión bajo presión y tu manera de gestionar impulsos.',
+    color: '#ec4899'
   },
   {
-    id: 3,
-    icon: '🔄',
-    title: 'Flexibilidad Cognitiva',
-    description: 'Task Switching y Wisconsin',
-    detail: 'Revela cómo navegas entre cambios de contexto y situaciones inesperadas',
-    color: '#f093fb',
-    colorRgb: '240, 147, 251'
+    icon: Target,
+    title: 'Adaptabilidad',
+    detail: 'Medimos qué tan rápido ajustas tu estrategia ante cambios en las reglas del juego.',
+    color: '#10b981'
   },
   {
-    id: 4,
-    icon: '👁️',
-    title: 'Atención Sostenida',
-    description: 'CPT y Vigilância',
-    detail: 'Conoce tu energía atencional, consistencia y resistencia a la fatiga',
-    color: '#4facfe',
-    colorRgb: '79, 172, 254'
-  },
+    icon: Zap,
+    title: 'Resiliencia operativa',
+    detail: 'Conoce tu energía atencional, consistencia y resistencia a la fatiga.',
+    color: '#f59e0b'
+  }
 ];
 
-const processSteps = [
-  {
-    number: '01',
-    title: 'Acceso Seguro',
-    description: 'Ingresa con tus credenciales. Tu sesión se encripta en tiempo real.'
-  },
-  {
-    number: '02',
-    title: 'Batería Cognitiva',
-    description: '7 juegos interactivos que miden core competencies en ~20 minutos.'
-  },
-  {
-    number: '03',
-    title: 'Análisis & Reporte',
-    description: 'Resultados instantáneos con benchmark sector y recomendaciones personalizadas.'
-  },
+const stats = [
+  { label: 'Pruebas validadas', value: '14' },
+  { label: 'Puntos de datos/seg', value: '250+' },
+  { label: 'Precisión de IA', value: '94%' }
 ];
 
-const useCases = [
-  { icon: '🎯', title: 'Selección Técnica', text: 'Identifica candidatos con máximo potencial cognitivo' },
-  { icon: '📈', title: 'Desarrollo Profesional', text: 'Mapea patrones y diseña programas personalizados' },
-  { icon: '👥', title: 'Movilidad Interna', text: 'Evaluación objetiva para promociones y rotaciones' },
-  { icon: '📊', title: 'Benchmarking', text: 'Compara perfiles y cohesiona estrategia de talento' },
-];
-
-const LandingPage = () => {
+const LandingPageV2 = () => {
   const navigate = useNavigate();
+  const { language, setLanguage } = useLanguage();
   const { setIsDemo, setParticipantProfile } = useTelemetry();
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const [authError, setAuthError] = useState('');
-  const [formData, setFormData] = useState({
-    fullName: '',
-    participantId: '',
-    email: '',
-    accessCode: ''
-  });
-  const [showForm, setShowForm] = useState(false);
-  const isDev = (typeof import.meta !== 'undefined' && import.meta.env?.DEV) === true;
+  const [scrolled, setScrolled] = useState(false);
 
-  const ensureQuickAccessProfile = () => {
+  useEffect(() => {
+    const handleScroll = () => setScrolled(window.scrollY > 20);
+    window.addEventListener('scroll', handleScroll);
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
+
+  const handleQuickStart = () => {
     setIsDemo(true);
     setParticipantProfile({
-      fullName: 'Dev Quick Access',
-      participantId: `DEV-${Date.now()}`,
-      email: 'dev@krumm.local',
+      fullName: 'Usuario Demo',
+      participantId: 'DEMO-V2',
+      email: 'demo@krumm.cl',
       authenticatedAt: new Date().toISOString(),
-      participantToken: null,
-      source: 'dev_quick_access'
-    });
-  };
-
-  const handleQuickGoToGame = (path) => {
-    ensureQuickAccessProfile();
-    navigate(path);
-  };
-
-  const handleQuickGoToReport = () => {
-    ensureQuickAccessProfile();
-    navigate('/report?dummy=true');
-  };
-
-  const handleChange = (event) => {
-    const { name, value } = event.target;
-    setFormData((prev) => ({
-      ...prev,
-      [name]: value
-    }));
-  };
-
-  const handleStartAssessment = (event) => {
-    event.preventDefault();
-
-    const authenticate = async () => {
-      setIsSubmitting(true);
-      setAuthError('');
-
-      try {
-        const authRes = await authenticateParticipant({
-          fullName: formData.fullName.trim(),
-          participantId: formData.participantId.trim(),
-          email: formData.email.trim(),
-          accessCode: formData.accessCode.trim()
-        });
-
-        setIsDemo(false);
-        setParticipantProfile({
-          fullName: authRes.participant.fullName,
-          participantId: authRes.participant.participantId,
-          email: authRes.participant.email,
-          authenticatedAt: authRes.authenticatedAt,
-          participantToken: authRes.participantToken,
-          source: 'landing_credentials'
-        });
-        navigate('/game/1');
-      } catch (error) {
-        setAuthError(error.message || 'No fue posible validar tus credenciales. Intenta nuevamente.');
-      } finally {
-        setIsSubmitting(false);
-      }
-    };
-
-    authenticate();
-  };
-
-  const handleStartDemo = () => {
-    setAuthError('');
-    setIsDemo(true);
-    setParticipantProfile({
-      fullName: 'Demo User',
-      participantId: 'DEMO-LOCAL',
-      email: '',
-      accessCode: '',
-      authenticatedAt: new Date().toISOString(),
-      source: 'demo'
-    });
-    navigate('/game/1');
-  };
-
-  const handleContinueLocal = () => {
-    setIsDemo(false);
-    setParticipantProfile({
-      fullName: formData.fullName.trim() || 'Local User',
-      participantId: formData.participantId.trim() || `LOCAL-${Date.now()}`,
-      email: formData.email.trim(),
-      authenticatedAt: new Date().toISOString(),
-      participantToken: null,
-      source: 'local_offline'
+      source: 'landing_v2_quick'
     });
     navigate('/game/1');
   };
 
   return (
-    <div className="landing-v2">
+    <div className="v2-landing">
       {/* Navigation */}
-      <nav className="nav-header">
-        <div className="nav-container">
-          <div className="nav-logo" aria-label="Marca Krumm">
-            <img src={logo} alt="Krumm - Tech for talent assessment" className="logo-img" />
-          </div>
-          <div className="nav-actions">
-            <button className="nav-btn-portal" onClick={() => navigate('/recruiter/login')}>
-              🔑 Portal recruiter
-            </button>
+      <nav className={`v2-nav ${scrolled ? 'scrolled' : ''}`}>
+        <div className="v2-container">
+          <div className="v2-nav-inner">
+            <div className="v2-logo">
+              <img src={logo} alt="Krumm" />
+              <span>KRUMM</span>
+            </div>
+            
+            <div className="v2-nav-actions">
+              <div className="v2-lang-toggle">
+                <button 
+                  className={language === 'es' ? 'active' : ''} 
+                  onClick={() => setLanguage('es')}
+                >ES</button>
+                <button 
+                  className={language === 'en' ? 'active' : ''} 
+                  onClick={() => setLanguage('en')}
+                >EN</button>
+              </div>
+              <button className="v2-btn-login" onClick={() => navigate('/postulantes')}>
+                {language === 'es' ? 'Acceso Candidatos' : 'Candidate Access'}
+              </button>
+            </div>
           </div>
         </div>
       </nav>
 
       {/* Hero Section */}
-      <section className="hero">
-        <div className="hero-orbs" aria-hidden="true">
-          <span className="hero-orb hero-orb--1" />
-          <span className="hero-orb hero-orb--2" />
-          <span className="hero-orb hero-orb--3" />
-          <span className="hero-orb hero-orb--4" />
-        </div>
-        <div className="hero-container">
-          <motion.div
-            className="hero-content"
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.7 }}
-          >
-            <div className="hero-badge">🚀 La plataforma de evaluación cognitiva para HR moderna</div>
-            <h1 className="hero-title">
-              Decisiones de talento basadas en <span className="highlight">evidencia científica</span>
-            </h1>
-            <p className="hero-subtitle">
-              Krumm combina neurocognición, UX moderna y análisis avanzado para medir capacidades reales.
-              Selecciona y desarrolla con certeza.
-            </p>
-
-            <div className="hero-cta">
-              <button className="btn-primary btn-hero-cta" onClick={() => setShowForm(true)}>
-                Ingresar al test <span className="btn-arrow">→</span>
-              </button>
-              <button className="btn-secondary btn-hero-cta" onClick={handleStartDemo}>
-                ✨ Ver demostración
-              </button>
-            </div>
-
-            <div className="hero-stats">
-              <div className="stat">
-                <span className="stat-value">98%</span>
-                <span className="stat-label">Precisión de predictores</span>
-              </div>
-              <div className="stat">
-                <span className="stat-value">14+</span>
-                <span className="stat-label">Pruebas cientificamente validadas</span>
-              </div>
-              <div className="stat">
-                <span className="stat-value">360°</span>
-                <span className="stat-label">Telemetría conductual</span>
-              </div>
-            </div>
-          </motion.div>
-
-          <motion.div
-            className="hero-visual"
-            initial={{ opacity: 0, scale: 0.95 }}
-            animate={{ opacity: 1, scale: 1 }}
-            transition={{ duration: 0.7, delay: 0.2 }}
-          >
-            <div className="visual-card gradient-1">
-              <div className="card-icon">🧠</div>
-              <div className="card-text">Memoria</div>
-            </div>
-            <div className="visual-card gradient-2">
-              <div className="card-icon">🛑</div>
-              <div className="card-text">Control</div>
-            </div>
-            <div className="visual-card gradient-3">
-              <div className="card-icon">🔄</div>
-              <div className="card-text">Flexibilidad</div>
-            </div>
-          </motion.div>
-        </div>
-      </section>
-
-      {/* Form Section (Floating) */}
-      {showForm && (
-        <motion.section
-          className="form-overlay"
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          exit={{ opacity: 0 }}
-        >
-          <motion.div
-            className="form-modal"
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-          >
-            <button className="close-btn" onClick={() => setShowForm(false)}>✕</button>
-            <h2>Accede a tu evaluación</h2>
-            <p className="form-subtitle">Completa el formulario para iniciar tu batería cognitiva</p>
-
-            <form className="assessment-form" onSubmit={handleStartAssessment}>
-              <div className="form-group">
-                <label>Nombre completo</label>
-                <input
-                  type="text"
-                  name="fullName"
-                  placeholder="Tu nombre"
-                  value={formData.fullName}
-                  onChange={handleChange}
-                />
-              </div>
-
-              <div className="form-group">
-                <label>ID de participante *</label>
-                <input
-                  type="text"
-                  name="participantId"
-                  placeholder="KRUMM-2026-001"
-                  value={formData.participantId}
-                  onChange={handleChange}
-                  required
-                />
-              </div>
-
-              <div className="form-group">
-                <label>Correo electrónico *</label>
-                <input
-                  type="email"
-                  name="email"
-                  placeholder="tu@email.com"
-                  value={formData.email}
-                  onChange={handleChange}
-                  required
-                />
-              </div>
-
-              <div className="form-group">
-                <label>Código de acceso *</label>
-                <input
-                  type="password"
-                  name="accessCode"
-                  placeholder="••••••••"
-                  value={formData.accessCode}
-                  onChange={handleChange}
-                  required
-                  minLength={4}
-                />
-              </div>
-
-              {authError && <div className="form-error">{authError}</div>}
-
-              <button type="submit" className="btn-primary full-width" disabled={isSubmitting}>
-                {isSubmitting ? 'Validando...' : 'Comenzar evaluación'}
-              </button>
-
-              <div className="form-divider">O continúa sin validación</div>
-
-              <button
-                type="button"
-                className="btn-secondary full-width"
-                onClick={handleContinueLocal}
-              >
-                Continuar localmente
-              </button>
-            </form>
-          </motion.div>
-        </motion.section>
-      )}
-
-      {/* Features Section */}
-      <section className="features">
-        <div className="features-container">
-          <motion.div
-            className="section-header"
-            initial={{ opacity: 0 }}
-            whileInView={{ opacity: 1 }}
-            transition={{ duration: 0.6 }}
-            viewport={{ once: true }}
-          >
-            <h2>¿Por qué Krumm?</h2>
-            <p>La primera plataforma de evaluación cognitiva diseñada para HR moderno</p>
-          </motion.div>
-
-          <div className="features-grid">
-            {features.map((feature, idx) => (
-              <motion.div
-                key={idx}
-                className="feature-card"
-                initial={{ opacity: 0, y: 20 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.6, delay: idx * 0.1 }}
-                viewport={{ once: true }}
-              >
-                <div className="feature-icon">{feature.icon}</div>
-                <h3>{feature.title}</h3>
-                <p>{feature.description}</p>
-              </motion.div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {isDev && (
-        <section className="dev-shortcuts" aria-label="Accesos de desarrollo">
-          <div className="dev-shortcuts-container">
-            <div className="section-header">
-              <h2>Accesos rápidos de desarrollo</h2>
-              <p>Entrar directo a un juego específico o al reporte final.</p>
-            </div>
-            <div className="dev-shortcuts-grid">
-              {GAME_FLOW.map((game) => (
-                <button
-                  key={game.id}
-                  className="dev-shortcut-button"
-                  onClick={() => handleQuickGoToGame(game.path)}
-                >
-                  {`Ir a Juego ${game.id}`}
+      <section className="v2-hero">
+        <div className="v2-container">
+          <div className="v2-hero-content">
+            <motion.div 
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.6 }}
+            >
+              <span className="v2-badge">
+                <Fingerprint size={14} />
+                <span>Next-Gen Talent Assessment</span>
+              </span>
+              <h1>
+                Decisiones de talento basadas en <span className="highlight">evidencia científica</span>
+              </h1>
+              <p>
+                Krumm transforma la psicometría tradicional en una experiencia gamificada de alta fidelidad. 
+                Selecciona y desarrolla con certeza.
+              </p>
+              
+              <div className="v2-hero-btns">
+                <button className="v2-btn-primary" onClick={handleQuickStart}>
+                  {language === 'es' ? 'Iniciar Evaluación' : 'Start Assessment'}
+                  <ChevronRight size={18} />
                 </button>
-              ))}
-              <button className="dev-shortcut-button dev-shortcut-report" onClick={handleQuickGoToReport}>
-                Ir al reporte final
-              </button>
-            </div>
-          </div>
-        </section>
-      )}
+                <button className="v2-btn-secondary" onClick={() => navigate('/pitch')}>
+                  {language === 'es' ? 'Ver Propuesta de Valor' : 'View Value Proposition'}
+                </button>
+              </div>
+            </motion.div>
 
-      {/* Assessment Tracks Section */}
-      <section className="tracks">
-        <div className="tracks-container">
-          <motion.div
-            className="section-header"
-            initial={{ opacity: 0 }}
-            whileInView={{ opacity: 1 }}
-            transition={{ duration: 0.6 }}
-            viewport={{ once: true }}
-          >
-            <h2>Tu perfil cognitivo único</h2>
-            <p>Cada dimensión revela una faceta de tu manera de pensar</p>
-          </motion.div>
-
-          <div className="tracks-grid">
-            {assessmentTracks.map((track, idx) => (
-              <motion.div
-                key={track.id}
-                className="bubble-track-card"
-                style={{ '--track-color': track.color, '--track-color-rgb': track.colorRgb }}
-                initial={{ opacity: 0, scale: 0.92 }}
-                whileInView={{ opacity: 1, scale: 1 }}
-                transition={{ duration: 0.5, delay: idx * 0.12 }}
-                viewport={{ once: true }}
-              >
-                <div className="bubble-icon-badge">{track.icon}</div>
-                <h3 className="bubble-title">{track.title}</h3>
-                <p className="bubble-subtitle">{track.description}</p>
-                <p className="bubble-detail">{track.detail}</p>
-              </motion.div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* Process Section */}
-      <section className="process">
-        <div className="process-container">
-          <motion.div
-            className="section-header"
-            initial={{ opacity: 0 }}
-            whileInView={{ opacity: 1 }}
-            transition={{ duration: 0.6 }}
-            viewport={{ once: true }}
-          >
-            <h2>Cómo funciona</h2>
-            <p>Tres pasos hacia decisiones de talento más inteligentes</p>
-          </motion.div>
-
-          <div className="process-timeline">
-            {processSteps.map((step, idx) => (
-              <motion.div
-                key={idx}
-                className="process-step"
-                initial={{ opacity: 0, x: idx % 2 === 0 ? -20 : 20 }}
-                whileInView={{ opacity: 1, x: 0 }}
-                transition={{ duration: 0.6, delay: idx * 0.15 }}
-                viewport={{ once: true }}
-              >
-                <div className="step-number">{step.number}</div>
-                <div className="step-content">
-                  <h3>{step.title}</h3>
-                  <p>{step.description}</p>
+            <motion.div 
+              className="v2-hero-stats"
+              initial={{ opacity: 0, x: 20 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ duration: 0.6, delay: 0.2 }}
+            >
+              {stats.map((stat, i) => (
+                <div key={i} className="v2-stat-card">
+                  <strong>{stat.value}</strong>
+                  <span>{stat.label}</span>
                 </div>
-                {idx < processSteps.length - 1 && <div className="step-arrow">→</div>}
-              </motion.div>
-            ))}
+              ))}
+            </motion.div>
           </div>
         </div>
+        
+        {/* Abstract shapes */}
+        <div className="v2-shape v2-shape-1" />
+        <div className="v2-shape v2-shape-2" />
       </section>
 
-      {/* Use Cases Section */}
-      <section className="use-cases">
-        <div className="use-cases-container">
-          <motion.div
-            className="section-header"
-            initial={{ opacity: 0 }}
-            whileInView={{ opacity: 1 }}
-            transition={{ duration: 0.6 }}
-            viewport={{ once: true }}
-          >
-            <h2>Casos de uso</h2>
-            <p>Soluciones para diferentes momentos en el ciclo de vida del talento</p>
-          </motion.div>
+      {/* Features Grid */}
+      <section className="v2-features">
+        <div className="v2-container">
+          <div className="v2-section-header">
+            <h2>Lo que evaluamos</h2>
+            <p>Batería de misiones diseñadas para activar constructos cognitivos específicos.</p>
+          </div>
 
-          <div className="use-cases-grid">
-            {useCases.map((useCase, idx) => (
-              <motion.div
-                key={idx}
-                className="use-case-card"
-                initial={{ opacity: 0, y: 20 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.6, delay: idx * 0.1 }}
-                viewport={{ once: true }}
+          <div className="v2-tracks-grid">
+            {assessmentTracks.map((track, i) => (
+              <motion.div 
+                key={i} 
+                className="v2-track-card"
+                whileHover={{ y: -5 }}
+                transition={{ duration: 0.2 }}
               >
-                <div className="use-case-icon">{useCase.icon}</div>
-                <h3>{useCase.title}</h3>
-                <p>{useCase.text}</p>
+                <div className="v2-track-icon" style={{ backgroundColor: `${track.color}15`, color: track.color }}>
+                  <track.icon size={24} />
+                </div>
+                <h3>{track.title}</h3>
+                <p>{track.detail}</p>
               </motion.div>
             ))}
           </div>
         </div>
       </section>
 
-      {/* CTA Section */}
-      <section className="cta">
-        <motion.div
-          className="cta-container"
-          initial={{ opacity: 0, y: 20 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.6 }}
-          viewport={{ once: true }}
-        >
-          <h2>¿Listo para mejorar tu proceso de selección?</h2>
-          <p>Si eres recruiter, entra al panel para ver analítica consolidada de candidatos.</p>
-          <button className="btn-primary btn-lg" onClick={() => navigate('/recruiter/login')}>
-            Ir a login recruiter
-          </button>
-        </motion.div>
-      </section>
-
-      {/* Footer */}
-      <footer className="footer">
-        <div className="footer-container">
-          <div className="footer-content">
-            <div>
-              <h4>Krumm</h4>
-              <p>Evaluación cognitiva moderna para HR</p>
+      {/* Data Section */}
+      <section className="v2-data">
+        <div className="v2-container">
+          <div className="v2-data-split">
+            <div className="v2-data-copy">
+              <h2>Telemetría en tiempo real</h2>
+              <p>
+                No solo miramos el resultado final. Capturamos el <strong>recorrido conductual</strong>: 
+                tiempos de reacción, vacilaciones, patrones de búsqueda y precisión rítmica.
+              </p>
+              
+              <ul className="v2-data-list">
+                <li>
+                  <ShieldCheck size={20} />
+                  <div>
+                    <strong>Privacidad Edge-AI</strong>
+                    <span>Procesamiento local de señales sin extraer datos sensibles.</span>
+                  </div>
+                </li>
+                <li>
+                  <Database size={20} />
+                  <div>
+                    <strong>Evidencia Empírica</strong>
+                    <span>Datos objetivos para eliminar sesgos en la selección.</span>
+                  </div>
+                </li>
+                <li>
+                  <LineChart size={20} />
+                  <div>
+                    <strong>Reportes Ejecutivos</strong>
+                    <span>Sintetizamos miles de puntos de datos en señales claras para decidir.</span>
+                  </div>
+                </li>
+              </ul>
             </div>
-            <div>
-              <p><strong>Seguridad:</strong> Encriptación E2E, GDPR/CCPA compliant</p>
-              <p><strong>Ciencia:</strong> Basado en investigación psicométrica validada</p>
+            
+            <div className="v2-data-visual">
+              <div className="v2-radar-mockup">
+                <ResponsiveRadarMockup />
+              </div>
             </div>
           </div>
-          <div className="footer-bottom">
-            <p>&copy; 2026 Krumm. Decisiones de talento con evidencia.</p>
+        </div>
+      </section>
+
+      {/* Steps */}
+      <section className="v2-steps">
+        <div className="v2-container">
+          <div className="v2-section-header">
+            <h2>El flujo Krumm</h2>
+            <p>Tres pasos hacia decisiones de talento más inteligentes</p>
+          </div>
+
+          <div className="v2-steps-row">
+            <div className="v2-step">
+              <div className="v2-step-num">01</div>
+              <h4>Acceso</h4>
+              <span>Validación de identidad y consentimiento de datos.</span>
+            </div>
+            <div className="v2-step">
+              <div className="v2-step-num">02</div>
+              <h4>Evaluación</h4>
+              <span>14 retos gamificados con monitoreo de señales.</span>
+            </div>
+            <div className="v2-step">
+              <div className="v2-step-num">03</div>
+              <h4>Reporte</h4>
+              <span>Análisis de IA con recomendaciones de puesto y desarrollo.</span>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* CTA Footer */}
+      <footer className="v2-footer">
+        <div className="v2-container">
+          <div className="v2-footer-inner">
+            <h2>¿Listo para medir el potencial real?</h2>
+            <p>Únete a las empresas que ya deciden con evidencia cognitiva.</p>
+            <button className="v2-btn-white" onClick={() => window.location.href = 'mailto:contacto@krumm.cl'}>
+              Contactar a un experto
+            </button>
+            
+            <div className="v2-footer-bottom">
+              <div className="v2-logo">
+                <img src={logo} alt="Krumm" />
+                <span>KRUMM</span>
+              </div>
+              <p>&copy; 2026 Krumm. Decisiones de talento con evidencia.</p>
+              <div className="v2-footer-links">
+                <a href="#">Privacidad</a>
+                <a href="#">Términos</a>
+                <a href="#">LinkedIn</a>
+              </div>
+            </div>
           </div>
         </div>
       </footer>
@@ -558,4 +292,21 @@ const LandingPage = () => {
   );
 };
 
-export default LandingPage;
+const ResponsiveRadarMockup = () => (
+  <div className="radar-mockup">
+    <div className="radar-circle radar-circle-1" />
+    <div className="radar-circle radar-circle-2" />
+    <div className="radar-circle radar-circle-3" />
+    <div className="radar-line radar-line-1" />
+    <div className="radar-line radar-line-2" />
+    <div className="radar-line radar-line-3" />
+    <div className="radar-polygon" />
+    <div className="radar-dot" style={{ top: '20%', left: '50%' }} />
+    <div className="radar-dot" style={{ top: '40%', left: '80%' }} />
+    <div className="radar-dot" style={{ top: '75%', left: '70%' }} />
+    <div className="radar-dot" style={{ top: '80%', left: '30%' }} />
+    <div className="radar-dot" style={{ top: '45%', left: '15%' }} />
+  </div>
+);
+
+export default LandingPageV2;

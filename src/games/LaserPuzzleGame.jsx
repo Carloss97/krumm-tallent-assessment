@@ -6,7 +6,7 @@ import Confetti from '../components/Confetti';
 import { useGameTimer } from '../hooks/useGameTimer';
 import { useLanguage } from '../context/LanguageContext';
 
-const CELL = 44; // Slightly larger for better tap targets
+const CELL = 56; // Larger board for demo
 
 const SHIP_ARROW = { right: '→', left: '←', up: '↑', down: '↓' };
 const DEFLECT_NE = { right: 'up', left: 'down', up: 'right', down: 'left' };
@@ -26,7 +26,7 @@ const DEMO_BRIEFINGS = {
     },
     {
       title: 'Fase III: Puentes Cuánticos',
-      body: 'Obstrucciones detectadas en el Sector Gamma. Los portales (P) permiten trasladar el haz de luz a través de vacíos espaciales. Planifica el salto para superar los bloqueos de roca.'
+      body: 'Obstrucciones detectadas en el Sector Gamma. Los portales (P) permiten trasladar el haz de luz a través de vacíos espaciales. Planifica el salto para superar los bloqueos.'
     }
   ],
   en: [
@@ -40,7 +40,7 @@ const DEMO_BRIEFINGS = {
     },
     {
       title: 'Phase III: Quantum Bridges',
-      body: 'Obstructions detected in Sector Gamma. Portals (P) allow transferring the light beam through spatial voids. Plan the jump to overcome rock blockages.'
+      body: 'Obstructions detected in Sector Gamma. Portals (P) allow transferring the light beam through spatial voids. Plan the jump to overcome blockages.'
     }
   ]
 };
@@ -56,10 +56,10 @@ const DEMO_LEVELS = [
     cols: 8,
     rows: 6,
     par: 2,
-    timeLimit: 40,
+    timeLimit: 45,
     hint: {
-      es: 'Refleja la luz hacia arriba.',
-      en: 'Reflect the light upwards.'
+      es: 'Refleja la luz hacia arriba para conectar la antena.',
+      en: 'Reflect the light upwards to connect the antenna.'
     },
     cells: [
       { x: 0, y: 4, type: 'ship', dir: 'right' },
@@ -74,10 +74,10 @@ const DEMO_LEVELS = [
     cols: 8,
     rows: 6,
     par: 3,
-    timeLimit: 50,
+    timeLimit: 60,
     hint: {
-      es: 'Divide el haz para llegar a ambos lados.',
-      en: 'Split the beam to reach both sides.'
+      es: 'Divide el haz para cubrir ambos receptores de señal.',
+      en: 'Split the beam to cover both signal receivers.'
     },
     cells: [
       { x: 0, y: 3, type: 'ship', dir: 'right' },
@@ -94,34 +94,29 @@ const DEMO_LEVELS = [
     cols: 8,
     rows: 8,
     par: 4,
-    timeLimit: 60,
+    timeLimit: 75,
     hint: {
-      es: 'Usa el portal para atravesar el muro.',
-      en: 'Use the portal to cross the wall.'
+      es: 'Usa el portal cuántico para atravesar la obstrucción.',
+      en: 'Use the quantum portal to cross the obstruction.'
     },
     cells: [
-      { x: 0, y: 1, type: 'ship', dir: 'right' },
-      { x: 7, y: 7, type: 'antenna' },
-      { x: 3, y: 1, type: 'portal_blue', portalId: 1 },
-      { x: 3, y: 5, type: 'portal_blue', portalId: 2 },
-      { x: 1, y: 4, type: 'rock' },
-      { x: 2, y: 4, type: 'rock' },
-      { x: 3, y: 4, type: 'rock' },
-      { x: 4, y: 4, type: 'rock' },
-      { x: 5, y: 4, type: 'rock' },
-      { x: 5, y: 1, type: 'reflector_ne', movable: true },
-      { x: 5, y: 7, type: 'reflector_ne', movable: true },
-      { x: 2, y: 7, type: 'reflector_nw', movable: true },
-      { x: 2, y: 2, type: 'reflector_nw', movable: true },
+      { x: 0, y: 2, type: 'ship', dir: 'right' },
+      { x: 3, y: 2, type: 'portal_blue', targetPortalId: 'p1' },
+      { x: 5, y: 6, type: 'portal_blue', portalId: 'p1' },
+      { x: 7, y: 6, type: 'antenna' },
+      { x: 4, y: 0, type: 'wall' }, { x: 4, y: 1, type: 'wall' }, { x: 4, y: 2, type: 'wall' },
+      { x: 4, y: 3, type: 'wall' }, { x: 4, y: 4, type: 'wall' },
+      { x: 1, y: 6, type: 'reflector_ne', movable: true },
+      { x: 6, y: 3, type: 'reflector_nw', movable: true },
     ],
     quiz: [
-      {
-        q: '¿Qué componente permite saltar obstáculos?',
-        opts: ['Reflector', 'Bifurcador', 'Portal', 'Roca'],
-        correct: 2
-      },
+      { 
+        q: '¿Qué componente permite dividir un haz en dos trayectorias?', 
+        opts: ['Reflector', 'Bifurcador', 'Portal', 'Antena'], 
+        correct: 1 
+      }
     ],
-  },
+  }
 ];
 
 function traceBeam(grid, cols, rows) {
@@ -148,7 +143,12 @@ function traceBeam(grid, cols, rows) {
     const cell = grid[cellKey];
     const type = cell?.type;
 
-    if (!type || type === 'empty') { beamCells.add(cellKey); queue.push({ x:nx, y:ny, dir }); }
+    if (!type || type === 'empty' || type === 'wall') { 
+      if (type !== 'wall') {
+        beamCells.add(cellKey); 
+        queue.push({ x:nx, y:ny, dir });
+      }
+    }
     else if (type === 'reflector_ne') { beamCells.add(cellKey); queue.push({ x:nx, y:ny, dir: DEFLECT_NE[dir] }); }
     else if (type === 'reflector_nw') { beamCells.add(cellKey); queue.push({ x:nx, y:ny, dir: DEFLECT_NW[dir] }); }
     else if (type === 'bifurcator') { beamCells.add(cellKey); BIFURCATE[dir].forEach(d => queue.push({ x:nx, y:ny, dir:d })); }
@@ -157,7 +157,6 @@ function traceBeam(grid, cols, rows) {
       const otherPortalKey = Object.keys(grid).find(k => k !== cellKey && grid[k].type === 'portal_blue');
       if (otherPortalKey) { const [px, py] = otherPortalKey.split(',').map(Number); queue.push({ x:px, y:py, dir }); }
     } else if (type === 'antenna') { beamCells.add(cellKey); litAntennas.add(cellKey); }
-    else if (type === 'rock') { /* blocks beam */ }
   }
   return { beamCells, litAntennas };
 }
@@ -330,13 +329,13 @@ const LaserPuzzleGame = ({ isActive, onEndGame, isDemo, timeLimit }) => {
 
     if (type === 'ship') { 
       bg = '#4f46e5'; border = '2px solid #6366f1'; 
-      content = <motion.span animate={{ scale: [1, 1.1, 1] }} transition={{ duration: 2, repeat: Infinity }} style={{ color:'white', fontSize:'1.2rem', fontWeight:'900' }}>{SHIP_ARROW[cell.dir]}</motion.span>; 
+      content = <motion.span animate={{ scale: [1, 1.1, 1] }} transition={{ duration: 2, repeat: Infinity }} style={{ color:'white', fontSize:'1.4rem', fontWeight:'900' }}>{SHIP_ARROW[cell.dir]}</motion.span>; 
     }
-    else if (type === 'rock') { bg = '#334155'; border = '1px solid #1e293b'; content = <div style={{ width:'60%', height:'60%', background:'#475569', borderRadius:'4px' }} />; }
-    else if (type === 'reflector_ne') { bg = isSel ? '#bbf7d0' : 'rgba(34,197,94,0.1)'; border = isSel ? '2px solid #22c55e' : '1px solid rgba(34,197,94,0.3)'; cursor = 'pointer'; content = <span style={{ color:'#15803d', fontSize:'1.6rem', fontWeight:'900' }}>/</span>; }
-    else if (type === 'reflector_nw') { bg = isSel ? '#a7f3d0' : 'rgba(20,184,166,0.1)'; border = isSel ? '2px solid #14b8a6' : '1px solid rgba(20,184,166,0.3)'; cursor = 'pointer'; content = <span style={{ color:'#0d9488', fontSize:'1.6rem', fontWeight:'900' }}>\</span>; }
-    else if (type === 'bifurcator') { bg = isSel ? '#fed7aa' : 'rgba(249,115,22,0.1)'; border = isSel ? '2px solid #f97316' : '1px solid rgba(249,115,22,0.3)'; cursor = 'pointer'; content = <span style={{ color:'#ea580c', fontSize:'1.4rem', fontWeight:'900' }}>+</span>; }
-    else if (type === 'portal_blue') { bg = isSel ? '#c7d2fe' : 'rgba(99,102,241,0.08)'; border = isSel ? '2px solid #6366f1' : '1px dashed rgba(99,102,241,0.5)'; cursor = 'pointer'; content = <span style={{ color:'#4f46e5', fontSize:'1.2rem', fontWeight:'900' }}>P</span>; }
+    else if (type === 'wall') { bg = '#334155'; border = '1px solid #1e293b'; content = <div style={{ width:'60%', height:'60%', background:'#475569', borderRadius:'4px' }} />; }
+    else if (type === 'reflector_ne') { bg = isSel ? '#bbf7d0' : 'rgba(34,197,94,0.1)'; border = isSel ? '2px solid #22c55e' : '1px solid rgba(34,197,94,0.3)'; cursor = 'pointer'; content = <span style={{ color:'#15803d', fontSize:'1.8rem', fontWeight:'900' }}>/</span>; }
+    else if (type === 'reflector_nw') { bg = isSel ? '#a7f3d0' : 'rgba(20,184,166,0.1)'; border = isSel ? '2px solid #14b8a6' : '1px solid rgba(20,184,166,0.3)'; cursor = 'pointer'; content = <span style={{ color:'#0d9488', fontSize:'1.8rem', fontWeight:'900' }}>\</span>; }
+    else if (type === 'bifurcator') { bg = isSel ? '#fed7aa' : 'rgba(249,115,22,0.1)'; border = isSel ? '2px solid #f97316' : '1px solid rgba(249,115,22,0.3)'; cursor = 'pointer'; content = <span style={{ color:'#ea580c', fontSize:'1.6rem', fontWeight:'900' }}>+</span>; }
+    else if (type === 'portal_blue') { bg = isSel ? '#c7d2fe' : 'rgba(99,102,241,0.08)'; border = isSel ? '2px solid #6366f1' : '1px dashed rgba(99,102,241,0.5)'; cursor = 'pointer'; content = <span style={{ color:'#4f46e5', fontSize:'1.4rem', fontWeight:'900' }}>P</span>; }
     else if (type === 'antenna') { 
       bg = isLit ? 'rgba(16,185,129,0.2)' : 'rgba(217,70,239,0.1)'; 
       border = isLit ? '2px solid #10b981' : '1px solid rgba(217,70,239,0.4)'; 
@@ -352,7 +351,7 @@ const LaserPuzzleGame = ({ isActive, onEndGame, isDemo, timeLimit }) => {
         onClick={() => handleCellClick(x, y)}
         style={{ width: CELL, height: CELL, background: bg, border, cursor, display: 'flex', alignItems: 'center', justifyContent:'center', position: 'relative', borderRadius: '4px', boxShadow: isSel ? '0 0 0 3px rgba(99,102,241,0.4)' : 'none', transition: 'all 0.15s' }}
       >
-        {isBeam && type !== 'rock' && type !== 'ship' && (
+        {isBeam && type !== 'wall' && type !== 'ship' && (
           <motion.div 
             initial={{ opacity: 0 }} 
             animate={{ opacity: 1 }} 
@@ -363,7 +362,7 @@ const LaserPuzzleGame = ({ isActive, onEndGame, isDemo, timeLimit }) => {
           <motion.div 
             animate={{ scale: [1, 1.4, 1], opacity: [0.7, 1, 0.7] }}
             transition={{ duration: 1.5, repeat: Infinity }}
-            style={{ position:'absolute', width:8, height:8, borderRadius:'50%', background:'#f59e0b', zIndex:1, pointerEvents:'none', boxShadow: '0 0 8px #f59e0b' }} 
+            style={{ position:'absolute', width:10, height:10, borderRadius:'50%', background:'#f59e0b', zIndex:1, pointerEvents:'none', boxShadow: '0 0 10px #f59e0b' }} 
           />
         )}
         <div style={{ position:'relative', zIndex:2 }}>{content}</div>
@@ -389,43 +388,43 @@ const LaserPuzzleGame = ({ isActive, onEndGame, isDemo, timeLimit }) => {
   const satColor = timeLeft < 15 ? '#dc2626' : timeLeft < 30 ? '#f59e0b' : '#059669';
 
   return (
-    <div style={{ width:'100%', minHeight:'620px', display:'flex', flexDirection:'column', alignItems:'center', justifyContent:'center', padding:'12px', gap:'10px', position:'relative' }}>
+    <div style={{ width:'100%', height:'100%', display:'flex', flexDirection:'column', alignItems:'center', justifyContent:'center', padding:'20px', gap:'12px', position:'relative' }}>
       <AnimatePresence mode="wait">
         {(gamePhase === 'playing' || gamePhase === 'levelComplete') && level && (
-          <motion.div key={`level-${levelIdx}`} initial={{ opacity:0, y:20 }} animate={{ opacity:1, y:0 }} exit={{ opacity:0 }} className="glass-panel" style={{ padding:'20px', display:'flex', flexDirection:'column', alignItems:'center', gap:'12px' }}>
-            <div style={{ display:'flex', justifyContent:'space-between', width:'100%', fontSize:'0.85rem', fontWeight:'700', color:'#1e1b4b', textTransform:'uppercase', letterSpacing:'1px', gap:'20px' }}>
+          <motion.div key={`level-${levelIdx}`} initial={{ opacity:0, y:20 }} animate={{ opacity:1, y:0 }} exit={{ opacity:0 }} className="glass-panel" style={{ padding:'32px', display:'flex', flexDirection:'column', alignItems:'center', gap:'20px', background: 'rgba(255,255,255,0.95)', backdropFilter: 'blur(12px)' }}>
+            <div style={{ display:'flex', justifyContent:'space-between', width:'100%', fontSize:'0.9rem', fontWeight:'900', color:'#1e1b4b', textTransform:'uppercase', letterSpacing:'2px', gap:'40px' }}>
               <span>{level.name}</span>
               <span style={{ color:satColor }}>⏱ {timeLeft}s</span>
               <span>Moves: <span style={{ color:'#4f46e5' }}>{moves}</span></span>
               <span>Antennas: <span style={{ color: litCount === allAntennas.length ? '#059669' : '#b91c1c' }}>{litCount}/{allAntennas.length}</span></span>
             </div>
             
-            <div style={{ border:'1px solid rgba(99,102,241,0.15)', borderRadius:'12px', background:'rgba(248,250,252,0.8)', padding:'8px', boxShadow: 'inset 0 2px 4px rgba(0,0,0,0.05)' }}>
-              <div style={{ display:'grid', gridTemplateColumns:`repeat(${level.cols}, ${CELL}px)`, gap:'4px' }}>
+            <div style={{ border:'2px solid rgba(99,102,241,0.15)', borderRadius:'16px', background:'rgba(248,250,252,0.8)', padding:'12px', boxShadow: 'inset 0 4px 10px rgba(0,0,0,0.08)' }}>
+              <div style={{ display:'grid', gridTemplateColumns:`repeat(${level.cols}, ${CELL}px)`, gap:'6px' }}>
                 {Array.from({ length:level.rows }, (_, y) => Array.from({ length:level.cols }, (_, x) => renderCell(x, y)))}
               </div>
             </div>
 
-            <div style={{ display:'flex', gap:'12px', alignItems:'center', width:'100%', justifyContent:'space-between', marginTop: '4px' }}>
-              <span style={{ fontSize:'0.75rem', color:'#64748b', fontStyle:'italic' }}>{language === 'es' ? 'Pista:' : 'Hint:'} {hintText}</span>
-              <button onClick={handleReset} className="btn" style={{ padding: '6px 12px', fontSize: '0.75rem' }}>Reset</button>
+            <div style={{ display:'flex', gap:'12px', alignItems:'center', width:'100%', justifyContent:'space-between', marginTop: '8px' }}>
+              <span style={{ fontSize:'0.85rem', color:'#64748b', fontStyle:'italic', fontWeight: 500 }}>{language === 'es' ? 'Pista:' : 'Hint:'} {hintText}</span>
+              <button onClick={handleReset} className="btn" style={{ padding: '10px 20px', fontSize: '0.85rem', fontWeight: 700 }}>Reset</button>
             </div>
           </motion.div>
         )}
         {gamePhase === 'quiz' && (
-          <motion.div key="quiz" initial={{ scale:0.9, opacity:0 }} animate={{ scale:1, opacity:1 }} className="glass-panel" style={{ padding:'40px', maxWidth:'580px', textAlign:'center' }}>
-            <div style={{ color:'#7c3aed', fontSize:'0.85rem', textTransform:'uppercase', letterSpacing:'3px', marginBottom:'12px', fontWeight:'700' }}>Spatial Insight</div>
-            <p style={{ color:'#1e1b4b', marginBottom:'32px', fontSize:'1.1rem', fontWeight: '500' }}>{procLevels[levelIdx].quiz[quizStep].q}</p>
-            <div style={{ display:'flex', flexDirection:'column', gap:'12px' }}>
+          <motion.div key="quiz" initial={{ scale:0.95, opacity:0 }} animate={{ scale:1, opacity:1 }} className="glass-panel" style={{ padding:'56px', maxWidth:'600px', textAlign:'center' }}>
+            <div style={{ color:'#7c3aed', fontSize:'0.9rem', textTransform:'uppercase', letterSpacing:'4px', marginBottom:'20px', fontWeight:'900' }}>Spatial Insight</div>
+            <p style={{ color:'#1e1b4b', marginBottom:'48px', fontSize:'1.4rem', fontWeight: '800', lineHeight: 1.3 }}>{procLevels[levelIdx].quiz[quizStep].q}</p>
+            <div style={{ display:'flex', flexDirection:'column', gap:'16px' }}>
               {procLevels[levelIdx].quiz[quizStep].opts.map((opt, i) => (
                 <motion.button 
                   key={i} 
-                  whileHover={{ x: 5, backgroundColor: 'rgba(124,58,237,0.1)' }}
+                  whileHover={{ x: 8, backgroundColor: 'rgba(124,58,237,0.12)' }}
                   className="btn" 
                   onClick={() => handleQuizAnswer(i)} 
-                  style={{ padding:'14px 20px', textAlign:'left', display:'flex', gap:'12px', borderRadius: '12px' }}
+                  style={{ padding:'20px 28px', textAlign:'left', display:'flex', gap:'16px', borderRadius: '18px', fontSize: '1.1rem' }}
                 >
-                  <span style={{ opacity:0.5 }}>{i+1}.</span><span>{opt}</span>
+                  <span style={{ opacity:0.5, fontWeight: 900 }}>{i+1}.</span><span style={{ fontWeight: 700 }}>{opt}</span>
                 </motion.button>
               ))}
             </div>
@@ -434,14 +433,14 @@ const LaserPuzzleGame = ({ isActive, onEndGame, isDemo, timeLimit }) => {
       </AnimatePresence>
 
       {gamePhase === 'briefing' && briefing && (
-        <motion.div initial={{ opacity:0 }} animate={{ opacity:1 }} style={{ position:'absolute', inset:0, background:'rgba(15,23,42,0.6)', backdropFilter: 'blur(4px)', display:'flex', alignItems:'center', justifyContent:'center', zIndex: 80, borderRadius: '16px' }}>
-          <motion.div initial={{ y:20, scale:0.95 }} animate={{ y:0, scale:1 }} style={{ background:'#ffffff', padding:'32px', borderRadius:'20px', maxWidth:'480px', textAlign:'center', border:'1px solid rgba(15,23,42,0.1)', boxShadow:'0 25px 50px -12px rgba(0,0,0,0.25)' }}>
-            <div style={{ color: '#6366f1', fontSize: '0.75rem', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '2px', marginBottom: '8px' }}>
+        <motion.div initial={{ opacity:0 }} animate={{ opacity:1 }} style={{ position:'absolute', inset:0, background:'rgba(15,23,42,0.7)', backdropFilter: 'blur(8px)', display:'flex', alignItems:'center', justifyContent:'center', zIndex: 100, borderRadius: '24px' }}>
+          <motion.div initial={{ y:30, scale:0.95 }} animate={{ y:0, scale:1 }} style={{ background:'#ffffff', padding:'48px', borderRadius:'32px', maxWidth:'520px', textAlign:'center', border:'1px solid rgba(15,23,42,0.1)', boxShadow:'0 35px 70px -15px rgba(0,0,0,0.4)' }}>
+            <div style={{ color: '#6366f1', fontSize: '0.85rem', fontWeight: 900, textTransform: 'uppercase', letterSpacing: '3px', marginBottom: '16px' }}>
               {language === 'es' ? 'Briefing del Sistema' : 'System Briefing'}
             </div>
-            <h4 style={{ margin: 0, fontSize:'1.4rem', color:'#1e1b4b', fontWeight: 800 }}>{briefing.title}</h4>
-            <p style={{ margin:'16px 0 24px', color:'#475569', lineHeight:1.7, fontSize: '0.95rem' }}>{briefing.body}</p>
-            <button className="btn btn-primary" onClick={() => setGamePhase('playing')} style={{ width: '100%', padding: '14px' }}>
+            <h4 style={{ margin: 0, fontSize:'2rem', color:'#1e1b4b', fontWeight: 900, letterSpacing: '-0.03em' }}>{briefing.title}</h4>
+            <p style={{ margin:'24px 0 36px', color:'#475569', lineHeight:1.7, fontSize: '1.1rem', fontWeight: 500 }}>{briefing.body}</p>
+            <button className="btn btn-primary" onClick={() => setGamePhase('playing')} style={{ width: '100%', padding: '20px', fontSize: '1.2rem' }}>
               {language === 'es' ? 'Activar Sistema' : 'Activate System'}
             </button>
           </motion.div>
@@ -449,11 +448,11 @@ const LaserPuzzleGame = ({ isActive, onEndGame, isDemo, timeLimit }) => {
       )}
 
       {gamePhase === 'levelComplete' && (
-        <div style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', pointerEvents: 'none', zIndex: 60 }}>
-          <motion.div initial={{ scale: 0.5, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 1.5, opacity: 0 }} style={{ padding: '24px 48px', background: 'rgba(16,185,129,0.95)', border: '2px solid #fff', borderRadius: 16, color: '#fff', fontWeight: 900, fontSize: '1.5rem', textTransform: 'uppercase', letterSpacing: '4px', boxShadow: '0 20px 25px -5px rgba(0,0,0,0.1)' }}>
+        <div style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', pointerEvents: 'none', zIndex: 110 }}>
+          <motion.div initial={{ scale: 0.5, opacity: 0 }} animate={{ scale: 1.1, opacity: 1 }} exit={{ scale: 1.5, opacity: 0 }} style={{ padding: '32px 64px', background: 'rgba(16,185,129,0.98)', border: '3px solid #fff', borderRadius: 24, color: '#fff', fontWeight: 900, fontSize: '2rem', textTransform: 'uppercase', letterSpacing: '6px', boxShadow: '0 30px 60px -10px rgba(0,0,0,0.3)' }}>
             {language === 'es' ? '¡ÓPTIMO!' : 'OPTIMIZED!'}
           </motion.div>
-          <Confetti count={20} spread={100} duration={1.5} />
+          <Confetti count={30} spread={120} duration={1.8} />
         </div>
       )}
     </div>

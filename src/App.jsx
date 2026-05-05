@@ -29,6 +29,9 @@ const PitchDeckPage = lazy(() => import('./components/PitchDeckPage'));
 function AppContent() {
   const location = useLocation();
   const isHome = location.pathname === '/';
+  const isReport = location.pathname === '/report';
+  const isIntro = location.pathname === '/intro' || location.pathname === '/complementary/intro';
+  const shouldScroll = isHome || isReport || isIntro;
 
   return (
     <div className="app-layout" style={{ height: '100vh', overflow: 'hidden' }}>
@@ -53,7 +56,7 @@ function AppContent() {
       <div style={{ 
         flex: 1, 
         position: 'relative', 
-        overflowY: isHome ? 'auto' : 'hidden', 
+        overflowY: shouldScroll ? 'auto' : 'hidden', 
         overflowX: 'hidden',
         height: '100%'
       }}>
