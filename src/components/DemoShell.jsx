@@ -390,28 +390,26 @@ const DemoShell = () => {
 
     setToast(isEn ? `Protocol ${id} completed` : `Protocolo ${id} completado`);
 
-    setCompleted((prev) => {
-      const next = { ...prev, [id]: true };
-      const doneCount = Object.keys(next).length;
-      console.log(`[DEMO-TRACE] Game completed count: ${doneCount}/${ACTIVITIES.length}`);
-      
-      // Use a slight delay to allow game completion animation before showing transition
-      setTimeout(() => {
-        if (doneCount >= ACTIVITIES.length) {
-          console.log(`[DEMO-TRACE] All activities complete, showing report`);
-          handleDemoComplete(next, 'completed');
-        } else {
-          const nextStep = step + 1;
-          console.log(`[DEMO-TRACE] Advancing to next activity: step ${step} → ${nextStep}, ACTIVITIES[${nextStep}]=${ACTIVITIES[nextStep]?.id}`);
-          setToast(isEn ? 'Preparing next assessment module...' : 'Preparando siguiente módulo...');
-          setStep(nextStep);
-        }
-        // Always clear the lock after transition
-        completingRef.current = null;
-      }, 1500);
-      
-      return next;
-    });
+    const nextCompleted = { ...completed, [id]: true };
+    const doneCount = Object.keys(nextCompleted).length;
+    console.log(`[DEMO-TRACE] Game completed count: ${doneCount}/${ACTIVITIES.length}`);
+
+    setCompleted(nextCompleted);
+
+    // Use a slight delay to allow game completion animation before showing transition
+    setTimeout(() => {
+      if (doneCount >= ACTIVITIES.length) {
+        console.log(`[DEMO-TRACE] All activities complete, showing report`);
+        handleDemoComplete(nextCompleted, 'completed');
+      } else {
+        const nextStep = step + 1;
+        console.log(`[DEMO-TRACE] Advancing to next activity: step ${step} → ${nextStep}, ACTIVITIES[${nextStep}]=${ACTIVITIES[nextStep]?.id}`);
+        setToast(isEn ? 'Preparing next assessment module...' : 'Preparando siguiente módulo...');
+        setStep((prevStep) => prevStep + 1);
+      }
+      // Always clear the lock after transition
+      completingRef.current = null;
+    }, 1500);
   };
 
   const restart = () => {
