@@ -90,7 +90,7 @@ const DEMO_BRIEFINGS = {
   ]
 };
 
-const GridFlowGame = ({ isActive, onEndGame, isDemo, showBriefing = true, timeLimit }) => {
+const GridFlowGame = ({ isActive, onEndGame, isDemo, showBriefing = true }) => {
   const { recordError, startTracking, stopTracking, recordTrialEvent } = useTelemetry();
   const { language } = useLanguage();
 

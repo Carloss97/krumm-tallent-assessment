@@ -164,6 +164,7 @@ const DemoShell = () => {
   const [demoSummary, setDemoSummary] = useState(null);
   const { sessionData, setIsDemo, startTracking, stopTracking, recordTrialEvent, recordWebcamFrame, setConsent } = useTelemetry();
   const { language } = useLanguage();
+  const isEn = language === 'en';
   
   // Use a ref as a lock to prevent double-incrementing step
   const completingRef = useRef(null);

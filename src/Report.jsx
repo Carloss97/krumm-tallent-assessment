@@ -42,6 +42,7 @@ const Report = ({ isDummy = false, useDummyData = false, demoSummary = null }) =
   const [insightMeta, setInsightMeta] = useState({ mode: 'pending', reason: '' });
   const [geminiHealth, setGeminiHealth] = useState({ checked: false, ok: false, message: '', code: 'UNKNOWN' });
   const [cooldownUntil, setCooldownUntil] = useState(0);
+  const [now, setNow] = useState(() => Date.now());
   const [aiDebugRows, setAiDebugRows] = useState([]);
   const [sessionSavedId, setSessionSavedId] = useState(null);
   const reportGeneratedRef = useRef(false);
@@ -102,7 +103,13 @@ const Report = ({ isDummy = false, useDummyData = false, demoSummary = null }) =
   const radarProfile = useMemo(() => buildRadarProfile(reportData, isEn, targetRole), [reportData, isEn, targetRole]);
   const competencyHighlights = useMemo(() => buildCompetencyHighlights(radarProfile), [radarProfile]);
   const roleOptions = useMemo(() => getTargetRoleOptions(isEn), [isEn]);
-  const isCooldownActive = cooldownUntil > Date.now();
+  const isCooldownActive = cooldownUntil > now;
+
+  useEffect(() => {
+    if (cooldownUntil <= 0) return undefined;
+    const timer = setInterval(() => setNow(Date.now()), 1000);
+    return () => clearInterval(timer);
+  }, [cooldownUntil]);
 
   useEffect(() => {
     if (!isCooldownActive) return;
@@ -116,7 +123,10 @@ const Report = ({ isDummy = false, useDummyData = false, demoSummary = null }) =
   useEffect(() => {
     const reason = `${geminiHealth?.code || ''} ${geminiHealth?.message || ''} ${insightMeta?.reason || ''}`.toLowerCase();
     if (reason.includes('quota') || reason.includes('429') || reason.includes('rate limit')) {
-      setCooldownUntil((current) => Math.max(current, Date.now() + 30000));
+      const timer = setTimeout(() => {
+        setCooldownUntil((current) => Math.max(current, Date.now() + 30000));
+      }, 0);
+      return () => clearTimeout(timer);
     }
   }, [geminiHealth, insightMeta]);
 
@@ -179,13 +189,16 @@ const Report = ({ isDummy = false, useDummyData = false, demoSummary = null }) =
   // Reset generation state when switching AI/demo modes to avoid stale report output.
   useEffect(() => {
     reportGeneratedRef.current = false;
-    setIsAnalyzing(true);
-    setAiReport(null);
-    setInsightMeta({ mode: 'pending', reason: '' });
-    if (dummyModeEnabled) {
-      setSessionSavedId(null);
-    }
-    setShowDummyReport(false);
+    const timer = setTimeout(() => {
+      setIsAnalyzing(true);
+      setAiReport(null);
+      setInsightMeta({ mode: 'pending', reason: '' });
+      if (dummyModeEnabled) {
+        setSessionSavedId(null);
+      }
+      setShowDummyReport(false);
+    }, 0);
+    return () => clearTimeout(timer);
   }, [dummyModeEnabled, useAI]);
 
   // Generate AI report when data is ready
@@ -318,7 +331,8 @@ const Report = ({ isDummy = false, useDummyData = false, demoSummary = null }) =
     edgeEscalationMinBiometricQuality,
     edgeEscalationConfidenceBandMin,
     edgeEscalationConfidenceBandMax,
-    edgeEscalationRecommendations
+    edgeEscalationRecommendations,
+    dummyModeEnabled
   ]);
 
   if (!hasRealData && !shouldShowDummyData) {
