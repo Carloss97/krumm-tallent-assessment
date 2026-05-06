@@ -24,6 +24,7 @@ const BalloonGame = ({ isActive, onEndGame, isDemo, showBriefing = true }) => {
   const totalPointsRef = useRef(0);
   const popsRef = useRef(0);
   const hasEndedRef = useRef(false);
+  const roundRef = useRef(1);
 
   const initRound = useCallback(() => {
     setCurrentBalloonSize(1);
@@ -39,21 +40,19 @@ const BalloonGame = ({ isActive, onEndGame, isDemo, showBriefing = true }) => {
   const advanceRound = useCallback(() => {
     if (hasEndedRef.current) return;
 
-    setRound((prevRound) => {
-      const nextRound = prevRound + 1;
-      const shouldEnd = nextRound > MAX_ROUNDS;
-      
-      if (shouldEnd) {
-        hasEndedRef.current = true;
-        stopTracking('game4', totalPointsRef.current, popsRef.current, { pops: popsRef.current });
-        onEndGame(totalPointsRef.current, popsRef.current);
-        return prevRound; // Do not advance round
-      }
-      
-      // Initialize the new round
-      setTimeout(() => initRound(), 0);
-      return nextRound;
-    });
+    const nextRound = roundRef.current + 1;
+
+    if (nextRound > MAX_ROUNDS) {
+      hasEndedRef.current = true;
+      stopTracking('game4', totalPointsRef.current, popsRef.current, { pops: popsRef.current });
+      // Defer onEndGame to avoid calling parent setState during a render cycle
+      queueMicrotask(() => onEndGame(totalPointsRef.current, popsRef.current));
+      return;
+    }
+
+    roundRef.current = nextRound;
+    setRound(nextRound);
+    setTimeout(() => initRound(), 0);
   }, [MAX_ROUNDS, onEndGame, initRound, stopTracking]);
 
   const handlePump = useCallback(() => {
@@ -105,6 +104,7 @@ const BalloonGame = ({ isActive, onEndGame, isDemo, showBriefing = true }) => {
       totalPointsRef.current = 0;
       popsRef.current = 0;
       startTracking();
+      roundRef.current = 1;
       setRound(1);
       setTotalPoints(0);
       initRound();
