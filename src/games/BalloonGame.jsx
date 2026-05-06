@@ -6,7 +6,7 @@ import { useTelemetry } from '../TelemetryContext';
 import { useLanguage } from '../context/LanguageContext';
 
 const BalloonGame = ({ isActive, onEndGame, isDemo, showBriefing = true }) => {
-  const MAX_ROUNDS = isDemo ? 3 : 10;
+  const MAX_ROUNDS = isDemo ? 10 : 10;
   const MIN_PUMPS = 6;
   const { startTracking, stopTracking, recordError, recordTrialEvent } = useTelemetry();
   const { language } = useLanguage();

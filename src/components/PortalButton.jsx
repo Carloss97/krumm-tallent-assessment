@@ -9,11 +9,12 @@ export default function PortalButton() {
   const telemetry = useTelemetry();
   const { language } = useLanguage();
   const portalUrl = import.meta.env.VITE_PORTAL_URL || '/postulantes';
+  const hideTakeTest = String(import.meta.env.VITE_HIDE_TAKE_TEST || '').trim() === '1';
   const navigate = useNavigate();
   // Only show the portal button on the landing page root. Hide in demo, game, report, candidate, etc.
   const path = (location?.pathname || '');
   const isVisible = path === '/';
-  if (!isVisible) return null;
+  if (!isVisible || hideTakeTest) return null;
 
   const isExternalUrl = (url) => {
     if (!url) return false;
