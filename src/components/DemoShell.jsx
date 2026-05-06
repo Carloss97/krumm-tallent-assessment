@@ -409,6 +409,8 @@ const DemoShell = () => {
           });
         }
       }, 1500);
+      // safety unlock in case something prevents step change
+      setTimeout(() => { if (completingRef.current === id) completingRef.current = null; }, 2200);
       
       return next;
     });

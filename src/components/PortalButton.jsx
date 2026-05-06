@@ -24,6 +24,10 @@ export default function PortalButton() {
   const ariaLabels = { es: 'Portal de Postulantes', en: 'Recruiter portal' };
 
   const handleClick = (e) => {
+    try {
+      const params = typeof window !== 'undefined' ? new URLSearchParams(window.location.search) : null;
+      if (params && params.get('hideTakeTest') === '1') return;
+    } catch { /* noop */ }
     try { telemetry?.recordTrialEvent && telemetry.recordTrialEvent({ event: 'portal_click' }); } catch (error) { void error; }
     try { window.dataLayer?.push({ event: 'portal_click' }); } catch (error) { void error; }
 
