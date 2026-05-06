@@ -401,16 +401,14 @@ const DemoShell = () => {
           console.log(`[DEMO-TRACE] All activities complete, showing report`);
           handleDemoComplete(next, 'completed');
         } else {
-          console.log(`[DEMO-TRACE] Advancing to next activity: step ${step} → ${step + 1}`);
+          const nextStep = step + 1;
+          console.log(`[DEMO-TRACE] Advancing to next activity: step ${step} → ${nextStep}, ACTIVITIES[${nextStep}]=${ACTIVITIES[nextStep]?.id}`);
           setToast(isEn ? 'Preparing next assessment module...' : 'Preparando siguiente módulo...');
-          setStep(prevStep => {
-            console.log(`[DEMO-TRACE] setStep callback: ${prevStep} → ${prevStep + 1}`);
-            return prevStep + 1;
-          });
+          setStep(nextStep);
         }
+        // Always clear the lock after transition
+        completingRef.current = null;
       }, 1500);
-      // safety unlock in case something prevents step change
-      setTimeout(() => { if (completingRef.current === id) completingRef.current = null; }, 2200);
       
       return next;
     });

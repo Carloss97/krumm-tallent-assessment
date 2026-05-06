@@ -39,23 +39,21 @@ const BalloonGame = ({ isActive, onEndGame, isDemo, showBriefing = true }) => {
   const advanceRound = useCallback(() => {
     if (hasEndedRef.current) return;
 
-    let nextRound = 0;
-    let shouldEnd = false;
-
     setRound((prevRound) => {
-      nextRound = prevRound + 1;
-      shouldEnd = nextRound > MAX_ROUNDS;
-      return shouldEnd ? prevRound : nextRound;
+      const nextRound = prevRound + 1;
+      const shouldEnd = nextRound > MAX_ROUNDS;
+      
+      if (shouldEnd) {
+        hasEndedRef.current = true;
+        stopTracking('game4', totalPointsRef.current, popsRef.current, { pops: popsRef.current });
+        onEndGame(totalPointsRef.current, popsRef.current);
+        return prevRound; // Do not advance round
+      }
+      
+      // Initialize the new round
+      setTimeout(() => initRound(), 0);
+      return nextRound;
     });
-
-    if (shouldEnd) {
-      hasEndedRef.current = true;
-      stopTracking('game4', totalPointsRef.current, popsRef.current, { pops: popsRef.current });
-      onEndGame(totalPointsRef.current, popsRef.current);
-      return;
-    }
-
-    initRound();
   }, [MAX_ROUNDS, onEndGame, initRound, stopTracking]);
 
   const handlePump = useCallback(() => {
