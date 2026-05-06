@@ -273,9 +273,14 @@ const DemoShell = () => {
   const finishedRef = useRef(false);
   const completedRef = useRef(completed);
 
-  function handleDemoComplete(completedObj, reason = 'completed') {
-    if (finishedRef.current) return;
+  const handleDemoComplete = useCallback((completedObj, reason = 'completed') => {
+    if (finishedRef.current) {
+      console.log('[DEMO-TRACE] handleDemoComplete guard: already finished, skipping');
+      return;
+    }
     finishedRef.current = true;
+    console.log('[DEMO-TRACE] handleDemoComplete executing with reason:', reason);
+    
     const completedIds = Object.keys(completedObj || {});
     const timeUsedSec = Math.round((Date.now() - startedAtRef.current) / 1000);
 
@@ -288,6 +293,7 @@ const DemoShell = () => {
       telemetryId: activity.telemetryId || activity.id,
     }));
 
+    console.log('[DEMO-TRACE] Analyzing telemetry with sessionData:', Object.keys(sessionData || {}));
     const telemetryReport = analyzeDemoTelemetry(sessionData, activityRows);
     const gameRowsById = new Map(telemetryReport.perGame.map((item) => [item.id, item]));
     const enrichedActivities = activityRows.map((activity) => ({
@@ -295,7 +301,7 @@ const DemoShell = () => {
       analytics: gameRowsById.get(activity.id) || null,
     }));
 
-    console.log('[DEMO-TRACE] Setting demoSummary and will show report when ready');
+    console.log('[DEMO-TRACE] Calling setDemoSummary with summary object');
     setDemoSummary({
       reason,
       timeUsedSec,
@@ -306,7 +312,6 @@ const DemoShell = () => {
       activities: enrichedActivities,
       telemetry: telemetryReport,
     });
-    // NOTE: showReport will be set by useEffect when demoSummary is ready
 
     try {
       stopTracking('demo', 0, null, { completedIds, timeUsedSec });
@@ -314,7 +319,7 @@ const DemoShell = () => {
     } catch {
       // swallow telemetry errors
     }
-  }
+  }, [ACTIVITIES, sessionData, selectedGameIds, stopTracking, recordTrialEvent]);
 
   useEffect(() => {
     // Only start timer if demo is running
@@ -336,13 +341,7 @@ const DemoShell = () => {
     completedRef.current = completed;
   }, [completed]);
 
-  // Sync showReport with demoSummary: only show report when summary is ready
-  useEffect(() => {
-    if (demoSummary) {
-      console.log('[DEMO-TRACE] demoSummary is ready, setting showReport=true');
-      setShowReport(true);
-    }
-  }, [demoSummary]);
+  // showReport is no longer needed; we render PostDemoScreen directly when demoSummary exists
 
   useEffect(() => {
     if (!toast) return undefined;
@@ -434,7 +433,7 @@ const DemoShell = () => {
       // Always clear the lock after transition
       completingRef.current = null;
     }, 1500);
-  }, [completed, step, ACTIVITIES.length, isEn, recordTrialEvent]);
+  }, [completed, step, ACTIVITIES, ACTIVITIES.length, isEn, recordTrialEvent, handleDemoComplete]);
 
   const restart = () => {
     finishedRef.current = false;
