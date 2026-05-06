@@ -52,68 +52,91 @@ const getBriefing = (idx, language) => {
 
 const DEMO_LEVELS = [
   {
+    // LEVEL 1: Introduction to Reflection
+    // Single antenna, multiple reflectors, learning basic deflection mechanics
+    // Par: 4 (actual puzzle, not trivial)
     name: 'Sector Alpha',
     cols: 8,
-    rows: 6,
-    par: 2,
-    timeLimit: 45,
+    rows: 7,
+    par: 4,
+    timeLimit: 50,
     hint: {
-      es: 'Refleja la luz hacia arriba para conectar la antena.',
-      en: 'Reflect the light upwards to connect the antenna.'
-    },
-    cells: [
-      { x: 0, y: 4, type: 'ship', dir: 'right' },
-      { x: 6, y: 1, type: 'antenna' },
-      { x: 3, y: 5, type: 'reflector_ne', movable: true },
-      { x: 5, y: 3, type: 'reflector_ne', movable: true },
-    ],
-    quiz: [],
-  },
-  {
-    name: 'Sector Beta',
-    cols: 8,
-    rows: 6,
-    par: 3,
-    timeLimit: 60,
-    hint: {
-      es: 'Divide el haz para cubrir ambos receptores de señal.',
-      en: 'Split the beam to cover both signal receivers.'
+      es: 'Coloca los espejos para que el rayo llegue a la antena. El reflector (/) desvía hacia arriba/derecha.',
+      en: 'Place mirrors so the beam reaches the antenna. The (/) reflector deflects up/right.'
     },
     cells: [
       { x: 0, y: 3, type: 'ship', dir: 'right' },
-      { x: 7, y: 1, type: 'antenna' },
-      { x: 7, y: 5, type: 'antenna' },
-      { x: 3, y: 2, type: 'bifurcator', movable: true },
+      { x: 7, y: 0, type: 'antenna' },
+      { x: 3, y: 3, type: 'reflector_ne', movable: true },
       { x: 5, y: 1, type: 'reflector_ne', movable: true },
-      { x: 5, y: 5, type: 'reflector_nw', movable: true },
+      { x: 2, y: 5, type: 'reflector_nw', movable: true },
     ],
     quiz: [],
   },
   {
-    name: 'Sector Gamma',
-    cols: 8,
-    rows: 8,
-    par: 4,
-    timeLimit: 75,
+    // LEVEL 2: Introduction to Bifurcation
+    // Multiple antennas, bifurcator must split beam efficiently
+    // Par: 6 (increased complexity)
+    name: 'Sector Beta',
+    cols: 10,
+    rows: 7,
+    par: 6,
+    timeLimit: 65,
     hint: {
-      es: 'Usa el portal cuántico para atravesar la obstrucción.',
-      en: 'Use the quantum portal to cross the obstruction.'
+      es: 'Usa el bifurcador (+) para dividir el haz hacia ambas antenas. Luego refleja cada rama.',
+      en: 'Use the bifurcator (+) to split the beam to both antennas. Then reflect each branch.'
     },
     cells: [
-      { x: 0, y: 2, type: 'ship', dir: 'right' },
-      { x: 3, y: 2, type: 'portal_blue', targetPortalId: 'p1' },
-      { x: 5, y: 6, type: 'portal_blue', portalId: 'p1' },
-      { x: 7, y: 6, type: 'antenna' },
-      { x: 4, y: 0, type: 'wall' }, { x: 4, y: 1, type: 'wall' }, { x: 4, y: 2, type: 'wall' },
-      { x: 4, y: 3, type: 'wall' }, { x: 4, y: 4, type: 'wall' },
-      { x: 1, y: 6, type: 'reflector_ne', movable: true },
-      { x: 6, y: 3, type: 'reflector_nw', movable: true },
+      { x: 0, y: 3, type: 'ship', dir: 'right' },
+      { x: 9, y: 1, type: 'antenna' },
+      { x: 9, y: 5, type: 'antenna' },
+      { x: 3, y: 3, type: 'bifurcator', movable: true },
+      { x: 6, y: 1, type: 'reflector_ne', movable: true },
+      { x: 6, y: 5, type: 'reflector_nw', movable: true },
+      { x: 1, y: 0, type: 'reflector_ne', movable: true },
+    ],
+    quiz: [],
+  },
+  {
+    // LEVEL 3: Portal Introduction & Complex Obstacles
+    // Multiple techniques: bifurcation, reflection, portal traversal
+    // Par: 8 (significant puzzle)
+    name: 'Sector Gamma',
+    cols: 10,
+    rows: 8,
+    par: 8,
+    timeLimit: 80,
+    hint: {
+      es: 'Las paredes bloquean la ruta directa. Usa el portal (P) para saltar al otro lado del bloqueo.',
+      en: 'Walls block the direct route. Use the portal (P) to jump across the blockage.'
+    },
+    cells: [
+      { x: 0, y: 3, type: 'ship', dir: 'right' },
+      // Portal system: entry at 2,3 → exit at 6,5
+      { x: 2, y: 3, type: 'portal_blue', targetPortalId: 'p1' },
+      { x: 6, y: 5, type: 'portal_blue', portalId: 'p1' },
+      // Antenna at far corner
+      { x: 9, y: 0, type: 'antenna' },
+      // Wall blocking direct path (vertical barrier)
+      { x: 4, y: 1, type: 'wall' }, { x: 4, y: 2, type: 'wall' }, { x: 4, y: 3, type: 'wall' },
+      { x: 4, y: 4, type: 'wall' }, { x: 4, y: 5, type: 'wall' },
+      // Additional wall cluster to force strategy
+      { x: 8, y: 6, type: 'wall' }, { x: 8, y: 7, type: 'wall' },
+      // Reflectors for solving
+      { x: 3, y: 6, type: 'reflector_ne', movable: true },
+      { x: 7, y: 2, type: 'reflector_nw', movable: true },
+      { x: 9, y: 3, type: 'reflector_ne', movable: true },
     ],
     quiz: [
       { 
-        q: '¿Qué componente permite dividir un haz en dos trayectorias?', 
-        opts: ['Reflector', 'Bifurcador', 'Portal', 'Antena'], 
-        correct: 1 
+        q: '¿Cuál es el propósito principal del portal (P)?', 
+        opts: ['Aumentar velocidad', 'Reflejar el haz', 'Trasladar el haz a otro punto', 'Detener el haz'], 
+        correct: 2 
+      },
+      {
+        q: '¿Qué hace el bifurcador (+) con el haz de luz?',
+        opts: ['Lo detiene', 'Lo divide en dos trayectorias', 'Lo refleja', 'Lo debilita'],
+        correct: 1
       }
     ],
   }

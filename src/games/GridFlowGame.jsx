@@ -6,57 +6,73 @@ import Confetti from '../components/Confetti';
 import { useLanguage } from '../context/LanguageContext';
 
 const GRID = 10;
-const SAT_DECAY = 2; // % per second
+const SAT_DECAY = 1; // % per second (reduced from 2 for better pacing)
 const CELL = 60; // Larger cells for better screen occupancy
 
 const LEVELS = [
-  { 
+  {
+    // NIVEL 1: Introduction - simple linear path, no energy drain, high time limit
+    // Objetivo: aprender controles y mecánica de satisfacción
     walls: [], 
     targets: [
-      { id:1, x:2, y:2, color:'#ef4444', points:150, dropZone:{x:8,y:8} }, 
+      { id:1, x:5, y:5, color:'#ef4444', points:100, dropZone:{x:5,y:0} }, 
     ], 
     stations: [], 
     energyDrain: 0, 
-    timeLimit: 45, 
-    startPos: { x:0, y:0 } 
-  },
-  { 
-    walls: ['4,0', '4,1', '4,2', '4,3', '4,4', '4,6', '4,7', '4,8', '4,9'], 
-    targets: [
-      { id:3, x:2, y:8, color:'#3b82f6', points:150, dropZone:{x:8,y:2} }
-    ], 
-    stations: [{ x:5, y:5 }], 
-    energyDrain: 3, 
-    timeLimit: 60, 
-    startPos: { x:0, y:0 } 
-  },
-  { 
-    walls: [
-      '1,1','2,1','1,2','2,2', '4,1','5,1','4,2','5,2', '7,1','8,1','7,2','8,2',
-      '1,5','2,5','1,6','2,6', '4,5','5,5','4,6', '7,5','8,5','7,6','8,6',
-    ], 
-    targets: [
-      { id:5, x:4, y:4, color:'#10b981', points:200, dropZone:{x:0,y:9} },
-      { id:6, x:0, y:0, color:'#f59e0b', points:200, dropZone:{x:9,y:9} }
-    ], 
-    stations: [{ x:5, y:4 }, { x:9, y:0 }], 
-    energyDrain: 5, 
-    timeLimit: 75, 
+    timeLimit: 40, 
     startPos: { x:5, y:9 } 
+  },
+  {
+    // NIVEL 2: Energy management - first energy drain mechanic + strategic station
+    // Objetivo: aprender que energía es un recurso limitado
+    // Ruta óptima: ~18 movimientos, consume 36 energía, necesita estación
+    walls: ['3,2', '3,3', '3,4', '3,5', '3,6', '3,7', '3,8'],
+    targets: [
+      { id:3, x:2, y:4, color:'#3b82f6', points:120, dropZone:{x:8,y:4} }
+    ], 
+    stations: [{ x:3, y:9 }],  // Station on the path back
+    energyDrain: 2,
+    timeLimit: 50,
+    startPos: { x:0, y:0 } 
+  },
+  {
+    // NIVEL 3: Dual objectives + complex maze + critical station usage
+    // Objetivo: planificación de ruta multi-objetivo, gestión de energía crítica
+    walls: [
+      // Left maze block
+      '1,1','2,1','1,2','2,2','1,3','2,3',
+      // Middle maze block  
+      '4,5','5,5','4,6','5,6','4,7','5,7',
+      // Right maze block
+      '8,2','9,2','8,3','9,3',
+    ], 
+    targets: [
+      { id:5, x:2, y:8, color:'#10b981', points:150, dropZone:{x:8,y:1} },
+      { id:6, x:8, y:8, color:'#f59e0b', points:150, dropZone:{x:1,y:1} }
+    ], 
+    stations: [{ x:0, y:5 }, { x:9, y:5 }],  // Stations on critical paths
+    energyDrain: 2.5,
+    timeLimit: 70,
+    startPos: { x:0, y:9 } 
   },
 ];
 
 const QUIZ = [
   { 
-    q: '¿Qué sucede con la satisfacción del objetivo con el tiempo?', 
-    opts: ['Aumenta', 'Se mantiene igual', 'Disminuye', 'Depende del color'], 
+    q: '¿Qué sucede con la satisfacción del paquete cuando no se entrega rápidamente?', 
+    opts: ['Aumenta', 'Se mantiene igual', 'Disminuye gradualmente', 'Depende del color'], 
     correct: 2 
   },
   { 
-    q: '¿Para qué sirven las estaciones con rayo (⚡)?', 
-    opts: ['Aumentar puntos', 'Recargar energía', 'Teletransportarse', 'Ganar tiempo'], 
+    q: '¿Cuál es el propósito principal de las estaciones con rayo (⚡)?', 
+    opts: ['Aumentar puntos', 'Recargar energía del sistema', 'Teletransportarse', 'Acelerar tiempo'], 
     correct: 1 
   },
+  {
+    q: '¿Qué estrategia es más eficiente cuando tienes múltiples paquetes?',
+    opts: ['Recoger todos primero y luego entregar', 'Entregar el más cercano primero', 'Priorizar según satisfacción y distancia', 'No importa el orden'],
+    correct: 2
+  }
 ];
 
 const DEMO_BRIEFINGS = {

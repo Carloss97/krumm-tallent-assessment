@@ -1,0 +1,518 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>KRUMM Pitch Deck</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <style>
+        :root {
+            /* Paleta VC de alto contraste extraída del logo */
+            --bg-primary: #FFFFFF;
+            --bg-secondary: #F8FAFC;
+            --text-main: #0F172A; /* Pizarra muy oscuro para lectura */
+            --text-muted: #475569;
+            --accent-corporate: #1E293B; /* Color del logo (Gris oscuro) */
+            --accent-soft: #9B907F; /* Color del logo (Tono arena) */
+            --border-light: #E2E8F0;
+            --success: #059669;
+            --danger: #DC2626;
+        }
+
+        body, html {
+            margin: 0;
+            padding: 0;
+            overflow: hidden;
+            font-family: 'Inter', sans-serif;
+            background-color: var(--bg-primary);
+            color: var(--text-main);
+        }
+
+        /* Contenedor de Diapositivas */
+        .deck-container {
+            width: 100vw;
+            height: 100vh;
+            display: flex;
+            transition: transform 0.7s cubic-bezier(0.77, 0, 0.175, 1);
+        }
+
+        .slide {
+            min-width: 100vw;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            padding: 60px 100px;
+            box-sizing: border-box;
+            position: relative;
+            background: var(--bg-primary);
+            opacity: 0.3;
+            transition: opacity 0.5s ease;
+        }
+
+        .slide.active {
+            opacity: 1;
+        }
+
+        /* Animaciones internas */
+        .slide .content-wrapper {
+            opacity: 0;
+            transform: translateY(20px);
+            transition: all 0.6s ease 0.2s;
+            width: 100%;
+            max-width: 1200px;
+        }
+
+        .slide.active .content-wrapper {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        /* Tipografía */
+        h1 { font-size: 3.5rem; font-weight: 700; color: var(--text-main); margin: 0 0 1rem 0; line-height: 1.1;}
+        h2 { font-size: 2.8rem; font-weight: 700; color: var(--accent-corporate); margin-bottom: 2rem; border-left: 5px solid var(--accent-soft); padding-left: 20px;}
+        h3 { font-size: 1.5rem; font-weight: 600; color: var(--text-main); margin-bottom: 0.5rem; }
+        p { font-size: 1.25rem; line-height: 1.6; color: var(--text-muted); margin-bottom: 1.5rem; }
+        b { color: var(--text-main); font-weight: 700; }
+
+        /* Navegación por Hover en los laterales */
+        .nav-trigger {
+            position: fixed;
+            top: 0;
+            bottom: 0;
+            width: 80px;
+            z-index: 1000;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: background 0.3s ease;
+        }
+        .nav-trigger-left { left: 0; }
+        .nav-trigger-right { right: 0; }
+        
+        .nav-btn {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            background: white;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            opacity: 0;
+            transform: scale(0.8);
+            transition: all 0.3s ease;
+            border: 1px solid var(--border-light);
+            color: var(--accent-corporate);
+            font-size: 1.2rem;
+        }
+        .nav-trigger:hover .nav-btn { opacity: 1; transform: scale(1); }
+
+        /* Barra de Progreso */
+        .progress-bar {
+            position: fixed;
+            top: 0;
+            left: 0;
+            height: 4px;
+            background: var(--accent-soft);
+            transition: width 0.3s ease;
+            z-index: 1001;
+        }
+
+        /* Selector de Idioma (Portada) */
+        .lang-toggle {
+            display: flex;
+            gap: 10px;
+            margin-top: 30px;
+            justify-content: center;
+        }
+        .lang-btn {
+            padding: 8px 25px;
+            border: 1px solid var(--border-light);
+            background: var(--bg-secondary);
+            cursor: pointer;
+            border-radius: 30px;
+            font-weight: 600;
+            font-size: 0.9rem;
+            transition: all 0.3s ease;
+            color: var(--text-muted);
+        }
+        .lang-btn.active {
+            background: var(--accent-corporate);
+            color: white;
+            border-color: var(--accent-corporate);
+        }
+
+        /* Estructura de Grids y Tarjetas */
+        .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 60px; align-items: center; }
+        .grid-3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 30px; width: 100%; }
+
+        .card {
+            background: var(--bg-secondary);
+            padding: 40px;
+            border-radius: 20px;
+            border: 1px solid var(--border-light);
+            transition: transform 0.3s ease;
+        }
+        .card:hover { transform: translateY(-5px); border-color: var(--accent-soft); }
+
+        ul.styled-list { list-style: none; padding: 0; font-size: 1.2rem; line-height: 2.2; }
+        ul.styled-list li { margin-bottom: 15px; display: flex; align-items: flex-start; gap: 15px; }
+
+        /* Flujo de proceso */
+        .flow { display: flex; align-items: flex-start; justify-content: space-between; gap: 20px; margin-top: 40px; }
+        .flow-item { flex: 1; text-align: center; }
+        .flow-icon { 
+            width: 80px; height: 80px; background: var(--bg-secondary); border-radius: 50%; 
+            display: flex; align-items: center; justify-content: center; margin: 0 auto 20px;
+            font-size: 2rem; color: var(--accent-corporate); border: 1px solid var(--border-light);
+        }
+
+        /* Diagrama TAM/SAM/SOM */
+        .market-diagram {
+            position: relative;
+            width: 450px;
+            height: 450px;
+            margin: 0 auto;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .circle {
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: absolute;
+        }
+        .tam { width: 450px; height: 450px; background: #F1F5F9; border: 2px dashed #CBD5E1; }
+        .sam { width: 300px; height: 300px; background: #E2E8F0; border: 1px solid #94A3B8; }
+        .som { width: 160px; height: 160px; background: var(--accent-soft); color: white; border: none; box-shadow: 0 10px 20px rgba(155, 144, 127, 0.3); }
+        .circle-label { position: absolute; font-weight: 700; text-align: center; pointer-events: none;}
+        .tam-label { top: 25px; color: #64748B; font-size: 1rem;}
+        .sam-label { top: 35px; color: #475569; font-size: 1rem;}
+        .som-label { font-size: 1.2rem; }
+
+        /* Tarjeta ROI */
+        .roi-card {
+            background: var(--accent-corporate);
+            color: white;
+            padding: 60px;
+            border-radius: 30px;
+            text-align: center;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 40px;
+        }
+        .roi-stat { font-size: 5rem; font-weight: 800; color: white; line-height: 1; margin-bottom: 10px;}
+        .roi-sub { color: #94A3B8; font-size: 1.1rem; }
+
+        /* Tabla comparativa */
+        table { width: 100%; border-collapse: collapse; margin-top: 20px; background: var(--bg-primary);} 
+        th { text-align: left; padding: 20px; color: var(--text-muted); font-size: 0.9rem; text-transform: uppercase; border-bottom: 2px solid var(--border-light); }
+        td { padding: 25px 20px; border-bottom: 1px solid var(--border-light); font-size: 1.1rem; }
+        .td-highlight { background: rgba(155, 144, 127, 0.05); font-weight: 600; border-left: 2px solid var(--accent-soft); }
+
+    </style>
+</head>
+<body>
+
+    <div class="progress-bar" id="progressBar"></div>
+
+    <div class="nav-trigger nav-trigger-left" onclick="prevSlide()">
+        <div class="nav-btn"><i class="fas fa-chevron-left"></i></div>
+    </div>
+    <div class="nav-trigger nav-trigger-right" onclick="nextSlide()">
+        <div class="nav-btn"><i class="fas fa-chevron-right"></i></div>
+    </div>
+
+    <div class="deck-container" id="deck">
+
+        <section class="slide">
+            <div class="content-wrapper" style="text-align: center;">
+                <img src="Krumm logo.jpg" alt="KRUMM Logo" style="max-width: 320px; margin-bottom: 40px; mix-blend-mode: multiply;">
+                
+                <h1 data-es="La Verdad Conductual en Contratación B2B" data-en="The Behavioral Truth in B2B Hiring">La Verdad Conductual en Contratación B2B</h1>
+                <p style="max-width: 700px; margin: 0 auto;" data-es="Validación empírica de talento basada en biometría y gamificación. Sin sesgos, escalable y en tiempo real." data-en="Empirical talent validation based on biometrics and gamification. Unbiased, scalable, and real-time.">Validación empírica de talento basada en biometría y gamificación. Sin sesgos, escalable y en tiempo real.</p>
+                
+                <div class="lang-toggle">
+                    <button class="lang-btn active" onclick="setLang('es')">ESPAÑOL</button>
+                    <button class="lang-btn" onclick="setLang('en')">ENGLISH</button>
+                </div>
+            </div>
+        </section>
+
+        <section class="slide">
+            <div class="content-wrapper grid-2">
+                <div>
+                    <h2 data-es="La contratación está rota" data-en="Hiring is Broken">La contratación está rota</h2>
+                    <p data-es="El <b>99%</b> de las empresas contratan basándose en opiniones subjetivas que fallan sistemáticamente en predecir el desempeño real." data-en="<b>99%</b> of companies hire based on subjective opinions that systematically fail to predict actual performance.">El <b>99%</b> de las empresas contratan basándose en opiniones subjetivas que fallan sistemáticamente en predecir el desempeño real.</p>
+                    <ul class="styled-list">
+                        <li data-es="<i class='fas fa-user-times' style='color: var(--danger); margin-top: 5px;'></i> <div><b>Entrevistas Humanas:</b> Lentas (8+ rondas) y cargadas de sesgos inconscientes.</div>" data-en="<i class='fas fa-user-times' style='color: var(--danger); margin-top: 5px;'></i> <div><b>Human Interviews:</b> Slow (8+ rounds) and loaded with unconscious bias.</div>"><i class='fas fa-user-times' style='color: var(--danger); margin-top: 5px;'></i> <div><b>Entrevistas Humanas:</b> Lentas (8+ rondas) y cargadas de sesgos inconscientes.</div></li>
+                        <li data-es="<i class='fas fa-robot' style='color: var(--danger); margin-top: 5px;'></i> <div><b>IA Avatares:</b> Experiencias incómodas y distópicas que alejan al mejor talento.</div>" data-en="<i class='fas fa-robot' style='color: var(--danger); margin-top: 5px;'></i> <div><b>AI Avatars:</b> Uncomfortable and dystopian experiences that drive away top talent.</div>"><i class='fas fa-robot' style='color: var(--danger); margin-top: 5px;'></i> <div><b>IA Avatares:</b> Experiencias incómodas y distópicas que alejan al mejor talento.</div></li>
+                    </ul>
+                </div>
+                <div class="card" style="text-align: center; border-color: var(--danger); background: white;">
+                    <span style="font-size: 6rem; font-weight: 800; color: var(--danger); display: block; line-height: 1; margin-bottom: 20px;">$32B</span>
+                    <p style="margin: 0; font-weight: 600; color: var(--text-main);" data-es="Desperdicio anual en ineficiencias del mercado de HR Tech." data-en="Annual waste in HR Tech market inefficiencies.">Desperdicio anual en ineficiencias del mercado de HR Tech.</p>
+                </div>
+            </div>
+        </section>
+
+        <section class="slide">
+            <div class="content-wrapper">
+                <h2 style="text-align: center; border: none; padding: 0;" data-es="Cómo KRUMM entrega la Verdad" data-en="How KRUMM Delivers the Truth">Cómo KRUMM entrega la Verdad</h2>
+                <div class="flow">
+                    <div class="flow-item">
+                        <div class="flow-icon"><i class="fas fa-gamepad"></i></div>
+                        <h3 data-es="1. Entorno Inmersivo" data-en="1. Immersive Environment">1. Entorno Inmersivo</h3>
+                        <p style="font-size: 1.05rem;" data-es="El candidato navega una experiencia interactiva diseñada para evaluar su comportamiento real ante diversos retos." data-en="The candidate navigates an interactive experience designed to evaluate their real behavior facing various challenges.">El candidato navega una experiencia interactiva diseñada para evaluar su comportamiento real ante diversos retos.</p>
+                    </div>
+                    <div class="flow-item"><i class="fas fa-arrow-right" style="margin-top: 35px; color: var(--border-light); font-size: 1.5rem;"></i></div>
+                    <div class="flow-item">
+                        <div class="flow-icon"><i class="fas fa-eye"></i></div>
+                        <h3 data-es="2. Captura Biométrica" data-en="2. Biometric Capture">2. Captura Biométrica</h3>
+                        <p style="font-size: 1.05rem;" data-es="Recopilamos micro-gestos y telemetría en tiempo real mientras el usuario toma decisiones." data-en="We collect micro-gestures and telemetry in real-time while the user makes decisions.">Recopilamos micro-gestos y telemetría en tiempo real mientras el usuario toma decisiones.</p>
+                    </div>
+                    <div class="flow-item"><i class="fas fa-arrow-right" style="margin-top: 35px; color: var(--border-light); font-size: 1.5rem;"></i></div>
+                    <div class="flow-item">
+                        <div class="flow-icon" style="background: var(--accent-corporate); color: white; border-color: var(--accent-corporate);"><i class="fas fa-file-invoice"></i></div>
+                        <h3 data-es="3. Reporte sin Sesgos" data-en="3. Unbiased Report">3. Reporte sin Sesgos</h3>
+                        <p style="font-size: 1.05rem;" data-es="Analítica empírica sobre habilidades blandas, tolerancia al estrés y liderazgo entregada a RRHH." data-en="Empirical analytics on soft skills, stress tolerance, and leadership delivered to HR.">Analítica empírica sobre habilidades blandas, tolerancia al estrés y liderazgo entregada a RRHH.</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section class="slide">
+            <div class="content-wrapper">
+                <h2 data-es="Nuestra Ventaja: Edge AI" data-en="Our Advantage: Edge AI">Nuestra Ventaja: Edge AI</h2>
+                <p data-es="Procesamiento local en el dispositivo del candidato para máxima privacidad y rendimiento." data-en="Local processing on the candidate's device for maximum privacy and performance.">Procesamiento local en el dispositivo del candidato para máxima privacidad y rendimiento.</p>
+                <div class="grid-3" style="margin-top: 40px;">
+                    <div class="card">
+                        <i class="fas fa-bolt" style="font-size: 2.5rem; color: var(--accent-soft); margin-bottom: 20px; display: block;"></i>
+                        <h3 data-es="Latencia Cero" data-en="Zero Latency">Latencia Cero</h3>
+                        <p style="font-size: 1.05rem; margin: 0;" data-es="Inferencia a 60fps directamente en el navegador. Experiencia fluida sin lags ni descargas." data-en="60fps inference directly in the browser. Fluid experience with no lag or downloads.">Inferencia a 60fps directamente en el navegador. Experiencia fluida sin lags ni descargas.</p>
+                    </div>
+                    <div class="card">
+                        <i class="fas fa-shield-halved" style="font-size: 2.5rem; color: var(--success); margin-bottom: 20px; display: block;"></i>
+                        <h3 data-es="Privacidad por Diseño" data-en="Privacy by Design">Privacidad por Diseño</h3>
+                        <p style="font-size: 1.05rem; margin: 0;" data-es="Cumplimiento nativo con EU AI Act. El video nunca sale del dispositivo, solo se envían tensores." data-en="Native compliance with EU AI Act. Video never leaves the device, only tensors are sent.">Cumplimiento nativo con EU AI Act. El video nunca sale del dispositivo, solo se envían tensores.</p>
+                    </div>
+                    <div class="card">
+                        <i class="fas fa-server" style="font-size: 2.5rem; color: var(--accent-corporate); margin-bottom: 20px; display: block;"></i>
+                        <h3 data-es="Infraestructura Escalable" data-en="Scalable Infrastructure">Infraestructura Escalable</h3>
+                        <p style="font-size: 1.05rem; margin: 0;" data-es="Costos de servidor mínimos. Aprovechamos el poder de cómputo del hardware del cliente." data-en="Minimal server costs. We leverage the computing power of the client's hardware.">Costos de servidor mínimos. Aprovechamos el poder de cómputo del hardware del cliente.</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section class="slide">
+            <div class="content-wrapper grid-2">
+                <div>
+                    <h2 data-es="El Foso Defensivo: Efecto de Red" data-en="The Defensive Moat: Network Effect">El Foso Defensivo: Efecto de Red</h2>
+                    <p data-es="Nuestra ventaja competitiva más fuerte es nuestro <b>Dataset Propietario</b> que se retroalimenta continuamente." data-en="Our strongest competitive advantage is our continuously self-feeding <b>Proprietary Dataset</b>.">Nuestra ventaja competitiva más fuerte es nuestro <b>Dataset Propietario</b> que se retroalimenta continuamente.</p>
+                    <ul class="styled-list">
+                        <li data-es="<i class='fas fa-database' style='color: var(--accent-soft); margin-top: 5px;'></i> <div><b>Precisión Incremental:</b> El algoritmo de evaluación se vuelve más preciso y robusto con cada candidato procesado.</div>" data-en="<i class='fas fa-database' style='color: var(--accent-soft); margin-top: 5px;'></i> <div><b>Incremental Precision:</b> The assessment algorithm becomes more accurate and robust with each processed candidate.</div>"><i class='fas fa-database' style='color: var(--accent-soft); margin-top: 5px;'></i> <div><b>Precisión Incremental:</b> El algoritmo de evaluación se vuelve más preciso y robusto con cada candidato procesado.</div></li>
+                        <li data-es="<i class='fas fa-lock' style='color: var(--accent-soft); margin-top: 5px;'></i> <div><b>Barrera de Entrada:</b> Capturamos datos de comportamiento real que son imposibles de replicar por los ATS y competidores tradicionales.</div>" data-en="<i class='fas fa-lock' style='color: var(--accent-soft); margin-top: 5px;'></i> <div><b>Entry Barrier:</b> We capture real behavioral data that is impossible for ATS and traditional competitors to replicate.</div>"><i class='fas fa-lock' style='color: var(--accent-soft); margin-top: 5px;'></i> <div><b>Barrera de Entrada:</b> Capturamos datos de comportamiento real que son imposibles de replicar por los ATS y competidores tradicionales.</div></li>
+                    </ul>
+                </div>
+                <div class="card" style="text-align: center; border-color: var(--accent-corporate);">
+                    <i class="fas fa-network-wired" style="font-size: 5rem; color: var(--accent-corporate); display: block; margin-bottom: 20px;"></i>
+                    <h3 data-es="Inteligencia Conductual" data-en="Behavioral Intelligence">Inteligencia Conductual</h3>
+                    <p style="margin: 0; font-weight: 600;" data-es="Cada interacción mejora nuestro estándar global de predicción de talento." data-en="Every interaction improves our global standard for talent prediction.">Cada interacción mejora nuestro estándar global de predicción de talento.</p>
+                </div>
+            </div>
+        </section>
+
+        <section class="slide">
+            <div class="content-wrapper">
+                <h2 style="text-align: center; border: none; padding: 0;" data-es="El Equipo Core" data-en="The Core Team">El Equipo Core</h2>
+                <div class="grid-3" style="margin-top: 50px;">
+                    <div class="card" style="text-align: center;">
+                        <h3 style="color: var(--accent-corporate);">Nicolas Cowley</h3>
+                        <span style="display: block; color: var(--accent-soft); font-weight: 700; letter-spacing: 1px; margin-bottom: 15px; font-size: 0.9rem;">CEO & DIRECTOR COMERCIAL</span>
+                        <p style="font-size: 1rem; margin: 0;" data-es="Experto en compliance y ética de IA. Lidera la estrategia comercial, alianzas corporativas y la expansión B2B." data-en="Expert in AI compliance and ethics. Leads commercial strategy, corporate partnerships, and B2B expansion.">Experto en compliance y ética de IA. Lidera la estrategia comercial, alianzas corporativas y la expansión B2B.</p>
+                    </div>
+                    <div class="card" style="text-align: center;">
+                        <h3 style="color: var(--accent-corporate);">Carlos Saldivia</h3>
+                        <span style="display: block; color: var(--accent-soft); font-weight: 700; letter-spacing: 1px; margin-bottom: 15px; font-size: 0.9rem;">CTO</span>
+                        <p style="font-size: 1rem; margin: 0;" data-es="Magíster en ingeniería electrónica, especialista en procesamiento de señales EEG basado en GSP. Amplia experiencia en biometría y biotech." data-en="MSc in Electronic Engineering, specialist in EEG signal processing based on GSP. Extensive experience in biometrics and biotech.">Magíster en ingeniería electrónica, especialista en procesamiento de señales EEG basado en GSP. Amplia experiencia en biometría y biotech.</p>
+                    </div>
+                    <div class="card" style="text-align: center;">
+                        <h3 style="color: var(--accent-corporate);">Gabriel Caro</h3>
+                        <span style="display: block; color: var(--accent-soft); font-weight: 700; letter-spacing: 1px; margin-bottom: 15px; font-size: 0.9rem;">CPO</span>
+                        <p style="font-size: 1rem; margin: 0;" data-es="Especialista en investigación y desarrollo (I+D), experto en didáctica y metodologías activas, especialmente enfocado en gamificación." data-en="R&D Specialist, expert in didactics and active methodologies, with a special focus on gamification.">Especialista en investigación y desarrollo (I+D), experto en didáctica y metodologías activas, especialmente enfocado en gamificación.</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section class="slide">
+            <div class="content-wrapper grid-2">
+                <div class="market-diagram">
+                    <div class="circle tam"><span class="circle-label tam-label">TAM: $32B</span></div>
+                    <div class="circle sam"><span class="circle-label sam-label">SAM: $2.5B</span></div>
+                    <div class="circle som"><span class="circle-label som-label">SOM: $100M</span></div>
+                </div>
+                <div>
+                    <h2 data-es="Mercado Target" data-en="Target Market">Mercado Target</h2>
+                    <p data-es="Foco estratégico inicial en industrias B2B de <b>Alta Rotación y Alta Responsabilidad</b>." data-en="Initial strategic focus on B2B industries with <b>High Turnover and High Responsibility</b>.">Foco estratégico inicial en industrias B2B de <b>Alta Rotación y Alta Responsabilidad</b>.</p>
+                    <ul class="styled-list">
+                        <li data-es="<i class='fas fa-bullseye' style='color: var(--accent-soft); margin-top: 5px;'></i> <div><b>TAM ($32B):</b> Mercado Global de HR Tech.</div>" data-en="<i class='fas fa-bullseye' style='color: var(--accent-soft); margin-top: 5px;'></i> <div><b>TAM ($32B):</b> Global HR Tech Market.</div>"><i class='fas fa-bullseye' style='color: var(--accent-soft); margin-top: 5px;'></i> <div><b>TAM ($32B):</b> Mercado Global de HR Tech.</div></li>
+                        <li data-es="<i class='fas fa-bullseye' style='color: var(--accent-soft); margin-top: 5px;'></i> <div><b>SAM ($2.5B):</b> Sectores globales de reclutamiento crítico (Logística, Finanzas).</div>" data-en="<i class='fas fa-bullseye' style='color: var(--accent-soft); margin-top: 5px;'></i> <div><b>SAM ($2.5B):</b> Global critical recruitment sectors (Logistics, Finance).</div>"><i class='fas fa-bullseye' style='color: var(--accent-soft); margin-top: 5px;'></i> <div><b>SAM ($2.5B):</b> Sectores globales de reclutamiento crítico (Logística, Finanzas).</div></li>
+                        <li data-es="<i class='fas fa-bullseye' style='color: var(--accent-soft); margin-top: 5px;'></i> <div><b>SOM ($100M):</b> Mercado objetivo inicial LatAm (Acuicultura y Pesca).</div>" data-en="<i class='fas fa-bullseye' style='color: var(--accent-soft); margin-top: 5px;'></i> <div><b>SOM ($100M):</b> Initial target market LatAm (Aquaculture and Fishing).</div>"><i class='fas fa-bullseye' style='color: var(--accent-soft); margin-top: 5px;'></i> <div><b>SOM ($100M):</b> Mercado objetivo inicial LatAm (Acuicultura y Pesca).</div></li>
+                    </ul>
+                </div>
+            </div>
+        </section>
+
+        <section class="slide">
+            <div class="content-wrapper">
+                <h2 style="text-align: center; border: none; padding: 0;" data-es="Estrategia de Captura de Valor" data-en="Value Capture Strategy">Estrategia de Captura de Valor</h2>
+                <div class="roi-card" style="margin: 40px auto; max-width: 900px;">
+                    <div>
+                        <p class="roi-sub" data-es="Por cada ahorro en rotación generado" data-en="For every turnover saving generated">Por cada ahorro en rotación generado</p>
+                        <span class="roi-stat">$10</span>
+                    </div>
+                    <i class="fas fa-arrow-right" style="font-size: 3rem; color: var(--accent-soft);"></i>
+                    <div style="background: rgba(255,255,255,0.1); padding: 30px 50px; border-radius: 20px; border: 1px solid rgba(255,255,255,0.2);">
+                        <p class="roi-sub" style="color: white; font-weight: 600;" data-es="Retorno para KRUMM (SaaS)" data-en="Return for KRUMM (SaaS)">Retorno para KRUMM (SaaS)</p>
+                        <span class="roi-stat" style="color: var(--accent-soft);">$1</span>
+                    </div>
+                </div>
+                <div style="text-align: center; max-width: 800px; margin: 0 auto;">
+                    <p data-es="Modelo de negocio <b>B2B SaaS</b> con contratos anuales y pricing basado en volumen de candidatos. Estrategia comercial <i>Land & Expand</i> por departamentos corporativos." data-en="<b>B2B SaaS</b> business model with annual contracts and pricing based on candidate volume. <i>Land & Expand</i> commercial strategy across corporate departments.">Modelo de negocio <b>B2B SaaS</b> con contratos anuales y pricing basado en volumen de candidatos. Estrategia comercial <i>Land & Expand</i> por departamentos corporativos.</p>
+                </div>
+            </div>
+        </section>
+
+        <section class="slide">
+            <div class="content-wrapper">
+                <h2 data-es="¿Por qué KRUMM domina?" data-en="Why KRUMM Dominates?">¿Por qué KRUMM domina?</h2>
+                <table>
+                    <thead>
+                        <tr>
+                            <th data-es="Criterio de Evaluación" data-en="Evaluation Criteria">Criterio de Evaluación</th>
+                            <th data-es="ATS Tradicional" data-en="Traditional ATS">ATS Tradicional</th>
+                            <th data-es="IA Avatares" data-en="AI Avatars">IA Avatares</th>
+                            <th class="td-highlight" style="color: var(--accent-corporate); font-size: 1rem;">KRUMM</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td data-es="Naturaleza de los Datos" data-en="Nature of Data">Naturaleza de los Datos</td>
+                            <td data-es="❌ Subjetivos" data-en="❌ Subjective">❌ Subjetivos</td>
+                            <td data-es="⚠️ Declarativos" data-en="⚠️ Declarative">⚠️ Declarativos</td>
+                            <td class="td-highlight" data-es="✅ Empíricos (Biometría)" data-en="✅ Empirical (Biometrics)">✅ Empíricos (Biometría)</td>
+                        </tr>
+                        <tr>
+                            <td data-es="Privacidad (Regulación EU)" data-en="Privacy (EU Regulation)">Privacidad (Regulación EU)</td>
+                            <td data-es="✅ Segura" data-en="✅ Secure">✅ Segura</td>
+                            <td data-es="❌ Riesgo en Nube" data-en="❌ Cloud Risk">❌ Riesgo en Nube</td>
+                            <td class="td-highlight" data-es="✅ Nativa (Edge AI)" data-en="✅ Native (Edge AI)">✅ Nativa (Edge AI)</td>
+                        </tr>
+                        <tr>
+                            <td data-es="Experiencia del Candidato" data-en="Candidate Experience">Experiencia del Candidato</td>
+                            <td data-es="❌ Alta Fricción" data-en="❌ High Friction">❌ Alta Fricción</td>
+                            <td data-es="❌ Incómoda" data-en="❌ Uncomfortable">❌ Incómoda</td>
+                            <td class="td-highlight" data-es="✅ Inmersiva / Gamificada" data-en="✅ Immersive / Gamified">✅ Inmersiva / Gamificada</td>
+                        </tr>
+                        <tr>
+                            <td data-es="Evaluación de Soft Skills" data-en="Soft Skills Evaluation">Evaluación de Soft Skills</td>
+                            <td data-es="❌ Nula" data-en="❌ None">❌ Nula</td>
+                            <td data-es="⚠️ Limitada" data-en="⚠️ Limited">⚠️ Limitada</td>
+                            <td class="td-highlight" data-es="✅ Alta Precisión" data-en="✅ High Precision">✅ Alta Precisión</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </section>
+
+        <section class="slide">
+            <div class="content-wrapper grid-2">
+                <div>
+                    <h2 style="font-size: 3.5rem; margin-bottom: 10px; border: none; padding: 0;" data-es="El Próximo Hito" data-en="The Next Milestone">El Próximo Hito</h2>
+                    <p style="font-size: 1.5rem; color: var(--text-main);" data-es="Buscamos <b>Smart Capital</b> para acelerar nuestro Go-To-Market." data-en="We are looking for <b>Smart Capital</b> to accelerate our Go-To-Market.">Buscamos <b>Smart Capital</b> para acelerar nuestro Go-To-Market.</p>
+                    
+                    <div style="margin-top: 40px; border-left: 4px solid var(--accent-soft); padding-left: 20px;">
+                        <h3 data-es="Uso de Fondos:" data-en="Use of Funds:">Uso de Fondos:</h3>
+                        <p style="font-size: 1.1rem; margin: 0;" data-es="Finalizar calibración de hardware Edge y escalar comercialmente nuestra plataforma." data-en="Finalize Edge hardware calibration and commercially scale our platform.">Finalizar calibración de hardware Edge y escalar comercialmente nuestra plataforma.</p>
+                    </div>
+                </div>
+                <div class="card" style="text-align: center; padding: 60px 40px; border-color: var(--accent-corporate);">
+                    <h3 style="color: var(--text-muted); text-transform: uppercase; letter-spacing: 2px; font-size: 1rem;" data-es="Meta a 36 meses" data-en="36-month Goal">Meta a 36 meses</h3>
+                    <span style="font-size: 5rem; font-weight: 800; color: var(--accent-corporate); display: block; margin: 10px 0;">$10M+</span>
+                    <span style="font-size: 1.2rem; color: var(--accent-soft); font-weight: 700;">ARR (Annual Recurring Revenue)</span>
+                </div>
+            </div>
+        </section>
+
+    </div>
+
+    <script>
+        let currentSlide = 0;
+        let currentLang = 'es';
+        const slides = document.querySelectorAll('.slide');
+        const deck = document.getElementById('deck');
+        const progressBar = document.getElementById('progressBar');
+
+        // Inicializar primer slide visible
+        slides[0].classList.add('active');
+
+        function updateSlide() {
+            deck.style.transform = `translateX(-${currentSlide * 100}vw)`;
+            progressBar.style.width = `${((currentSlide + 1) / slides.length) * 100}%`;
+            
+            slides.forEach((s, i) => {
+                if(i === currentSlide) {
+                    s.classList.add('active');
+                } else {
+                    s.classList.remove('active');
+                }
+            });
+        }
+
+        function nextSlide() {
+            if (currentSlide < slides.length - 1) {
+                currentSlide++;
+                updateSlide();
+            }
+        }
+
+        function prevSlide() {
+            if (currentSlide > 0) {
+                currentSlide--;
+                updateSlide();
+            }
+        }
+
+        function setLang(lang) {
+            currentLang = lang;
+            document.querySelectorAll('[data-es]').forEach(el => {
+                el.innerHTML = el.getAttribute('data-' + lang);
+            });
+            document.querySelectorAll('.lang-btn').forEach(btn => {
+                btn.classList.toggle('active', btn.innerText.toLowerCase().includes(lang === 'es' ? 'español' : 'english'));
+            });
+            document.documentElement.lang = lang;
+        }
+
+        // Navegación por teclado
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'ArrowRight' || e.key === ' ') nextSlide();
+            if (e.key === 'ArrowLeft') prevSlide();
+        });
+        
+        // Setup inicial barra
+        progressBar.style.width = `${(1 / slides.length) * 100}%`;
+    </script>
+</body>
+</html>

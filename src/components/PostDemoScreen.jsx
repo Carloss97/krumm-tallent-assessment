@@ -57,16 +57,7 @@ const PostDemoScreen = ({ summary = null, onRestart }) => {
             <RefreshCcw size={16} /> {c.restartButton}
           </button>
         </div>
-        <Report isDummy={true} demoSummary={summary} />
-      </div>
-    );
-  }
-
-  return (
-    <div className="post-demo-container" style={{ height: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#f8fafc', padding: '24px', overflow: 'hidden' }}>
-      <motion.div 
-        initial={{ opacity: 0, scale: 0.95 }}
-        animate={{ opacity: 1, scale: 1 }}
+        <Report demoSummary={summary} />
         className="glass-panel"
         style={{ maxWidth: '800px', width: '100%', padding: '48px', textAlign: 'center', borderRadius: '32px' }}
       >
