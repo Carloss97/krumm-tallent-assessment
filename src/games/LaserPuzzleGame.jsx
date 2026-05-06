@@ -228,7 +228,7 @@ const LaserPuzzleGame = ({ isActive, onEndGame, isDemo, showBriefing = true, tim
         setGrid({});
         setMoves(0);
         setTotalMoves(0);
-        setGamePhase(isDemo ? 'briefing' : 'playing');
+        setGamePhase(isDemo && showBriefing ? 'briefing' : 'playing');
         setQuizStep(0);
 
         setTimeout(() => {
@@ -238,7 +238,7 @@ const LaserPuzzleGame = ({ isActive, onEndGame, isDemo, showBriefing = true, tim
           setBriefing(isDemo && showBriefing ? getBriefing(0, language) : null);
         }, 0);
     }
-  }, [isActive, isDemo, startTracking, language]);
+  }, [isActive, isDemo, showBriefing, startTracking, language]);
   
   const handleCellClick = useCallback((x, y) => {
     if (gamePhase !== 'playing') return;
