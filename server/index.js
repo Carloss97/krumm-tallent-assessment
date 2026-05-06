@@ -138,6 +138,17 @@ app.get('/health', async (req, res) => {
 	});
 });
 
+// Lightweight DB ping endpoint (useful to wake Neon / pooled DBs)
+app.get('/api/db/ping', async (req, res) => {
+	try {
+		const ok = await checkDb();
+		return res.json({ ok, timestamp: new Date().toISOString() });
+	} catch (err) {
+		logger.error({ err: err?.message }, 'db_ping_failed');
+		return res.status(500).json({ ok: false, error: 'db ping failed' });
+	}
+});
+
 app.get('/api/feature-flags', (req, res) => {
 	const enableHeroDemo = parseBoolean(process.env.ENABLE_HERO_DEMO, false);
 	const heroDemoPercentage = parseInteger(process.env.HERO_DEMO_PERCENTAGE, 0);
@@ -448,6 +459,26 @@ app.use((err, req, res, next) => {
 	if (res.headersSent) return next(err);
 	return res.status(500).json({ error: 'Internal Server Error' });
 });
+
+// DB keep-alive: periodically ping the DB to reduce Neon/PG suspension
+try {
+	const dbClientName = process.env.DB_CLIENT || (process.env.DATABASE_URL ? 'pg' : 'sqlite');
+	const enableKeepAlive = (process.env.ENABLE_DB_KEEPALIVE || 'true').toLowerCase() !== 'false';
+	if (dbClientName === 'pg' && enableKeepAlive) {
+		const keepAliveIntervalMs = parseInteger(process.env.DB_KEEPALIVE_MS, 180000);
+		logger.info({ event: 'db', detail: `DB keep-alive enabled, interval=${keepAliveIntervalMs}ms` });
+		setInterval(async () => {
+			try {
+				const ok = await checkDb();
+				logger.debug({ event: 'db-keepalive', ok }, 'db keepalive probe');
+			} catch (err) {
+				logger.warn({ event: 'db-keepalive-failed', err: err?.message }, 'db keepalive probe failed');
+			}
+		}, keepAliveIntervalMs).unref();
+	}
+} catch (err) {
+	logger.warn({ event: 'db-keepalive-init', err: err?.message }, 'db keepalive init failed');
+}
 
 const port = parseInteger(process.env.PORT, 4000);
 app.listen(port, '0.0.0.0', () => {

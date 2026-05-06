@@ -292,22 +292,34 @@ const Report = ({ isDummy = false, useDummyData = false, demoSummary = null }) =
           setIsAnalyzing(false);
         }
 
-        // Save session to backend
+        // Save session to backend in background with retries (don't block UI)
         if (!dummyModeEnabled && hasRealData && !sessionSavedId) {
-          try {
+          (async () => {
             const safeMetadata = typeof getSessionMetadata === 'function'
               ? getSessionMetadata()
               : { timestamp: new Date().toISOString() };
 
-            const saveRes = await saveSessionToBackend({
-              participant: participantProfile,
-              sessionData: reportData,
-              metadata: safeMetadata
-            });
-            setSessionSavedId(saveRes.sessionId);
-          } catch (error) {
-            console.error('Backend save failure', error);
-          }
+            const maxAttempts = 3;
+            let attempt = 0;
+            while (attempt < maxAttempts) {
+              attempt += 1;
+              try {
+                const saveRes = await saveSessionToBackend({
+                  participant: participantProfile,
+                  sessionData: reportData,
+                  metadata: safeMetadata
+                });
+                if (saveRes && saveRes.sessionId) {
+                  setSessionSavedId(saveRes.sessionId);
+                }
+                break;
+              } catch (err) {
+                const backoff = 500 * Math.pow(2, attempt);
+                console.warn('[Report] save attempt failed, retrying', { attempt, err: err?.message, backoff });
+                await new Promise((r) => setTimeout(r, backoff));
+              }
+            }
+          })();
         }
       };
       generateReport();

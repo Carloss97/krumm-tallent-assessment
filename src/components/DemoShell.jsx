@@ -271,14 +271,15 @@ const DemoShell = () => {
 
   const startedAtRef = useRef(0);
   const finishedRef = useRef(false);
+  const completionLockRef = useRef(false);
   const completedRef = useRef(completed);
 
   const handleDemoComplete = useCallback((completedObj, reason = 'completed') => {
-    if (finishedRef.current) {
-      console.log('[DEMO-TRACE] handleDemoComplete guard: already finished, skipping');
+    if (completionLockRef.current) {
+      console.log('[DEMO-TRACE] handleDemoComplete re-entry guard: already processing, skipping');
       return;
     }
-    finishedRef.current = true;
+    completionLockRef.current = true;
     console.log('[DEMO-TRACE] handleDemoComplete executing with reason:', reason);
     
     const completedIds = Object.keys(completedObj || {});
@@ -312,13 +313,15 @@ const DemoShell = () => {
       activities: enrichedActivities,
       telemetry: telemetryReport,
     });
-
     try {
       stopTracking('demo', 0, null, { completedIds, timeUsedSec });
       recordTrialEvent({ event: 'demo_complete', payload: { completedIds, timeUsedSec, completedCount: completedIds.length } });
     } catch {
       // swallow telemetry errors
     }
+
+    // Mark finished only after summary and telemetry recorded
+    finishedRef.current = true;
   }, [ACTIVITIES, sessionData, selectedGameIds, stopTracking, recordTrialEvent]);
 
   useEffect(() => {

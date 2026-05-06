@@ -13,6 +13,7 @@
     "start": "node server/index.js",
     "dev:full": "concurrently \"npm run dev:frontend\" \"npm run dev:server\"",
     "build": "vite build",
+    "postinstall": "node scripts/copy-logo.js",
     "lint": "eslint .",
     "preview": "vite preview",
     "test": "vitest run",
