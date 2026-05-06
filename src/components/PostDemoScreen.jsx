@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion } from 'framer-motion';
 import { useLanguage } from '../context/LanguageContext';
 import { CheckCircle2, ArrowRight, Mail, RefreshCcw } from 'lucide-react';
 import Report from '../Report';
@@ -18,10 +18,9 @@ const PostDemoScreen = ({ summary = null, onRestart }) => {
       contactBody: 'Obtén la batería completa de 14 juegos y análisis avanzado de Google Gemini.',
       emailUs: 'Contactar a Ventas',
       generating: 'Generando informe final...',
-      metricsTitle: 'Métricas de la Sesión',
       timeUsed: 'Tiempo utilizado',
-      coverage: 'Cobertura de datos'
-      },
+      coverage: 'Cobertura de datos',
+    },
     en: {
       title: 'Simulation Completed!',
       subtitle: 'We have analyzed your behavioral profile during the demo.',
@@ -31,9 +30,8 @@ const PostDemoScreen = ({ summary = null, onRestart }) => {
       contactBody: 'Get the full 14-game battery and advanced Google Gemini analysis.',
       emailUs: 'Contact Sales',
       generating: 'Generating final report...',
-      metricsTitle: 'Session Metrics',
       timeUsed: 'Time used',
-      coverage: 'Data coverage'
+      coverage: 'Data coverage',
     }
   };
 
@@ -58,6 +56,15 @@ const PostDemoScreen = ({ summary = null, onRestart }) => {
           </button>
         </div>
         <Report demoSummary={summary} />
+      </div>
+    );
+  }
+
+  return (
+    <div className="post-demo-container" style={{ height: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#f8fafc', padding: '24px', overflow: 'hidden' }}>
+      <motion.div 
+        initial={{ opacity: 0, scale: 0.95 }}
+        animate={{ opacity: 1, scale: 1 }}
         className="glass-panel"
         style={{ maxWidth: '800px', width: '100%', padding: '48px', textAlign: 'center', borderRadius: '32px' }}
       >

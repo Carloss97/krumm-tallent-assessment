@@ -50,82 +50,69 @@ const getBriefing = (idx, language) => {
   return pack[idx] || null;
 };
 
-const DEMO_LEVELS = [
+export const LASER_DEMO_LEVELS = [
   {
-    // LEVEL 1: Introduction to Reflection
-    // Single antenna, multiple reflectors, learning basic deflection mechanics
-    // Par: 4 (actual puzzle, not trivial)
+    // LEVEL 1: Two-step reflection puzzle
     name: 'Sector Alpha',
     cols: 8,
     rows: 7,
-    par: 4,
+    par: 2,
     timeLimit: 50,
     hint: {
-      es: 'Coloca los espejos para que el rayo llegue a la antena. El reflector (/) desvía hacia arriba/derecha.',
-      en: 'Place mirrors so the beam reaches the antenna. The (/) reflector deflects up/right.'
+      es: 'Encadena dos espejos para llevar el rayo hasta la antena.',
+      en: 'Chain two mirrors to guide the beam to the antenna.'
     },
     cells: [
       { x: 0, y: 3, type: 'ship', dir: 'right' },
       { x: 7, y: 0, type: 'antenna' },
-      { x: 3, y: 3, type: 'reflector_ne', movable: true },
-      { x: 5, y: 1, type: 'reflector_ne', movable: true },
-      { x: 2, y: 5, type: 'reflector_nw', movable: true },
+      { x: 1, y: 5, type: 'reflector_ne', movable: true },
+      { x: 6, y: 5, type: 'reflector_ne', movable: true },
     ],
     quiz: [],
   },
   {
-    // LEVEL 2: Introduction to Bifurcation
-    // Multiple antennas, bifurcator must split beam efficiently
-    // Par: 6 (increased complexity)
+    // LEVEL 2: Bifurcation into two receivers
     name: 'Sector Beta',
     cols: 10,
     rows: 7,
-    par: 6,
+    par: 3,
     timeLimit: 65,
     hint: {
-      es: 'Usa el bifurcador (+) para dividir el haz hacia ambas antenas. Luego refleja cada rama.',
-      en: 'Use the bifurcator (+) to split the beam to both antennas. Then reflect each branch.'
+      es: 'Mueve el bifurcador al carril central y ajusta un espejo por cada rama.',
+      en: 'Move the bifurcator to the center lane and place one mirror on each branch.'
     },
     cells: [
       { x: 0, y: 3, type: 'ship', dir: 'right' },
       { x: 9, y: 1, type: 'antenna' },
       { x: 9, y: 5, type: 'antenna' },
-      { x: 3, y: 3, type: 'bifurcator', movable: true },
-      { x: 6, y: 1, type: 'reflector_ne', movable: true },
-      { x: 6, y: 5, type: 'reflector_nw', movable: true },
-      { x: 1, y: 0, type: 'reflector_ne', movable: true },
+      { x: 1, y: 1, type: 'bifurcator', movable: true },
+      { x: 1, y: 5, type: 'reflector_ne', movable: true },
+      { x: 8, y: 0, type: 'reflector_ne', movable: true },
     ],
     quiz: [],
   },
   {
-    // LEVEL 3: Portal Introduction & Complex Obstacles
-    // Multiple techniques: bifurcation, reflection, portal traversal
-    // Par: 8 (significant puzzle)
+    // LEVEL 3: Portal traversal with bifurcation after the jump
     name: 'Sector Gamma',
     cols: 10,
     rows: 8,
-    par: 8,
+    par: 3,
     timeLimit: 80,
     hint: {
-      es: 'Las paredes bloquean la ruta directa. Usa el portal (P) para saltar al otro lado del bloqueo.',
-      en: 'Walls block the direct route. Use the portal (P) to jump across the blockage.'
+      es: 'El portal evita el muro; después, divide el haz y resuelve ambas salidas.',
+      en: 'Use the portal to bypass the wall, then split the beam and solve both exits.'
     },
     cells: [
       { x: 0, y: 3, type: 'ship', dir: 'right' },
-      // Portal system: entry at 2,3 → exit at 6,5
       { x: 2, y: 3, type: 'portal_blue', targetPortalId: 'p1' },
-      { x: 6, y: 5, type: 'portal_blue', portalId: 'p1' },
-      // Antenna at far corner
+      { x: 6, y: 3, type: 'portal_blue', portalId: 'p1' },
       { x: 9, y: 0, type: 'antenna' },
-      // Wall blocking direct path (vertical barrier)
+      { x: 9, y: 6, type: 'antenna' },
       { x: 4, y: 1, type: 'wall' }, { x: 4, y: 2, type: 'wall' }, { x: 4, y: 3, type: 'wall' },
       { x: 4, y: 4, type: 'wall' }, { x: 4, y: 5, type: 'wall' },
-      // Additional wall cluster to force strategy
-      { x: 8, y: 6, type: 'wall' }, { x: 8, y: 7, type: 'wall' },
-      // Reflectors for solving
-      { x: 3, y: 6, type: 'reflector_ne', movable: true },
-      { x: 7, y: 2, type: 'reflector_nw', movable: true },
-      { x: 9, y: 3, type: 'reflector_ne', movable: true },
+      { x: 1, y: 1, type: 'bifurcator', movable: true },
+      { x: 7, y: 0, type: 'reflector_ne', movable: true },
+      { x: 7, y: 6, type: 'reflector_nw', movable: true },
     ],
     quiz: [
       { 
@@ -142,7 +129,11 @@ const DEMO_LEVELS = [
   }
 ];
 
-function traceBeam(grid, cols, rows) {
+export const getLaserEfficiency = (moves, par) => {
+  return Math.min(100, Math.round((Math.max(1, par) / Math.max(1, moves)) * 100));
+};
+
+export function traceBeam(grid, cols, rows) {
   const shipEntry = Object.entries(grid).find(([, c]) => c.type === 'ship');
   if (!shipEntry) return { beamCells: new Set(), litAntennas: new Set() };
   
@@ -184,7 +175,7 @@ function traceBeam(grid, cols, rows) {
   return { beamCells, litAntennas };
 }
 
-const buildGrid = (level) => {
+export const buildGrid = (level) => {
   const g = {};
   level.cells.forEach(c => { g[`${c.x},${c.y}`] = { ...c }; });
   return g;
@@ -205,9 +196,7 @@ const LaserPuzzleGame = ({ isActive, onEndGame, isDemo, showBriefing = true, tim
   const quizScore = useRef(0);
   const hasEndedRef = useRef(false);
   
-  const currentLevel = useMemo(() => {
-    return procLevels ? procLevels[levelIdx] : null;
-  }, [procLevels, levelIdx]);
+  const currentLevel = useMemo(() => procLevels ? procLevels[levelIdx] : null, [procLevels, levelIdx]);
 
   const finishGame = useCallback((tm) => {
     if(hasEndedRef.current) return;
@@ -240,6 +229,7 @@ const LaserPuzzleGame = ({ isActive, onEndGame, isDemo, showBriefing = true, tim
   
   const levelTimeLimit = isDemo && currentLevel?.timeLimit ? currentLevel.timeLimit : timeLimit;
   const timeLeft = useGameTimer({ isActive: isActive && gamePhase === 'playing', timeLimit: levelTimeLimit, onEnd: advanceLevel });
+  const levelEfficiency = currentLevel ? getLaserEfficiency(moves, currentLevel.par) : 100;
 
   useEffect(() => {
     if (isActive) {
@@ -255,9 +245,9 @@ const LaserPuzzleGame = ({ isActive, onEndGame, isDemo, showBriefing = true, tim
         setQuizStep(0);
 
         setTimeout(() => {
-          setProcLevels(DEMO_LEVELS);
+          setProcLevels(LASER_DEMO_LEVELS);
           setLevelIdx(0);
-          setGrid(buildGrid(DEMO_LEVELS[0]));
+          setGrid(buildGrid(LASER_DEMO_LEVELS[0]));
           setBriefing(isDemo && showBriefing ? getBriefing(0, language) : null);
         }, 0);
     }
@@ -419,6 +409,7 @@ const LaserPuzzleGame = ({ isActive, onEndGame, isDemo, showBriefing = true, tim
               <span>{level.name}</span>
               <span style={{ color:satColor }}>⏱ {timeLeft}s</span>
               <span>Moves: <span style={{ color:'#4f46e5' }}>{moves}</span></span>
+              <span style={{ color:'#0f766e' }}>Eff: {levelEfficiency}%</span>
               <span>Antennas: <span style={{ color: litCount === allAntennas.length ? '#059669' : '#b91c1c' }}>{litCount}/{allAntennas.length}</span></span>
             </div>
             

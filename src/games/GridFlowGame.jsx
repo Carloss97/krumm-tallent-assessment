@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef, useCallback } from 'react';
+import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useTelemetry } from '../TelemetryContext';
 import { playMemoryClick, playSuccessSound, playLevelUpSound } from '../utils/audio';
@@ -9,7 +9,7 @@ const GRID = 10;
 const SAT_DECAY = 1; // % per second (reduced from 2 for better pacing)
 const CELL = 60; // Larger cells for better screen occupancy
 
-const LEVELS = [
+export const GRID_LEVELS = [
   {
     // NIVEL 1: Introduction - simple linear path, no energy drain, high time limit
     // Objetivo: aprender controles y mecánica de satisfacción
@@ -23,14 +23,12 @@ const LEVELS = [
     startPos: { x:5, y:9 } 
   },
   {
-    // NIVEL 2: Energy management - first energy drain mechanic + strategic station
-    // Objetivo: aprender que energía es un recurso limitado
-    // Ruta óptima: ~18 movimientos, consume 36 energía, necesita estación
-    walls: ['3,2', '3,3', '3,4', '3,5', '3,6', '3,7', '3,8'],
+    // NIVEL 2: Energy management - single bottleneck with a meaningful recharge point
+    walls: ['3,0', '3,1', '3,2', '3,3', '3,4', '3,5', '3,6', '3,7', '3,8'],
     targets: [
-      { id:3, x:2, y:4, color:'#3b82f6', points:120, dropZone:{x:8,y:4} }
+      { id:3, x:1, y:8, color:'#3b82f6', points:120, dropZone:{x:8,y:8} }
     ], 
-    stations: [{ x:3, y:9 }],  // Station on the path back
+    stations: [{ x:3, y:9 }],
     energyDrain: 2,
     timeLimit: 50,
     startPos: { x:0, y:0 } 
@@ -50,12 +48,16 @@ const LEVELS = [
       { id:5, x:2, y:8, color:'#10b981', points:150, dropZone:{x:8,y:1} },
       { id:6, x:8, y:8, color:'#f59e0b', points:150, dropZone:{x:1,y:1} }
     ], 
-    stations: [{ x:0, y:5 }, { x:9, y:5 }],  // Stations on critical paths
+    stations: [{ x:0, y:5 }, { x:9, y:5 }],
     energyDrain: 2.5,
     timeLimit: 70,
     startPos: { x:0, y:9 } 
   },
 ];
+
+export const getGridEfficiency = (score, totalPossiblePoints) => {
+  return Math.min(100, Math.round((score / Math.max(1, totalPossiblePoints)) * 100));
+};
 
 const QUIZ = [
   { 
@@ -110,8 +112,13 @@ const GridFlowGame = ({ isActive, onEndGame, isDemo, showBriefing = true }) => {
   const { recordError, startTracking, stopTracking, recordTrialEvent } = useTelemetry();
   const { language } = useLanguage();
 
-  const effectiveMaxRounds = LEVELS.length;
+  const effectiveMaxRounds = GRID_LEVELS.length;
   const hasEndedRef = useRef(false);
+
+  const totalPossiblePoints = useMemo(
+    () => GRID_LEVELS.reduce((sum, lvl) => sum + lvl.targets.reduce((targetSum, t) => targetSum + t.points, 0), 0),
+    []
+  );
 
   const [gameState, setGameState] = useState('playing');
   const [briefing, setBriefing] = useState(null);
@@ -140,8 +147,7 @@ const GridFlowGame = ({ isActive, onEndGame, isDemo, showBriefing = true }) => {
     hasEndedRef.current = true;
     setGameState('done');
     
-    const totalPossiblePoints = LEVELS.reduce((sum, lvl) => sum + lvl.targets.reduce((s, t) => s + t.points, 0), 0);
-    const efficiency = Math.min(100, Math.round((stateRef.current.score / Math.max(1, totalPossiblePoints)) * 100));
+    const efficiency = getGridEfficiency(stateRef.current.score, totalPossiblePoints);
 
     stopTracking('game6', stateRef.current.score, quizScoreRef.current, { 
       score: stateRef.current.score, 
@@ -162,7 +168,7 @@ const GridFlowGame = ({ isActive, onEndGame, isDemo, showBriefing = true }) => {
   const loadLevel = useCallback((idx) => {
     if (idx >= effectiveMaxRounds) { transitionToQuiz(); return; }
     
-    const lvl = LEVELS[idx];
+    const lvl = GRID_LEVELS[idx];
     const initSats = {};
     lvl.targets.forEach(t => { initSats[t.id] = 100; });
     satsRef.current = initSats;
@@ -209,7 +215,7 @@ const GridFlowGame = ({ isActive, onEndGame, isDemo, showBriefing = true }) => {
       return;
     }
 
-    const lvl = LEVELS[stateRef.current.round];
+    const lvl = GRID_LEVELS[stateRef.current.round];
     if (!lvl) return;
 
     setLevelTimeLeft(lvl.timeLimit);
@@ -261,7 +267,7 @@ const GridFlowGame = ({ isActive, onEndGame, isDemo, showBriefing = true }) => {
     if (!isActive || gameState !== 'playing') return;
     const { player:p, energy:eng, targets:tgt, inventory:inv, round:r, score:sc, totalMoves: tm } = stateRef.current;
     
-    const lvl = LEVELS[r];
+    const lvl = GRID_LEVELS[r];
     const walls = new Set(lvl.walls);
 
     if (eng <= 0 && lvl.energyDrain > 0) {
@@ -355,7 +361,7 @@ const GridFlowGame = ({ isActive, onEndGame, isDemo, showBriefing = true }) => {
   };
 
   const renderGrid = () => {
-    const lvl = LEVELS[round];
+    const lvl = GRID_LEVELS[round];
     if (!lvl) return [];
     const walls = new Set(lvl.walls);
     const revealedDrop = inventory ? inventory.dropZone : null;
@@ -420,7 +426,8 @@ const GridFlowGame = ({ isActive, onEndGame, isDemo, showBriefing = true }) => {
       )
   }
 
-  const lvlData = LEVELS[round];
+  const lvlData = GRID_LEVELS[round];
+  const liveEfficiency = getGridEfficiency(score, totalPossiblePoints);
 
   return (
     <div style={{ width:'100%', height:'100%', display:'flex', flexDirection:'column', alignItems:'center', justifyContent:'center', padding:'20px', gap:'20px', position:'relative' }}>
@@ -432,6 +439,7 @@ const GridFlowGame = ({ isActive, onEndGame, isDemo, showBriefing = true }) => {
               <span style={{ color: levelTimeLeft<10?'#dc2626':'#059669' }}>⏱ {levelTimeLeft}s</span>
               {lvlData.energyDrain>0 && <span style={{ color: energy<30?'#dc2626':'#1e1b4b' }}>⚡ {energy}%</span>}
               <span style={{ color:satColor }}>★ {avgSat}%</span>
+              <span style={{ color:'#0f766e' }}>Eff: {liveEfficiency}%</span>
               <span style={{ color:'#4f46e5' }}>Pts: {score}</span>
             </div>
             
