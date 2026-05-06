@@ -22,7 +22,10 @@ import {
   Layers,
   Scale,
   MousePointer2,
-  CheckCircle2
+  CheckCircle2,
+  Clock,
+  LineChart,
+  Sparkles
 } from 'lucide-react';
 import { useLanguage } from '../context/LanguageContext';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -67,6 +70,7 @@ const coreCards = [
 
 const processSteps = [
   {
+    number: '01',
     icon: Gamepad2,
     title: {
       es: 'Experiencia inmersiva',
@@ -78,6 +82,7 @@ const processSteps = [
     }
   },
   {
+    number: '02',
     icon: Eye,
     title: {
       es: 'Telemetría conductual',
@@ -89,6 +94,7 @@ const processSteps = [
     }
   },
   {
+    number: '03',
     icon: BarChart3,
     title: {
       es: 'Reporte accionable',
@@ -329,8 +335,35 @@ function PitchDeckPage() {
               animate={{ y: 0, opacity: 1 }}
               transition={{ duration: 0.6, delay: 0.3 }}
             >Behavioral Intelligence</motion.p>
+            <motion.div
+              className="pitch-hero-stat-row"
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.6, delay: 0.5 }}
+            >
+              <div className="pitch-hero-stat">
+                <Clock size={16} />
+                <span>~30 min</span>
+              </div>
+              <div className="pitch-hero-stat">
+                <Gamepad2 size={16} />
+                <span>{language === 'es' ? '6 retos' : '6 challenges'}</span>
+              </div>
+              <div className="pitch-hero-stat">
+                <Sparkles size={16} />
+                <span>{language === 'es' ? 'Edge AI' : 'Edge AI'}</span>
+              </div>
+            </motion.div>
           </aside>
           <article className="pitch-hero-content">
+            <motion.div
+              className="pitch-hero-kicker"
+              initial={{ opacity: 0, x: 20 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ duration: 0.5, delay: 0.2 }}
+            >
+              {language === 'es' ? 'Plataforma B2B de HR Tech' : 'B2B HR Tech Platform'}
+            </motion.div>
             <motion.h1 
               initial={{ opacity: 0, x: 20 }}
               animate={{ opacity: 1, x: 0 }}
@@ -345,13 +378,34 @@ function PitchDeckPage() {
             >
               {t.heroText}
             </motion.p>
+            <motion.div
+              className="pitch-hero-metrics"
+              initial={{ opacity: 0, y: 16 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.5, delay: 0.85 }}
+            >
+              <div className="pitch-hero-metric">
+                <strong>$32B</strong>
+                <span>TAM</span>
+              </div>
+              <div className="pitch-hero-metric-divider" />
+              <div className="pitch-hero-metric">
+                <strong>10:1</strong>
+                <span>{language === 'es' ? 'ROI cliente' : 'Client ROI'}</span>
+              </div>
+              <div className="pitch-hero-metric-divider" />
+              <div className="pitch-hero-metric">
+                <strong>Edge AI</strong>
+                <span>{language === 'es' ? 'Privacidad' : 'Privacy-first'}</span>
+              </div>
+            </motion.div>
             <motion.div 
               className="pitch-slide-footer-text"
               initial={{ opacity: 0 }}
               animate={{ opacity: 0.5 }}
-              transition={{ delay: 1 }}
+              transition={{ delay: 1.2 }}
             >
-              {language === 'es' ? 'Desliza para comenzar ->' : 'Swipe to begin ->'}
+              {language === 'es' ? 'Usa las flechas para navegar →' : 'Use arrows to navigate →'}
             </motion.div>
           </article>
         </div>
@@ -463,26 +517,38 @@ function PitchDeckPage() {
 
   return (
     <div className="pitch-presentation">
+      {/* Top progress bar */}
+      <div className="pitch-progress-bar" role="progressbar" aria-valuenow={currentSlide + 1} aria-valuemin={1} aria-valuemax={slides.length}>
+        <div className="pitch-progress-fill" style={{ width: `${((currentSlide + 1) / slides.length) * 100}%` }} />
+      </div>
+
       <header className="pitch-pres-header">
         <button type="button" className="pitch-exit" onClick={() => navigate('/')} title="Exit (Esc)">
           <ArrowLeft size={20} />
         </button>
 
-        <div className="pitch-lang-toggle" role="group" aria-label="Language">
-          <button
-            type="button"
-            className={language === 'es' ? 'active' : ''}
-            onClick={() => setLanguage('es')}
-          >
-            ES
-          </button>
-          <button
-            type="button"
-            className={language === 'en' ? 'active' : ''}
-            onClick={() => setLanguage('en')}
-          >
-            EN
-          </button>
+        <div className="pitch-header-brand">
+          <img src={logo} alt="KRUMM" className="pitch-header-logo" />
+          <span>KRUMM</span>
+        </div>
+
+        <div className="pitch-header-right">
+          <div className="pitch-lang-toggle" role="group" aria-label="Language">
+            <button
+              type="button"
+              className={language === 'es' ? 'active' : ''}
+              onClick={() => setLanguage('es')}
+            >
+              ES
+            </button>
+            <button
+              type="button"
+              className={language === 'en' ? 'active' : ''}
+              onClick={() => setLanguage('en')}
+            >
+              EN
+            </button>
+          </div>
         </div>
       </header>
 
@@ -514,6 +580,7 @@ function PitchDeckPage() {
                   {slide.cards.map((card, idx) => {
                     const Icon = card.icon;
                     const role = slide.variant === 'team' ? card.role : null;
+                    const isProcess = slide.variant === 'process';
                     return (
                       <motion.article 
                         key={idx} 
@@ -522,6 +589,9 @@ function PitchDeckPage() {
                         animate={{ opacity: 1, y: 0 }}
                         transition={{ delay: idx * 0.1 }}
                       >
+                        {isProcess && card.number && (
+                          <div className="pitch-card-step-number">{card.number}</div>
+                        )}
                         <div className="pitch-card-icon">
                           <Icon size={32} strokeWidth={2.5} />
                         </div>
@@ -712,7 +782,19 @@ function PitchDeckPage() {
         </div>
 
         <div className="pitch-footer-center">
-          {language === 'es' ? 'Usa flechas del teclado o los botones para navegar' : 'Use keyboard arrows or buttons to navigate'}
+          <div className="pitch-dots" role="tablist" aria-label={language === 'es' ? 'Navegación por diapositivas' : 'Slide navigation'}>
+            {slides.map((_, idx) => (
+              <button
+                key={idx}
+                type="button"
+                role="tab"
+                aria-selected={idx === currentSlide}
+                aria-label={`${language === 'es' ? 'Diapositiva' : 'Slide'} ${idx + 1}`}
+                className={`pitch-dot${idx === currentSlide ? ' pitch-dot--active' : ''}`}
+                onClick={() => setCurrentSlide(idx)}
+              />
+            ))}
+          </div>
         </div>
 
         <div className="pitch-footer-right">
