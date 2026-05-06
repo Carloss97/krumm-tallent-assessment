@@ -351,7 +351,7 @@ function PitchDeckPage() {
               </div>
               <div className="pitch-hero-stat">
                 <Sparkles size={16} />
-                <span>{language === 'es' ? 'Edge AI' : 'Edge AI'}</span>
+                <span>Edge AI</span>
               </div>
             </motion.div>
           </aside>
