@@ -447,7 +447,7 @@ const DemoShell = () => {
     setGameSelectionMode(true);
   };
 
-  if (showReport) {
+  if (demoSummary) {
     return (
       <PostDemoScreen
         summary={demoSummary}
