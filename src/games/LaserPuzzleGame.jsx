@@ -199,13 +199,18 @@ const LaserPuzzleGame = ({ isActive, onEndGame, isDemo, showBriefing = true, tim
   const currentLevel = useMemo(() => procLevels ? procLevels[levelIdx] : null, [procLevels, levelIdx]);
 
   const finishGame = useCallback((tm) => {
-    if(hasEndedRef.current) return;
+    if(hasEndedRef.current) {
+      console.log('[LaserPuzzle-TRACE] finishGame called but hasEndedRef.current already true, skipping');
+      return;
+    }
+    console.log('[LaserPuzzle-TRACE] finishGame executing - setting phase to done and calling onEndGame');
     hasEndedRef.current = true;
     const parTotal = procLevels ? procLevels.reduce((s, l) => s + l.par, 0) : 6;
     const efficiency = Math.min(100, Math.round((parTotal / Math.max(1, tm)) * 100));
     setGamePhase('done');
     try { playSuccessSound(); } catch (error) { void error; }
     stopTracking('game7', efficiency, quizScore.current, { efficiency, quizScore: quizScore.current, totalMoves: tm });
+    console.log('[LaserPuzzle-TRACE] Calling onEndGame callback with efficiency:', efficiency);
     onEndGame(efficiency, quizScore.current);
   }, [procLevels, onEndGame, stopTracking]);
 
@@ -289,12 +294,23 @@ const LaserPuzzleGame = ({ isActive, onEndGame, isDemo, showBriefing = true, tim
   };
 
   const handleQuizAnswer = (idx) => {
+    if (hasEndedRef.current) {
+      console.log('[LaserPuzzle-TRACE] handleQuizAnswer called but game already ended');
+      return;
+    }
     const level = procLevels[levelIdx];
     const q = level.quiz[quizStep];
-    if (idx === q.correct) quizScore.current += 1;
+    const isCorrect = idx === q.correct;
+    console.log(`[LaserPuzzle-TRACE] Quiz answer submitted. Question ${quizStep+1}/${level.quiz.length}, Answer correct: ${isCorrect}`);
+    if (isCorrect) quizScore.current += 1;
     else recordError();
-    if (quizStep + 1 < level.quiz.length) setQuizStep(s => s + 1);
-    else finishGame(totalMoves);
+    if (quizStep + 1 < level.quiz.length) {
+      console.log(`[LaserPuzzle-TRACE] Moving to next quiz question ${quizStep+2}/${level.quiz.length}`);
+      setQuizStep(s => s + 1);
+    } else {
+      console.log('[LaserPuzzle-TRACE] All quiz questions answered, calling finishGame()');
+      finishGame(totalMoves);
+    }
   };
 
   const { beamCells, litAntennas } = useMemo(() => {

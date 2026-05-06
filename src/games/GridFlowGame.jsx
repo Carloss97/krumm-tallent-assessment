@@ -143,7 +143,11 @@ const GridFlowGame = ({ isActive, onEndGame, isDemo, showBriefing = true }) => {
   const satTimerRef = useRef(null);
 
   const finishGame = useCallback(() => {
-    if (hasEndedRef.current) return;
+    if (hasEndedRef.current) {
+      console.log('[GridFlow-TRACE] finishGame called but hasEndedRef.current already true, skipping');
+      return;
+    }
+    console.log('[GridFlow-TRACE] finishGame executing - setting state to done and calling onEndGame');
     hasEndedRef.current = true;
     setGameState('done');
     
@@ -155,6 +159,7 @@ const GridFlowGame = ({ isActive, onEndGame, isDemo, showBriefing = true }) => {
       efficiency,
       totalMoves: stateRef.current.totalMoves
     });
+    console.log('[GridFlow-TRACE] Calling onEndGame callback with score:', stateRef.current.score);
     onEndGame(stateRef.current.score, quizScoreRef.current);
   }, [onEndGame, stopTracking]);
 
@@ -355,9 +360,20 @@ const GridFlowGame = ({ isActive, onEndGame, isDemo, showBriefing = true }) => {
   useEffect(() => { window.addEventListener('keydown',handleKeyDown); return ()=>window.removeEventListener('keydown',handleKeyDown); }, [handleKeyDown]);
 
   const handleQuizAnswer = (idx) => {
-    if (hasEndedRef.current) return;
-    if (idx===QUIZ[quizStep].correct) quizScoreRef.current+=1; else recordError();
-    if (quizStep+1<QUIZ.length) setQuizStep(p=>p+1); else finishGame();
+    if (hasEndedRef.current) {
+      console.log('[GridFlow-TRACE] handleQuizAnswer called but game already ended');
+      return;
+    }
+    const isCorrect = idx===QUIZ[quizStep].correct;
+    console.log(`[GridFlow-TRACE] Quiz answer submitted. Question ${quizStep+1}/${QUIZ.length}, Answer correct: ${isCorrect}`);
+    if (isCorrect) quizScoreRef.current+=1; else recordError();
+    if (quizStep+1<QUIZ.length) {
+      console.log(`[GridFlow-TRACE] Moving to next quiz question ${quizStep+2}/${QUIZ.length}`);
+      setQuizStep(p=>p+1);
+    } else {
+      console.log('[GridFlow-TRACE] All quiz questions answered, calling finishGame()');
+      finishGame();
+    }
   };
 
   const renderGrid = () => {

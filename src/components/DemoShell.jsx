@@ -1,7 +1,7 @@
 /* eslint-disable react-hooks/exhaustive-deps */
 // TODO: Fix React Hook dependencies properly in a future refactor
 // This file uses complex state management patterns that require careful dependency array handling
-import React, { useState, useEffect, useRef, useMemo } from 'react';
+import React, { useState, useEffect, useRef, useMemo, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useTelemetry } from '../TelemetryContext';
 import { useLanguage } from '../context/LanguageContext';
@@ -40,7 +40,13 @@ const GridProtoWrapper = ({ onComplete, est }) => (
     isDemo={true}
     showBriefing={false}
     timeLimit={est}
-    onEndGame={() => { setTimeout(() => onComplete && onComplete('grid'), 50); }}
+    onEndGame={() => { 
+      console.log('[GridFlow-WRAPPER] onEndGame fired, calling onComplete in 50ms');
+      setTimeout(() => {
+        console.log('[GridFlow-WRAPPER] Calling onComplete callback for grid');
+        onComplete && onComplete('grid');
+      }, 50); 
+    }}
   />
 );
 const LaserProtoWrapper = ({ onComplete, est }) => (
@@ -49,7 +55,13 @@ const LaserProtoWrapper = ({ onComplete, est }) => (
     isDemo={true}
     showBriefing={false}
     timeLimit={est}
-    onEndGame={() => { setTimeout(() => onComplete && onComplete('laser'), 50); }}
+    onEndGame={() => { 
+      console.log('[LaserPuzzle-WRAPPER] onEndGame fired, calling onComplete in 50ms');
+      setTimeout(() => {
+        console.log('[LaserPuzzle-WRAPPER] Calling onComplete callback for laser');
+        onComplete && onComplete('laser');
+      }, 50); 
+    }}
   />
 );
 const GoNoGoProtoWrapper = ({ onComplete, est }) => <ProtoGoNoGo isActive={true} isDemo={false} timeLimit={est} onEndGame={() => onComplete('gng')} />;
@@ -375,9 +387,12 @@ const DemoShell = () => {
     }
   }, [step, ACTIVITIES.length]);
 
-  const onComplete = (id) => {
+  const onComplete = useCallback((id) => {
     // Prevent double-counting or race conditions
-    if (completed[id] || completingRef.current === id) return;
+    if (completed[id] || completingRef.current === id) {
+      console.log(`[DEMO-TRACE] onComplete debounced for ${id} (already completed or processing)`);
+      return;
+    }
     completingRef.current = id;
 
     console.log(`[DEMO-TRACE] onComplete called for: ${id}, current step: ${step}, activities remaining: ${ACTIVITIES.length - (Object.keys(completed).length + 1)}`);
@@ -410,7 +425,7 @@ const DemoShell = () => {
       // Always clear the lock after transition
       completingRef.current = null;
     }, 1500);
-  };
+  }, [completed, step, ACTIVITIES.length, isEn, recordTrialEvent]);
 
   const restart = () => {
     finishedRef.current = false;
