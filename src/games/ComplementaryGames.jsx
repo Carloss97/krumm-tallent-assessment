@@ -140,9 +140,9 @@ export const MetacognitiveCalibrationGame = ({ language = 'es' }) => {
           rewardLabel={isEn ? `Streak ${answers.filter((a) => a.correct).length}` : `Racha ${answers.filter((a) => a.correct).length}`}
         />
         <div style={rowStyle}>
-          <button className="btn" onClick={() => evaluate('yes')}>{isEn ? 'Yes' : 'Sí'}</button>
-          <button className="btn" onClick={() => evaluate('depends')}>{isEn ? 'Depends' : 'Depende'}</button>
-          <button className="btn" onClick={() => evaluate('no')}>{isEn ? 'No' : 'No'}</button>
+          <button className="btn" aria-label={isEn ? 'Yes' : 'Si'} onClick={() => evaluate('yes')}>{isEn ? 'Yes' : 'Sí'}</button>
+          <button className="btn" aria-label={isEn ? 'Depends' : 'Depende'} onClick={() => evaluate('depends')}>{isEn ? 'Depends' : 'Depende'}</button>
+          <button className="btn" aria-label={isEn ? 'No' : 'No'} onClick={() => evaluate('no')}>{isEn ? 'No' : 'No'}</button>
         </div>
       </div>
     </div>
@@ -287,10 +287,10 @@ export const LearningAgilityGame = ({ language = 'es' }) => {
         rewardLabel={isEn ? `Combo ${records.filter((r) => r.quality === 'excellent').length}` : `Combo ${records.filter((r) => r.quality === 'excellent').length}`}
       />
       <div style={rowStyle}>
-        <button className="btn" onClick={() => handleResult('excellent')}>{isEn ? 'Correct adaptation' : 'Adaptación correcta'}</button>
-        <button className="btn" onClick={() => handleResult('good')}>{isEn ? 'Partial adaptation' : 'Adaptación parcial'}</button>
-        <button className="btn" onClick={() => handleResult('weak')}>{isEn ? 'Slow adaptation' : 'Adaptación lenta'}</button>
-        <button className="btn" onClick={() => handleResult('wrong')}>{isEn ? 'Rule conflict' : 'Conflicto de regla'}</button>
+        <button className="btn" aria-label={isEn ? 'Correct adaptation' : 'Adaptacion correcta'} onClick={() => handleResult('excellent')}>{isEn ? 'Correct adaptation' : 'Adaptación correcta'}</button>
+        <button className="btn" aria-label={isEn ? 'Partial adaptation' : 'Adaptacion parcial'} onClick={() => handleResult('good')}>{isEn ? 'Partial adaptation' : 'Adaptación parcial'}</button>
+        <button className="btn" aria-label={isEn ? 'Slow adaptation' : 'Adaptacion lenta'} onClick={() => handleResult('weak')}>{isEn ? 'Slow adaptation' : 'Adaptación lenta'}</button>
+        <button className="btn" aria-label={isEn ? 'Rule conflict' : 'Conflicto de regla'} onClick={() => handleResult('wrong')}>{isEn ? 'Rule conflict' : 'Conflicto de regla'}</button>
       </div>
     </div></div>
   );
@@ -403,10 +403,10 @@ export const CognitiveResilienceGame = ({ language = 'es' }) => {
         rewardLabel={isEn ? `Recovery points ${score}` : `Puntos de recuperación ${score}`}
       />
       <div style={rowStyle}>
-        <button className="btn" onClick={() => respond('stable')}>{isEn ? 'Maintain performance' : 'Mantener desempeño'}</button>
-        <button className="btn" onClick={() => respond('recover')}>{isEn ? 'Recover quickly' : 'Recuperar rápido'}</button>
-        <button className="btn" onClick={() => respond('partial')}>{isEn ? 'Partial drop' : 'Caída parcial'}</button>
-        <button className="btn" onClick={() => respond('drop')}>{isEn ? 'Performance drop' : 'Caída de desempeño'}</button>
+        <button className="btn" aria-label={isEn ? 'Maintain performance' : 'Mantener desempeno'} onClick={() => respond('stable')}>{isEn ? 'Maintain performance' : 'Mantener desempeño'}</button>
+        <button className="btn" aria-label={isEn ? 'Recover quickly' : 'Recuperar rapido'} onClick={() => respond('recover')}>{isEn ? 'Recover quickly' : 'Recuperar rápido'}</button>
+        <button className="btn" aria-label={isEn ? 'Partial drop' : 'Caida parcial'} onClick={() => respond('partial')}>{isEn ? 'Partial drop' : 'Caída parcial'}</button>
+        <button className="btn" aria-label={isEn ? 'Performance drop' : 'Caida de desempeno'} onClick={() => respond('drop')}>{isEn ? 'Performance drop' : 'Caída de desempeño'}</button>
       </div>
     </div></div>
   );

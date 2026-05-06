@@ -133,6 +133,10 @@ function calculateBiometricQuality(data, games) {
 export function buildEdgeLocalLiveInsight(rawTelemetry) {
   if (!rawTelemetry) return null;
 
+  if (!Number.isFinite(rawTelemetry.startTime) && !Number.isFinite(rawTelemetry.elapsedSec)) {
+    return null;
+  }
+
   const toCount = (value, fallbackKeys = []) => {
     if (Number.isFinite(value)) return value;
     if (Array.isArray(value)) return value.length;
@@ -149,7 +153,7 @@ export function buildEdgeLocalLiveInsight(rawTelemetry) {
   const elapsedSec = Number.isFinite(rawTelemetry.elapsedSec)
     ? rawTelemetry.elapsedSec
     : Number.isFinite(rawTelemetry.startTime)
-      ? Math.max(0, (Date.now() - rawTelemetry.startTime) / 1000)
+      ? Math.max(0, Math.floor((Date.now() - rawTelemetry.startTime) / 1000))
       : 0;
   const cursorEvents = toCount(rawTelemetry.cursorEvents, ['mouseMovements']);
   const clickEvents = toCount(rawTelemetry.clickEvents, ['clicks']);
@@ -177,6 +181,18 @@ export function buildEdgeLocalLiveInsight(rawTelemetry) {
   const formatPercent = (v) => Math.min(100, Math.max(0, Math.round(v)));
 
   const signals = [];
+  if (Array.isArray(rawTelemetry.qualityFlags) && rawTelemetry.qualityFlags.length > 0) {
+    signals.push('Quality flags active');
+  }
+  if (webcamQuality > 0 && webcamQuality < 60) {
+    signals.push('Webcam quality is low');
+  }
+  const hesitationCount = Number.isFinite(rawTelemetry?.cursorMetrics?.hesitationCount)
+    ? rawTelemetry.cursorMetrics.hesitationCount
+    : 0;
+  if (hesitationCount > 0) {
+    signals.push('Hesitation is increasing');
+  }
   if (coverageScore > 80) signals.push('High data density');
   if (stabilityScore < 60) signals.push('Movement hesitation');
   if (webcamQuality > 85) signals.push('Premium visual signal');

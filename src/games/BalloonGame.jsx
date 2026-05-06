@@ -37,27 +37,25 @@ const BalloonGame = ({ isActive, onEndGame, isDemo, showBriefing = true }) => {
   }, []);
 
   const advanceRound = useCallback(() => {
-    if (hasEndedRef.current) {
-      console.log(`[BALLOON-TRACE] advanceRound called but hasEnded=true, ignoring`);
+    if (hasEndedRef.current) return;
+
+    let nextRound = 0;
+    let shouldEnd = false;
+
+    setRound((prevRound) => {
+      nextRound = prevRound + 1;
+      shouldEnd = nextRound > MAX_ROUNDS;
+      return shouldEnd ? prevRound : nextRound;
+    });
+
+    if (shouldEnd) {
+      hasEndedRef.current = true;
+      stopTracking('game4', totalPointsRef.current, popsRef.current, { pops: popsRef.current });
+      onEndGame(totalPointsRef.current, popsRef.current);
       return;
     }
-    
-    // Use a functional update to get the latest round value
-    setRound(prevRound => {
-      const nextRound = prevRound + 1;
-      console.log(`[BALLOON-TRACE] advanceRound: current=${prevRound}, MAX=${MAX_ROUNDS}, nextRound=${nextRound}`);
-      
-      if (nextRound > MAX_ROUNDS) {
-        console.log(`[BALLOON-TRACE] Game ending: nextRound ${nextRound} > MAX ${MAX_ROUNDS}`);
-        hasEndedRef.current = true;
-        stopTracking('game4', totalPointsRef.current, popsRef.current, { pops: popsRef.current });
-        onEndGame(totalPointsRef.current, popsRef.current);
-        return prevRound; // Don't update round state
-      } else {
-        console.log(`[BALLOON-TRACE] Starting round ${nextRound}`);
-        return nextRound;
-      }
-    });
+
+    initRound();
   }, [MAX_ROUNDS, onEndGame, initRound, stopTracking]);
 
   const handlePump = useCallback(() => {
@@ -105,7 +103,6 @@ const BalloonGame = ({ isActive, onEndGame, isDemo, showBriefing = true }) => {
 
   useEffect(() => {
     if (isActive) {
-      console.log(`[BALLOON-TRACE] Game activated in ${isDemo ? 'DEMO' : 'FULL'} mode, MAX_ROUNDS=${MAX_ROUNDS}`);
       hasEndedRef.current = false;
       totalPointsRef.current = 0;
       popsRef.current = 0;
@@ -141,7 +138,7 @@ const BalloonGame = ({ isActive, onEndGame, isDemo, showBriefing = true }) => {
       yieldSecured: 'Capital Capturado',
       pumpLabel: 'Optimizar',
       bankBtn: 'Capturar',
-      ariaPump: 'Ejecutar optimización (Barra espaciadora)',
+      ariaPump: 'Expandir globo (Barra espaciadora)',
       ariaBank: 'Capturar puntos en reserva (Enter)',
       briefTitle: 'Protocolo de Riesgo',
       briefBody: 'Iniciando evaluación de captura de valor. Debe gestionar el crecimiento del activo mediante ciclos de optimización. Mayor volumen implica mayor recompensa, pero incrementa exponencialmente la probabilidad de colapso de la integridad. Utilice el comando Capturar para asegurar el rendimiento acumulado.',
@@ -154,7 +151,7 @@ const BalloonGame = ({ isActive, onEndGame, isDemo, showBriefing = true }) => {
       yieldSecured: 'Capital Captured',
       pumpLabel: 'Optimize',
       bankBtn: 'Capture',
-      ariaPump: 'Execute optimization (Spacebar)',
+      ariaPump: 'Expand balloon (Spacebar)',
       ariaBank: 'Capture points to reserve (Enter)',
       briefTitle: 'Risk Protocol',
       briefBody: 'Initiating value capture assessment. You must manage asset growth through optimization cycles. Higher volume implies higher reward, but exponentially increases the probability of integrity collapse. Use the Capture command to secure accumulated yield.',

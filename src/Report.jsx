@@ -21,20 +21,21 @@ import { saveSessionToBackend } from './services/backendService';
 import { generateDummyReportData } from './utils/dummyDataGenerator';
 import './Report.css';
 
-const Report = ({ isDummy = false, demoSummary = null }) => {
+const Report = ({ isDummy = false, useDummyData = false, demoSummary = null }) => {
   const { sessionData, participantProfile, getSessionMetadata } = useTelemetry();
   const { language } = useLanguage();
   const isEn = language === 'en';
   const [searchParams] = useSearchParams();
   
   // Initialize modes from URL params or props.
-  const initialDummyMode = isDummy || searchParams.get('dummy') === 'true';
+  const initialDummyMode = isDummy || useDummyData || searchParams.get('dummy') === 'true';
   const initialAiMode = searchParams.get('ai') !== 'false';
   
   const [isAnalyzing, setIsAnalyzing] = useState(true);
   const [aiReport, setAiReport] = useState(null);
   const [useAI] = useState(initialAiMode); // AI mode state
-  const [useDummyData] = useState(initialDummyMode);
+  const [dummyModeEnabled] = useState(initialDummyMode);
+  const [showDummyReport, setShowDummyReport] = useState(false);
   const [showDevTelemetry] = useState(false);
   const [generationNonce] = useState(0);
   const [targetRole, setTargetRole] = useState('generalist');
@@ -83,10 +84,11 @@ const Report = ({ isDummy = false, demoSummary = null }) => {
   // Support demo-specific dummy subsets via ?demoCount=5 to show only N dummy games
   const demoCountParam = searchParams.get('demoCount');
   const demoCount = demoCountParam ? Number(demoCountParam) : null;
+  const shouldShowDummyData = dummyModeEnabled && (showDummyReport || hasRealData);
 
   const reportData = useMemo(() => {
-    const base = (useDummyData || !hasRealData) ? generateDummyReportData() : effectiveSessionData;
-    if (useDummyData && demoCount && typeof base === 'object' && Object.keys(base).length > 0) {
+    const base = (shouldShowDummyData || !hasRealData) ? generateDummyReportData() : effectiveSessionData;
+    if (shouldShowDummyData && demoCount && typeof base === 'object' && Object.keys(base).length > 0) {
       const entries = Object.keys(base).filter((k) => k !== 'futureModules');
       const subsetKeys = entries.slice(0, Math.max(0, Math.floor(demoCount)));
       const filtered = {};
@@ -95,7 +97,7 @@ const Report = ({ isDummy = false, demoSummary = null }) => {
       return filtered;
     }
     return base;
-  }, [useDummyData, hasRealData, effectiveSessionData, demoCount]);
+  }, [shouldShowDummyData, hasRealData, effectiveSessionData, demoCount]);
 
   const radarProfile = useMemo(() => buildRadarProfile(reportData, isEn, targetRole), [reportData, isEn, targetRole]);
   const competencyHighlights = useMemo(() => buildCompetencyHighlights(radarProfile), [radarProfile]);
@@ -180,14 +182,15 @@ const Report = ({ isDummy = false, demoSummary = null }) => {
     setIsAnalyzing(true);
     setAiReport(null);
     setInsightMeta({ mode: 'pending', reason: '' });
-    if (useDummyData) {
+    if (dummyModeEnabled) {
       setSessionSavedId(null);
     }
-  }, [useDummyData, useAI]);
+    setShowDummyReport(false);
+  }, [dummyModeEnabled, useAI]);
 
   // Generate AI report when data is ready
   useEffect(() => {
-    if ((hasRealData || useDummyData) && !reportGeneratedRef.current) {
+    if ((hasRealData || shouldShowDummyData) && !reportGeneratedRef.current) {
       reportGeneratedRef.current = true;
       const generateReport = async () => {
         try {
@@ -277,7 +280,7 @@ const Report = ({ isDummy = false, demoSummary = null }) => {
         }
 
         // Save session to backend
-        if (!useDummyData && hasRealData && !sessionSavedId) {
+        if (!dummyModeEnabled && hasRealData && !sessionSavedId) {
           try {
             const safeMetadata = typeof getSessionMetadata === 'function'
               ? getSessionMetadata()
@@ -298,7 +301,7 @@ const Report = ({ isDummy = false, demoSummary = null }) => {
     }
   }, [
     hasRealData,
-    useDummyData,
+    shouldShowDummyData,
     useAI,
     language,
     reportData,
@@ -318,11 +321,16 @@ const Report = ({ isDummy = false, demoSummary = null }) => {
     edgeEscalationRecommendations
   ]);
 
-  if (!hasRealData && !useDummyData) {
+  if (!hasRealData && !shouldShowDummyData) {
     return (
       <main id="report-main" className="flex-center glass-panel report-empty report-page report-empty-main" role="main" tabIndex={-1}>
         <h2>{isEn ? 'No Assessment Data Found' : 'No se encontraron datos de evaluación'}</h2>
         <p>{isEn ? 'Please complete the extended assessment to view the HR report.' : 'Completa la evaluación extendida para ver el reporte final.'}</p>
+        {dummyModeEnabled && (
+          <button className="btn btn-primary" onClick={() => setShowDummyReport(true)} style={{ marginTop: '20px' }}>
+            {isEn ? 'View Demo Report' : 'Ver reporte demo'}
+          </button>
+        )}
       </main>
     );
   }
@@ -379,10 +387,10 @@ const Report = ({ isDummy = false, demoSummary = null }) => {
             : report.source === 'gemini'
             ? (isEn ? 'Powered by Google Gemini Enterprise' : 'Potenciado por Google Gemini Enterprise')
             : (isEn ? 'Heuristic Analysis' : 'Análisis heurístico')}
-          {useDummyData && <span style={{ color: '#6366f1', fontWeight: 700 }}>{isEn ? ' • Verified Demo' : ' • Demo verificada'}</span>}
+          {dummyModeEnabled && <span style={{ color: '#6366f1', fontWeight: 700 }}>{isEn ? ' • Verified Demo' : ' • Demo verificada'}</span>}
         </p>
 
-        {useDummyData && (
+        {dummyModeEnabled && (
           <motion.div 
             initial={{ opacity: 0, scale: 0.98 }}
             animate={{ opacity: 1, scale: 1 }}
@@ -428,7 +436,7 @@ const Report = ({ isDummy = false, demoSummary = null }) => {
             {
               (() => {
                 const covered = extendedGameRows.filter((row) => typeof row.score === 'number').length;
-                const total = (useDummyData && demoCount) ? demoCount : GAME_ROWS.length;
+                const total = (dummyModeEnabled && demoCount) ? demoCount : GAME_ROWS.length;
                 return (
                   <TelemetryStatCard label={isEn ? 'Coverage' : 'Cobertura'} value={`${covered}/${total} ${isEn ? 'units' : 'módulos'}`} />
                 );
@@ -580,7 +588,7 @@ const Report = ({ isDummy = false, demoSummary = null }) => {
 
         <div className="report-footer" style={{ textAlign: 'center' }}>
           <div style={{ marginBottom: '32px' }}>
-            {!useDummyData && sessionSavedId && (
+            {!dummyModeEnabled && sessionSavedId && (
               <div className="report-meta-pill" style={{ background: '#ecfdf5', color: '#059669', borderColor: '#10b981' }}>
                 ✓ {isEn ? `Record archived: ${sessionSavedId}` : `Registro archivado: ${sessionSavedId}`}
               </div>

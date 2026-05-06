@@ -360,12 +360,20 @@ function PitchDeckPage() {
     {
       type: 'cards',
       title: t.sectionProblem,
+      kicker: language === 'es' ? '01 / Diagnóstico' : '01 / Diagnosis',
+      summary: language === 'es'
+        ? 'El problema no es la falta de talento, sino la falta de señales confiables para decidir más rápido y con menor sesgo.'
+        : 'The problem is not talent scarcity, but the lack of reliable signals to decide faster and with less bias.',
       cards: coreCards,
       columns: 3
     },
     {
       type: 'cards',
       title: t.sectionProcess,
+      kicker: language === 'es' ? '02 / Flujo' : '02 / Flow',
+      summary: language === 'es'
+        ? 'Convertimos la evaluación en un recorrido corto y medible: experiencia, telemetría y reporte accionable.'
+        : 'We turn assessment into a short, measurable journey: experience, telemetry, and actionable reporting.',
       cards: processSteps,
       columns: 3,
       variant: 'process'
@@ -373,6 +381,10 @@ function PitchDeckPage() {
     {
       type: 'cards',
       title: t.sectionEdge,
+      kicker: language === 'es' ? '03 / Diferenciación' : '03 / Differentiation',
+      summary: language === 'es'
+        ? 'El edge AI reduce latencia, protege datos sensibles y habilita una ejecución consistente en entornos reales.'
+        : 'Edge AI reduces latency, protects sensitive data, and enables consistent execution in real environments.',
       cards: edgeBenefits,
       columns: 3,
       variant: 'dark'
@@ -380,6 +392,10 @@ function PitchDeckPage() {
     {
       type: 'cards',
       title: t.sectionMoat,
+      kicker: language === 'es' ? '04 / Foso' : '04 / Moat',
+      summary: language === 'es'
+        ? 'Cada interacción alimenta el sistema y vuelve más costoso imitar la señal de KRUMM.'
+        : 'Every interaction trains the system and makes KRUMM’s signal harder to replicate.',
       cards: moatItems,
       columns: 2
     },
@@ -391,6 +407,10 @@ function PitchDeckPage() {
     {
       type: 'comparison',
       title: t.sectionComparison,
+      kicker: language === 'es' ? '05 / Benchmark' : '05 / Benchmark',
+      summary: language === 'es'
+        ? 'La comparación correcta no es entre herramientas, sino entre tipos de señal y su valor para la decisión.'
+        : 'The right comparison is not between tools, but between signal types and their decision value.',
       data: comparisonRows
     },
     {
@@ -407,6 +427,7 @@ function PitchDeckPage() {
     },
     {
       type: 'milestone',
+      kicker: language === 'es' ? '06 / Retorno' : '06 / Return',
       title: t.roiTitle,
       subtitle: t.sectionMilestone,
       text: t.roiText,
@@ -483,6 +504,12 @@ function PitchDeckPage() {
                   initial={{ opacity: 0, y: -20 }}
                   animate={{ opacity: 1, y: 0 }}
                 >{slide.title}</motion.h2>
+                {slide.kicker && (
+                  <div className="pitch-slide-kicker">{slide.kicker}</div>
+                )}
+                {slide.summary && (
+                  <p className="pitch-slide-summary">{slide.summary}</p>
+                )}
                 <div className={`pitch-card-grid pitch-grid-${slide.columns}`}>
                   {slide.cards.map((card, idx) => {
                     const Icon = card.icon;
@@ -514,16 +541,22 @@ function PitchDeckPage() {
                 <div className="pitch-market-slide-layout">
                   <div className="pitch-market-diagram" aria-hidden="true">
                     <div className="pitch-circle pitch-circle-tam">
-                      <span>TAM</span>
-                      <strong>{slide.data[0]?.value}</strong>
+                      <div className="pitch-circle-content pitch-circle-content-tam">
+                        <span>TAM</span>
+                        <strong>{slide.data[0]?.value}</strong>
+                      </div>
                     </div>
                     <div className="pitch-circle pitch-circle-sam">
-                      <span>SAM</span>
-                      <strong>{slide.data[1]?.value}</strong>
+                      <div className="pitch-circle-content pitch-circle-content-sam">
+                        <span>SAM</span>
+                        <strong>{slide.data[1]?.value}</strong>
+                      </div>
                     </div>
                     <div className="pitch-circle pitch-circle-som">
-                      <span>SOM</span>
-                      <strong>{slide.data[2]?.value}</strong>
+                      <div className="pitch-circle-content pitch-circle-content-som">
+                        <span>SOM</span>
+                        <strong>{slide.data[2]?.value}</strong>
+                      </div>
                     </div>
                     <div className="pitch-market-diagram-label">
                       <TrendingUp size={16} />
@@ -569,13 +602,20 @@ function PitchDeckPage() {
             {slide.type === 'comparison' && (
               <>
                 <motion.h2 initial={{ opacity: 0 }} animate={{ opacity: 1 }}>{slide.title}</motion.h2>
+                {slide.kicker && <div className="pitch-slide-kicker">{slide.kicker}</div>}
+                {slide.summary && <p className="pitch-slide-summary pitch-slide-summary-narrow">{slide.summary}</p>}
+                <div className="pitch-comparison-badges">
+                  <span className="pitch-comparison-badge">{language === 'es' ? 'ATS tradicional' : 'Traditional ATS'}</span>
+                  <span className="pitch-comparison-badge">{language === 'es' ? 'IA declarativa' : 'Declarative AI'}</span>
+                  <span className="pitch-comparison-badge pitch-comparison-badge-highlight">KRUMM</span>
+                </div>
                 <div className="pitch-table-slide">
                   <table>
                     <thead>
                       <tr>
                         <th>{language === 'es' ? 'Criterio' : 'Criteria'}</th>
-                        <th>ATS</th>
-                        <th>{language === 'es' ? 'IA Avatares' : 'AI Avatars'}</th>
+                        <th>{language === 'es' ? 'ATS tradicional' : 'Traditional ATS'}</th>
+                        <th>{language === 'es' ? 'IA declarativa' : 'Declarative AI'}</th>
                         <th>KRUMM</th>
                       </tr>
                     </thead>
@@ -632,6 +672,7 @@ function PitchDeckPage() {
                   animate={{ opacity: 1, scale: 1 }}
                   transition={{ duration: 0.5 }}
                 >
+                  {slide.kicker && <div className="pitch-slide-kicker pitch-slide-kicker-center">{slide.kicker}</div>}
                   <Layers size={56} style={{ color: '#60a5fa', marginBottom: '24px' }} />
                   <h2>{slide.title}</h2>
                   <p>{slide.text}</p>

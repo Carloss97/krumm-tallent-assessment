@@ -232,6 +232,32 @@
   font-size: 1.05rem;
 }
 
+.pitch-slide-kicker {
+  margin-bottom: 0.9rem;
+  color: #93c5fd;
+  text-transform: uppercase;
+  letter-spacing: 0.24em;
+  font-size: 0.78rem;
+  font-weight: 900;
+}
+
+.pitch-slide-kicker-center {
+  text-align: center;
+}
+
+.pitch-slide-summary {
+  max-width: 980px;
+  margin: -1.5rem auto 2.2rem;
+  color: #cbd5e1;
+  font-size: 1.08rem;
+  line-height: 1.7;
+  text-align: center;
+}
+
+.pitch-slide-summary-narrow {
+  max-width: 860px;
+}
+
 .pitch-card.dark { background: rgba(0, 0, 0, 0.25); }
 .pitch-card.team { text-align: center; display: flex; flex-direction: column; align-items: center; }
 .pitch-role { color: #818cf8 !important; font-weight: 850; text-transform: uppercase; font-size: 0.8rem; letter-spacing: 1.5px; margin-bottom: 1.2rem; }
@@ -309,12 +335,19 @@
   position: absolute;
   border-radius: 50%;
   display: flex;
-  flex-direction: column;
   align-items: center;
   justify-content: flex-start;
   text-align: center;
   padding-top: 34px;
   box-shadow: inset 0 0 0 1px rgba(255,255,255,0.06);
+}
+
+.pitch-circle-content {
+  position: absolute;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
 }
 
 .pitch-circle span {
@@ -326,10 +359,34 @@
 }
 
 .pitch-circle strong {
-  margin-top: 12px;
   font-size: 2.2rem;
   font-weight: 950;
   letter-spacing: -0.04em;
+}
+
+.pitch-circle-content span {
+  font-size: 0.82rem;
+}
+
+.pitch-circle-content strong {
+  font-size: 2rem;
+  line-height: 1;
+}
+
+.pitch-circle-content-tam {
+  top: 16%;
+  left: 14%;
+}
+
+.pitch-circle-content-sam {
+  top: 32%;
+  right: 14%;
+}
+
+.pitch-circle-content-som {
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
 }
 
 .pitch-circle-tam {
@@ -375,6 +432,32 @@
   text-transform: uppercase;
   -webkit-backdrop-filter: blur(8px);
   backdrop-filter: blur(8px);
+}
+
+.pitch-comparison-badges {
+  display: flex;
+  justify-content: center;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin: -0.4rem 0 1.4rem;
+}
+
+.pitch-comparison-badge {
+  padding: 0.55rem 1rem;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  color: #cbd5e1;
+  font-size: 0.76rem;
+  font-weight: 850;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.pitch-comparison-badge-highlight {
+  background: linear-gradient(135deg, rgba(96,165,250,0.18), rgba(79,70,229,0.28));
+  color: #fff;
+  border-color: rgba(96,165,250,0.3);
 }
 
 .pitch-market-copy {
@@ -476,6 +559,7 @@
 /* Milestone Slide */
 .pitch-milestone-content { text-align: center; max-width: 1000px; }
 .pitch-milestone-emphasis { font-size: 1.8rem; font-weight: 850; color: #fff; line-height: 1.3; }
+.pitch-milestone-content .pitch-slide-kicker { margin-bottom: 1rem; }
 .pitch-milestone-arr {
   display: inline-flex;
   align-items: center;
@@ -522,8 +606,12 @@
 @media (max-width: 1024px) {
   .pitch-slide { padding: 2rem 3rem; }
   .pitch-slide h2 { font-size: 2.2rem; }
+  .pitch-slide-summary { margin-top: -1rem; }
   .pitch-hero-content h1 { font-size: 2.8rem; }
   .pitch-market-card-slide strong { font-size: 3rem; }
   .pitch-market-slide-layout { grid-template-columns: 1fr; }
   .pitch-market-lead { max-width: 100%; }
+  .pitch-circle-content-tam { top: 10%; left: 8%; }
+  .pitch-circle-content-sam { top: 28%; right: 10%; }
+  .pitch-circle-content-som { top: 48%; left: 50%; }
 }
