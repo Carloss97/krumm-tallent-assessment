@@ -295,6 +295,7 @@ const DemoShell = () => {
       analytics: gameRowsById.get(activity.id) || null,
     }));
 
+    console.log('[DEMO-TRACE] Setting demoSummary and will show report when ready');
     setDemoSummary({
       reason,
       timeUsedSec,
@@ -305,7 +306,7 @@ const DemoShell = () => {
       activities: enrichedActivities,
       telemetry: telemetryReport,
     });
-    setShowReport(true);
+    // NOTE: showReport will be set by useEffect when demoSummary is ready
 
     try {
       stopTracking('demo', 0, null, { completedIds, timeUsedSec });
@@ -334,6 +335,14 @@ const DemoShell = () => {
     // keep a ref to the latest completed state for cleanup callbacks
     completedRef.current = completed;
   }, [completed]);
+
+  // Sync showReport with demoSummary: only show report when summary is ready
+  useEffect(() => {
+    if (demoSummary) {
+      console.log('[DEMO-TRACE] demoSummary is ready, setting showReport=true');
+      setShowReport(true);
+    }
+  }, [demoSummary]);
 
   useEffect(() => {
     if (!toast) return undefined;
