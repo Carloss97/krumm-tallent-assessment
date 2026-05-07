@@ -9,6 +9,16 @@ import { useLanguage } from '../context/LanguageContext';
 const GRID = 10;
 const SAT_DECAY = 1; // % per second (reduced from 2 for better pacing)
 const CELL = 60; // Larger cells for better screen occupancy
+const GRID_GAP = 3;
+const GRID_STEP = CELL + GRID_GAP;
+
+const COLOR_POINT_VALUES = {
+  red: 100,
+  blue: 120,
+  green: 150,
+  orange: 170,
+  pink: 200,
+};
 
 export const GRID_LEVELS = [
   {
@@ -160,6 +170,26 @@ const QUIZ = [
   }
 ];
 
+const buildAttentionQuestion = (isEn) => {
+  const targetColor = 'orange';
+  const targetPoints = COLOR_POINT_VALUES[targetColor];
+  const options = isEn
+    ? [100, 120, 150, 170, 200]
+    : [100, 120, 150, 170, 200];
+  return {
+    q: isEn
+      ? `Attention check: what was the point value of the ${targetColor} target?`
+      : `Chequeo de atención: ¿cuánto valía el objetivo de color ${targetColor === 'orange' ? 'naranja' : targetColor}?`,
+    opts: options.map((value) => `${value} pts`),
+    correct: options.indexOf(targetPoints),
+  };
+};
+
+const buildQuizQuestions = (language) => {
+  const isEn = language === 'en';
+  return [...QUIZ, buildAttentionQuestion(isEn)];
+};
+
 const DEMO_BRIEFINGS = {
   es: [
     {
@@ -218,6 +248,7 @@ const GridFlowGame = ({ isActive, onEndGame, isDemo, showBriefing = true }) => {
   const [showDeliverAnim, setShowDeliverAnim] = useState(false);
   const [showPickupAnim, setShowPickupAnim] = useState(false);
   const [showChargeAnim, setShowChargeAnim] = useState(false);
+  const quizQuestions = useMemo(() => buildQuizQuestions(language), [language]);
 
   const quizScoreRef = useRef(0);
   const stateRef = useRef({ player:{x:0,y:0}, inventory:null, targets:[], energy:100, round:0, score:0, totalMoves:0 });
@@ -464,11 +495,12 @@ const GridFlowGame = ({ isActive, onEndGame, isDemo, showBriefing = true }) => {
       console.log('[GridFlow-TRACE] handleQuizAnswer called but game already ended');
       return;
     }
-    const isCorrect = idx===QUIZ[quizStep].correct;
-    console.log(`[GridFlow-TRACE] Quiz answer submitted. Question ${quizStep+1}/${QUIZ.length}, Answer correct: ${isCorrect}`);
+    const currentQuestion = quizQuestions[quizStep];
+    const isCorrect = idx===currentQuestion.correct;
+    console.log(`[GridFlow-TRACE] Quiz answer submitted. Question ${quizStep+1}/${quizQuestions.length}, Answer correct: ${isCorrect}`);
     if (isCorrect) quizScoreRef.current+=1; else recordError();
-    if (quizStep+1<QUIZ.length) {
-      console.log(`[GridFlow-TRACE] Moving to next quiz question ${quizStep+2}/${QUIZ.length}`);
+    if (quizStep+1<quizQuestions.length) {
+      console.log(`[GridFlow-TRACE] Moving to next quiz question ${quizStep+2}/${quizQuestions.length}`);
       setQuizStep(p=>p+1);
     } else {
       console.log('[GridFlow-TRACE] All quiz questions answered, calling finishGame()');
@@ -485,7 +517,6 @@ const GridFlowGame = ({ isActive, onEndGame, isDemo, showBriefing = true }) => {
     for (let y=0; y<GRID; y++) {
       for (let x=0; x<GRID; x++) {
         const isWall = walls.has(`${x},${y}`);
-        const isPlayer = player.x===x && player.y===y;
         const station = lvl.stations.find(s=>s.x===x&&s.y===y);
         const target = targets.find(t=>t.active&&t.x===x&&t.y===y);
         const isDrop = revealedDrop && revealedDrop.x===x && revealedDrop.y===y;
@@ -510,11 +541,7 @@ const GridFlowGame = ({ isActive, onEndGame, isDemo, showBriefing = true }) => {
           );
         }
 
-        if (isPlayer) content = (
-          <motion.div layoutId="player" style={{ width:'80%', height:'80%', borderRadius:'12px', background:'#4f46e5', border:'3px solid #fff', boxShadow:'0 15px 25px -5px rgba(79,70,229,0.5)', zIndex: 10 }} />
-        );
-
-        cells.push(<div key={`${x}-${y}`} style={{ width:`${CELL}px`, height:`${CELL}px`, background:bg, border, display:'flex', justifyContent:'center', alignItems:'center', position:'relative', borderRadius: isWall ? '6px' : '0' }}>{content}</div>);
+        cells.push(<div key={`${x}-${y}`} style={{ width:`${CELL}px`, height:`${CELL}px`, minWidth:`${CELL}px`, minHeight:`${CELL}px`, background:bg, border, display:'flex', justifyContent:'center', alignItems:'center', position:'relative', borderRadius: isWall ? '6px' : '0', flexShrink: 0, boxSizing: 'border-box', overflow: 'hidden' }}>{content}</div>);
       }
     }
     return cells;
@@ -544,6 +571,7 @@ const GridFlowGame = ({ isActive, onEndGame, isDemo, showBriefing = true }) => {
 
   const lvlData = GRID_LEVELS[round];
   const liveEfficiency = getGridEfficiency(score, totalPossiblePoints);
+  const currentQuestion = quizQuestions[quizStep];
 
   return (
     <div style={{ width:'100%', height:'100%', display:'flex', flexDirection:'column', alignItems:'center', justifyContent:'center', padding:'20px', gap:'20px', position:'relative' }}>
@@ -576,7 +604,19 @@ const GridFlowGame = ({ isActive, onEndGame, isDemo, showBriefing = true }) => {
                 </motion.div>
               )}
               {showDeliverAnim && (<div style={{ position: 'absolute', inset: 0, pointerEvents: 'none', zIndex: 40 }}><Confetti count={30} spread={100} duration={1.5} /></div>)}
-              <div style={{ display:'grid', gridTemplateColumns:`repeat(${GRID}, ${CELL}px)`, gap:'3px' }}>{renderGrid()}</div>
+              <div style={{ position: 'relative', display:'inline-block' }}>
+                <div style={{ display:'grid', gridTemplateColumns:`repeat(${GRID}, ${CELL}px)`, gap:`${GRID_GAP}px` }}>{renderGrid()}</div>
+                <motion.div
+                  aria-hidden="true"
+                  style={{ position:'absolute', left: 12, top: 12, width: CELL, height: CELL, zIndex: 20, pointerEvents: 'none' }}
+                  animate={{ x: player.x * GRID_STEP, y: player.y * GRID_STEP }}
+                  transition={{ type: 'spring', stiffness: 460, damping: 34, mass: 0.7 }}
+                >
+                  <div style={{ width:'100%', height:'100%', borderRadius:'16px', background:'linear-gradient(135deg, #4f46e5, #6366f1)', border:'3px solid #fff', boxShadow:'0 18px 30px -8px rgba(79,70,229,0.55)', display:'flex', alignItems:'center', justifyContent:'center', color:'#fff', fontWeight: 900, fontSize: '1.35rem' }}>
+                    ⬚
+                  </div>
+                </motion.div>
+              </div>
             </div>
 
             <div style={{ width: '100%', display: 'flex', justifyContent: 'center', gap: '60px', alignItems: 'center' }}>
@@ -619,12 +659,12 @@ const GridFlowGame = ({ isActive, onEndGame, isDemo, showBriefing = true }) => {
           </motion.div>
         )}
 
-        {gameState === 'quiz' && (
+        {gameState === 'quiz' && currentQuestion && (
           <motion.div initial={{ scale:0.95, opacity:0 }} animate={{ scale:1, opacity:1 }} className="glass-panel" style={{ padding:'64px', maxWidth:'700px', textAlign:'center' }}>
             <div style={{ color:'#7c3aed', fontSize:'1rem', textTransform:'uppercase', letterSpacing:'5px', marginBottom:'24px', fontWeight:'950' }}>Network Check</div>
-            <p style={{ color:'#1e1b4b', marginBottom:'60px', fontSize:'1.8rem', fontWeight: '900', lineHeight: 1.25 }}>{QUIZ[quizStep].q}</p>
+            <p style={{ color:'#1e1b4b', marginBottom:'60px', fontSize:'1.8rem', fontWeight: '900', lineHeight: 1.25 }}>{currentQuestion.q}</p>
             <div style={{ display:'flex', flexDirection:'column', gap:'20px' }}>
-              {QUIZ[quizStep].opts.map((opt, i) => (
+              {currentQuestion.opts.map((opt, i) => (
                 <motion.button 
                   key={i} 
                   whileHover={{ x: 12, backgroundColor: 'rgba(124,58,237,0.15)' }}

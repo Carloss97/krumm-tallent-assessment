@@ -5,6 +5,10 @@ const EDGE_LOCAL_MODEL_URL = typeof import.meta !== 'undefined' && import.meta.e
   : '/models/edge-local-report.onnx';
 const ENV = typeof import.meta !== 'undefined' ? (import.meta?.env || {}) : {};
 
+let preloadedWorker = null;
+let preloadedWorkerModelUrl = '';
+let preloadedWorkerReady = null;
+
 const EDGE_CALIBRATION_REGISTRY = {
   stableVersion: '2026-03-27.v1-stable',
   baselineConfidence: 0.68,
@@ -273,31 +277,13 @@ export async function generateEdgeLocalReportModel(sessionData, language = 'en',
       return generateEdgeLocalReport(sessionData, language);
     }
 
-    const worker = new Worker(new URL('../workers/onnxWorker.js', import.meta.url), { type: 'module' });
     const id = `r-${Date.now()}-${Math.floor(Math.random() * 10000)}`;
     const modelUrl = options.modelUrl || EDGE_LOCAL_MODEL_URL;
+    const { worker, initResult } = await preloadEdgeLocalModel({ modelUrl, featureOrder, reuseOnly: false });
 
-    const initResult = await new Promise((resolve) => {
-      const onInit = (ev) => {
-        const message = ev.data || {};
-        if (message.type === 'init:ok' || message.type === 'init:fail') {
-          worker.removeEventListener('message', onInit);
-          if (timeoutId) clearTimeout(timeoutId);
-          resolve(message);
-        }
-      };
-      worker.addEventListener('message', onInit);
-      worker.postMessage({
-        type: 'init',
-        id: `init-${id}`,
-        modelUrl,
-        options: { featureOrder },
-      });
-      const timeoutId = setTimeout(() => {
-        worker.removeEventListener('message', onInit);
-        resolve({ type: 'init:timeout' });
-      }, 1500);
-    });
+    if (!worker) {
+      return generateEdgeLocalReport(sessionData, language);
+    }
 
     const promise = new Promise((resolve, reject) => {
       const onMessage = (ev) => {
@@ -370,5 +356,69 @@ export async function generateEdgeLocalReportModel(sessionData, language = 'en',
     console.warn('[edgeLocalInference] model inference failed, falling back to heuristic:', err?.message || err);
     return generateEdgeLocalReport(sessionData, language);
   }
+}
+
+export async function preloadEdgeLocalModel(options = {}) {
+  const modelUrl = options.modelUrl || EDGE_LOCAL_MODEL_URL;
+  const featureOrder = Array.isArray(options.featureOrder) && options.featureOrder.length > 0
+    ? [...options.featureOrder]
+    : ['avgScore', 'meanDuration', 'meanConfidence', 'readinessMean', 'telemetryCoverage', 'stabilityScore', 'numGames'];
+
+  if (typeof Worker === 'undefined') {
+    return { worker: null, initResult: { type: 'worker-unavailable' } };
+  }
+
+  if (preloadedWorker && preloadedWorkerModelUrl === modelUrl && preloadedWorkerReady) {
+    const initResult = await preloadedWorkerReady.catch(() => ({ type: 'init:fail' }));
+    return { worker: preloadedWorker, initResult };
+  }
+
+  if (preloadedWorker && preloadedWorkerModelUrl !== modelUrl) {
+    try { preloadedWorker.terminate(); } catch (e) {}
+    preloadedWorker = null;
+    preloadedWorkerReady = null;
+    preloadedWorkerModelUrl = '';
+  }
+
+  const worker = new Worker(new URL('../workers/onnxWorker.js', import.meta.url), { type: 'module' });
+  const initResultPromise = new Promise((resolve) => {
+    const timeoutId = setTimeout(() => {
+      worker.removeEventListener('message', onInit);
+      resolve({ type: 'init:timeout' });
+    }, 1500);
+
+    function onInit(ev) {
+      const message = ev.data || {};
+      if (message.type === 'init:ok' || message.type === 'init:fail') {
+        worker.removeEventListener('message', onInit);
+        clearTimeout(timeoutId);
+        resolve(message);
+      }
+    }
+
+    worker.addEventListener('message', onInit);
+    worker.postMessage({
+      type: 'init',
+      id: `init-${Date.now()}`,
+      modelUrl,
+      options: { featureOrder },
+    });
+  });
+
+  preloadedWorker = worker;
+  preloadedWorkerModelUrl = modelUrl;
+  preloadedWorkerReady = initResultPromise;
+
+  const initResult = await initResultPromise.catch((error) => ({ type: 'init:fail', message: error?.message || String(error) }));
+  return { worker, initResult };
+}
+
+export function clearEdgeLocalModelCache() {
+  if (preloadedWorker) {
+    try { preloadedWorker.terminate(); } catch (e) {}
+  }
+  preloadedWorker = null;
+  preloadedWorkerModelUrl = '';
+  preloadedWorkerReady = null;
 }
 

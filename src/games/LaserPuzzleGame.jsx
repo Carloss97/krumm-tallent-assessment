@@ -53,118 +53,111 @@ const getBriefing = (idx, language) => {
 
 export const LASER_DEMO_LEVELS = [
   {
-    // LEVEL 1: Two-step reflection puzzle
     name: 'Sector Alpha',
     difficulty: 'easy',
     cols: 8,
     rows: 7,
     par: 2,
-    timeLimit: 50,
+    timeLimit: 55,
     hint: {
-      es: 'Encadena dos espejos para llevar el rayo hasta la antena.',
-      en: 'Chain two mirrors to guide the beam to the antenna.'
+      es: 'Coloca dos espejos en la ruta para doblar el haz antes de llegar a la antena.',
+      en: 'Place two mirrors on the route to bend the beam before it reaches the antenna.'
     },
     cells: [
       { x: 0, y: 3, type: 'ship', dir: 'right' },
       { x: 7, y: 0, type: 'antenna' },
-      { x: 1, y: 5, type: 'reflector_ne', movable: true },
-      { x: 6, y: 5, type: 'reflector_ne', movable: true },
+      { x: 0, y: 0, type: 'reflector_ne', movable: true },
+      { x: 6, y: 6, type: 'reflector_nw', movable: true },
     ],
     quiz: [],
   },
   {
-    // LEVEL 1-HARD: Two antennas, requires more precision
     name: 'Sector Alpha+',
     difficulty: 'hard',
     cols: 10,
     rows: 8,
     par: 3,
-    timeLimit: 45,
+    timeLimit: 60,
     hint: {
-      es: 'Divide el haz hacia dos antenas simultáneamente.',
-      en: 'Split the beam to reach two antennas at once.'
+      es: 'El bifurcador debe tocar el carril central y cada rama necesita su propio desvío.',
+      en: 'The bifurcator must sit in the center lane and each branch needs its own deflection.'
     },
     cells: [
       { x: 0, y: 4, type: 'ship', dir: 'right' },
-      { x: 9, y: 1, type: 'antenna' },
-      { x: 9, y: 7, type: 'antenna' },
-      { x: 1, y: 2, type: 'bifurcator', movable: true },
-      { x: 8, y: 0, type: 'reflector_ne', movable: true },
-      { x: 8, y: 7, type: 'reflector_nw', movable: true },
+      { x: 8, y: 1, type: 'antenna' },
+      { x: 8, y: 7, type: 'antenna' },
+      { x: 0, y: 0, type: 'bifurcator', movable: true },
+      { x: 9, y: 0, type: 'reflector_ne', movable: true },
+      { x: 9, y: 7, type: 'reflector_nw', movable: true },
     ],
     quiz: [],
   },
   {
-    // LEVEL 2: Bifurcation into two receivers
     name: 'Sector Beta',
     difficulty: 'easy',
     cols: 10,
     rows: 7,
-    par: 3,
+    par: 2,
     timeLimit: 65,
     hint: {
-      es: 'Mueve el bifurcador al carril central y ajusta un espejo por cada rama.',
-      en: 'Move the bifurcator to the center lane and place one mirror on each branch.'
+      es: 'El portal abre el paso, pero todavía necesitas dos espejos para cerrar la ruta.',
+      en: 'The portal opens the path, but you still need two mirrors to close the route.'
     },
     cells: [
       { x: 0, y: 3, type: 'ship', dir: 'right' },
-      { x: 9, y: 1, type: 'antenna' },
-      { x: 9, y: 5, type: 'antenna' },
-      { x: 1, y: 1, type: 'bifurcator', movable: true },
-      { x: 1, y: 5, type: 'reflector_ne', movable: true },
-      { x: 8, y: 0, type: 'reflector_ne', movable: true },
+      { x: 2, y: 3, type: 'portal_blue', targetPortalId: 'p1' },
+      { x: 7, y: 2, type: 'portal_blue', portalId: 'p1' },
+      { x: 1, y: 0, type: 'antenna' },
+      { x: 0, y: 6, type: 'reflector_ne', movable: true },
+      { x: 9, y: 6, type: 'reflector_nw', movable: true },
     ],
     quiz: [],
   },
   {
-    // LEVEL 2-HARD: Three antennas with portals
     name: 'Sector Beta+',
     difficulty: 'hard',
     cols: 12,
     rows: 8,
     par: 4,
-    timeLimit: 60,
+    timeLimit: 65,
     hint: {
-      es: 'Usa portales y múltiples bifurcaciones para alcanzar tres antenas.',
-      en: 'Use portals and multiple bifurcations to reach three antennas.'
+      es: 'Secuencia mixta: portal, bifurcador y dos espejos para abrir ambas salidas.',
+      en: 'Mixed sequence: portal, bifurcator, and two mirrors to open both exits.'
     },
     cells: [
-      { x: 0, y: 3, type: 'ship', dir: 'right' },
+      { x: 0, y: 4, type: 'ship', dir: 'right' },
+      { x: 3, y: 4, type: 'portal_blue', targetPortalId: 'p2' },
+      { x: 8, y: 2, type: 'portal_blue', portalId: 'p2' },
+      { x: 9, y: 2, type: 'bifurcator', movable: true },
+      { x: 9, y: 0, type: 'reflector_ne', movable: true },
+      { x: 9, y: 6, type: 'reflector_nw', movable: true },
       { x: 11, y: 0, type: 'antenna' },
-      { x: 11, y: 3, type: 'antenna' },
       { x: 11, y: 6, type: 'antenna' },
-      { x: 2, y: 3, type: 'portal_blue', targetPortalId: 'p1' },
-      { x: 9, y: 3, type: 'portal_blue', portalId: 'p1' },
-      { x: 1, y: 1, type: 'bifurcator', movable: true },
-      { x: 1, y: 5, type: 'bifurcator', movable: true },
-      { x: 10, y: 0, type: 'reflector_ne', movable: true },
-      { x: 10, y: 6, type: 'reflector_nw', movable: true },
     ],
     quiz: [],
   },
   {
-    // LEVEL 3: Portal traversal with bifurcation after the jump
     name: 'Sector Gamma',
     difficulty: 'easy',
-    cols: 10,
-    rows: 8,
-    par: 3,
-    timeLimit: 80,
+    cols: 12,
+    rows: 9,
+    par: 4,
+    timeLimit: 75,
     hint: {
-      es: 'El portal evita el muro; después, divide el haz y resuelve ambas salidas.',
-      en: 'Use the portal to bypass the wall, then split the beam and solve both exits.'
+      es: 'Combina el portal con el bifurcador para forzar una ruta doble y evitar el bloque central.',
+      en: 'Combine the portal with the bifurcator to force a double route and avoid the central block.'
     },
     cells: [
-      { x: 0, y: 3, type: 'ship', dir: 'right' },
-      { x: 2, y: 3, type: 'portal_blue', targetPortalId: 'p1' },
-      { x: 6, y: 3, type: 'portal_blue', portalId: 'p1' },
-      { x: 9, y: 0, type: 'antenna' },
-      { x: 9, y: 6, type: 'antenna' },
-      { x: 4, y: 1, type: 'wall' }, { x: 4, y: 2, type: 'wall' }, { x: 4, y: 3, type: 'wall' },
-      { x: 4, y: 4, type: 'wall' }, { x: 4, y: 5, type: 'wall' },
-      { x: 1, y: 1, type: 'bifurcator', movable: true },
-      { x: 7, y: 0, type: 'reflector_ne', movable: true },
-      { x: 7, y: 6, type: 'reflector_nw', movable: true },
+      { x: 0, y: 4, type: 'ship', dir: 'right' },
+      { x: 2, y: 4, type: 'portal_blue', targetPortalId: 'p3' },
+      { x: 7, y: 4, type: 'portal_blue', portalId: 'p3' },
+      { x: 8, y: 4, type: 'bifurcator', movable: true },
+      { x: 8, y: 1, type: 'reflector_ne', movable: true },
+      { x: 8, y: 7, type: 'reflector_nw', movable: true },
+      { x: 11, y: 1, type: 'antenna' },
+      { x: 11, y: 7, type: 'antenna' },
+      { x: 5, y: 0, type: 'wall' }, { x: 5, y: 1, type: 'wall' }, { x: 5, y: 2, type: 'wall' },
+      { x: 5, y: 6, type: 'wall' }, { x: 5, y: 7, type: 'wall' }, { x: 5, y: 8, type: 'wall' },
     ],
     quiz: [
       { 
@@ -180,35 +173,29 @@ export const LASER_DEMO_LEVELS = [
     ],
   },
   {
-    // LEVEL 3-HARD: Complex maze with three objectives and time pressure
     name: 'Sector Gamma+',
     difficulty: 'hard',
     cols: 12,
     rows: 10,
     par: 5,
-    timeLimit: 70,
+    timeLimit: 80,
     hint: {
-      es: 'Laberinto complejo. Usa múltiples portales y bifurcadores para alcanzar todas las antenas.',
-      en: 'Complex maze. Use multiple portals and bifurcators to reach all antennas.'
+      es: 'El laberinto final exige portal, bifurcación y dos desvíos precisos para cerrar ambas antenas.',
+      en: 'The final maze requires portal, bifurcation, and two precise bends to close both antennas.'
     },
     cells: [
       { x: 0, y: 5, type: 'ship', dir: 'right' },
+      { x: 2, y: 5, type: 'portal_blue', targetPortalId: 'p4' },
+      { x: 8, y: 5, type: 'portal_blue', portalId: 'p4' },
+      { x: 9, y: 5, type: 'bifurcator', movable: true },
+      { x: 9, y: 1, type: 'reflector_ne', movable: true },
+      { x: 9, y: 8, type: 'reflector_nw', movable: true },
       { x: 11, y: 1, type: 'antenna' },
-      { x: 11, y: 5, type: 'antenna' },
-      { x: 11, y: 9, type: 'antenna' },
-      // Portals for bypassing maze sections
-      { x: 3, y: 5, type: 'portal_blue', targetPortalId: 'p1' },
-      { x: 7, y: 5, type: 'portal_blue', portalId: 'p1' },
-      // Walls forming maze
+      { x: 11, y: 8, type: 'antenna' },
       { x: 5, y: 0, type: 'wall' }, { x: 5, y: 1, type: 'wall' }, { x: 5, y: 2, type: 'wall' }, { x: 5, y: 3, type: 'wall' },
       { x: 5, y: 6, type: 'wall' }, { x: 5, y: 7, type: 'wall' }, { x: 5, y: 8, type: 'wall' }, { x: 5, y: 9, type: 'wall' },
-      { x: 9, y: 2, type: 'wall' }, { x: 9, y: 3, type: 'wall' }, { x: 9, y: 4, type: 'wall' }, { x: 9, y: 6, type: 'wall' }, { x: 9, y: 7, type: 'wall' }, { x: 9, y: 8, type: 'wall' },
-      // Movable pieces for solving
-      { x: 1, y: 1, type: 'bifurcator', movable: true },
-      { x: 1, y: 9, type: 'bifurcator', movable: true },
-      { x: 10, y: 0, type: 'reflector_ne', movable: true },
-      { x: 10, y: 5, type: 'reflector_ne', movable: true },
-      { x: 10, y: 9, type: 'reflector_nw', movable: true },
+      { x: 10, y: 2, type: 'wall' }, { x: 10, y: 3, type: 'wall' }, { x: 10, y: 4, type: 'wall' },
+      { x: 10, y: 6, type: 'wall' }, { x: 10, y: 7, type: 'wall' }, { x: 10, y: 9, type: 'wall' },
     ],
     quiz: [],
   }
@@ -278,7 +265,7 @@ export function traceBeam(grid, cols, rows) {
     else if (type === 'bifurcator') { beamCells.add(cellKey); BIFURCATE[dir].forEach(d => queue.push({ x:nx, y:ny, dir:d })); }
     else if (type === 'portal_blue') {
       beamCells.add(cellKey);
-      const otherPortalKey = Object.keys(grid).find(k => k !== cellKey && grid[k].type === 'portal_blue');
+      const otherPortalKey = findLinkedPortalKey(grid, cellKey, cell);
       if (otherPortalKey) { const [px, py] = otherPortalKey.split(',').map(Number); queue.push({ x:px, y:py, dir }); }
     } else if (type === 'antenna') { beamCells.add(cellKey); litAntennas.add(cellKey); }
   }
@@ -290,6 +277,24 @@ export const buildGrid = (level) => {
   level.cells.forEach(c => { g[`${c.x},${c.y}`] = { ...c }; });
   return g;
 };
+
+function findLinkedPortalKey(grid, cellKey, cell) {
+  const targetPortalId = cell?.targetPortalId;
+  const portalId = cell?.portalId;
+
+  if (targetPortalId) {
+    const match = Object.keys(grid).find((key) => key !== cellKey && grid[key].type === 'portal_blue' && grid[key].portalId === targetPortalId);
+    if (match) return match;
+  }
+
+  if (portalId) {
+    const match = Object.keys(grid).find((key) => key !== cellKey && grid[key].type === 'portal_blue' && grid[key].targetPortalId === portalId);
+    if (match) return match;
+  }
+
+  const fallback = Object.keys(grid).find((key) => key !== cellKey && grid[key].type === 'portal_blue');
+  return fallback || null;
+}
 
 const LaserPuzzleGame = ({ isActive, onEndGame, isDemo, showBriefing = true, timeLimit }) => {
   const { recordError, startTracking, stopTracking, recordTrialEvent } = useTelemetry();

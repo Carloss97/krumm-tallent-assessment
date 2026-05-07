@@ -10,7 +10,10 @@ describe('LaserPuzzleGame levels', () => {
     expect(LASER_DEMO_LEVELS[3].difficulty).toBe('hard');
     expect(LASER_DEMO_LEVELS[4].difficulty).toBe('easy');
     expect(LASER_DEMO_LEVELS[5].difficulty).toBe('hard');
-    expect(LASER_DEMO_LEVELS[4].quiz.length).toBeGreaterThan(0);
+    expect(LASER_DEMO_LEVELS.every((level) => level.cells.filter((cell) => cell.movable).length >= 2)).toBe(true);
+    expect(LASER_DEMO_LEVELS.some((level) => level.cells.some((cell) => cell.type === 'bifurcator'))).toBe(true);
+    expect(LASER_DEMO_LEVELS.some((level) => level.cells.some((cell) => cell.type === 'portal_blue'))).toBe(true);
+    expect(LASER_DEMO_LEVELS.some((level) => level.quiz.length > 0)).toBe(true);
   });
 
   it('lights the antenna in a solved reflection layout', () => {

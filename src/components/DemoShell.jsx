@@ -21,6 +21,7 @@ import ProgressTracker from './ProgressTracker';
 import LiveDemoTelemetryHud from './LiveDemoTelemetryHud';
 import { analyzeDemoTelemetry } from '../utils/advancedTelemetryAnalytics';
 import { useWebcamCapture } from '../hooks/useWebcamCapture';
+import { preloadEdgeLocalModel } from '../services/edgeLocalInferenceService';
 import './DemoShell.css';
 
 // Adapter wrappers so DemoShell can call games with the expected onComplete() callback
@@ -263,6 +264,9 @@ const DemoShell = () => {
     setTimeLeft(TOTAL_TIME);
     setActivityStarted(false);
     setShowInstructions(false); // Hide instructions until permissions are handled
+    void preloadEdgeLocalModel().catch((error) => {
+      console.warn('[DemoShell] edge-local model preload failed:', error?.message || error);
+    });
   };
 
   const handleGameSelectionChange = () => {
