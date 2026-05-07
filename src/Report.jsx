@@ -379,6 +379,7 @@ const Report = ({ isDummy = false, useDummyData = false, demoSummary = null }) =
     getSessionMetadata,
     sessionSavedId,
     canUseGemini,
+    geminiReady,
     generationNonce,
     isEn,
     preferEdgeLocalInference,
