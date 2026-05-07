@@ -100,7 +100,7 @@ const PostDemoScreen = ({ summary = null, onRestart }) => {
           <h3 style={{ fontSize: '1.1rem', fontWeight: 800, color: '#1e1b4b', marginBottom: '8px' }}>{c.contactTitle}</h3>
           <p style={{ color: '#64748b', fontSize: '0.95rem', marginBottom: '24px' }}>{c.contactBody}</p>
           <a 
-            href="mailto:ventas@krumm.cl" 
+            href="mailto:contacto@krumm.cl" 
             style={{ display: 'inline-flex', alignItems: 'center', gap: '8px', color: '#6366f1', fontWeight: 700, textDecoration: 'none', background: 'rgba(99,102,241,0.06)', padding: '10px 20px', borderRadius: '12px' }}
           >
             <Mail size={18} /> {c.emailUs}

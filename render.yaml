@@ -82,6 +82,9 @@ services:
       
       - key: RECRUITER_PASSWORD
         sync: false
+      
+      - key: ALLOWED_ORIGINS
+        value: https://www.krumm.cl,https://www.krumm.cl:443
     
     # Health check configuration
     healthCheckPath: /health

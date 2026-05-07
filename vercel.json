@@ -27,7 +27,7 @@
   "rewrites": [
     {
       "source": "/api/:path*",
-      "destination": "https://krumm-backend.onrender.com/api/:path*"
+      "destination": "https://krumm-tallent-assessment.onrender.com/api/:path*"
     },
     {
       "source": "/(.*)",
