@@ -55,19 +55,20 @@ export const LASER_DEMO_LEVELS = [
   {
     name: 'Sector Alpha',
     difficulty: 'easy',
-    cols: 8,
+    cols: 9,
     rows: 7,
     par: 2,
     timeLimit: 55,
     hint: {
-      es: 'Coloca dos espejos en la ruta para doblar el haz antes de llegar a la antena.',
-      en: 'Place two mirrors on the route to bend the beam before it reaches the antenna.'
+      es: 'Necesitas dos espejos: uno para subir el haz y otro para redirigirlo hacia la antena.',
+      en: 'You need two mirrors: one to lift the beam and a second one to redirect it to the antenna.'
     },
     cells: [
-      { x: 0, y: 3, type: 'ship', dir: 'right' },
-      { x: 7, y: 0, type: 'antenna' },
+      { x: 0, y: 5, type: 'ship', dir: 'right' },
+      { x: 8, y: 1, type: 'antenna' },
       { x: 0, y: 0, type: 'reflector_ne', movable: true },
-      { x: 6, y: 6, type: 'reflector_nw', movable: true },
+      { x: 8, y: 6, type: 'reflector_ne', movable: true },
+      { x: 8, y: 4, type: 'wall' },
     ],
     quiz: [],
   },
@@ -79,8 +80,8 @@ export const LASER_DEMO_LEVELS = [
     par: 3,
     timeLimit: 60,
     hint: {
-      es: 'El bifurcador debe tocar el carril central y cada rama necesita su propio desvío.',
-      en: 'The bifurcator must sit in the center lane and each branch needs its own deflection.'
+      es: 'Para encender ambas antenas necesitas bifurcar y doblar cada rama con un espejo distinto.',
+      en: 'To light both antennas you must split the beam and bend each branch with a different mirror.'
     },
     cells: [
       { x: 0, y: 4, type: 'ship', dir: 'right' },
@@ -88,28 +89,34 @@ export const LASER_DEMO_LEVELS = [
       { x: 8, y: 7, type: 'antenna' },
       { x: 0, y: 0, type: 'bifurcator', movable: true },
       { x: 9, y: 0, type: 'reflector_ne', movable: true },
-      { x: 9, y: 7, type: 'reflector_nw', movable: true },
+      { x: 0, y: 7, type: 'reflector_nw', movable: true },
+      { x: 8, y: 3, type: 'wall' },
+      { x: 8, y: 5, type: 'wall' },
     ],
     quiz: [],
   },
   {
     name: 'Sector Beta',
     difficulty: 'easy',
-    cols: 10,
-    rows: 7,
+    cols: 12,
+    rows: 8,
     par: 2,
     timeLimit: 65,
     hint: {
-      es: 'El portal abre el paso, pero todavía necesitas dos espejos para cerrar la ruta.',
-      en: 'The portal opens the path, but you still need two mirrors to close the route.'
+      es: 'El portal es obligatorio para cruzar el muro central; luego encadena dos espejos.',
+      en: 'The portal is mandatory to cross the central wall; then chain two mirrors.'
     },
     cells: [
       { x: 0, y: 3, type: 'ship', dir: 'right' },
       { x: 2, y: 3, type: 'portal_blue', targetPortalId: 'p1' },
-      { x: 7, y: 2, type: 'portal_blue', portalId: 'p1' },
-      { x: 1, y: 0, type: 'antenna' },
-      { x: 0, y: 6, type: 'reflector_ne', movable: true },
-      { x: 9, y: 6, type: 'reflector_nw', movable: true },
+      { x: 7, y: 5, type: 'portal_blue', portalId: 'p1' },
+      { x: 11, y: 1, type: 'antenna' },
+      { x: 0, y: 0, type: 'reflector_ne', movable: true },
+      { x: 11, y: 7, type: 'reflector_ne', movable: true },
+      { x: 5, y: 0, type: 'wall' }, { x: 5, y: 1, type: 'wall' }, { x: 5, y: 2, type: 'wall' },
+      { x: 5, y: 3, type: 'wall' }, { x: 5, y: 4, type: 'wall' }, { x: 5, y: 5, type: 'wall' },
+      { x: 5, y: 6, type: 'wall' }, { x: 5, y: 7, type: 'wall' },
+      { x: 11, y: 4, type: 'wall' },
     ],
     quiz: [],
   },
@@ -117,22 +124,26 @@ export const LASER_DEMO_LEVELS = [
     name: 'Sector Beta+',
     difficulty: 'hard',
     cols: 12,
-    rows: 8,
+    rows: 9,
     par: 4,
     timeLimit: 65,
     hint: {
-      es: 'Secuencia mixta: portal, bifurcador y dos espejos para abrir ambas salidas.',
-      en: 'Mixed sequence: portal, bifurcator, and two mirrors to open both exits.'
+      es: 'Secuencia obligatoria: portal, bifurcador y dos espejos para resolver las dos antenas.',
+      en: 'Mandatory sequence: portal, bifurcator, and two mirrors to solve both antennas.'
     },
     cells: [
       { x: 0, y: 4, type: 'ship', dir: 'right' },
       { x: 3, y: 4, type: 'portal_blue', targetPortalId: 'p2' },
-      { x: 8, y: 2, type: 'portal_blue', portalId: 'p2' },
-      { x: 9, y: 2, type: 'bifurcator', movable: true },
-      { x: 9, y: 0, type: 'reflector_ne', movable: true },
-      { x: 9, y: 6, type: 'reflector_nw', movable: true },
-      { x: 11, y: 0, type: 'antenna' },
-      { x: 11, y: 6, type: 'antenna' },
+      { x: 7, y: 4, type: 'portal_blue', portalId: 'p2' },
+      { x: 1, y: 0, type: 'bifurcator', movable: true },
+      { x: 11, y: 0, type: 'reflector_ne', movable: true },
+      { x: 0, y: 8, type: 'reflector_nw', movable: true },
+      { x: 11, y: 1, type: 'antenna' },
+      { x: 11, y: 7, type: 'antenna' },
+      { x: 5, y: 0, type: 'wall' }, { x: 5, y: 1, type: 'wall' }, { x: 5, y: 2, type: 'wall' },
+      { x: 5, y: 3, type: 'wall' }, { x: 5, y: 4, type: 'wall' }, { x: 5, y: 5, type: 'wall' },
+      { x: 5, y: 6, type: 'wall' }, { x: 5, y: 7, type: 'wall' }, { x: 5, y: 8, type: 'wall' },
+      { x: 11, y: 3, type: 'wall' }, { x: 11, y: 5, type: 'wall' },
     ],
     quiz: [],
   },
@@ -144,60 +155,61 @@ export const LASER_DEMO_LEVELS = [
     par: 4,
     timeLimit: 75,
     hint: {
-      es: 'Combina el portal con el bifurcador para forzar una ruta doble y evitar el bloque central.',
-      en: 'Combine the portal with the bifurcator to force a double route and avoid the central block.'
+      es: 'Ruta en dos fases: portal para cruzar el bloqueo y luego bifurcación para dividir salidas.',
+      en: 'Two-phase route: portal to cross the blockade and then bifurcation to split outputs.'
     },
     cells: [
       { x: 0, y: 4, type: 'ship', dir: 'right' },
       { x: 2, y: 4, type: 'portal_blue', targetPortalId: 'p3' },
-      { x: 7, y: 4, type: 'portal_blue', portalId: 'p3' },
-      { x: 8, y: 4, type: 'bifurcator', movable: true },
-      { x: 8, y: 1, type: 'reflector_ne', movable: true },
-      { x: 8, y: 7, type: 'reflector_nw', movable: true },
-      { x: 11, y: 1, type: 'antenna' },
-      { x: 11, y: 7, type: 'antenna' },
-      { x: 5, y: 0, type: 'wall' }, { x: 5, y: 1, type: 'wall' }, { x: 5, y: 2, type: 'wall' },
-      { x: 5, y: 6, type: 'wall' }, { x: 5, y: 7, type: 'wall' }, { x: 5, y: 8, type: 'wall' },
+      { x: 6, y: 2, type: 'portal_blue', portalId: 'p3' },
+      { x: 0, y: 8, type: 'bifurcator', movable: true },
+      { x: 11, y: 8, type: 'reflector_ne', movable: true },
+      { x: 0, y: 0, type: 'reflector_nw', movable: true },
+      { x: 11, y: 0, type: 'antenna' },
+      { x: 11, y: 6, type: 'antenna' },
+      { x: 4, y: 0, type: 'wall' }, { x: 4, y: 1, type: 'wall' }, { x: 4, y: 2, type: 'wall' },
+      { x: 4, y: 3, type: 'wall' }, { x: 4, y: 4, type: 'wall' }, { x: 4, y: 5, type: 'wall' },
+      { x: 4, y: 6, type: 'wall' }, { x: 4, y: 7, type: 'wall' }, { x: 4, y: 8, type: 'wall' },
+      { x: 11, y: 2, type: 'wall' }, { x: 11, y: 4, type: 'wall' },
     ],
-    quiz: [
-      { 
-        q: '¿Cuál es el propósito principal del portal (P)?', 
-        opts: ['Aumentar velocidad', 'Reflejar el haz', 'Trasladar el haz a otro punto', 'Detener el haz'], 
-        correct: 2 
-      },
-      {
-        q: '¿Qué hace el bifurcador (+) con el haz de luz?',
-        opts: ['Lo detiene', 'Lo divide en dos trayectorias', 'Lo refleja', 'Lo debilita'],
-        correct: 1
-      }
-    ],
+    quiz: [],
   },
   {
     name: 'Sector Gamma+',
     difficulty: 'hard',
-    cols: 12,
+    cols: 13,
     rows: 10,
     par: 5,
     timeLimit: 80,
     hint: {
-      es: 'El laberinto final exige portal, bifurcación y dos desvíos precisos para cerrar ambas antenas.',
-      en: 'The final maze requires portal, bifurcation, and two precise bends to close both antennas.'
+      es: 'Desafío final: cruza con portal, divide con bifurcador y encadena desvíos para cerrar ambas antenas.',
+      en: 'Final challenge: cross with the portal, split with the bifurcator, and chain precise bends to close both antennas.'
     },
     cells: [
       { x: 0, y: 5, type: 'ship', dir: 'right' },
       { x: 2, y: 5, type: 'portal_blue', targetPortalId: 'p4' },
       { x: 8, y: 5, type: 'portal_blue', portalId: 'p4' },
-      { x: 9, y: 5, type: 'bifurcator', movable: true },
-      { x: 9, y: 1, type: 'reflector_ne', movable: true },
-      { x: 9, y: 8, type: 'reflector_nw', movable: true },
-      { x: 11, y: 1, type: 'antenna' },
-      { x: 11, y: 8, type: 'antenna' },
-      { x: 5, y: 0, type: 'wall' }, { x: 5, y: 1, type: 'wall' }, { x: 5, y: 2, type: 'wall' }, { x: 5, y: 3, type: 'wall' },
-      { x: 5, y: 6, type: 'wall' }, { x: 5, y: 7, type: 'wall' }, { x: 5, y: 8, type: 'wall' }, { x: 5, y: 9, type: 'wall' },
-      { x: 10, y: 2, type: 'wall' }, { x: 10, y: 3, type: 'wall' }, { x: 10, y: 4, type: 'wall' },
-      { x: 10, y: 6, type: 'wall' }, { x: 10, y: 7, type: 'wall' }, { x: 10, y: 9, type: 'wall' },
+      { x: 0, y: 0, type: 'bifurcator', movable: true },
+      { x: 12, y: 0, type: 'reflector_ne', movable: true },
+      { x: 0, y: 9, type: 'reflector_nw', movable: true },
+      { x: 12, y: 1, type: 'antenna' },
+      { x: 12, y: 8, type: 'antenna' },
+      { x: 6, y: 0, type: 'wall' }, { x: 6, y: 1, type: 'wall' }, { x: 6, y: 2, type: 'wall' }, { x: 6, y: 3, type: 'wall' },
+      { x: 6, y: 4, type: 'wall' }, { x: 6, y: 5, type: 'wall' }, { x: 6, y: 6, type: 'wall' }, { x: 6, y: 7, type: 'wall' }, { x: 6, y: 8, type: 'wall' }, { x: 6, y: 9, type: 'wall' },
+      { x: 12, y: 3, type: 'wall' }, { x: 12, y: 5, type: 'wall' }, { x: 12, y: 7, type: 'wall' },
     ],
-    quiz: [],
+    quiz: [
+      {
+        q: '¿Cuál es la secuencia más eficiente en los niveles avanzados?',
+        opts: ['Mover primero el bifurcador y luego ajustar espejos', 'Mover espejos al azar y probar', 'Evitar usar portales', 'Priorizar solo una antena'],
+        correct: 0,
+      },
+      {
+        q: 'En este juego, ¿qué función cumple el portal (P)?',
+        opts: ['Multiplica el haz', 'Bloquea el haz', 'Traslada el haz a otro nodo manteniendo la dirección', 'Convierte antenas en espejos'],
+        correct: 2,
+      },
+    ],
   }
 ];
 
@@ -478,13 +490,12 @@ const LaserPuzzleGame = ({ isActive, onEndGame, isDemo, showBriefing = true, tim
   useEffect(() => {
     if (gamePhase !== 'playing') return;
     const antennaKeys = Object.keys(grid).filter(k => grid[k].type === 'antenna');
-    const minMovesToAdvance = currentLevel?.par || 2;
-    if (antennaKeys.length > 0 && antennaKeys.every(k => litAntennas.has(k)) && moves >= minMovesToAdvance) {
+    if (antennaKeys.length > 0 && antennaKeys.every(k => litAntennas.has(k))) {
        
       setGamePhase('levelComplete');
       setTimeout(advanceLevel, 1400);
     }
-  }, [litAntennas, grid, gamePhase, advanceLevel, moves, currentLevel?.par]);
+  }, [litAntennas, grid, gamePhase, advanceLevel]);
 
   const renderCell = (x, y) => {
     const key = `${x},${y}`;

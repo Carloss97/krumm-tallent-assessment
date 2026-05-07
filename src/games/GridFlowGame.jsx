@@ -92,7 +92,7 @@ export const GRID_LEVELS = [
     ], 
     targets: [
       { id:5, x:2, y:8, color:'#10b981', points:150, dropZone:{x:8,y:1} },
-      { id:6, x:8, y:8, color:'#f59e0b', points:150, dropZone:{x:1,y:1} }
+      { id:6, x:8, y:8, color:'#f59e0b', points:150, dropZone:{x:1,y:0} }
     ], 
     stations: [{ x:0, y:5 }, { x:9, y:5 }],
     energyDrain: 2.5,
@@ -436,6 +436,9 @@ const GridFlowGame = ({ isActive, onEndGame, isDemo, showBriefing = true }) => {
     if (!newInv) {
       const hit = newTargets.find(t=>t.active&&t.x===nx&&t.y===ny);
         if (hit) {
+        if (!Number.isFinite(satsRef.current[hit.id])) {
+          satsRef.current[hit.id] = 100;
+        }
         newInv=hit; 
         newTargets=newTargets.map(t=>t.id===hit.id?{...t,active:false}:t);
         try { playMemoryClick(); } catch (error) { void error; }
@@ -538,7 +541,7 @@ const GridFlowGame = ({ isActive, onEndGame, isDemo, showBriefing = true }) => {
           const satColor = sat >= 60 ? '#059669' : sat >= 30 ? '#d97706' : '#dc2626';
           content = (
             <motion.div initial={{ scale: 0 }} animate={{ scale: 1 }} style={{ position:'relative', width:'60%', height:'60%', background:target.color, borderRadius:'8px', boxShadow:`0 6px 20px -1px ${target.color}60`, display:'flex', alignItems:'center', justifyContent:'center' }}>
-              <span style={{ position:'absolute', top:'-24px', left:'50%', transform:'translateX(-50%)', fontSize:'12px', color:satColor, fontWeight:'900' }}>{sat}%</span>
+              <span style={{ position:'absolute', top:'2px', left:'50%', transform:'translateX(-50%)', fontSize:'10px', color:satColor, fontWeight:'900', lineHeight: 1, background:'rgba(255,255,255,0.9)', borderRadius:'6px', padding:'2px 4px' }}>{sat}%</span>
             </motion.div>
           );
         }
@@ -559,7 +562,14 @@ const GridFlowGame = ({ isActive, onEndGame, isDemo, showBriefing = true }) => {
     >{label}</motion.button>
   );
 
-  const avgSat = targets.length ? Math.round(Object.entries(sats).filter(([id]) => targets.find(t=>t.id===parseInt(id)&&t.active)).reduce((s,[,v])=>s+v,0) / Math.max(1, targets.filter(t=>t.active).length)) : 100;
+  const activeIds = targets.filter((target) => target.active).map((target) => target.id);
+  const trackedIds = inventory ? [...activeIds, inventory.id] : activeIds;
+  const trackedSatValues = trackedIds
+    .map((id) => sats[id])
+    .filter((value) => Number.isFinite(value));
+  const avgSat = trackedSatValues.length > 0
+    ? Math.round(trackedSatValues.reduce((sum, value) => sum + value, 0) / trackedSatValues.length)
+    : 100;
   const satColor = avgSat >= 60 ? '#059669' : avgSat >= 30 ? '#d97706' : '#dc2626';
 
   if (!isActive) {

@@ -17,6 +17,13 @@ describe('GridFlowGame levels', () => {
     expect(GRID_LEVELS[5].stations.length).toBeGreaterThanOrEqual(3);
     expect(GRID_LEVELS[0].timeLimit).toBeLessThan(GRID_LEVELS[1].timeLimit + 10);
     expect(GRID_LEVELS[1].timeLimit).toBeGreaterThan(0);
+    GRID_LEVELS.forEach((level) => {
+      const wallSet = new Set(level.walls);
+      level.targets.forEach((target) => {
+        expect(target.dropZone).toBeTruthy();
+        expect(wallSet.has(`${target.dropZone.x},${target.dropZone.y}`)).toBe(false);
+      });
+    });
   });
 
   it('computes efficiency from delivered score', () => {
