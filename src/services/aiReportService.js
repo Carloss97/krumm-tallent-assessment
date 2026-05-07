@@ -148,7 +148,7 @@ export async function checkGeminiHealth(modelName) {
       });
       lastAIDebugTrace = Array.isArray(proxyResult.attempts) ? [...proxyResult.attempts] : [];
       return writeGeminiHealthCache(cacheKey, {
-        ok: Boolean(proxyResult.ok),
+        ok: false,
         code: proxyResult.code || 'OK',
         message: proxyResult.message || 'Gemini health check completed via backend proxy.',
         model: proxyResult.model || preferredModel,
@@ -576,7 +576,6 @@ function prepareGameAnalysis(sessionData) {
   const games = {};
 
   const getGame = (newId, legacyId) => sessionData?.[newId] || sessionData?.[legacyId];
-  
   // Game 1: OSPAN (Working Memory)
   const game1 = getGame('ospan_game_1', 'game1');
   if (game1) {
@@ -591,7 +590,7 @@ function prepareGameAnalysis(sessionData) {
                       'Working memory under load may need support'
     };
   }
-  
+
   // Game 2: Stop-Signal (Inhibition)
   const game2 = getGame('sst_game_2', 'game2');
   if (game2) {
@@ -606,7 +605,7 @@ function prepareGameAnalysis(sessionData) {
                       'Impulse control may fluctuate under pressure'
     };
   }
-  
+
   // Game 3: Task Switching (Flexibility)
   const game3 = getGame('tsw_game_3', 'game3');
   if (game3) {
@@ -620,7 +619,7 @@ function prepareGameAnalysis(sessionData) {
                       'Switch-cost may be elevated'
     };
   }
-  
+
   // Game 4: Balloon Risk Task (Risk Assessment)
   const game4 = getGame('cpt_game_4', 'game4');
   if (game4) {
@@ -634,7 +633,7 @@ function prepareGameAnalysis(sessionData) {
                       'Propensity for high-risk decisions under uncertainty'
     };
   }
-  
+
   // Game 5: Decision under Pressure
   const game5 = getGame('dec_game_5', 'game5');
   if (game5) {
@@ -648,7 +647,7 @@ function prepareGameAnalysis(sessionData) {
                       'Decision quality may degrade with time constraints'
     };
   }
-  
+
   // Game 6: Grid Flow (Planning & Logic)
   const game6 = getGame('rsh_game_6', 'game6');
   if (game6) {
@@ -662,7 +661,7 @@ function prepareGameAnalysis(sessionData) {
                       'Resource optimization may benefit from structured planning'
     };
   }
-  
+
   // Game 7: Laser Puzzle (Spatial Reasoning)
   const game7 = getGame('sjt_game_7', 'game7');
   if (game7) {
@@ -766,7 +765,7 @@ function prepareGameAnalysis(sessionData) {
                       'Visuospatial working memory may need support'
     };
   }
-  
+
   return games;
 }
 

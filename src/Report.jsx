@@ -17,7 +17,7 @@ import {
   checkGeminiHealth,
 } from './services/aiReportService';
 import { generateEdgeLocalReport } from './services/edgeLocalInferenceService';
-import { saveSessionToBackend, authenticateParticipant, getCurrentToken } from './services/backendService';
+import { saveSessionToBackend, getCurrentToken } from './services/backendService';
 import { generateDummyReportData } from './utils/dummyDataGenerator';
 import './Report.css';
 
@@ -50,6 +50,7 @@ const Report = ({ isDummy = false, useDummyData = false, demoSummary = null }) =
   const useBackendGeminiProxy = typeof import.meta !== 'undefined' && import.meta.env?.VITE_USE_BACKEND_GEMINI_PROXY !== 'false';
   const hasGeminiKey = Boolean(typeof import.meta !== 'undefined' && import.meta.env?.VITE_GOOGLE_API_KEY);
   const canUseGemini = useBackendGeminiProxy || hasGeminiKey;
+  const geminiReady = canUseGemini && geminiHealth.checked && geminiHealth.ok;
   const preferEdgeLocalInference = typeof import.meta !== 'undefined' && import.meta.env?.VITE_USE_EDGE_LOCAL_INFERENCE !== 'false';
   const enableGeminiProbeInDev = typeof import.meta !== 'undefined' && import.meta.env?.VITE_GEMINI_HEALTH_PROBE_DEV === 'true';
   const edgeGeminiEscalationEnabled = typeof import.meta !== 'undefined' && import.meta.env?.VITE_EDGE_ESCALATION_ENABLED !== 'false';
@@ -249,7 +250,7 @@ const Report = ({ isDummy = false, useDummyData = false, demoSummary = null }) =
                   isEn,
                 });
 
-                if (escalation.shouldEscalate && canUseGemini) {
+                if (escalation.shouldEscalate && geminiReady) {
                   const report = await generateAIReport(reportData, 'recruitment', language);
                   if (report) {
                     resolvedReport = report;
@@ -271,7 +272,7 @@ const Report = ({ isDummy = false, useDummyData = false, demoSummary = null }) =
               }
             }
 
-            if (!resolvedReport && canUseGemini) {
+            if (!resolvedReport && geminiReady) {
               const report = await generateAIReport(reportData, 'recruitment', language);
               if (report) {
                 resolvedReport = report;
@@ -314,21 +315,20 @@ const Report = ({ isDummy = false, useDummyData = false, demoSummary = null }) =
               ? getSessionMetadata()
               : { timestamp: new Date().toISOString() };
 
-            // Ensure we have a participant token; if none, attempt lightweight guest authenticate
-            try {
-              const existing = getCurrentToken();
-              if (!existing) {
-                const genId = participantProfile?.participantId || `guest-${Date.now()}`;
-                console.log('[Report] No participant token found, requesting guest token for', genId);
-                try {
-                  await authenticateParticipant({ participantId: genId, accessCode: 'demo', email: participantProfile?.email, fullName: participantProfile?.fullName });
-                } catch (authErr) {
-                  console.warn('[Report] Guest authenticate failed:', authErr?.message || authErr);
-                }
-              }
-            } catch (err) {
-              console.warn('[Report] token check/auth flow error', err?.message || err);
+            const token = getCurrentToken();
+            if (!token || !participantProfile?.participantId) {
+              console.info('[Report] Skipping backend session save because no authenticated participant token is available.');
+              return;
             }
+
+            const sessionDataPayload = {
+              startedAt: safeMetadata.startedAt || new Date().toISOString(),
+              completedAt: new Date().toISOString(),
+              participantId: participantProfile.participantId,
+              telemetry: effectiveSessionData,
+              report: reportData,
+              demoSummary,
+            };
 
             const maxAttempts = 3;
             let attempt = 0;
@@ -337,7 +337,7 @@ const Report = ({ isDummy = false, useDummyData = false, demoSummary = null }) =
               try {
                 const saveRes = await saveSessionToBackend({
                   participant: participantProfile,
-                  sessionData: reportData,
+                  sessionData: sessionDataPayload,
                   metadata: safeMetadata
                 });
                 if (saveRes && saveRes.sessionId) {
@@ -361,6 +361,8 @@ const Report = ({ isDummy = false, useDummyData = false, demoSummary = null }) =
     useAI,
     language,
     reportData,
+    effectiveSessionData,
+    demoSummary,
     participantProfile,
     getSessionMetadata,
     sessionSavedId,
@@ -375,6 +377,7 @@ const Report = ({ isDummy = false, useDummyData = false, demoSummary = null }) =
     edgeEscalationConfidenceBandMin,
     edgeEscalationConfidenceBandMax,
     edgeEscalationRecommendations,
+    geminiHealth,
     dummyModeEnabled
   ]);
 
