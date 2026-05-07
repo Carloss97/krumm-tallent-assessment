@@ -53,7 +53,7 @@ const Report = ({ isDummy = false, useDummyData = false, demoSummary = null }) =
   const geminiReady = canUseGemini && geminiHealth.checked && geminiHealth.ok;
   const preferEdgeLocalInference = typeof import.meta !== 'undefined' && import.meta.env?.VITE_USE_EDGE_LOCAL_INFERENCE !== 'false';
   const enableGeminiProbeInDev = typeof import.meta !== 'undefined' && import.meta.env?.VITE_GEMINI_HEALTH_PROBE_DEV === 'true';
-  const edgeGeminiEscalationEnabled = typeof import.meta !== 'undefined' && import.meta.env?.VITE_EDGE_ESCALATION_ENABLED !== 'false';
+  const edgeGeminiEscalationEnabled = typeof import.meta !== 'undefined' && import.meta.env?.VITE_EDGE_ESCALATION_ENABLED === 'true';
   const edgeEscalationMinConfidence = readEnvNumber('VITE_EDGE_ESCALATE_MIN_CONFIDENCE', 66);
   const edgeEscalationMinTelemetryCoverage = readEnvNumber('VITE_EDGE_ESCALATE_MIN_TELEMETRY_COVERAGE', 55);
   const edgeEscalationMinBiometricQuality = readEnvNumber('VITE_EDGE_ESCALATE_MIN_BIOMETRIC_QUALITY', 50);
@@ -248,34 +248,37 @@ const Report = ({ isDummy = false, useDummyData = false, demoSummary = null }) =
                     : `Inferencia edge-local completada en navegador sin exfiltración de datos crudos (cobertura ${edgeReport?.signalAudit?.telemetryCoverageScore ?? 0}%, calidad biométrica ${edgeReport?.signalAudit?.biometricSignalQualityScore ?? 0}%).`
                 });
 
-                const escalation = evaluateEdgeGeminiEscalation(edgeReport, {
-                  enabled: edgeGeminiEscalationEnabled,
-                  minConfidence: edgeEscalationMinConfidence,
-                  minTelemetryCoverage: edgeEscalationMinTelemetryCoverage,
-                  minBiometricQuality: edgeEscalationMinBiometricQuality,
-                  confidenceBandMin: edgeEscalationConfidenceBandMin,
-                  confidenceBandMax: edgeEscalationConfidenceBandMax,
-                  recommendationList: edgeEscalationRecommendations,
-                  isEn,
-                });
+                // Only escalate when explicitly enabled. Local report is the default path.
+                if (edgeGeminiEscalationEnabled) {
+                  const escalation = evaluateEdgeGeminiEscalation(edgeReport, {
+                    enabled: edgeGeminiEscalationEnabled,
+                    minConfidence: edgeEscalationMinConfidence,
+                    minTelemetryCoverage: edgeEscalationMinTelemetryCoverage,
+                    minBiometricQuality: edgeEscalationMinBiometricQuality,
+                    confidenceBandMin: edgeEscalationConfidenceBandMin,
+                    confidenceBandMax: edgeEscalationConfidenceBandMax,
+                    recommendationList: edgeEscalationRecommendations,
+                    isEn,
+                  });
 
-                if (escalation.shouldEscalate && geminiReady) {
-                  const report = await generateAIReport(reportData, 'recruitment', language);
-                  if (report) {
-                    resolvedReport = report;
-                    setInsightMeta({
-                      mode: 'ai',
-                      reason: isEn
-                        ? `Gemini escalation triggered after edge-local due to: ${escalation.reasons.join('; ')}.`
-                        : `Escalamiento a Gemini activado tras edge-local por: ${escalation.reasons.join('; ')}.`
-                    });
-                  } else {
-                    setInsightMeta({
-                      mode: 'edge-local',
-                      reason: isEn
-                        ? `Edge-local retained after Gemini escalation attempt failed (${escalation.reasons.join('; ')}).`
-                        : `Se mantiene edge-local tras fallo en el escalamiento de Gemini (${escalation.reasons.join('; ')}).`
-                    });
+                  if (escalation.shouldEscalate && geminiReady) {
+                    const report = await generateAIReport(reportData, 'recruitment', language);
+                    if (report) {
+                      resolvedReport = report;
+                      setInsightMeta({
+                        mode: 'ai',
+                        reason: isEn
+                          ? `Gemini escalation triggered after edge-local due to: ${escalation.reasons.join('; ')}.`
+                          : `Escalamiento a Gemini activado tras edge-local por: ${escalation.reasons.join('; ')}.`
+                      });
+                    } else {
+                      setInsightMeta({
+                        mode: 'edge-local',
+                        reason: isEn
+                          ? `Edge-local retained after Gemini escalation attempt failed (${escalation.reasons.join('; ')}).`
+                          : `Se mantiene edge-local tras fallo en el escalamiento de Gemini (${escalation.reasons.join('; ')}).`
+                      });
+                    }
                   }
                 }
               }
@@ -307,13 +310,13 @@ const Report = ({ isDummy = false, useDummyData = false, demoSummary = null }) =
 
           setAiReport(resolvedReport);
           setAiDebugRows(getLastAIDebugTrace());
-          setIsAnalyzing(false);
         } catch (error) {
           console.error('Error generating AI report:', error);
           const heuristicReport = generateHeuristicReport(reportData, language);
           setAiReport(heuristicReport);
           setAiDebugRows(getLastAIDebugTrace());
           setInsightMeta({ mode: 'heuristic', reason: isEn ? 'Runtime error while generating AI report; fallback activated.' : 'Error de ejecución al generar reporte IA; fallback activado.' });
+        } finally {
           setIsAnalyzing(false);
         }
 

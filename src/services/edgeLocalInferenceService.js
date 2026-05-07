@@ -57,12 +57,33 @@ function getLocalizedLabels(language = 'en') {
 export function generateEdgeLocalReport(sessionData, language = 'en') {
   const labels = getLocalizedLabels(language);
   const gameIds = Object.keys(sessionData || {}).filter((k) => k !== 'futureModules');
-  const validGames = gameIds.filter((id) => typeof sessionData[id]?.score === 'number');
+  const getGameSignal = (id) => {
+    const game = sessionData?.[id];
+    if (!game || typeof game !== 'object') return null;
+
+    const score = Number.isFinite(game.score)
+      ? game.score
+      : Number.isFinite(game.confidence)
+        ? game.confidence
+        : Number.isFinite(game.gameCoverage)
+          ? game.gameCoverage
+          : Number.isFinite(game.readinessScore)
+            ? game.readinessScore
+            : null;
+
+    if (score === null) return null;
+
+    return { ...game, score };
+  };
+
+  const validGames = gameIds
+    .map((id) => ({ id, game: getGameSignal(id) }))
+    .filter(({ game }) => Boolean(game));
 
   if (validGames.length === 0) return null;
 
   const latencyMs = Math.round(12 + Math.random() * 45); // Simulated local inference time
-  const totalScore = validGames.reduce((acc, id) => acc + (sessionData[id].score || 0), 0);
+  const totalScore = validGames.reduce((acc, entry) => acc + (entry.game.score || 0), 0);
   const avgScore = totalScore / validGames.length;
   
   // Local signal audit (simulated)
