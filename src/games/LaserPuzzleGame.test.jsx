@@ -2,11 +2,15 @@ import { describe, it, expect } from 'vitest';
 import { LASER_DEMO_LEVELS, buildGrid, getLaserEfficiency, traceBeam } from './LaserPuzzleGame';
 
 describe('LaserPuzzleGame levels', () => {
-  it('defines a progressive three-level puzzle set', () => {
-    expect(LASER_DEMO_LEVELS).toHaveLength(3);
-    expect(LASER_DEMO_LEVELS[0].par).toBeLessThan(LASER_DEMO_LEVELS[1].par + 1);
-    expect(LASER_DEMO_LEVELS[1].rows).toBeGreaterThanOrEqual(LASER_DEMO_LEVELS[0].rows);
-    expect(LASER_DEMO_LEVELS[2].quiz.length).toBeGreaterThan(0);
+  it('defines a progressive adaptive six-level puzzle set', () => {
+    expect(LASER_DEMO_LEVELS).toHaveLength(6);
+    expect(LASER_DEMO_LEVELS[0].difficulty).toBe('easy');
+    expect(LASER_DEMO_LEVELS[1].difficulty).toBe('hard');
+    expect(LASER_DEMO_LEVELS[2].difficulty).toBe('easy');
+    expect(LASER_DEMO_LEVELS[3].difficulty).toBe('hard');
+    expect(LASER_DEMO_LEVELS[4].difficulty).toBe('easy');
+    expect(LASER_DEMO_LEVELS[5].difficulty).toBe('hard');
+    expect(LASER_DEMO_LEVELS[4].quiz.length).toBeGreaterThan(0);
   });
 
   it('lights the antenna in a solved reflection layout', () => {

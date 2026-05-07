@@ -2,15 +2,21 @@ import { describe, it, expect } from 'vitest';
 import { GRID_LEVELS, getGridEfficiency } from './GridFlowGame';
 
 describe('GridFlowGame levels', () => {
-  it('defines a readable three-step progression', () => {
-    expect(GRID_LEVELS).toHaveLength(3);
+  it('defines a readable adaptive six-step progression', () => {
+    expect(GRID_LEVELS).toHaveLength(6);
+    expect(GRID_LEVELS[0].difficulty).toBe('easy');
+    expect(GRID_LEVELS[1].difficulty).toBe('hard');
+    expect(GRID_LEVELS[2].difficulty).toBe('easy');
+    expect(GRID_LEVELS[3].difficulty).toBe('hard');
+    expect(GRID_LEVELS[4].difficulty).toBe('easy');
+    expect(GRID_LEVELS[5].difficulty).toBe('hard');
     expect(GRID_LEVELS[0].energyDrain).toBe(0);
     expect(GRID_LEVELS[1].energyDrain).toBeGreaterThan(0);
-    expect(GRID_LEVELS[2].targets).toHaveLength(2);
-    expect(GRID_LEVELS[1].stations).toHaveLength(1);
-    expect(GRID_LEVELS[2].stations).toHaveLength(2);
-    expect(GRID_LEVELS[0].timeLimit).toBeLessThan(GRID_LEVELS[1].timeLimit);
-    expect(GRID_LEVELS[1].timeLimit).toBeLessThan(GRID_LEVELS[2].timeLimit);
+    expect(GRID_LEVELS[5].targets).toHaveLength(3);
+    expect(GRID_LEVELS[1].stations.length).toBeGreaterThanOrEqual(1);
+    expect(GRID_LEVELS[5].stations.length).toBeGreaterThanOrEqual(3);
+    expect(GRID_LEVELS[0].timeLimit).toBeLessThan(GRID_LEVELS[1].timeLimit + 10);
+    expect(GRID_LEVELS[1].timeLimit).toBeGreaterThan(0);
   });
 
   it('computes efficiency from delivered score', () => {

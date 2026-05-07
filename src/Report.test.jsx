@@ -36,6 +36,7 @@ vi.mock('./services/aiReportService', () => ({
 
 vi.mock('./services/backendService', () => ({
   saveSessionToBackend: vi.fn(() => Promise.resolve({ sessionId: 123 })),
+  getCurrentToken: vi.fn(() => null),
 }));
 
 describe('Report Component', () => {
