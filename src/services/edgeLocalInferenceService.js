@@ -1,5 +1,8 @@
 const EDGE_MODEL_NAME = 'edge-linear-v1';
 const EDGE_MODEL_SIZE_MB = 0.018;
+const EDGE_LOCAL_MODEL_URL = typeof import.meta !== 'undefined' && import.meta.env?.VITE_EDGE_LOCAL_MODEL_URL
+  ? import.meta.env.VITE_EDGE_LOCAL_MODEL_URL
+  : '/models/edge-local-report.onnx';
 const ENV = typeof import.meta !== 'undefined' ? (import.meta?.env || {}) : {};
 
 const EDGE_CALIBRATION_REGISTRY = {
@@ -232,3 +235,140 @@ export function buildEdgeLocalLiveInsight(rawTelemetry) {
     signals,
   };
 }
+
+/**
+ * Attempt to run a lightweight edge-inference using a WebWorker (PoC).
+ * Falls back to `generateEdgeLocalReport` on timeout or failure.
+ * @param {Object} sessionData
+ * @param {string} language
+ * @param {Object} options
+ */
+export async function generateEdgeLocalReportModel(sessionData, language = 'en', options = {}) {
+  // Derive simple features to send to the worker
+  try {
+    const gameIds = Object.keys(sessionData || {}).filter((k) => k !== 'futureModules');
+    const games = gameIds.map((id) => sessionData[id]).filter(Boolean);
+    const numGames = games.length;
+    const avgScore = games.length > 0 ? Math.round(games.reduce((s, g) => s + (Number.isFinite(g.score) ? g.score : (Number.isFinite(g.confidence) ? g.confidence : 0)), 0) / games.length) : 0;
+    const meanDuration = games.length > 0 ? Math.round(games.reduce((s, g) => s + (Number.isFinite(g.duration) ? g.duration : 0), 0) / games.length) : 0;
+    const meanConfidence = games.length > 0 ? Math.round(games.reduce((s, g) => s + (Number.isFinite(g.confidence) ? g.confidence : 0), 0) / games.length) : 0;
+    const readinessMean = games.length > 0 ? Math.round(games.reduce((s, g) => s + (Number.isFinite(g.readinessScore) ? g.readinessScore : 0), 0) / games.length) : 0;
+    const telemetryCoverage = Math.min(100, Math.round((numGames / 7) * 100));
+    const stabilityScore = calculateBiometricQuality(sessionData, gameIds);
+
+    const features = {
+      avgScore,
+      meanDuration,
+      meanConfidence,
+      readinessMean,
+      telemetryCoverage,
+      stabilityScore,
+      numGames,
+    };
+    const featureOrder = ['avgScore', 'meanDuration', 'meanConfidence', 'readinessMean', 'telemetryCoverage', 'stabilityScore', 'numGames'];
+
+    // Try to spin up worker
+    if (typeof Worker === 'undefined') {
+      // Not available in current environment (e.g., unit tests). Fallback to heuristic
+      return generateEdgeLocalReport(sessionData, language);
+    }
+
+    const worker = new Worker(new URL('../workers/onnxWorker.js', import.meta.url), { type: 'module' });
+    const id = `r-${Date.now()}-${Math.floor(Math.random() * 10000)}`;
+    const modelUrl = options.modelUrl || EDGE_LOCAL_MODEL_URL;
+
+    const initResult = await new Promise((resolve) => {
+      const onInit = (ev) => {
+        const message = ev.data || {};
+        if (message.type === 'init:ok' || message.type === 'init:fail') {
+          worker.removeEventListener('message', onInit);
+          if (timeoutId) clearTimeout(timeoutId);
+          resolve(message);
+        }
+      };
+      worker.addEventListener('message', onInit);
+      worker.postMessage({
+        type: 'init',
+        id: `init-${id}`,
+        modelUrl,
+        options: { featureOrder },
+      });
+      const timeoutId = setTimeout(() => {
+        worker.removeEventListener('message', onInit);
+        resolve({ type: 'init:timeout' });
+      }, 1500);
+    });
+
+    const promise = new Promise((resolve, reject) => {
+      const onMessage = (ev) => {
+        const m = ev.data || {};
+        if (m.id && String(m.id) !== String(id)) return;
+        if (m.type === 'infer:result' && m.result) {
+          resolve(m.result);
+        } else if (m.type === 'error') {
+          reject(new Error(m.message || 'Worker error'));
+        }
+      };
+
+      worker.addEventListener('message', onMessage);
+
+      // Timeout fallback
+      const to = setTimeout(() => {
+        worker.removeEventListener('message', onMessage);
+        try { worker.terminate(); } catch (e) {}
+        reject(new Error('Worker timeout'));
+      }, 2000);
+
+      // Send infer request
+      try {
+        worker.postMessage({ type: 'infer', id, features, featureOrder, initResult });
+      } catch (err) {
+        clearTimeout(to);
+        worker.removeEventListener('message', onMessage);
+        try { worker.terminate(); } catch (e) {}
+        reject(err);
+      }
+    });
+
+    try {
+      const result = await promise;
+      try { worker.terminate(); } catch (e) {}
+
+      // Map worker result to report-shaped object
+      const latencyMs = result.latencyMs || 0;
+      const confidenceScore = result.confidence || Math.round((result.scorePercent || 50) * 0.6);
+      const recommendation = (result.scorePercent >= 75) ? getLocalizedLabels(language).recommendations.strong
+        : (result.scorePercent >= 60) ? getLocalizedLabels(language).recommendations.solid
+        : (result.scorePercent >= 45) ? getLocalizedLabels(language).recommendations.conditional
+        : getLocalizedLabels(language).recommendations.exploratory;
+
+      return {
+        summary: `${getLocalizedLabels(language).summaryPrefix} ${recommendation.toLowerCase()}. ${getLocalizedLabels(language).confidencePrefix} (${confidenceScore}%).`,
+        strengths: [],
+        areasToMonitor: [language === 'es' ? 'Consistencia bajo carga cognitiva extrema' : 'Consistency under extreme cognitive load'],
+        careerRecommendations: [],
+        confidenceScore,
+        recommendation,
+        source: 'edge-local',
+        runtime: {
+          model: 'onnx-worker-poc',
+          sizeMb: 0,
+          latencyMs,
+          processedAt: new Date().toISOString(),
+        },
+        signalAudit: {
+          telemetryCoverageScore: features.telemetryCoverage,
+          biometricSignalQualityScore: features.stabilityScore,
+        }
+      };
+    } catch (err) {
+      // Worker failed or timed out — fallback to heuristic
+      try { worker.terminate(); } catch (e) {}
+      return generateEdgeLocalReport(sessionData, language);
+    }
+  } catch (err) {
+    console.warn('[edgeLocalInference] model inference failed, falling back to heuristic:', err?.message || err);
+    return generateEdgeLocalReport(sessionData, language);
+  }
+}
+

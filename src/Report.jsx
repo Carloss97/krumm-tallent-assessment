@@ -16,7 +16,7 @@ import {
   getLastAIDebugTrace,
   checkGeminiHealth,
 } from './services/aiReportService';
-import { generateEdgeLocalReport } from './services/edgeLocalInferenceService';
+import { generateEdgeLocalReportModel } from './services/edgeLocalInferenceService';
 import { saveSessionToBackend, getCurrentToken } from './services/backendService';
 import { generateDummyReportData } from './utils/dummyDataGenerator';
 import './Report.css';
@@ -246,7 +246,7 @@ const Report = ({ isDummy = false, useDummyData = false, demoSummary = null }) =
 
           if (useAI) {
             if (preferEdgeLocalInference) {
-              const edgeReport = generateEdgeLocalReport(reportData, language, {
+              const edgeReport = await generateEdgeLocalReportModel(reportData, language, {
                 participantId: participantProfile?.participantId || 'anonymous',
               });
               if (edgeReport) {

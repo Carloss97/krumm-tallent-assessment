@@ -1,0 +1,21 @@
+{
+  "name": "edge-local-report",
+  "featureOrder": [
+    "avgScore",
+    "meanDuration",
+    "meanConfidence",
+    "readinessMean",
+    "telemetryCoverage",
+    "stabilityScore",
+    "numGames"
+  ],
+  "inputShape": [
+    1,
+    7
+  ],
+  "outputShape": [
+    1,
+    1
+  ],
+  "description": "Tiny linear ONNX model used by the browser worker for demo report inference."
+}
