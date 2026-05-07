@@ -68,6 +68,7 @@ async function callGeminiProxy(path, options = {}) {
 
   for (const baseUrl of proxyBases) {
     const endpoint = buildApiUrl(path, baseUrl);
+    console.log(`[callGeminiProxy] Attempting ${path} at ${endpoint}`);
     try {
       const response = await fetch(endpoint, {
         headers: {

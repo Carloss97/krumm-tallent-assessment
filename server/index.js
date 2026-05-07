@@ -77,6 +77,11 @@ app.use(cors({
 	origin: (origin, callback) => {
 		if (!origin || allowAllOrigins) return callback(null, true);
 		if (allowedOrigins.includes(origin)) return callback(null, true);
+		// Normalize URL and check (handle www prefix variations)
+		const normalizedOrigin = origin ? origin.replace(/^https?:\/\/(www\.)?/, '') : '';
+		const normalizedAllowed = allowedOrigins.map(o => o.replace(/^https?:\/\/(www\.)?/, ''));
+		if (normalizedAllowed.includes(normalizedOrigin)) return callback(null, true);
+		console.warn(`[CORS] Blocked origin: ${origin}, allowed: ${allowedOrigins.join(', ')}`);
 		return callback(new Error('Not allowed by CORS'));
 	},
 	methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],

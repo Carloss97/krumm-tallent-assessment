@@ -67,38 +67,53 @@ const Report = ({ isDummy = false, useDummyData = false, demoSummary = null }) =
 
   // Use passed demo data if available, otherwise fallback to sessionData
   const effectiveSessionData = useMemo(() => {
-    if (demoSummary && demoSummary.activities) {
+    if (demoSummary && demoSummary.activities && demoSummary.activities.length > 0) {
       // Reconstruct session data from demo activities
       const reconstructed = {};
       demoSummary.activities.forEach(act => {
-        if (act.analytics) {
-          reconstructed[act.telemetryId || act.id] = act.analytics;
+        const telKey = act.telemetryId || act.id;
+        const data = act.analytics || act;
+        if (telKey && (data.score !== undefined || data.duration !== undefined || Object.keys(data).length > 2)) {
+          reconstructed[telKey] = data;
         }
       });
-      return reconstructed;
+      console.log('[Report] Reconstructed from demoSummary:', Object.keys(reconstructed), reconstructed);
+      if (Object.keys(reconstructed).length > 0) return reconstructed;
     }
+    console.log('[Report] Using sessionData from context:', Object.keys(sessionData || {}));
     return sessionData;
   }, [demoSummary, sessionData]);
 
   // Check if we have sufficient data or should use dummy data
   const hasRealData = hasMinimumAssessmentData(effectiveSessionData);
+  console.log('[Report] hasRealData:', hasRealData, 'effectiveSessionData keys:', Object.keys(effectiveSessionData || {}));
   // Support demo-specific dummy subsets via ?demoCount=5 to show only N dummy games
   const demoCountParam = searchParams.get('demoCount');
   const demoCount = demoCountParam ? Number(demoCountParam) : null;
   const shouldShowDummyData = dummyModeEnabled && (showDummyReport || hasRealData);
 
   const reportData = useMemo(() => {
-    const base = (shouldShowDummyData || !hasRealData) ? generateDummyReportData() : effectiveSessionData;
-    if (shouldShowDummyData && demoCount && typeof base === 'object' && Object.keys(base).length > 0) {
-      const entries = Object.keys(base).filter((k) => k !== 'futureModules');
-      const subsetKeys = entries.slice(0, Math.max(0, Math.floor(demoCount)));
-      const filtered = {};
-      subsetKeys.forEach((k) => { filtered[k] = base[k]; });
-      if (base.futureModules) filtered.filtered = base.futureModules;
-      return filtered;
+    // Prefer real data if available, only use dummy as fallback
+    if (hasRealData) {
+      console.log('[Report] Using real data from assessment');
+      return effectiveSessionData;
     }
-    return base;
-  }, [shouldShowDummyData, hasRealData, effectiveSessionData, demoCount]);
+    if (shouldShowDummyData) {
+      console.log('[Report] Using dummy data (demo mode enabled)');
+      const base = generateDummyReportData();
+      if (demoCount && typeof base === 'object' && Object.keys(base).length > 0) {
+        const entries = Object.keys(base).filter((k) => k !== 'futureModules');
+        const subsetKeys = entries.slice(0, Math.max(0, Math.floor(demoCount)));
+        const filtered = {};
+        subsetKeys.forEach((k) => { filtered[k] = base[k]; });
+        if (base.futureModules) filtered.filtered = base.futureModules;
+        return filtered;
+      }
+      return base;
+    }
+    console.log('[Report] Using fallback heuristic (no real or dummy data)');
+    return effectiveSessionData;
+  }, [hasRealData, shouldShowDummyData, effectiveSessionData, demoCount]);
 
   const radarProfile = useMemo(() => buildRadarProfile(reportData, isEn, targetRole), [reportData, isEn, targetRole]);
   const competencyHighlights = useMemo(() => buildCompetencyHighlights(radarProfile), [radarProfile]);

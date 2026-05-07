@@ -296,11 +296,17 @@ const DemoShell = () => {
 
     console.log('[DEMO-TRACE] Analyzing telemetry with sessionData:', Object.keys(sessionData || {}));
     const telemetryReport = analyzeDemoTelemetry(sessionData, activityRows);
+    console.log('[DEMO-TRACE] telemetryReport.perGame:', telemetryReport.perGame);
     const gameRowsById = new Map(telemetryReport.perGame.map((item) => [item.id, item]));
-    const enrichedActivities = activityRows.map((activity) => ({
-      ...activity,
-      analytics: gameRowsById.get(activity.id) || null,
-    }));
+    const enrichedActivities = activityRows.map((activity) => {
+      // Try to find analytics by telemetryId first, then by activity.id
+      const analytics = gameRowsById.get(activity.telemetryId) || gameRowsById.get(activity.id) || sessionData[activity.telemetryId] || null;
+      console.log(`[DEMO-TRACE] Activity ${activity.id} (telemetryId: ${activity.telemetryId}): found analytics =`, !!analytics);
+      return {
+        ...activity,
+        analytics,
+      };
+    });
 
     console.log('[DEMO-TRACE] Calling setDemoSummary with summary object');
     setDemoSummary({

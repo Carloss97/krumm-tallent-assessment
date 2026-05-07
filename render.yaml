@@ -84,7 +84,7 @@ services:
         sync: false
       
       - key: ALLOWED_ORIGINS
-        value: https://www.krumm.cl,https://www.krumm.cl:443
+        value: "https://www.krumm.cl,https://krumm-tallent-assessment.vercel.app"
     
     # Health check configuration
     healthCheckPath: /health
