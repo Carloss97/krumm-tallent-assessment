@@ -14,6 +14,7 @@ const PostDemoScreen = ({ summary = null, onRestart }) => {
       subtitle: 'Hemos analizado tu perfil conductual durante la demo.',
       viewReport: 'Ver Reporte de IA',
       restartButton: 'Reiniciar Demo',
+      continueLabel: 'Continuar al reporte',
       contactTitle: '¿Te interesa para tu organización?',
       contactBody: 'Obtén la batería completa de 14 juegos y análisis avanzado de Google Gemini.',
       emailUs: 'Contactar a Ventas',
@@ -26,6 +27,7 @@ const PostDemoScreen = ({ summary = null, onRestart }) => {
       subtitle: 'We have analyzed your behavioral profile during the demo.',
       viewReport: 'View AI Report',
       restartButton: 'Restart Demo',
+      continueLabel: 'Continue to report',
       contactTitle: 'Interested for your organization?',
       contactBody: 'Get the full 14-game battery and advanced Google Gemini analysis.',
       emailUs: 'Contact Sales',
@@ -52,7 +54,7 @@ const PostDemoScreen = ({ summary = null, onRestart }) => {
         <div style={{ position: 'sticky', top: 0, zIndex: 100, padding: '12px 24px', background: 'rgba(255,255,255,0.8)', backdropFilter: 'blur(8px)', borderBottom: '1px solid #e2e8f0', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
           <span style={{ fontWeight: 800, color: '#1e1b4b' }}>KRUMM <span style={{ color: '#6366f1' }}>INSIGHTS</span></span>
           <button className="btn" onClick={onRestart} style={{ padding: '8px 16px', fontSize: '0.85rem', display: 'flex', alignItems: 'center', gap: '8px' }}>
-            <RefreshCcw size={16} /> {c.restartButton}
+            <RefreshCcw size={16} /> {language === 'es' ? 'Volver a la demo' : 'Back to demo'}
           </button>
         </div>
         <Report demoSummary={summary} />
@@ -86,13 +88,20 @@ const PostDemoScreen = ({ summary = null, onRestart }) => {
           </div>
         </div>
 
-        <div style={{ display: 'flex', gap: '20px', justifyContent: 'center', marginBottom: '48px' }}>
+        <div style={{ display: 'flex', gap: '20px', justifyContent: 'center', marginBottom: '48px', flexWrap: 'wrap' }}>
           <button 
             className="btn btn-primary" 
             onClick={() => setShowReport(true)}
             style={{ padding: '20px 48px', fontSize: '1.1rem', borderRadius: '20px', display: 'flex', alignItems: 'center', gap: '12px' }}
           >
-            {c.viewReport} <ArrowRight size={20} />
+            {c.continueLabel} <ArrowRight size={20} />
+          </button>
+          <button
+            className="btn"
+            onClick={onRestart}
+            style={{ padding: '20px 48px', fontSize: '1.1rem', borderRadius: '20px', display: 'flex', alignItems: 'center', gap: '12px', background: '#fff', color: '#1e1b4b', border: '1px solid #cbd5e1' }}
+          >
+            <RefreshCcw size={20} /> {c.restartButton}
           </button>
         </div>
 

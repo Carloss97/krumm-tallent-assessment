@@ -6,7 +6,6 @@ import {
   RadarChart,
   PolarGrid,
   PolarAngleAxis,
-  ResponsiveContainer,
 } from 'recharts';
 import { useTelemetry } from './TelemetryContext';
 import { useLanguage } from './context/LanguageContext';
@@ -129,6 +128,7 @@ const Report = ({ isDummy = false, useDummyData = false, demoSummary = null }) =
   const radarProfile = useMemo(() => buildRadarProfile(reportData, isEn, targetRole), [reportData, isEn, targetRole]);
   const competencyHighlights = useMemo(() => buildCompetencyHighlights(radarProfile), [radarProfile]);
   const roleOptions = useMemo(() => getTargetRoleOptions(isEn), [isEn]);
+  const visibleGameRows = useMemo(() => buildVisibleGameRows(reportData), [reportData]);
   const isCooldownActive = cooldownUntil > now;
 
   useEffect(() => {
@@ -450,7 +450,6 @@ const Report = ({ isDummy = false, useDummyData = false, demoSummary = null }) =
 
   return (
       <>
-      <a href="#report-main" className="skip-link">{isEn ? 'Skip to report' : 'Saltar al reporte'}</a>
       <main id="report-main" className="report-page" role="main" tabIndex={-1}>
         <motion.div 
           initial={{ opacity: 0, y: 30 }}
@@ -520,7 +519,7 @@ const Report = ({ isDummy = false, useDummyData = false, demoSummary = null }) =
             {
               (() => {
                 const covered = extendedGameRows.filter((row) => typeof row.score === 'number').length;
-                const total = (dummyModeEnabled && demoCount) ? demoCount : GAME_ROWS.length;
+                const total = extendedGameRows.length || visibleGameRows.length || GAME_ROWS.length;
                 return (
                   <TelemetryStatCard label={isEn ? 'Coverage' : 'Cobertura'} value={`${covered}/${total} ${isEn ? 'units' : 'módulos'}`} />
                 );
@@ -548,15 +547,13 @@ const Report = ({ isDummy = false, useDummyData = false, demoSummary = null }) =
           </div>
 
           <div className="radar-grid" style={{ display: 'grid', gridTemplateColumns: '1.2fr 1fr', gap: '24px' }}>
-            <div className="radar-panel">
-              <ResponsiveContainer width="100%" height="100%">
-                <RadarChart data={radarProfile} outerRadius="80%">
-                  <PolarGrid stroke="#e2e8f0" />
-                  <PolarAngleAxis dataKey="axis" tick={{ fill: '#64748b', fontSize: 11, fontWeight: 700 }} />
-                  <Radar name={isEn ? 'Participant' : 'Postulante'} dataKey="value" stroke={participantRadarColor} fill={participantRadarFill} fillOpacity={0.4} strokeWidth={3} />
-                  <Radar name={isEn ? 'Target' : 'Objetivo'} dataKey="baseline" stroke={targetRadarColor} fill={targetRadarFill} fillOpacity={0.1} strokeWidth={2} strokeDasharray="4 4" />
-                </RadarChart>
-              </ResponsiveContainer>
+            <div className="radar-panel" style={{ minHeight: '420px', height: '420px', minWidth: 0, overflow: 'auto' }}>
+              <RadarChart width={420} height={420} data={radarProfile} outerRadius="80%">
+                <PolarGrid stroke="#e2e8f0" />
+                <PolarAngleAxis dataKey="axis" tick={{ fill: '#64748b', fontSize: 11, fontWeight: 700 }} />
+                <Radar name={isEn ? 'Participant' : 'Postulante'} dataKey="value" stroke={participantRadarColor} fill={participantRadarFill} fillOpacity={0.4} strokeWidth={3} />
+                <Radar name={isEn ? 'Target' : 'Objetivo'} dataKey="baseline" stroke={targetRadarColor} fill={targetRadarFill} fillOpacity={0.1} strokeWidth={2} strokeDasharray="4 4" />
+              </RadarChart>
             </div>
             <div className="stats-grid" style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
               <motion.div initial={{ x: 20, opacity: 0 }} animate={{ x: 0, opacity: 1 }} style={{ padding: '20px', borderRadius: '20px', background: 'rgba(16, 185, 129, 0.04)', border: '1px solid rgba(16, 185, 129, 0.15)' }}>
@@ -679,7 +676,7 @@ const Report = ({ isDummy = false, useDummyData = false, demoSummary = null }) =
             )}
           </div>
           <button className="btn btn-primary" style={{ padding: '20px 64px', fontSize: '1.2rem', borderRadius: '24px', boxShadow: '0 20px 40px -10px rgba(99,102,241,0.4)' }} onClick={() => window.location.href = '/'}>
-            {isEn ? 'Initiate New Assessment' : 'Iniciar nueva evaluación'}
+            {isEn ? 'Go to Start' : 'Ir al inicio'}
           </button>
         </div>
         </motion.div>
@@ -862,10 +859,17 @@ function formatDuration(ms) {
   return `${Math.round(ms / 1000)}s`;
 }
 
+function buildVisibleGameRows(data) {
+  const rows = GAME_ROWS.filter((game) => Boolean(getGameSnapshot(data, game.id, game.legacyId)));
+  return rows.length > 0 ? rows : GAME_ROWS;
+}
+
 function buildEnhancedRows(data, isEn) {
-  return GAME_ROWS.map((game) => {
+  return buildVisibleGameRows(data).map((game) => {
     const snapshot = getGameSnapshot(data, game.id, game.legacyId);
     const details = snapshot?.details || {};
+    const score = [snapshot?.score, snapshot?.confidence, snapshot?.gameCoverage, snapshot?.readinessScore, snapshot?.efficiency, snapshot?.accuracy]
+      .find((value) => typeof value === 'number' && !Number.isNaN(value));
     const metric =
       details.operationAccuracy !== undefined ? `${isEn ? 'Operation accuracy' : 'Precisión operacional'} ${details.operationAccuracy}%` :
       details.efficiency !== undefined ? `${isEn ? 'Efficiency index' : 'Índice de eficiencia'} ${details.efficiency}%` :
@@ -885,7 +889,7 @@ function buildEnhancedRows(data, isEn) {
       id: game.id,
       name: isEn ? game.name.en : game.name.es,
       construct: isEn ? game.construct.en : game.construct.es,
-      score: snapshot?.score ?? 'N/A',
+      score: score ?? 'N/A',
       errors: snapshot?.errors ?? 'N/A',
       duration: formatDuration(snapshot?.duration),
       metric,
@@ -898,7 +902,13 @@ function buildRadarProfile(data, isEn, targetRole) {
 
   return RADAR_DIMENSIONS.map((dim) => {
     const values = dim.keys
-      .map((k) => data?.[k]?.score)
+      .map((k) => {
+        const item = data?.[k];
+        if (!item || typeof item !== 'object') return null;
+        const rawScore = [item.score, item.confidence, item.gameCoverage, item.readinessScore, item.efficiency, item.accuracy]
+          .find((value) => typeof value === 'number' && !Number.isNaN(value));
+        return rawScore;
+      })
       .filter((v) => typeof v === 'number' && !Number.isNaN(v));
 
     const value = values.length

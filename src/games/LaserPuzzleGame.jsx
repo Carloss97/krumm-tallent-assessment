@@ -478,12 +478,13 @@ const LaserPuzzleGame = ({ isActive, onEndGame, isDemo, showBriefing = true, tim
   useEffect(() => {
     if (gamePhase !== 'playing') return;
     const antennaKeys = Object.keys(grid).filter(k => grid[k].type === 'antenna');
-    if (antennaKeys.length > 0 && antennaKeys.every(k => litAntennas.has(k))) {
+    const minMovesToAdvance = currentLevel?.par || 2;
+    if (antennaKeys.length > 0 && antennaKeys.every(k => litAntennas.has(k)) && moves >= minMovesToAdvance) {
        
       setGamePhase('levelComplete');
       setTimeout(advanceLevel, 1400);
     }
-  }, [litAntennas, grid, gamePhase, advanceLevel]);
+  }, [litAntennas, grid, gamePhase, advanceLevel, moves, currentLevel?.par]);
 
   const renderCell = (x, y) => {
     const key = `${x},${y}`;

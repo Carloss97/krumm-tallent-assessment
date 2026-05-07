@@ -25,8 +25,8 @@ async function loadModel(url, options = {}) {
     const runtime = await tryLoadRuntime();
     if (!runtime) throw new Error('onnxruntime-web not available');
 
-    // Create session - let runtime choose best provider (webgpu/webgl/wasm)
-    session = await runtime.InferenceSession.create(url, { executionProviders: ['webgl', 'wasm'] });
+    // Create session using the WASM backend only to avoid unavailable browser providers.
+    session = await runtime.InferenceSession.create(url, { executionProviders: ['wasm'] });
 
     featureOrder = Array.isArray(options.featureOrder) && options.featureOrder.length > 0
       ? [...options.featureOrder]

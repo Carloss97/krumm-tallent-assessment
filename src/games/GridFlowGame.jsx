@@ -11,6 +11,8 @@ const SAT_DECAY = 1; // % per second (reduced from 2 for better pacing)
 const CELL = 60; // Larger cells for better screen occupancy
 const GRID_GAP = 3;
 const GRID_STEP = CELL + GRID_GAP;
+const BOARD_PADDING = 12;
+const BOARD_SIZE = (GRID * CELL) + ((GRID - 1) * GRID_GAP) + (BOARD_PADDING * 2);
 
 const COLOR_POINT_VALUES = {
   red: 100,
@@ -577,8 +579,8 @@ const GridFlowGame = ({ isActive, onEndGame, isDemo, showBriefing = true }) => {
     <div style={{ width:'100%', height:'100%', display:'flex', flexDirection:'column', alignItems:'center', justifyContent:'center', padding:'20px', gap:'20px', position:'relative' }}>
       <AnimatePresence>
         {gameState === 'playing' && (
-          <motion.div initial={{ opacity:0, y:20 }} animate={{ opacity:1, y:0 }} exit={{ opacity:0 }} className="glass-panel" style={{ padding:'40px', display:'flex', flexDirection:'column', alignItems:'center', gap:'32px', background: 'rgba(255,255,255,0.95)', backdropFilter: 'blur(12px)', width: 'auto' }}>
-            <div style={{ display:'flex', justifyContent:'space-between', width:'100%', color:'#1e1b4b', textTransform:'uppercase', letterSpacing:'3px', fontSize:'1rem', fontWeight:'900', gap:'60px' }}>
+          <motion.div initial={{ opacity:0, y:20 }} animate={{ opacity:1, y:0 }} exit={{ opacity:0 }} className="glass-panel" style={{ padding:'40px', display:'flex', flexDirection:'column', alignItems:'center', gap:'32px', background: 'rgba(255,255,255,0.95)', backdropFilter: 'blur(12px)', width: 'fit-content', minWidth: `${BOARD_SIZE}px`, maxWidth: '100%' }}>
+            <div style={{ display:'grid', gridTemplateColumns:'repeat(6, minmax(0, 1fr))', width:'100%', color:'#1e1b4b', textTransform:'uppercase', letterSpacing:'3px', fontSize:'1rem', fontWeight:'900', gap:'24px', whiteSpace:'nowrap' }}>
               <span>Round {round+1}/{effectiveMaxRounds}</span>
               <span style={{ color: levelTimeLeft<10?'#dc2626':'#059669' }}>⏱ {levelTimeLeft}s</span>
               {lvlData.energyDrain>0 && <span style={{ color: energy<30?'#dc2626':'#1e1b4b' }}>⚡ {energy}%</span>}
@@ -587,7 +589,7 @@ const GridFlowGame = ({ isActive, onEndGame, isDemo, showBriefing = true }) => {
               <span style={{ color:'#4f46e5' }}>Pts: {score}</span>
             </div>
             
-            <div style={{ position:'relative', padding:'12px', border:'2px solid rgba(99,102,241,0.2)', borderRadius:'20px', background:'#f8fafc', boxShadow: 'inset 0 4px 12px rgba(0,0,0,0.1)' }}>
+            <div style={{ position:'relative', padding:`${BOARD_PADDING}px`, border:'2px solid rgba(99,102,241,0.2)', borderRadius:'20px', background:'#f8fafc', boxShadow: 'inset 0 4px 12px rgba(0,0,0,0.1)', width: `${BOARD_SIZE}px`, maxWidth: '100%', overflow: 'hidden', boxSizing: 'border-box' }}>
               {showPickupAnim && (
                 <motion.div initial={{ y:10, opacity:0 }} animate={{ y:-50, opacity:1 }} exit={{ opacity:0 }} style={{ position: 'absolute', left: '50%', transform: 'translateX(-50%)', zIndex: 30, background: '#1e293b', padding: '12px 32px', borderRadius: 32, color: '#fff', fontWeight: 900, fontSize: '1.1rem' }}>
                   {language === 'es' ? '+ RECOGIDO' : '+ COLLECTED'}
@@ -604,11 +606,11 @@ const GridFlowGame = ({ isActive, onEndGame, isDemo, showBriefing = true }) => {
                 </motion.div>
               )}
               {showDeliverAnim && (<div style={{ position: 'absolute', inset: 0, pointerEvents: 'none', zIndex: 40 }}><Confetti count={30} spread={100} duration={1.5} /></div>)}
-              <div style={{ position: 'relative', display:'inline-block' }}>
+              <div style={{ position: 'relative', display:'inline-block', width: `${GRID * CELL + ((GRID - 1) * GRID_GAP)}px`, height: `${GRID * CELL + ((GRID - 1) * GRID_GAP)}px`, overflow: 'hidden' }}>
                 <div style={{ display:'grid', gridTemplateColumns:`repeat(${GRID}, ${CELL}px)`, gap:`${GRID_GAP}px` }}>{renderGrid()}</div>
                 <motion.div
                   aria-hidden="true"
-                  style={{ position:'absolute', left: 12, top: 12, width: CELL, height: CELL, zIndex: 20, pointerEvents: 'none' }}
+                  style={{ position:'absolute', left: 0, top: 0, width: CELL, height: CELL, zIndex: 20, pointerEvents: 'none' }}
                   animate={{ x: player.x * GRID_STEP, y: player.y * GRID_STEP }}
                   transition={{ type: 'spring', stiffness: 460, damping: 34, mass: 0.7 }}
                 >
