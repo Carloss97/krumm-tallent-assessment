@@ -17,7 +17,7 @@ import {
   checkGeminiHealth,
 } from './services/aiReportService';
 import { generateEdgeLocalReport } from './services/edgeLocalInferenceService';
-import { saveSessionToBackend } from './services/backendService';
+import { saveSessionToBackend, authenticateParticipant, getCurrentToken } from './services/backendService';
 import { generateDummyReportData } from './utils/dummyDataGenerator';
 import './Report.css';
 
@@ -313,6 +313,22 @@ const Report = ({ isDummy = false, useDummyData = false, demoSummary = null }) =
             const safeMetadata = typeof getSessionMetadata === 'function'
               ? getSessionMetadata()
               : { timestamp: new Date().toISOString() };
+
+            // Ensure we have a participant token; if none, attempt lightweight guest authenticate
+            try {
+              const existing = getCurrentToken();
+              if (!existing) {
+                const genId = participantProfile?.participantId || `guest-${Date.now()}`;
+                console.log('[Report] No participant token found, requesting guest token for', genId);
+                try {
+                  await authenticateParticipant({ participantId: genId, accessCode: 'demo', email: participantProfile?.email, fullName: participantProfile?.fullName });
+                } catch (authErr) {
+                  console.warn('[Report] Guest authenticate failed:', authErr?.message || authErr);
+                }
+              }
+            } catch (err) {
+              console.warn('[Report] token check/auth flow error', err?.message || err);
+            }
 
             const maxAttempts = 3;
             let attempt = 0;
