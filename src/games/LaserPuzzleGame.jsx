@@ -54,6 +54,7 @@ export const LASER_DEMO_LEVELS = [
   {
     // LEVEL 1: Two-step reflection puzzle
     name: 'Sector Alpha',
+    difficulty: 'easy',
     cols: 8,
     rows: 7,
     par: 2,
@@ -71,8 +72,31 @@ export const LASER_DEMO_LEVELS = [
     quiz: [],
   },
   {
+    // LEVEL 1-HARD: Two antennas, requires more precision
+    name: 'Sector Alpha+',
+    difficulty: 'hard',
+    cols: 10,
+    rows: 8,
+    par: 3,
+    timeLimit: 45,
+    hint: {
+      es: 'Divide el haz hacia dos antenas simultáneamente.',
+      en: 'Split the beam to reach two antennas at once.'
+    },
+    cells: [
+      { x: 0, y: 4, type: 'ship', dir: 'right' },
+      { x: 9, y: 1, type: 'antenna' },
+      { x: 9, y: 7, type: 'antenna' },
+      { x: 1, y: 2, type: 'bifurcator', movable: true },
+      { x: 8, y: 0, type: 'reflector_ne', movable: true },
+      { x: 8, y: 7, type: 'reflector_nw', movable: true },
+    ],
+    quiz: [],
+  },
+  {
     // LEVEL 2: Bifurcation into two receivers
     name: 'Sector Beta',
+    difficulty: 'easy',
     cols: 10,
     rows: 7,
     par: 3,
@@ -92,8 +116,35 @@ export const LASER_DEMO_LEVELS = [
     quiz: [],
   },
   {
+    // LEVEL 2-HARD: Three antennas with portals
+    name: 'Sector Beta+',
+    difficulty: 'hard',
+    cols: 12,
+    rows: 8,
+    par: 4,
+    timeLimit: 60,
+    hint: {
+      es: 'Usa portales y múltiples bifurcaciones para alcanzar tres antenas.',
+      en: 'Use portals and multiple bifurcations to reach three antennas.'
+    },
+    cells: [
+      { x: 0, y: 3, type: 'ship', dir: 'right' },
+      { x: 11, y: 0, type: 'antenna' },
+      { x: 11, y: 3, type: 'antenna' },
+      { x: 11, y: 6, type: 'antenna' },
+      { x: 2, y: 3, type: 'portal_blue', targetPortalId: 'p1' },
+      { x: 9, y: 3, type: 'portal_blue', portalId: 'p1' },
+      { x: 1, y: 1, type: 'bifurcator', movable: true },
+      { x: 1, y: 5, type: 'bifurcator', movable: true },
+      { x: 10, y: 0, type: 'reflector_ne', movable: true },
+      { x: 10, y: 6, type: 'reflector_nw', movable: true },
+    ],
+    quiz: [],
+  },
+  {
     // LEVEL 3: Portal traversal with bifurcation after the jump
     name: 'Sector Gamma',
+    difficulty: 'easy',
     cols: 10,
     rows: 8,
     par: 3,
@@ -126,8 +177,66 @@ export const LASER_DEMO_LEVELS = [
         correct: 1
       }
     ],
+  },
+  {
+    // LEVEL 3-HARD: Complex maze with three objectives and time pressure
+    name: 'Sector Gamma+',
+    difficulty: 'hard',
+    cols: 12,
+    rows: 10,
+    par: 5,
+    timeLimit: 70,
+    hint: {
+      es: 'Laberinto complejo. Usa múltiples portales y bifurcadores para alcanzar todas las antenas.',
+      en: 'Complex maze. Use multiple portals and bifurcators to reach all antennas.'
+    },
+    cells: [
+      { x: 0, y: 5, type: 'ship', dir: 'right' },
+      { x: 11, y: 1, type: 'antenna' },
+      { x: 11, y: 5, type: 'antenna' },
+      { x: 11, y: 9, type: 'antenna' },
+      // Portals for bypassing maze sections
+      { x: 3, y: 5, type: 'portal_blue', targetPortalId: 'p1' },
+      { x: 7, y: 5, type: 'portal_blue', portalId: 'p1' },
+      // Walls forming maze
+      { x: 5, y: 0, type: 'wall' }, { x: 5, y: 1, type: 'wall' }, { x: 5, y: 2, type: 'wall' }, { x: 5, y: 3, type: 'wall' },
+      { x: 5, y: 6, type: 'wall' }, { x: 5, y: 7, type: 'wall' }, { x: 5, y: 8, type: 'wall' }, { x: 5, y: 9, type: 'wall' },
+      { x: 9, y: 2, type: 'wall' }, { x: 9, y: 3, type: 'wall' }, { x: 9, y: 4, type: 'wall' }, { x: 9, y: 6, type: 'wall' }, { x: 9, y: 7, type: 'wall' }, { x: 9, y: 8, type: 'wall' },
+      // Movable pieces for solving
+      { x: 1, y: 1, type: 'bifurcator', movable: true },
+      { x: 1, y: 9, type: 'bifurcator', movable: true },
+      { x: 10, y: 0, type: 'reflector_ne', movable: true },
+      { x: 10, y: 5, type: 'reflector_ne', movable: true },
+      { x: 10, y: 9, type: 'reflector_nw', movable: true },
+    ],
+    quiz: [],
   }
 ];
+
+// Helper function to get next level(s) based on performance
+export const getAdaptiveNextLevel = (currentLevelIndex, efficiency, totalLevels) => {
+  // efficiency = (par / moves) * 100
+  // > 85%: Very efficient - jump to hard variant
+  // 60-85%: Good - go to next standard level  
+  // < 60%: Struggling - repeat with easier variant or same level
+  
+  if (efficiency > 85) {
+    // Find hard variant of next level or skip ahead
+    const nextIdx = currentLevelIndex + 1;
+    if (nextIdx < totalLevels && LASER_DEMO_LEVELS[nextIdx]?.difficulty === 'hard') {
+      return nextIdx; // Go to hard variant
+    }
+    // Skip to level after hard variant
+    return Math.min(nextIdx + 1, totalLevels - 1);
+  } else if (efficiency >= 60) {
+    // Standard progression
+    return currentLevelIndex + 1 < totalLevels ? currentLevelIndex + 1 : currentLevelIndex;
+  } else {
+    // Struggling - repeat current level or go to easy variant
+    // For now, repeat the same level
+    return currentLevelIndex;
+  }
+};
 
 export const getLaserEfficiency = (moves, par) => {
   return Math.min(100, Math.round((Math.max(1, par) / Math.max(1, moves)) * 100));
@@ -217,20 +326,43 @@ const LaserPuzzleGame = ({ isActive, onEndGame, isDemo, showBriefing = true, tim
   const advanceLevel = useCallback(() => {
     setSelected(null);
     if (!procLevels) return;
-    if (levelIdx + 1 < procLevels.length) {
-      const next = levelIdx + 1;
-      setLevelIdx(next);
-      setGrid(buildGrid(procLevels[next]));
+    
+    // Calculate efficiency and determine next level adaptively
+    const currentLevelData = procLevels[levelIdx];
+    const efficiency = currentLevelData ? getLaserEfficiency(moves, currentLevelData.par) : 100;
+    
+    console.log(`[LaserPuzzle-ADAPTIVE] Level ${levelIdx} (${currentLevelData?.name}) completed with efficiency ${efficiency}%`);
+    
+    // Use adaptive branching if level completed (high efficiency) or fallback to standard progression
+    let nextLevelIdx = levelIdx + 1;
+    if (efficiency > 75 && currentLevelData?.difficulty !== 'hard') {
+      // High efficiency on easy level - check if there's a hard variant available
+      const hardVariantIdx = procLevels.findIndex((lvl, idx) => idx > levelIdx && lvl.difficulty === 'hard');
+      if (hardVariantIdx >= 0 && hardVariantIdx < procLevels.length) {
+        nextLevelIdx = hardVariantIdx;
+        console.log(`[LaserPuzzle-ADAPTIVE] ✓ High efficiency (${efficiency}%) - advancing to hard variant at index ${hardVariantIdx}`);
+      }
+    } else if (efficiency < 50 && levelIdx > 0) {
+      // Low efficiency - might want to repeat, but for demo we'll progress anyway with a note
+      console.log(`[LaserPuzzle-ADAPTIVE] ⚠ Low efficiency (${efficiency}%) - consider repeating, but progressing for demo`);
+    }
+    
+    // Progress to next level or finish
+    if (nextLevelIdx < procLevels.length) {
+      setLevelIdx(nextLevelIdx);
+      setGrid(buildGrid(procLevels[nextLevelIdx]));
       setMoves(0);
-      setBriefing(isDemo && showBriefing ? getBriefing(next, language) : null);
+      setBriefing(isDemo && showBriefing ? getBriefing(nextLevelIdx, language) : null);
       setGamePhase(isDemo && !showBriefing ? 'playing' : (isDemo ? 'briefing' : 'playing'));
       try { playLevelUpSound(); } catch (error) { void error; }
     } else {
-      const q = procLevels[procLevels.length - 1].quiz;
+      // Game complete - go to quiz if available
+      const lastLevel = procLevels[procLevels.length - 1];
+      const q = lastLevel?.quiz;
       if (q && q.length > 0) setGamePhase('quiz');
       else finishGame(totalMoves);
     }
-  }, [levelIdx, totalMoves, procLevels, finishGame, isDemo, language]);
+  }, [levelIdx, totalMoves, procLevels, finishGame, isDemo, language, moves]);
   
   const levelTimeLimit = isDemo && currentLevel?.timeLimit ? currentLevel.timeLimit : timeLimit;
   const timeLeft = useGameTimer({ isActive: isActive && gamePhase === 'playing', timeLimit: levelTimeLimit, onEnd: advanceLevel });

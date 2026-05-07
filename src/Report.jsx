@@ -71,17 +71,26 @@ const Report = ({ isDummy = false, useDummyData = false, demoSummary = null }) =
     if (demoSummary && demoSummary.activities && demoSummary.activities.length > 0) {
       // Reconstruct session data from demo activities
       const reconstructed = {};
-      demoSummary.activities.forEach(act => {
+      console.log('[Report] ===== RECONSTRUCTING FROM DEMO =====');
+      console.log(`[Report] demoSummary.activities length: ${demoSummary.activities.length}`);
+      demoSummary.activities.forEach((act, idx) => {
         const telKey = act.telemetryId || act.id;
         const data = act.analytics || act;
-        if (telKey && (data.score !== undefined || data.duration !== undefined || Object.keys(data).length > 2)) {
+        console.log(`[Report]   [${idx}] ${act.id} (telKey: ${telKey}): has analytics=${!!act.analytics}`);
+        if (act.analytics) {
+          console.log(`        confidence=${act.analytics.confidence}, coverage=${act.analytics.gameCoverage}`);
+        }
+        if (telKey && (data.score !== undefined || data.duration !== undefined || data.confidence !== undefined || Object.keys(data).length > 2)) {
           reconstructed[telKey] = data;
         }
       });
-      console.log('[Report] Reconstructed from demoSummary:', Object.keys(reconstructed), reconstructed);
-      if (Object.keys(reconstructed).length > 0) return reconstructed;
+      console.log('[Report] Reconstructed keys:', Object.keys(reconstructed));
+      if (Object.keys(reconstructed).length > 0) {
+        console.log('[Report] ✓ Using reconstructed demo data');
+        return reconstructed;
+      }
     }
-    console.log('[Report] Using sessionData from context:', Object.keys(sessionData || {}));
+    console.log('[Report] No valid demoSummary, using sessionData from context:', Object.keys(sessionData || {}));
     return sessionData;
   }, [demoSummary, sessionData]);
 

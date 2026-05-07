@@ -302,12 +302,19 @@ const DemoShell = () => {
       // Try to find analytics by telemetryId first, then by activity.id
       const analytics = gameRowsById.get(activity.telemetryId) || gameRowsById.get(activity.id) || sessionData[activity.telemetryId] || null;
       console.log(`[DEMO-TRACE] Activity ${activity.id} (telemetryId: ${activity.telemetryId}): found analytics =`, !!analytics);
+      if (analytics) {
+        console.log(`  ↳ Analytics keys: ${Object.keys(analytics).slice(0, 5).join(', ')}...`);
+        console.log(`  ↳ Confidence: ${analytics.confidence}, Coverage: ${analytics.gameCoverage}`);
+      }
       return {
         ...activity,
         analytics,
       };
     });
 
+    console.log('[DEMO-TRACE] ===== DEMO COMPLETE SUMMARY ====');
+    console.log(`[DEMO-TRACE] Total activities: ${ACTIVITIES.length}, Completed: ${completedIds.length}`);
+    console.log(`[DEMO-TRACE] enrichedActivities with analytics: ${enrichedActivities.filter(a => !!a.analytics).length}`);
     console.log('[DEMO-TRACE] Calling setDemoSummary with summary object');
     setDemoSummary({
       reason,

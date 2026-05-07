@@ -13,6 +13,7 @@ export const GRID_LEVELS = [
   {
     // NIVEL 1: Introduction - simple linear path, no energy drain, high time limit
     // Objetivo: aprender controles y mecánica de satisfacción
+    difficulty: 'easy',
     walls: [], 
     targets: [
       { id:1, x:5, y:5, color:'#ef4444', points:100, dropZone:{x:5,y:0} }, 
@@ -23,7 +24,22 @@ export const GRID_LEVELS = [
     startPos: { x:5, y:9 } 
   },
   {
+    // NIVEL 1-HARD: Three targets, energy management introduced
+    difficulty: 'hard',
+    walls: [], 
+    targets: [
+      { id:1, x:2, y:2, color:'#ef4444', points:100, dropZone:{x:2,y:9} },
+      { id:2, x:5, y:5, color:'#3b82f6', points:100, dropZone:{x:5,y:0} },
+      { id:3, x:8, y:2, color:'#10b981', points:100, dropZone:{x:8,y:9} },
+    ], 
+    stations: [{ x:4, y:4 }, { x:6, y:4 }],
+    energyDrain: 1,
+    timeLimit: 45,
+    startPos: { x:5, y:9 } 
+  },
+  {
     // NIVEL 2: Energy management - single bottleneck with a meaningful recharge point
+    difficulty: 'easy',
     walls: ['3,0', '3,1', '3,2', '3,3', '3,4', '3,5', '3,6', '3,7', '3,8'],
     targets: [
       { id:3, x:1, y:8, color:'#3b82f6', points:120, dropZone:{x:8,y:8} }
@@ -34,8 +50,25 @@ export const GRID_LEVELS = [
     startPos: { x:0, y:0 } 
   },
   {
+    // NIVEL 2-HARD: Dual objectives with narrow corridor and energy pressure
+    difficulty: 'hard',
+    walls: [
+      '3,0','3,1','3,2','3,3','3,4','3,5','3,6','3,7','3,8',
+      '6,1','6,2','6,3','6,4','6,5','6,6','6,7','6,8','6,9'
+    ],
+    targets: [
+      { id:3, x:1, y:8, color:'#3b82f6', points:120, dropZone:{x:8,y:0} },
+      { id:4, x:8, y:1, color:'#f59e0b', points:120, dropZone:{x:1,y:0} }
+    ], 
+    stations: [{ x:3, y:9 }, { x:6, y:0 }],
+    energyDrain: 2.5,
+    timeLimit: 45,
+    startPos: { x:0, y:0 } 
+  },
+  {
     // NIVEL 3: Dual objectives + complex maze + critical station usage
     // Objetivo: planificación de ruta multi-objetivo, gestión de energía crítica
+    difficulty: 'easy',
     walls: [
       // Left maze block
       '1,1','2,1','1,2','2,2','1,3','2,3',
@@ -53,7 +86,56 @@ export const GRID_LEVELS = [
     timeLimit: 70,
     startPos: { x:0, y:9 } 
   },
+  {
+    // NIVEL 3-HARD: Three targets, complex maze, severe energy drain, time pressure
+    difficulty: 'hard',
+    walls: [
+      // Dense maze structure
+      '1,0','2,0','1,1','2,1','1,2','2,2','1,3','2,3','1,4','2,4',
+      '4,5','5,5','4,6','5,6','4,7','5,7','4,8','5,8',
+      '7,1','8,1','7,2','8,2','7,3','8,3','7,4','8,4',
+      '9,6','9,7','9,8','9,9',
+    ], 
+    targets: [
+      { id:5, x:3, y:8, color:'#10b981', points:200, dropZone:{x:0,y:0} },
+      { id:6, x:6, y:9, color:'#f59e0b', points:200, dropZone:{x:9,y:5} },
+      { id:7, x:9, y:0, color:'#ec4899', points:200, dropZone:{x:3,y:0} }
+    ], 
+    stations: [{ x:0, y:4 }, { x:4, y:2 }, { x:9, y:9 }],
+    energyDrain: 3.5,
+    timeLimit: 65,
+    startPos: { x:0, y:9 } 
+  },
 ];
+
+// Helper to determine next level adaptively based on performance
+export const getAdaptiveGridNextRound = (currentRound, score, maxPossibleScore, totalLevels) => {
+  const efficiency = (score / Math.max(1, maxPossibleScore)) * 100;
+  
+  console.log(`[GridFlow-ADAPTIVE] Round ${currentRound}: score=${score}/${maxPossibleScore}, efficiency=${efficiency.toFixed(1)}%`);
+  
+  // Determine next round based on performance
+  // efficiency > 80%: Jump to hard variant
+  // efficiency 50-80%: Normal progression
+  // efficiency < 50%: Repeat current difficulty or provide easier variant
+  
+  let nextRound = currentRound + 1;
+  
+  if (efficiency > 80) {
+    // Check if current round has a hard variant (hard variant index = easy index + 1)
+    if ((currentRound * 2 + 1) < totalLevels) {
+      nextRound = currentRound * 2 + 1; // Jump to hard variant
+      console.log(`[GridFlow-ADAPTIVE] ✓ High efficiency (${efficiency.toFixed(1)}%) - advancing to hard variant (round ${nextRound})`);
+    }
+  } else if (efficiency < 50 && currentRound < 2) {
+    // Low efficiency - stay at current round (implicit repeat)
+    console.log(`[GridFlow-ADAPTIVE] ⚠ Low efficiency (${efficiency.toFixed(1)}%) - consider easier approach`);
+  } else {
+    console.log(`[GridFlow-ADAPTIVE] ~ Standard progression: ${efficiency.toFixed(1)}% - moving to next round`);
+  }
+  
+  return Math.min(nextRound, totalLevels - 1);
+};
 
 export const getGridEfficiency = (score, totalPossiblePoints) => {
   return Math.min(100, Math.round((score / Math.max(1, totalPossiblePoints)) * 100));
@@ -229,7 +311,17 @@ const GridFlowGame = ({ isActive, onEndGame, isDemo, showBriefing = true }) => {
         if (prev <= 1) {
           clearInterval(levelTimerRef.current);
           const r = stateRef.current.round;
-          if (r + 1 < effectiveMaxRounds) loadLevel(r + 1); else transitionToQuiz();
+          const currentRoundScore = stateRef.current.score;
+          const maxPossibleScore = GRID_LEVELS[r].targets.reduce((sum, t) => sum + t.points, 0);
+          
+          // Use adaptive branching based on score
+          const nextRound = getAdaptiveGridNextRound(r, currentRoundScore, maxPossibleScore, effectiveMaxRounds);
+          
+          if (nextRound < effectiveMaxRounds) {
+            loadLevel(nextRound);
+          } else {
+            transitionToQuiz();
+          }
           return 0;
         }
         return prev - 1;
@@ -256,7 +348,10 @@ const GridFlowGame = ({ isActive, onEndGame, isDemo, showBriefing = true }) => {
             setTargets([...expiredTargets]);
             if (expiredTargets.every(t => !t.active) && !inv) {
               const r = stateRef.current.round;
-              if (r+1 < effectiveMaxRounds) loadLevel(r+1); else transitionToQuiz();
+              const currentRoundScore = stateRef.current.score;
+              const maxPossibleScore = GRID_LEVELS[r].targets.reduce((sum, t) => sum + t.points, 0);
+              const nextRound = getAdaptiveGridNextRound(r, currentRoundScore, maxPossibleScore, effectiveMaxRounds);
+              if (nextRound < effectiveMaxRounds) loadLevel(nextRound); else transitionToQuiz();
             }
           }
         }
@@ -346,7 +441,11 @@ const GridFlowGame = ({ isActive, onEndGame, isDemo, showBriefing = true }) => {
     }
     
     if (newTargets.every(t=>!t.active) && !newInv) {
-      if (r+1 < effectiveMaxRounds) loadLevel(r+1); else transitionToQuiz();
+      const r = stateRef.current.round;
+      const currentRoundScore = stateRef.current.score;
+      const maxPossibleScore = GRID_LEVELS[r].targets.reduce((sum, t) => sum + t.points, 0);
+      const nextRound = getAdaptiveGridNextRound(r, currentRoundScore, maxPossibleScore, effectiveMaxRounds);
+      if (nextRound < effectiveMaxRounds) loadLevel(nextRound); else transitionToQuiz();
     }
   }, [isActive, gameState, loadLevel, transitionToQuiz, recordError, effectiveMaxRounds, recordTrialEvent]);
 
