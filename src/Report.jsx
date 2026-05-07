@@ -47,9 +47,10 @@ const Report = ({ isDummy = false, useDummyData = false, demoSummary = null }) =
   const [sessionSavedId, setSessionSavedId] = useState(null);
   const reportGeneratedRef = useRef(false);
   const isTestEnv = typeof import.meta !== 'undefined' && import.meta.env?.MODE === 'test';
-  const useBackendGeminiProxy = typeof import.meta !== 'undefined' && import.meta.env?.VITE_USE_BACKEND_GEMINI_PROXY !== 'false';
-  const hasGeminiKey = Boolean(typeof import.meta !== 'undefined' && import.meta.env?.VITE_GOOGLE_API_KEY);
-  const canUseGemini = useBackendGeminiProxy || hasGeminiKey;
+  const allowRemoteGeminiFallback = typeof import.meta !== 'undefined' && import.meta.env?.VITE_ENABLE_GEMINI_FALLBACK === 'true';
+  const useBackendGeminiProxy = allowRemoteGeminiFallback && typeof import.meta !== 'undefined' && import.meta.env?.VITE_USE_BACKEND_GEMINI_PROXY === 'true';
+  const hasGeminiKey = allowRemoteGeminiFallback && Boolean(typeof import.meta !== 'undefined' && import.meta.env?.VITE_GOOGLE_API_KEY);
+  const canUseGemini = allowRemoteGeminiFallback && (useBackendGeminiProxy || hasGeminiKey);
   const geminiReady = canUseGemini && geminiHealth.checked && geminiHealth.ok;
   const preferEdgeLocalInference = typeof import.meta !== 'undefined' && import.meta.env?.VITE_USE_EDGE_LOCAL_INFERENCE !== 'false';
   const enableGeminiProbeInDev = typeof import.meta !== 'undefined' && import.meta.env?.VITE_GEMINI_HEALTH_PROBE_DEV === 'true';
@@ -183,6 +184,15 @@ const Report = ({ isDummy = false, useDummyData = false, demoSummary = null }) =
         });
         return;
       }
+      if (!allowRemoteGeminiFallback) {
+        setGeminiHealth({
+          checked: true,
+          ok: false,
+          message: isEn ? 'Remote Gemini fallback is disabled. Using browser-local edge inference only.' : 'El respaldo remoto de Gemini está desactivado. Se usa solo inferencia edge-local en el navegador.',
+          code: 'DISABLED_LOCAL_ONLY',
+        });
+        return;
+      }
       if (!canUseGemini) {
         setGeminiHealth({
           checked: true,
@@ -209,7 +219,7 @@ const Report = ({ isDummy = false, useDummyData = false, demoSummary = null }) =
     return () => {
       cancelled = true;
     };
-  }, [isEn, isTestEnv, useAI, canUseGemini, isCooldownActive, preferEdgeLocalInference, isDevBuild, enableGeminiProbeInDev]);
+  }, [isEn, isTestEnv, useAI, canUseGemini, allowRemoteGeminiFallback, isCooldownActive, preferEdgeLocalInference, isDevBuild, enableGeminiProbeInDev]);
 
   // Reset generation state when switching AI/demo modes to avoid stale report output.
   useEffect(() => {
@@ -382,6 +392,7 @@ const Report = ({ isDummy = false, useDummyData = false, demoSummary = null }) =
     geminiReady,
     generationNonce,
     isEn,
+    allowRemoteGeminiFallback,
     preferEdgeLocalInference,
     edgeGeminiEscalationEnabled,
     edgeEscalationMinConfidence,

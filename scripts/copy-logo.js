@@ -1,5 +1,6 @@
 import fs from 'fs';
 import path from 'path';
+import process from 'node:process';
 
 const root = path.resolve('.');
 const src = path.join(root, 'src', 'assets', 'logo.jpg');
