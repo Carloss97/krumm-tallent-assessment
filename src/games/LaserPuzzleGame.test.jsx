@@ -206,14 +206,74 @@ describe('LaserPuzzleGame levels', () => {
   });
 
   it('has at least one solvable arrangement for every level', () => {
-    // All levels should support some form of solution through player moves
-    // We verify this by checking that the level structure is complete
-    LASER_DEMO_LEVELS.forEach((level) => {
-      expect(level.cells.length).toBeGreaterThan(0);
-      const hasShip = level.cells.some((c) => c.type === 'ship');
-      const hasAntenna = level.cells.some((c) => c.type === 'antenna');
-      expect(hasShip).toBe(true);
-      expect(hasAntenna).toBe(true);
+    const cases = [
+      {
+        name: 'Sector Alpha',
+        levelIndex: 0,
+        placements: [
+          ['1,4', '3,3'],
+          ['8,1', '3,0'],
+        ],
+      },
+      {
+        name: 'Sector Alpha+',
+        levelIndex: 1,
+        placements: [
+          ['2,2', '2,3'],
+          ['10,1', '2,0'],
+          ['10,6', '2,7'],
+        ],
+      },
+      {
+        name: 'Sector Beta',
+        levelIndex: 2,
+        placements: [
+          ['4,1', '2,0'],
+        ],
+      },
+      {
+        name: 'Sector Beta+',
+        levelIndex: 3,
+        placements: [
+          ['1,0', '2,3'],
+          ['6,0', '2,1'],
+          ['6,4', '2,5'],
+        ],
+      },
+      {
+        name: 'Sector Gamma',
+        levelIndex: 4,
+        placements: [
+          ['1,4', '1,2'],
+          ['7,4', '6,2'],
+        ],
+      },
+      {
+        name: 'Sector Gamma+',
+        levelIndex: 5,
+        placements: [
+          ['1,0', '2,3'],
+          ['8,0', '2,1'],
+          ['8,6', '2,5'],
+          ['1,1', '4,1'],
+          ['6,1', '7,1'],
+          ['1,5', '4,5'],
+          ['6,5', '7,5'],
+        ],
+      },
+    ];
+
+    cases.forEach(({ name, levelIndex, placements }) => {
+      const level = LASER_DEMO_LEVELS[levelIndex];
+      const antennaKeys = level.cells
+        .filter((cell) => cell.type === 'antenna')
+        .map((cell) => `${cell.x},${cell.y}`);
+
+      const finalGrid = buildPlacedGrid(level, placements);
+      const { litAntennas } = traceBeam(finalGrid, level.cols, level.rows);
+      const solved = antennaKeys.every((antennaKey) => litAntennas.has(antennaKey));
+
+      expect(solved, `${name} should have a real solved arrangement`).toBe(true);
     });
   });
 

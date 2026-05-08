@@ -118,7 +118,7 @@ export const LASER_DEMO_LEVELS = [
     quiz: [],
   },
   {
-    // Sector Beta: Simple right-angle with pre-placed solution
+    // Sector Beta: Intro reflection puzzle (guaranteed solvable)
     name: 'Sector Beta',
     difficulty: 'easy',
     cols: 6,
@@ -134,15 +134,14 @@ export const LASER_DEMO_LEVELS = [
       { x: 4, y: 0, type: 'antenna' },
       { x: 2, y: 2, type: 'reflector_ne', movable: true },
       { x: 4, y: 1, type: 'reflector_ne', movable: true },
-      // Vertical wall to force reflection at (2,2)
-      { x: 3, y: 0 }, { x: 3, y: 1 }, { x: 3, y: 2 }, { x: 3, y: 3 }, { x: 3, y: 4 },
-      // Side walls
+      // Vertical barrier with top gap, forcing a two-mirror route
+      { x: 3, y: 1 }, { x: 3, y: 2 }, { x: 3, y: 3 }, { x: 3, y: 4 },
       { x: 5, y: 2 }, { x: 5, y: 3 }, { x: 5, y: 4 },
     ].map(c => c.type ? c : { ...c, type: 'wall' }),
     quiz: [],
   },
   {
-    // Sector Beta+: Bifurcation example
+    // Sector Beta+: Bifurcation to two antennas (guaranteed solvable)
     name: 'Sector Beta+',
     difficulty: 'hard',
     cols: 8,
@@ -155,22 +154,20 @@ export const LASER_DEMO_LEVELS = [
     },
     cells: [
       { x: 0, y: 3, type: 'ship', dir: 'right' },
-      { x: 1, y: 0, type: 'antenna' },
-      { x: 6, y: 5, type: 'antenna' },
-      { x: 2, y: 3, type: 'bifurcator', movable: true },
-      { x: 1, y: 2, type: 'reflector_ne', movable: true },
+      { x: 7, y: 1, type: 'antenna' },
+      { x: 7, y: 5, type: 'antenna' },
+      { x: 1, y: 0, type: 'bifurcator', movable: true },
+      { x: 6, y: 0, type: 'reflector_ne', movable: true },
       { x: 6, y: 4, type: 'reflector_nw', movable: true },
-      // Walls to guide paths
-      { x: 3, y: 0 }, { x: 3, y: 1 }, { x: 3, y: 2 }, { x: 3, y: 4 }, { x: 3, y: 5 },
-      { x: 4, y: 3 },
-      { x: 5, y: 4 }, { x: 5, y: 5 },
+      // Corridor-like walls while keeping the solved routes open on rows 1 and 5
+      { x: 4, y: 0 }, { x: 4, y: 2 }, { x: 4, y: 3 }, { x: 4, y: 4 },
+      { x: 5, y: 2 }, { x: 5, y: 4 },
       { x: 6, y: 2 }, { x: 6, y: 3 },
-      { x: 7, y: 0 }, { x: 7, y: 1 }, { x: 7, y: 2 }, { x: 7, y: 3 }, { x: 7, y: 4 }, { x: 7, y: 5 },
     ].map(c => c.type ? c : { ...c, type: 'wall' }),
     quiz: [],
   },
   {
-    // Sector Gamma: Portal introduction
+    // Sector Gamma: Portal introduction (guaranteed solvable)
     name: 'Sector Gamma',
     difficulty: 'easy',
     cols: 8,
@@ -183,20 +180,20 @@ export const LASER_DEMO_LEVELS = [
     },
     cells: [
       { x: 0, y: 2, type: 'ship', dir: 'right' },
-      { x: 7, y: 1, type: 'antenna' },
-      { x: 1, y: 2, type: 'portal_blue', targetPortalId: 'p1', movable: true },
+      { x: 6, y: 1, type: 'antenna' },
+      { x: 1, y: 4, type: 'portal_blue', targetPortalId: 'p1', movable: true },
       { x: 5, y: 2, type: 'portal_blue', portalId: 'p1', movable: true },
-      { x: 7, y: 0, type: 'reflector_nw', movable: true },
+      { x: 7, y: 4, type: 'reflector_ne', movable: true },
       // Central barrier
       { x: 3, y: 0 }, { x: 3, y: 1 }, { x: 3, y: 3 }, { x: 3, y: 4 },
       // Side walls
       { x: 0, y: 0 }, { x: 0, y: 1 }, { x: 0, y: 3 }, { x: 0, y: 4 },
-      { x: 7, y: 2 }, { x: 7, y: 3 }, { x: 7, y: 4 },
+      { x: 7, y: 2 }, { x: 7, y: 3 },
     ].map(c => c.type ? c : { ...c, type: 'wall' }),
     quiz: [],
   },
   {
-    // Sector Gamma+: Advanced portal chains
+    // Sector Gamma+: Dual-portal + bifurcation challenge (guaranteed solvable)
     name: 'Sector Gamma+',
     difficulty: 'hard',
     cols: 9,
@@ -211,23 +208,21 @@ export const LASER_DEMO_LEVELS = [
       { x: 0, y: 3, type: 'ship', dir: 'right' },
       { x: 8, y: 1, type: 'antenna' },
       { x: 8, y: 5, type: 'antenna' },
-      { x: 2, y: 3, type: 'bifurcator', movable: true },
+      { x: 1, y: 0, type: 'bifurcator', movable: true },
       // Blue portal pair
-      { x: 3, y: 3, type: 'portal_blue', targetPortalId: 'pb1', movable: true },
+      { x: 1, y: 1, type: 'portal_blue', targetPortalId: 'pb1', movable: true },
       { x: 6, y: 1, type: 'portal_blue', portalId: 'pb1', movable: true },
       // Red portal pair
-      { x: 6, y: 5, type: 'portal_red', targetPortalId: 'pr1', movable: true },
-      { x: 7, y: 3, type: 'portal_red', portalId: 'pr1', movable: true },
+      { x: 1, y: 5, type: 'portal_red', targetPortalId: 'pr1', movable: true },
+      { x: 6, y: 5, type: 'portal_red', portalId: 'pr1', movable: true },
       // Reflectors for final approach
-      { x: 8, y: 0, type: 'reflector_nw', movable: true },
-      { x: 8, y: 6, type: 'reflector_ne', movable: true },
-      { x: 7, y: 1, type: 'reflector_ne', movable: true },
-      // Maze walls
-      { x: 1, y: 0 }, { x: 1, y: 1 }, { x: 1, y: 2 }, { x: 1, y: 4 }, { x: 1, y: 5 }, { x: 1, y: 6 },
-      { x: 4, y: 0 }, { x: 4, y: 2 }, { x: 4, y: 4 }, { x: 4, y: 6 },
-      { x: 5, y: 4 },
-      { x: 7, y: 4 }, { x: 7, y: 5 },
-      { x: 8, y: 2 }, { x: 8, y: 3 }, { x: 8, y: 4 },
+      { x: 8, y: 0, type: 'reflector_ne', movable: true },
+      { x: 8, y: 6, type: 'reflector_nw', movable: true },
+      { x: 8, y: 2, type: 'reflector_ne', movable: true },
+      // Structured walls with open lanes at y=1, y=3 and y=5
+      { x: 3, y: 0 }, { x: 3, y: 2 }, { x: 3, y: 4 }, { x: 3, y: 6 },
+      { x: 5, y: 0 }, { x: 5, y: 2 }, { x: 5, y: 4 }, { x: 5, y: 6 },
+      { x: 8, y: 3 },
     ].map(c => c.type ? c : { ...c, type: 'wall' }),
     quiz: [
       {
