@@ -351,6 +351,9 @@ const LaserPuzzleGame = ({ isActive, onEndGame, isDemo, showBriefing = true, tim
   const [quizStep, setQuizStep] = useState(0);
   const quizScore = useRef(0);
   const hasEndedRef = useRef(false);
+  const wasActiveRef = useRef(false);
+  const initTimeoutRef = useRef(null);
+  const advanceTimeoutRef = useRef(null);
   const { cellSize, gridGap, boardPadding } = useMemo(
     () => getLaserMetrics(isMobile, isTablet),
     [isMobile, isTablet]
@@ -375,6 +378,7 @@ const LaserPuzzleGame = ({ isActive, onEndGame, isDemo, showBriefing = true, tim
   }, [procLevels, onEndGame, stopTracking]);
 
   const advanceLevel = useCallback(() => {
+    if (hasEndedRef.current) return;
     setSelected(null);
     if (!procLevels) return;
     
@@ -410,7 +414,10 @@ const LaserPuzzleGame = ({ isActive, onEndGame, isDemo, showBriefing = true, tim
       // Game complete - go to quiz if available
       const lastLevel = procLevels[procLevels.length - 1];
       const q = lastLevel?.quiz;
-      if (q && q.length > 0) setGamePhase('quiz');
+      if (q && q.length > 0) {
+        setQuizStep(0);
+        setGamePhase('quiz');
+      }
       else finishGame(totalMoves);
     }
   }, [levelIdx, totalMoves, procLevels, finishGame, isDemo, language, moves]);
@@ -420,27 +427,42 @@ const LaserPuzzleGame = ({ isActive, onEndGame, isDemo, showBriefing = true, tim
   const levelEfficiency = currentLevel ? getLaserEfficiency(moves, currentLevel.par) : 100;
 
   useEffect(() => {
-    // Only initialize/reset if game is active AND hasn't finished
-    if (isActive && gamePhase !== 'done') {
-        hasEndedRef.current = false;
-        startTracking();
-        quizScore.current = 0;
-        setProcLevels(null);
-        setLevelIdx(0);
-        setGrid({});
-        setMoves(0);
-        setTotalMoves(0);
-        setGamePhase(isDemo && showBriefing ? 'briefing' : 'playing');
-        setQuizStep(0);
+    // Initialize only on inactive->active transition (not on every internal state update)
+    if (isActive && !wasActiveRef.current) {
+      hasEndedRef.current = false;
+      startTracking();
+      quizScore.current = 0;
+      setProcLevels(null);
+      setLevelIdx(0);
+      setGrid({});
+      setMoves(0);
+      setTotalMoves(0);
+      setGamePhase(isDemo && showBriefing ? 'briefing' : 'playing');
+      setQuizStep(0);
 
-        setTimeout(() => {
-          setProcLevels(LASER_DEMO_LEVELS);
-          setLevelIdx(0);
-          setGrid(buildGrid(LASER_DEMO_LEVELS[0]));
-          setBriefing(isDemo && showBriefing ? getBriefing(0, language) : null);
-        }, 0);
+      if (initTimeoutRef.current) clearTimeout(initTimeoutRef.current);
+      initTimeoutRef.current = setTimeout(() => {
+        setProcLevels(LASER_DEMO_LEVELS);
+        setLevelIdx(0);
+        setGrid(buildGrid(LASER_DEMO_LEVELS[0]));
+        setBriefing(isDemo && showBriefing ? getBriefing(0, language) : null);
+        initTimeoutRef.current = null;
+      }, 0);
     }
-  }, [isActive, isDemo, showBriefing, startTracking, language, gamePhase]);
+
+    if (!isActive) {
+      if (initTimeoutRef.current) {
+        clearTimeout(initTimeoutRef.current);
+        initTimeoutRef.current = null;
+      }
+      if (advanceTimeoutRef.current) {
+        clearTimeout(advanceTimeoutRef.current);
+        advanceTimeoutRef.current = null;
+      }
+    }
+
+    wasActiveRef.current = isActive;
+  }, [isActive, isDemo, showBriefing, startTracking, language]);
   
   const handleCellClick = useCallback((x, y) => {
     if (gamePhase !== 'playing') return;
@@ -482,14 +504,19 @@ const LaserPuzzleGame = ({ isActive, onEndGame, isDemo, showBriefing = true, tim
       console.log('[LaserPuzzle-TRACE] handleQuizAnswer called but game already ended');
       return;
     }
-    const level = procLevels[levelIdx];
-    const q = level.quiz[quizStep];
+    const level = procLevels?.[levelIdx];
+    const quizItems = level?.quiz || [];
+    const q = quizItems[quizStep];
+    if (!q) {
+      finishGame(totalMoves);
+      return;
+    }
     const isCorrect = idx === q.correct;
-    console.log(`[LaserPuzzle-TRACE] Quiz answer submitted. Question ${quizStep+1}/${level.quiz.length}, Answer correct: ${isCorrect}`);
+    console.log(`[LaserPuzzle-TRACE] Quiz answer submitted. Question ${quizStep+1}/${quizItems.length}, Answer correct: ${isCorrect}`);
     if (isCorrect) quizScore.current += 1;
     else recordError();
-    if (quizStep + 1 < level.quiz.length) {
-      console.log(`[LaserPuzzle-TRACE] Moving to next quiz question ${quizStep+2}/${level.quiz.length}`);
+    if (quizStep + 1 < quizItems.length) {
+      console.log(`[LaserPuzzle-TRACE] Moving to next quiz question ${quizStep+2}/${quizItems.length}`);
       setQuizStep(s => s + 1);
     } else {
       console.log('[LaserPuzzle-TRACE] All quiz questions answered, calling finishGame()');
@@ -525,11 +552,21 @@ const LaserPuzzleGame = ({ isActive, onEndGame, isDemo, showBriefing = true, tim
     if (gamePhase !== 'playing') return;
     const antennaKeys = Object.keys(grid).filter(k => grid[k].type === 'antenna');
     if (antennaKeys.length > 0 && antennaKeys.every(k => litAntennas.has(k))) {
-       
       setGamePhase('levelComplete');
-      setTimeout(advanceLevel, 1400);
+      if (advanceTimeoutRef.current) clearTimeout(advanceTimeoutRef.current);
+      advanceTimeoutRef.current = setTimeout(() => {
+        advanceLevel();
+        advanceTimeoutRef.current = null;
+      }, 1400);
     }
   }, [litAntennas, grid, gamePhase, advanceLevel]);
+
+  useEffect(() => {
+    return () => {
+      if (initTimeoutRef.current) clearTimeout(initTimeoutRef.current);
+      if (advanceTimeoutRef.current) clearTimeout(advanceTimeoutRef.current);
+    };
+  }, []);
 
   const renderCell = (x, y) => {
     const key = `${x},${y}`;
@@ -600,6 +637,8 @@ const LaserPuzzleGame = ({ isActive, onEndGame, isDemo, showBriefing = true, tim
   const allAntennas = level ? Object.keys(grid).filter(k => grid[k].type === 'antenna') : [];
   const litCount = allAntennas.filter(k => litAntennas.has(k)).length;
   const satColor = timeLeft < 15 ? '#dc2626' : timeLeft < 30 ? '#f59e0b' : '#059669';
+  const quizItems = procLevels?.[levelIdx]?.quiz || [];
+  const currentQuiz = quizItems[quizStep] || null;
 
   return (
     <div style={{ width:'100%', height:'100%', display:'flex', flexDirection:'column', alignItems:'center', justifyContent:'center', padding:isMobile ? '12px' : '20px', gap:isMobile ? '10px' : '12px', position:'relative' }}>
@@ -635,12 +674,12 @@ const LaserPuzzleGame = ({ isActive, onEndGame, isDemo, showBriefing = true, tim
             </div>
           </motion.div>
         )}
-        {gamePhase === 'quiz' && (
+        {gamePhase === 'quiz' && currentQuiz && (
           <motion.div key="quiz" initial={{ scale:0.95, opacity:0 }} animate={{ scale:1, opacity:1 }} className="glass-panel" style={{ padding:'56px', maxWidth:'600px', textAlign:'center' }}>
             <div style={{ color:'#7c3aed', fontSize:'0.9rem', textTransform:'uppercase', letterSpacing:'4px', marginBottom:'20px', fontWeight:'900' }}>Spatial Insight</div>
-            <p style={{ color:'#1e1b4b', marginBottom:'48px', fontSize:'1.4rem', fontWeight: '800', lineHeight: 1.3 }}>{procLevels[levelIdx].quiz[quizStep].q}</p>
+            <p style={{ color:'#1e1b4b', marginBottom:'48px', fontSize:'1.4rem', fontWeight: '800', lineHeight: 1.3 }}>{currentQuiz.q}</p>
             <div style={{ display:'flex', flexDirection:'column', gap:'16px' }}>
-              {procLevels[levelIdx].quiz[quizStep].opts.map((opt, i) => (
+              {currentQuiz.opts.map((opt, i) => (
                 <motion.button 
                   key={i} 
                   whileHover={{ x: 8, backgroundColor: 'rgba(124,58,237,0.12)' }}
