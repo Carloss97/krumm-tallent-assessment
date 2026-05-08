@@ -161,22 +161,152 @@
 }
 
 @media (max-width: 768px) {
+  /* HEADER: Más compacto en móvil */
   .demo-floating-header {
     padding: 0 16px;
     height: 50px;
+    gap: 12px;
   }
   
+  .demo-timer-compact {
+    font-size: 0.9rem;
+    padding: 4px 10px;
+  }
+  
+  /* MAIN CONTAINER: Ajustar para dejar espacio a HUD */
   .demo-fullscreen-main {
     padding-top: 50px;
+    padding-bottom: 150px; /* Espacio para HUD en bottom */
+    overflow-y: auto;
   }
   
+  /* GAME STAGE: Responsive height */
+  .game-stage {
+    height: auto;
+    min-height: 400px;
+    padding: 16px;
+  }
+
+  /* INSTRUCTIONS: Responsive padding y tamaño */
+  .instructions-overlay {
+    padding: 16px;
+  }
+
   .instructions-box {
-    padding: 32px;
-    border-radius: 24px;
+    padding: 24px;
+    border-radius: 20px;
+    max-width: 100%;
+    max-height: 80vh;
+    overflow-y: auto;
+  }
+
+  .instructions-box h4 {
+    font-size: 1.2rem;
+    margin-bottom: 12px;
+  }
+
+  .instructions-box p {
+    font-size: 0.95rem;
+    line-height: 1.6;
+    margin-bottom: 20px;
+  }
+
+  .instructions-box button {
+    padding: 16px;
+    border-radius: 16px;
+    font-size: 1rem;
+    min-height: 48px; /* Touch target standard */
   }
   
+  /* SELECTION HEADER: Responsive layout */
   .selection-header {
-    padding: 40px 20px;
+    padding: 32px 20px;
     border-radius: 0 0 24px 24px;
+    margin-bottom: 24px;
+  }
+
+  .selection-header h1 {
+    font-size: 2rem;
+    margin-bottom: 12px;
+  }
+
+  .selection-header p {
+    font-size: 1rem;
+  }
+
+  /* GAME CARDS: Single column en móvil */
+  .demo-selection {
+    padding: 0 0 24px 0;
+  }
+
+  /* Toast notificaciones */
+  .demo-toast {
+    top: auto;
+    bottom: 160px; /* Encima del HUD */
+    left: 16px;
+    right: 16px;
+    max-width: none;
+    text-align: center;
+  }
+}
+
+@media (max-width: 480px) {
+  /* PANTALLAS MUY PEQUEÑAS (<480px) */
+  
+  .demo-floating-header {
+    height: 48px;
+    padding: 0 12px;
+  }
+
+  .demo-fullscreen-main {
+    padding-top: 48px;
+    padding-bottom: 130px;
+  }
+
+  .instructions-box {
+    padding: 20px;
+    border-radius: 16px;
+  }
+
+  .instructions-box h4 {
+    font-size: 1.1rem;
+  }
+
+  .instructions-box p {
+    font-size: 0.9rem;
+  }
+
+  .selection-header {
+    padding: 24px 16px;
+  }
+
+  .selection-header h1 {
+    font-size: 1.75rem;
+  }
+
+  .game-stage {
+    min-height: 300px;
+    padding: 12px;
+  }
+}
+
+@media (orientation: landscape) and (max-height: 500px) {
+  /* Landscape mode en móvil: optimizar altura */
+  
+  .demo-floating-header {
+    height: 45px;
+  }
+
+  .demo-fullscreen-main {
+    padding-top: 45px;
+    padding-bottom: 120px;
+  }
+
+  .instructions-box {
+    max-height: calc(100vh - 100px);
+  }
+
+  .game-stage {
+    min-height: 300px;
   }
 }
