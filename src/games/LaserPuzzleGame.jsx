@@ -81,10 +81,10 @@ export const LASER_DEMO_LEVELS = [
     cells: [
       { x: 0, y: 3, type: 'ship', dir: 'right' },
       { x: 8, y: 0, type: 'antenna' },
-      { x: 1, y: 4, type: 'reflector_nw', movable: true },
+      { x: 1, y: 4, type: 'reflector_ne', movable: true },
       { x: 8, y: 1, type: 'reflector_ne', movable: true },
       // Force wall barrier in middle
-      { x: 4, y: 0 }, { x: 4, y: 1 }, { x: 4, y: 2 }, { x: 4, y: 3 },
+      { x: 4, y: 1 }, { x: 4, y: 2 }, { x: 4, y: 3 },
       { x: 4, y: 4 }, { x: 4, y: 5 }, { x: 4, y: 6 },
       // Block antenna approach
       { x: 8, y: 2 }, { x: 8, y: 3 }, { x: 8, y: 4 }, { x: 8, y: 5 }, { x: 8, y: 6 },
@@ -110,9 +110,9 @@ export const LASER_DEMO_LEVELS = [
       { x: 10, y: 1, type: 'reflector_ne', movable: true },
       { x: 10, y: 6, type: 'reflector_nw', movable: true },
       // Middle barrier
-      { x: 4, y: 0 }, { x: 4, y: 1 }, { x: 4, y: 2 }, { x: 4, y: 3 },
-      { x: 4, y: 4 }, { x: 4, y: 5 }, { x: 4, y: 6 }, { x: 4, y: 7 },
-      // Block antenna approaches
+      { x: 4, y: 1 }, { x: 4, y: 2 }, { x: 4, y: 3 },
+      { x: 5, y: 0 }, { x: 5, y: 2 }, { x: 5, y: 3 },
+      { x: 5, y: 4 }, { x: 5, y: 5 }, { x: 5, y: 6 },
       { x: 10, y: 2 }, { x: 10, y: 3 }, { x: 10, y: 4 }, { x: 10, y: 5 },
     ].map(c => c.type ? c : { ...c, type: 'wall' }),
     quiz: [],
@@ -165,8 +165,8 @@ export const LASER_DEMO_LEVELS = [
       { x: 11, y: 0, type: 'reflector_ne', movable: true },
       { x: 11, y: 8, type: 'reflector_nw', movable: true },
       // Central wall barrier
-      { x: 5, y: 0 }, { x: 5, y: 1 }, { x: 5, y: 2 }, { x: 5, y: 3 },
-      { x: 5, y: 4 }, { x: 5, y: 5 }, { x: 5, y: 6 }, { x: 5, y: 7 }, { x: 5, y: 8 },
+      { x: 5, y: 0 }, { x: 5, y: 2 }, { x: 5, y: 3 },
+      { x: 5, y: 4 }, { x: 5, y: 5 }, { x: 5, y: 6 }, { x: 5, y: 8 },
       // Block antenna
       { x: 11, y: 3 }, { x: 11, y: 4 }, { x: 11, y: 5 }, { x: 11, y: 6 },
     ].map(c => c.type ? c : { ...c, type: 'wall' }),
@@ -222,8 +222,8 @@ export const LASER_DEMO_LEVELS = [
       { x: 12, y: 9, type: 'reflector_nw', movable: true },
       { x: 10, y: 2, type: 'reflector_ne', movable: true },
       // Complex maze
-      { x: 5, y: 0 }, { x: 5, y: 1 }, { x: 5, y: 2 }, { x: 5, y: 3 },
-      { x: 5, y: 4 }, { x: 5, y: 5 }, { x: 5, y: 6 }, { x: 5, y: 7 }, { x: 5, y: 8 }, { x: 5, y: 9 },
+      { x: 5, y: 0 }, { x: 5, y: 2 }, { x: 5, y: 3 },
+      { x: 5, y: 4 }, { x: 5, y: 5 }, { x: 5, y: 6 }, { x: 5, y: 7 }, { x: 5, y: 9 },
       // Block antenna
       { x: 12, y: 2 }, { x: 12, y: 3 }, { x: 12, y: 4 }, { x: 12, y: 5 },
       { x: 12, y: 6 }, { x: 12, y: 7 },

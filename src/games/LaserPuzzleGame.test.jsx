@@ -2,6 +2,30 @@ import { describe, it, expect } from 'vitest';
 import { LASER_DEMO_LEVELS, buildGrid, getLaserEfficiency, traceBeam } from './LaserPuzzleGame';
 
 describe('LaserPuzzleGame levels', () => {
+  const buildPlacedGrid = (level, placements) => {
+    const grid = buildGrid(level);
+
+    placements.forEach(([fromKey, toKey]) => {
+      const cell = grid[fromKey];
+      expect(cell).toBeDefined();
+      delete grid[fromKey];
+      grid[toKey] = { ...cell };
+    });
+
+    return grid;
+  };
+
+  const expectSolvedArrangement = (level, placements) => {
+    const antennaKeys = level.cells
+      .filter((cell) => cell.type === 'antenna')
+      .map((cell) => `${cell.x},${cell.y}`);
+
+    const finalGrid = buildPlacedGrid(level, placements);
+    const { litAntennas } = traceBeam(finalGrid, level.cols, level.rows);
+
+    expect(antennaKeys.every((antennaKey) => litAntennas.has(antennaKey))).toBe(true);
+  };
+
   it('defines a progressive adaptive six-level puzzle set', () => {
     expect(LASER_DEMO_LEVELS).toHaveLength(6);
     expect(LASER_DEMO_LEVELS[0].difficulty).toBe('easy');
@@ -179,6 +203,51 @@ describe('LaserPuzzleGame levels', () => {
       const movableCount = level.cells.filter((cell) => cell.movable).length;
       expect(movableCount).toBeGreaterThanOrEqual(2);
     });
+  });
+
+  it('has at least one solvable arrangement for every level', () => {
+    expectSolvedArrangement(LASER_DEMO_LEVELS[0], [
+      ['1,4', '3,3'],
+      ['8,1', '3,0'],
+    ]);
+
+    expectSolvedArrangement(LASER_DEMO_LEVELS[1], [
+      ['2,2', '2,3'],
+      ['10,1', '2,0'],
+      ['10,6', '2,7'],
+    ]);
+
+    expectSolvedArrangement(LASER_DEMO_LEVELS[2], [
+      ['1,3', '1,3'],
+      ['8,2', '8,0'],
+      ['11,1', '0,0'],
+      ['8,5', '0,1'],
+    ]);
+
+    expectSolvedArrangement(LASER_DEMO_LEVELS[3], [
+      ['1,4', '9,0'],
+      ['7,2', '9,8'],
+      ['2,2', '2,4'],
+      ['11,0', '2,1'],
+      ['11,8', '2,7'],
+    ]);
+
+    expectSolvedArrangement(LASER_DEMO_LEVELS[4], [
+      ['1,4', '9,0'],
+      ['7,3', '9,8'],
+      ['2,2', '2,4'],
+      ['12,0', '2,1'],
+      ['12,8', '2,7'],
+    ]);
+
+    expectSolvedArrangement(LASER_DEMO_LEVELS[5], [
+      ['1,5', '9,0'],
+      ['8,3', '9,9'],
+      ['2,3', '2,5'],
+      ['12,0', '2,1'],
+      ['12,9', '2,8'],
+      ['10,2', '0,0'],
+    ]);
   });
 
   it('increases par value with level difficulty progression', () => {
