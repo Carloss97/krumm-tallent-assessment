@@ -5,14 +5,31 @@ import { useTelemetry } from '../TelemetryContext';
 import { playMemoryClick, playSuccessSound, playLevelUpSound } from '../utils/audio';
 import Confetti from '../components/Confetti';
 import { useLanguage } from '../context/LanguageContext';
+import { useIsMobile, useIsTablet } from '../hooks/useMediaQuery';
 
 const GRID = 10;
 const SAT_DECAY = 1; // % per second (reduced from 2 for better pacing)
 const CELL = 60; // Larger cells for better screen occupancy
+const MOBILE_CELL = 28;
+const TABLET_CELL = 45;
 const GRID_GAP = 3;
-const GRID_STEP = CELL + GRID_GAP;
 const BOARD_PADDING = 12;
-const BOARD_SIZE = (GRID * CELL) + ((GRID - 1) * GRID_GAP) + (BOARD_PADDING * 2);
+
+const getGridMetrics = (isMobile, isTablet) => {
+  const cellSize = isMobile ? MOBILE_CELL : isTablet ? TABLET_CELL : CELL;
+  const gapSize = isMobile ? 2 : GRID_GAP;
+  const paddingSize = isMobile ? 10 : BOARD_PADDING;
+  const stepSize = cellSize + gapSize;
+  const boardSize = (GRID * cellSize) + ((GRID - 1) * gapSize) + (paddingSize * 2);
+
+  return {
+    cellSize,
+    gapSize,
+    paddingSize,
+    stepSize,
+    boardSize,
+  };
+};
 
 const COLOR_POINT_VALUES = {
   red: 100,
@@ -255,6 +272,8 @@ const DEMO_BRIEFINGS = {
 const GridFlowGame = ({ isActive, onEndGame, isDemo, showBriefing = true }) => {
   const { recordError, startTracking, stopTracking, recordTrialEvent } = useTelemetry();
   const { language } = useLanguage();
+  const isMobile = useIsMobile();
+  const isTablet = useIsTablet();
 
   const effectiveMaxRounds = GRID_LEVELS.length;
   const hasEndedRef = useRef(false);
@@ -262,6 +281,10 @@ const GridFlowGame = ({ isActive, onEndGame, isDemo, showBriefing = true }) => {
   const totalPossiblePoints = useMemo(
     () => GRID_LEVELS.reduce((sum, lvl) => sum + lvl.targets.reduce((targetSum, t) => targetSum + t.points, 0), 0),
     []
+  );
+  const { cellSize, gapSize, paddingSize, stepSize, boardSize } = useMemo(
+    () => getGridMetrics(isMobile, isTablet),
+    [isMobile, isTablet]
   );
 
   const [gameState, setGameState] = useState('playing');
@@ -575,7 +598,7 @@ const GridFlowGame = ({ isActive, onEndGame, isDemo, showBriefing = true }) => {
           );
         }
 
-        cells.push(<div key={`${x}-${y}`} style={{ width:`${CELL}px`, height:`${CELL}px`, minWidth:`${CELL}px`, minHeight:`${CELL}px`, background:bg, border, display:'flex', justifyContent:'center', alignItems:'center', position:'relative', borderRadius: isWall ? '6px' : '0', flexShrink: 0, boxSizing: 'border-box', overflow: 'hidden' }}>{content}</div>);
+        cells.push(<div key={`${x}-${y}`} style={{ width:`${cellSize}px`, height:`${cellSize}px`, minWidth:`${cellSize}px`, minHeight:`${cellSize}px`, background:bg, border, display:'flex', justifyContent:'center', alignItems:'center', position:'relative', borderRadius: isWall ? '6px' : '0', flexShrink: 0, boxSizing: 'border-box', overflow: 'hidden' }}>{content}</div>);
       }
     }
     return cells;
@@ -615,11 +638,11 @@ const GridFlowGame = ({ isActive, onEndGame, isDemo, showBriefing = true }) => {
   const currentQuestion = quizQuestions[quizStep];
 
   return (
-    <div style={{ width:'100%', height:'100%', display:'flex', flexDirection:'column', alignItems:'center', justifyContent:'center', padding:'20px', gap:'20px', position:'relative' }}>
+      <div style={{ width:'100%', height:'100%', display:'flex', flexDirection:'column', alignItems:'center', justifyContent:'center', padding:isMobile ? '12px' : '20px', gap:isMobile ? '12px' : '20px', position:'relative' }}>
       <AnimatePresence>
         {gameState === 'playing' && (
-          <motion.div initial={{ opacity:0, y:20 }} animate={{ opacity:1, y:0 }} exit={{ opacity:0 }} className="glass-panel" style={{ padding:'40px', display:'flex', flexDirection:'column', alignItems:'center', gap:'32px', background: 'rgba(255,255,255,0.95)', backdropFilter: 'blur(12px)', width: 'fit-content', minWidth: `${BOARD_SIZE}px`, maxWidth: '100%' }}>
-            <div style={{ display:'grid', gridTemplateColumns:'repeat(6, minmax(0, 1fr))', width:'100%', color:'#1e1b4b', textTransform:'uppercase', letterSpacing:'3px', fontSize:'1rem', fontWeight:'900', gap:'24px', whiteSpace:'nowrap' }}>
+          <motion.div initial={{ opacity:0, y:20 }} animate={{ opacity:1, y:0 }} exit={{ opacity:0 }} className="glass-panel" style={{ padding:isMobile ? '24px' : '40px', display:'flex', flexDirection:'column', alignItems:'center', gap:isMobile ? '20px' : '32px', background: 'rgba(255,255,255,0.95)', backdropFilter: 'blur(12px)', width: 'fit-content', minWidth: `${boardSize}px`, maxWidth: '100%' }}>
+            <div style={{ display:'grid', gridTemplateColumns:isMobile ? 'repeat(3, minmax(0, 1fr))' : 'repeat(6, minmax(0, 1fr))', width:'100%', color:'#1e1b4b', textTransform:'uppercase', letterSpacing:isMobile ? '1px' : '3px', fontSize:isMobile ? '0.78rem' : '1rem', fontWeight:'900', gap:isMobile ? '10px' : '24px', whiteSpace:'nowrap' }}>
               <span>Round {round+1}/{effectiveMaxRounds}</span>
               <span style={{ color: levelTimeLeft<10?'#dc2626':'#059669' }}>⏱ {levelTimeLeft}s</span>
               {lvlData.energyDrain>0 && <span style={{ color: energy<30?'#dc2626':'#1e1b4b' }}>⚡ {energy}%</span>}
@@ -628,7 +651,7 @@ const GridFlowGame = ({ isActive, onEndGame, isDemo, showBriefing = true }) => {
               <span style={{ color:'#4f46e5' }}>Pts: {score}</span>
             </div>
             
-            <div style={{ position:'relative', padding:`${BOARD_PADDING}px`, border:'2px solid rgba(99,102,241,0.2)', borderRadius:'20px', background:'#f8fafc', boxShadow: 'inset 0 4px 12px rgba(0,0,0,0.1)', width: `${BOARD_SIZE}px`, maxWidth: '100%', overflow: 'hidden', boxSizing: 'border-box' }}>
+            <div style={{ position:'relative', padding:`${paddingSize}px`, border:'2px solid rgba(99,102,241,0.2)', borderRadius:'20px', background:'#f8fafc', boxShadow: 'inset 0 4px 12px rgba(0,0,0,0.1)', width: `${boardSize}px`, maxWidth: '100%', overflow: 'hidden', boxSizing: 'border-box' }}>
               {showPickupAnim && (
                 <motion.div initial={{ y:10, opacity:0 }} animate={{ y:-50, opacity:1 }} exit={{ opacity:0 }} style={{ position: 'absolute', left: '50%', transform: 'translateX(-50%)', zIndex: 30, background: '#1e293b', padding: '12px 32px', borderRadius: 32, color: '#fff', fontWeight: 900, fontSize: '1.1rem' }}>
                   {language === 'es' ? '+ RECOGIDO' : '+ COLLECTED'}
@@ -645,15 +668,15 @@ const GridFlowGame = ({ isActive, onEndGame, isDemo, showBriefing = true }) => {
                 </motion.div>
               )}
               {showDeliverAnim && (<div style={{ position: 'absolute', inset: 0, pointerEvents: 'none', zIndex: 40 }}><Confetti count={30} spread={100} duration={1.5} /></div>)}
-              <div style={{ position: 'relative', display:'inline-block', width: `${GRID * CELL + ((GRID - 1) * GRID_GAP)}px`, height: `${GRID * CELL + ((GRID - 1) * GRID_GAP)}px`, overflow: 'hidden' }}>
-                <div style={{ display:'grid', gridTemplateColumns:`repeat(${GRID}, ${CELL}px)`, gap:`${GRID_GAP}px` }}>{renderGrid()}</div>
+              <div style={{ position: 'relative', display:'inline-block', width: `${GRID * cellSize + ((GRID - 1) * gapSize)}px`, height: `${GRID * cellSize + ((GRID - 1) * gapSize)}px`, overflow: 'hidden' }}>
+                <div style={{ display:'grid', gridTemplateColumns:`repeat(${GRID}, ${cellSize}px)`, gap:`${gapSize}px` }}>{renderGrid()}</div>
                 <motion.div
                   aria-hidden="true"
-                  style={{ position:'absolute', left: 0, top: 0, width: CELL, height: CELL, zIndex: 20, pointerEvents: 'none' }}
-                  animate={{ x: player.x * GRID_STEP, y: player.y * GRID_STEP }}
+                  style={{ position:'absolute', left: 0, top: 0, width: cellSize, height: cellSize, zIndex: 20, pointerEvents: 'none' }}
+                  animate={{ x: player.x * stepSize, y: player.y * stepSize }}
                   transition={{ type: 'spring', stiffness: 460, damping: 34, mass: 0.7 }}
                 >
-                  <div style={{ width:'100%', height:'100%', borderRadius:'16px', background:'linear-gradient(135deg, #4f46e5, #6366f1)', border:'3px solid #fff', boxShadow:'0 18px 30px -8px rgba(79,70,229,0.55)', display:'flex', alignItems:'center', justifyContent:'center', color:'#fff', fontWeight: 900, fontSize: '1.35rem' }}>
+                  <div style={{ width:'100%', height:'100%', borderRadius:isMobile ? '12px' : '16px', background:'linear-gradient(135deg, #4f46e5, #6366f1)', border:'3px solid #fff', boxShadow:'0 18px 30px -8px rgba(79,70,229,0.55)', display:'flex', alignItems:'center', justifyContent:'center', color:'#fff', fontWeight: 900, fontSize: isMobile ? '1rem' : '1.35rem' }}>
                     ⬚
                   </div>
                 </motion.div>

@@ -9,6 +9,10 @@ export const useMediaQuery = (query) => {
   const [matches, setMatches] = useState(false);
 
   useEffect(() => {
+    if (typeof window === 'undefined' || typeof window.matchMedia !== 'function') {
+      return undefined;
+    }
+
     const mediaQuery = window.matchMedia(query);
     
     // Set initial value
@@ -20,11 +24,19 @@ export const useMediaQuery = (query) => {
     };
 
     // Agregar listener
-    mediaQuery.addEventListener('change', handleChange);
+    if (typeof mediaQuery.addEventListener === 'function') {
+      mediaQuery.addEventListener('change', handleChange);
+    } else {
+      mediaQuery.addListener(handleChange);
+    }
 
     // Cleanup
     return () => {
-      mediaQuery.removeEventListener('change', handleChange);
+      if (typeof mediaQuery.removeEventListener === 'function') {
+        mediaQuery.removeEventListener('change', handleChange);
+      } else {
+        mediaQuery.removeListener(handleChange);
+      }
     };
   }, [query]);
 
@@ -32,7 +44,7 @@ export const useMediaQuery = (query) => {
 };
 
 /**
- * Detectar si es móvil (<768px)
+ * Detectar si es mï¿½vil (<768px)
  */
 export const useIsMobile = () => useMediaQuery('(max-width: 767px)');
 
@@ -47,7 +59,7 @@ export const useIsTablet = () => useMediaQuery('(min-width: 768px) and (max-widt
 export const useIsDesktop = () => useMediaQuery('(min-width: 1024px)');
 
 /**
- * Detectar orientación landscape
+ * Detectar orientaciï¿½n landscape
  */
 export const useIsLandscape = () => useMediaQuery('(orientation: landscape)');
 

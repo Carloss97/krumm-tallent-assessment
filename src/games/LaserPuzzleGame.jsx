@@ -6,8 +6,23 @@ import { playMemoryClick, playMemoryFlash, playSuccessSound, playLevelUpSound } 
 import Confetti from '../components/Confetti';
 import { useGameTimer } from '../hooks/useGameTimer';
 import { useLanguage } from '../context/LanguageContext';
+import { useIsMobile, useIsTablet } from '../hooks/useMediaQuery';
 
 const CELL = 56; // Larger board for demo
+const MOBILE_CELL = 24;
+const TABLET_CELL = 38;
+const MOBILE_GRID_GAP = 2;
+const TABLET_GRID_GAP = 4;
+const MOBILE_BOARD_PADDING = 8;
+const TABLET_BOARD_PADDING = 10;
+
+const getLaserMetrics = (isMobile, isTablet) => {
+  const cellSize = isMobile ? MOBILE_CELL : isTablet ? TABLET_CELL : CELL;
+  const gridGap = isMobile ? MOBILE_GRID_GAP : isTablet ? TABLET_GRID_GAP : 6;
+  const boardPadding = isMobile ? MOBILE_BOARD_PADDING : isTablet ? TABLET_BOARD_PADDING : 12;
+
+  return { cellSize, gridGap, boardPadding };
+};
 
 const SHIP_ARROW = { right: '→', left: '←', up: '↑', down: '↓' };
 const DEFLECT_NE = { right: 'up', left: 'down', up: 'right', down: 'left' };
@@ -326,6 +341,8 @@ function findLinkedPortalKey(grid, cellKey, cell) {
 const LaserPuzzleGame = ({ isActive, onEndGame, isDemo, showBriefing = true, timeLimit }) => {
   const { recordError, startTracking, stopTracking, recordTrialEvent } = useTelemetry();
   const { language } = useLanguage();
+  const isMobile = useIsMobile();
+  const isTablet = useIsTablet();
   const [procLevels, setProcLevels] = useState(null);
   const [levelIdx, setLevelIdx] = useState(0);
   const [grid, setGrid] = useState({});
@@ -337,6 +354,10 @@ const LaserPuzzleGame = ({ isActive, onEndGame, isDemo, showBriefing = true, tim
   const [quizStep, setQuizStep] = useState(0);
   const quizScore = useRef(0);
   const hasEndedRef = useRef(false);
+  const { cellSize, gridGap, boardPadding } = useMemo(
+    () => getLaserMetrics(isMobile, isTablet),
+    [isMobile, isTablet]
+  );
   
   const currentLevel = useMemo(() => procLevels ? procLevels[levelIdx] : null, [procLevels, levelIdx]);
 
@@ -543,7 +564,7 @@ const LaserPuzzleGame = ({ isActive, onEndGame, isDemo, showBriefing = true, tim
         key={key}
         whileHover={cell?.movable ? { scale: 1.05, backgroundColor: 'rgba(99,102,241,0.1)' } : {}}
         onClick={() => handleCellClick(x, y)}
-        style={{ width: CELL, height: CELL, background: bg, border, cursor, display: 'flex', alignItems: 'center', justifyContent:'center', position: 'relative', borderRadius: '4px', boxShadow: isSel ? '0 0 0 3px rgba(99,102,241,0.4)' : 'none', transition: 'all 0.15s' }}
+        style={{ width: cellSize, height: cellSize, background: bg, border, cursor, display: 'flex', alignItems: 'center', justifyContent:'center', position: 'relative', borderRadius: '4px', boxShadow: isSel ? '0 0 0 3px rgba(99,102,241,0.4)' : 'none', transition: 'all 0.15s' }}
       >
         {isBeam && type !== 'wall' && type !== 'ship' && (
           <motion.div 
@@ -582,11 +603,11 @@ const LaserPuzzleGame = ({ isActive, onEndGame, isDemo, showBriefing = true, tim
   const satColor = timeLeft < 15 ? '#dc2626' : timeLeft < 30 ? '#f59e0b' : '#059669';
 
   return (
-    <div style={{ width:'100%', height:'100%', display:'flex', flexDirection:'column', alignItems:'center', justifyContent:'center', padding:'20px', gap:'12px', position:'relative' }}>
+    <div style={{ width:'100%', height:'100%', display:'flex', flexDirection:'column', alignItems:'center', justifyContent:'center', padding:isMobile ? '12px' : '20px', gap:isMobile ? '10px' : '12px', position:'relative' }}>
       <AnimatePresence mode="wait">
         {(gamePhase === 'playing' || gamePhase === 'levelComplete') && level && (
-          <motion.div key={`level-${levelIdx}`} initial={{ opacity:0, y:20 }} animate={{ opacity:1, y:0 }} exit={{ opacity:0 }} className="glass-panel" style={{ padding:'32px', display:'flex', flexDirection:'column', alignItems:'center', gap:'20px', background: 'rgba(255,255,255,0.95)', backdropFilter: 'blur(12px)' }}>
-            <div style={{ display:'flex', justifyContent:'space-between', width:'100%', fontSize:'0.9rem', fontWeight:'900', color:'#1e1b4b', textTransform:'uppercase', letterSpacing:'2px', gap:'40px' }}>
+          <motion.div key={`level-${levelIdx}`} initial={{ opacity:0, y:20 }} animate={{ opacity:1, y:0 }} exit={{ opacity:0 }} className="glass-panel" style={{ padding:isMobile ? '24px' : '32px', display:'flex', flexDirection:'column', alignItems:'center', gap:isMobile ? '16px' : '20px', background: 'rgba(255,255,255,0.95)', backdropFilter: 'blur(12px)', maxWidth: '100%' }}>
+            <div style={{ display:'grid', gridTemplateColumns:isMobile ? 'repeat(2, minmax(0, 1fr))' : 'repeat(5, minmax(0, auto))', justifyContent:'space-between', width:'100%', fontSize:isMobile ? '0.78rem' : '0.9rem', fontWeight:'900', color:'#1e1b4b', textTransform:'uppercase', letterSpacing:isMobile ? '1px' : '2px', gap:isMobile ? '8px' : '16px' }}>
               <span>{level.name}</span>
               <span style={{ color:satColor }}>⏱ {timeLeft}s</span>
               <span>Moves: <span style={{ color:'#4f46e5' }}>{moves}</span></span>
@@ -594,8 +615,8 @@ const LaserPuzzleGame = ({ isActive, onEndGame, isDemo, showBriefing = true, tim
               <span>Antennas: <span style={{ color: litCount === allAntennas.length ? '#059669' : '#b91c1c' }}>{litCount}/{allAntennas.length}</span></span>
             </div>
             
-            <div style={{ border:'2px solid rgba(99,102,241,0.15)', borderRadius:'16px', background:'rgba(248,250,252,0.8)', padding:'12px', boxShadow: 'inset 0 4px 10px rgba(0,0,0,0.08)' }}>
-              <div style={{ display:'grid', gridTemplateColumns:`repeat(${level.cols}, ${CELL}px)`, gap:'6px' }}>
+            <div style={{ border:'2px solid rgba(99,102,241,0.15)', borderRadius:'16px', background:'rgba(248,250,252,0.8)', padding:`${boardPadding}px`, boxShadow: 'inset 0 4px 10px rgba(0,0,0,0.08)', width: '100%', maxWidth: '100%', overflowX: 'auto' }}>
+              <div style={{ display:'grid', gridTemplateColumns:`repeat(${level.cols}, ${cellSize}px)`, gap:`${gridGap}px`, width: 'fit-content', margin: '0 auto' }}>
                 {Array.from({ length:level.rows }, (_, y) => Array.from({ length:level.cols }, (_, x) => renderCell(x, y)))}
               </div>
             </div>

@@ -68,9 +68,14 @@
 
 .gallery-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
   gap: 20px;
   margin-bottom: 24px;
+}
+
+.game-gallery--compact .gallery-grid {
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 16px;
 }
 
 .game-card {
@@ -234,8 +239,12 @@
 /* Responsive */
 @media (max-width: 768px) {
   .gallery-grid {
-    grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
     gap: 16px;
+  }
+
+  .game-gallery--compact .gallery-grid {
+    grid-template-columns: 1fr;
   }
 
   .game-card {

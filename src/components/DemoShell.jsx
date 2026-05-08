@@ -20,6 +20,7 @@ import GameGallery from './GameGallery';
 import ProgressTracker from './ProgressTracker';
 import LiveDemoTelemetryHud from './LiveDemoTelemetryHud';
 import { analyzeDemoTelemetry } from '../utils/advancedTelemetryAnalytics';
+import { useIsMobile } from '../hooks/useMediaQuery';
 import { useWebcamCapture } from '../hooks/useWebcamCapture';
 import { preloadEdgeLocalModel } from '../services/edgeLocalInferenceService';
 import './DemoShell.css';
@@ -178,6 +179,7 @@ const DemoShell = () => {
   const { sessionData, setIsDemo, startTracking, stopTracking, recordTrialEvent, recordWebcamFrame, setConsent } = useTelemetry();
   const { language } = useLanguage();
   const isEn = language === 'en';
+  const isMobile = useIsMobile();
   
   // Use a ref as a lock to prevent double-incrementing step
   const completingRef = useRef(null);
@@ -516,10 +518,10 @@ const DemoShell = () => {
             exit={{ opacity: 0, y: -20 }}
             className="demo-selection"
           >
-            <header className="selection-header" style={{ background: 'linear-gradient(135deg, #1e1b4b 0%, #312e81 100%)', borderRadius: '0 0 48px 48px', margin: '0 0 40px 0', padding: '80px 24px' }}>
-              <h1 style={{ fontSize: '3.5rem', marginBottom: '16px', color: 'white' }}>{demoCopy[language]?.interactiveDemo || demoCopy.es.interactiveDemo}</h1>
-              <p style={{ fontSize: '1.25rem', opacity: 0.9, color: 'white' }}>{demoCopy[language]?.selectGames || demoCopy.es.selectGames}</p>
-              <div style={{ marginTop: 24, display: 'inline-flex', padding: '8px 20px', background: 'rgba(255,255,255,0.1)', borderRadius: '999px', fontSize: '0.9rem', fontWeight: 600, color: 'white' }}>
+            <header className="selection-header" style={{ background: 'linear-gradient(135deg, #1e1b4b 0%, #312e81 100%)', borderRadius: isMobile ? '0 0 24px 24px' : '0 0 48px 48px', margin: '0 0 40px 0', padding: isMobile ? '40px 20px' : '80px 24px' }}>
+              <h1 style={{ fontSize: isMobile ? '2rem' : '3.5rem', marginBottom: '16px', color: 'white' }}>{demoCopy[language]?.interactiveDemo || demoCopy.es.interactiveDemo}</h1>
+              <p style={{ fontSize: isMobile ? '1rem' : '1.25rem', opacity: 0.9, color: 'white' }}>{demoCopy[language]?.selectGames || demoCopy.es.selectGames}</p>
+              <div style={{ marginTop: isMobile ? 16 : 24, display: 'inline-flex', padding: isMobile ? '8px 16px' : '8px 20px', background: 'rgba(255,255,255,0.1)', borderRadius: '999px', fontSize: '0.9rem', fontWeight: 600, color: 'white' }}>
                 {demoCopy[language]?.demoLockNotice || demoCopy.es.demoLockNotice}
               </div>
             </header>
@@ -532,6 +534,7 @@ const DemoShell = () => {
                 availableGameIds={DEMO_FIXED_IDS}
                 lockedLabel={demoCopy[language]?.lockedGameLabel || demoCopy.es.lockedGameLabel}
                 lockSelection={true}
+                compactLayout={isMobile}
               />
 
               {selectedGameIds.length > 0 && (
@@ -541,7 +544,7 @@ const DemoShell = () => {
                     whileTap={{ scale: 0.95 }}
                     className="btn btn-primary"
                     onClick={handleStartDemo}
-                    style={{ padding: '20px 60px', fontSize: '1.2rem', borderRadius: '20px' }}
+                    style={{ padding: isMobile ? '16px 28px' : '20px 60px', fontSize: isMobile ? '1rem' : '1.2rem', borderRadius: '20px' }}
                   >
                     {demoCopy[language]?.continueButton || demoCopy.es.continueButton}
                     {' '}

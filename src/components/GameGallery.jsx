@@ -156,6 +156,7 @@ const GameGallery = ({
   availableGameIds = null,
   lockedLabel = null,
   lockSelection = false,
+  compactLayout = false,
 }) => {
   const { language } = useLanguage();
   const [filterCategory, setFilterCategory] = useState(null);
@@ -182,7 +183,7 @@ const GameGallery = ({
   }, 0);
 
   return (
-    <div className="game-gallery">
+    <div className={`game-gallery ${compactLayout ? 'game-gallery--compact' : ''}`}>
       <div className="gallery-header">
         <h3>{language === 'es' ? 'Selecciona tus juegos' : 'Select your games'}</h3>
         <p className="gallery-subtitle">
