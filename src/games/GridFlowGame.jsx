@@ -259,6 +259,65 @@ const DEMO_BRIEFINGS = {
   ]
 };
 
+// Helper: Randomize target positions within grid (except last level)
+const randomizeTargetPositions = (level, round, totalRounds) => {
+  if (round === totalRounds - 1) {
+    // Last level: keep original positions for structured spawning
+    return level.targets.map(t => ({ ...t }));
+  }
+  
+  // Other levels: randomize positions to create dynamic "street-like" experience
+  const walls = new Set(level.walls);
+  const occupied = new Set();
+  
+  return level.targets.map(t => {
+    let x, y;
+    let attempts = 0;
+    do {
+      x = Math.floor(Math.random() * GRID);
+      y = Math.floor(Math.random() * GRID);
+      attempts++;
+    } while ((walls.has(`${x},${y}`) || occupied.has(`${x},${y}`)) && attempts < 50);
+    
+    occupied.add(`${x},${y}`);
+    return { ...t, x, y };
+  });
+};
+
+// Helper: Generate spontaneous targets for final level
+const generateSpontaneousTarget = (levelIndex, currentTargets, walls) => {
+  if (levelIndex !== GRID_LEVELS.length - 1) return null;
+  
+  // Only spawn if not already at max targets
+  if (currentTargets.length >= 5) return null;
+  
+  let x, y, attempts = 0;
+  const occupied = new Set(currentTargets.map(t => `${t.x},${t.y}`));
+  
+  do {
+    x = Math.floor(Math.random() * GRID);
+    y = Math.floor(Math.random() * GRID);
+    attempts++;
+  } while ((walls.has(`${x},${y}`) || occupied.has(`${x},${y}`)) && attempts < 50);
+  
+  if (attempts >= 50) return null;
+  
+  // Create a new target with random color from existing set
+  const colors = ['#ef4444', '#3b82f6', '#10b981', '#f59e0b', '#8b5cf6'];
+  const randomColor = colors[Math.floor(Math.random() * colors.length)];
+  const nextId = Math.max(...currentTargets.map(t => t.id), 0) + 1;
+  
+  return {
+    id: nextId,
+    x,
+    y,
+    color: randomColor,
+    points: 150,
+    dropZone: { x: Math.floor(Math.random() * GRID), y: Math.floor(Math.random() * GRID) },
+    active: true
+  };
+};
+
 const GridFlowGame = ({ isActive, onEndGame, isDemo, showBriefing = true }) => {
   const { recordError, startTracking, stopTracking, recordTrialEvent } = useTelemetry();
   const { language } = useLanguage();
@@ -332,8 +391,10 @@ const GridFlowGame = ({ isActive, onEndGame, isDemo, showBriefing = true }) => {
     if (idx >= effectiveMaxRounds) { transitionToQuiz(); return; }
     
     const lvl = GRID_LEVELS[idx];
+    // Randomize target positions for dynamic "street-like" gameplay
+    const randomizedTargets = randomizeTargetPositions(lvl, idx, effectiveMaxRounds);
     const initSats = {};
-    lvl.targets.forEach(t => { initSats[t.id] = 100; });
+    randomizedTargets.forEach(t => { initSats[t.id] = 100; });
     satsRef.current = initSats;
     setSats({ ...initSats });
     setFuelEmpty(false);
@@ -343,7 +404,7 @@ const GridFlowGame = ({ isActive, onEndGame, isDemo, showBriefing = true }) => {
       player: { ...lvl.startPos },
       inventory: null,
       energy: 100,
-      targets: lvl.targets.map(t => ({ ...t, active:true })),
+      targets: randomizedTargets.map(t => ({ ...t, active:true })),
     };
     stateRef.current = { ...stateRef.current, ...newState };
     setRound(newState.round);
@@ -433,9 +494,29 @@ const GridFlowGame = ({ isActive, onEndGame, isDemo, showBriefing = true }) => {
         }
       }, 1000);
 
+    // Spontaneous target spawning for final level (Sector Gamma+)
+    let spawnTimerRef = null;
+    if (stateRef.current.round === effectiveMaxRounds - 1) {
+      spawnTimerRef = setInterval(() => {
+        const lvl = GRID_LEVELS[stateRef.current.round];
+        const newTarget = generateSpontaneousTarget(stateRef.current.round, stateRef.current.targets, new Set(lvl.walls));
+        if (newTarget) {
+          const updatedTargets = [...stateRef.current.targets, newTarget];
+          stateRef.current.targets = updatedTargets;
+          setTargets(updatedTargets);
+          
+          // Initialize satisfaction for new target
+          const newSats = { ...satsRef.current, [newTarget.id]: 100 };
+          satsRef.current = newSats;
+          setSats(newSats);
+        }
+      }, 4000); // Spawn every 4 seconds in final level
+    }
+
     return () => {
         clearInterval(levelTimerRef.current);
         clearInterval(satTimerRef.current);
+        if (spawnTimerRef) clearInterval(spawnTimerRef);
     };
   }, [isActive, gameState, round, loadLevel, transitionToQuiz, effectiveMaxRounds]);
 
