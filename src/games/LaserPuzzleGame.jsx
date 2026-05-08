@@ -118,126 +118,127 @@ export const LASER_DEMO_LEVELS = [
     quiz: [],
   },
   {
+    // Sector Beta: Simple right-angle with pre-placed solution
     name: 'Sector Beta',
     difficulty: 'easy',
-    cols: 12,
-    rows: 8,
+    cols: 6,
+    rows: 5,
     par: 2,
-    timeLimit: 70,
+    timeLimit: 60,
     hint: {
-      es: 'Mueve los portales y espejos para guiar el haz a través de la barrera central.',
-      en: 'Move the portals and mirrors to guide the beam across the central barrier.'
+      es: 'Espejos pre-colocados forman una ruta. Aprende cómo funciona la reflexión.',
+      en: 'Pre-placed mirrors form a route. Learn how reflection works.'
+    },
+    cells: [
+      { x: 0, y: 2, type: 'ship', dir: 'right' },
+      { x: 4, y: 0, type: 'antenna' },
+      { x: 2, y: 2, type: 'reflector_ne', movable: true },
+      { x: 4, y: 1, type: 'reflector_ne', movable: true },
+      // Vertical wall to force reflection at (2,2)
+      { x: 3, y: 0 }, { x: 3, y: 1 }, { x: 3, y: 2 }, { x: 3, y: 3 }, { x: 3, y: 4 },
+      // Side walls
+      { x: 5, y: 2 }, { x: 5, y: 3 }, { x: 5, y: 4 },
+    ].map(c => c.type ? c : { ...c, type: 'wall' }),
+    quiz: [],
+  },
+  {
+    // Sector Beta+: Bifurcation example
+    name: 'Sector Beta+',
+    difficulty: 'hard',
+    cols: 8,
+    rows: 6,
+    par: 4,
+    timeLimit: 75,
+    hint: {
+      es: 'El bifurcador divide el haz. Los espejos guían cada mitad hacia una antena.',
+      en: 'The bifurcator splits the beam. Mirrors guide each half to an antenna.'
     },
     cells: [
       { x: 0, y: 3, type: 'ship', dir: 'right' },
-      { x: 11, y: 0, type: 'antenna' },
-      { x: 1, y: 3, type: 'portal_blue', targetPortalId: 'p1', movable: true },
-      { x: 8, y: 2, type: 'portal_blue', portalId: 'p1', movable: true },
-      { x: 11, y: 1, type: 'reflector_ne', movable: true },
-      { x: 8, y: 5, type: 'reflector_nw', movable: true },
-      // Central wall barrier
-      { x: 5, y: 0 }, { x: 5, y: 1 }, { x: 5, y: 2 }, { x: 5, y: 3 },
-      { x: 5, y: 4 }, { x: 5, y: 5 }, { x: 5, y: 6 }, { x: 5, y: 7 },
-      // Block antenna
-      { x: 11, y: 2 }, { x: 11, y: 3 }, { x: 11, y: 4 }, { x: 11, y: 5 },
-      { x: 11, y: 6 }, { x: 11, y: 7 },
+      { x: 1, y: 0, type: 'antenna' },
+      { x: 6, y: 5, type: 'antenna' },
+      { x: 2, y: 3, type: 'bifurcator', movable: true },
+      { x: 1, y: 2, type: 'reflector_ne', movable: true },
+      { x: 6, y: 4, type: 'reflector_nw', movable: true },
+      // Walls to guide paths
+      { x: 3, y: 0 }, { x: 3, y: 1 }, { x: 3, y: 2 }, { x: 3, y: 4 }, { x: 3, y: 5 },
+      { x: 4, y: 3 },
+      { x: 5, y: 4 }, { x: 5, y: 5 },
+      { x: 6, y: 2 }, { x: 6, y: 3 },
+      { x: 7, y: 0 }, { x: 7, y: 1 }, { x: 7, y: 2 }, { x: 7, y: 3 }, { x: 7, y: 4 }, { x: 7, y: 5 },
     ].map(c => c.type ? c : { ...c, type: 'wall' }),
     quiz: [],
   },
   {
-    name: 'Sector Beta+',
-    difficulty: 'hard',
-    cols: 12,
-    rows: 9,
-    par: 4,
-    timeLimit: 70,
-    hint: {
-      es: 'Mueve portales, bifurcador y espejos para alcanzar ambas antenas detrás de la barrera.',
-      en: 'Move portals, bifurcator, and mirrors to reach both antennas behind the barrier.'
-    },
-    cells: [
-      { x: 0, y: 4, type: 'ship', dir: 'right' },
-      { x: 11, y: 1, type: 'antenna' },
-      { x: 11, y: 7, type: 'antenna' },
-      { x: 1, y: 4, type: 'portal_blue', targetPortalId: 'p2', movable: true },
-      { x: 7, y: 2, type: 'portal_blue', portalId: 'p2', movable: true },
-      { x: 2, y: 2, type: 'bifurcator', movable: true },
-      { x: 11, y: 0, type: 'reflector_ne', movable: true },
-      { x: 11, y: 8, type: 'reflector_nw', movable: true },
-      // Central wall barrier
-      { x: 5, y: 0 }, { x: 5, y: 2 }, { x: 5, y: 3 },
-      { x: 5, y: 4 }, { x: 5, y: 5 }, { x: 5, y: 6 }, { x: 5, y: 8 },
-      // Block antenna
-      { x: 11, y: 3 }, { x: 11, y: 4 }, { x: 11, y: 5 }, { x: 11, y: 6 },
-    ].map(c => c.type ? c : { ...c, type: 'wall' }),
-    quiz: [],
-  },
-  {
+    // Sector Gamma: Portal introduction
     name: 'Sector Gamma',
     difficulty: 'easy',
-    cols: 13,
-    rows: 9,
+    cols: 8,
+    rows: 5,
     par: 3,
-    timeLimit: 75,
+    timeLimit: 70,
     hint: {
-      es: 'Usa dos portales movibles, bifurcador y espejos para crear rutas bifurcadas.',
-      en: 'Use two movable portals, bifurcator, and mirrors to create branching paths.'
+      es: 'Portales teleportan el haz. Salta la barrera y refleja a la antena.',
+      en: 'Portals teleport the beam. Jump the barrier and reflect to the antenna.'
     },
     cells: [
-      { x: 0, y: 4, type: 'ship', dir: 'right' },
-      { x: 12, y: 1, type: 'antenna' },
-      { x: 12, y: 7, type: 'antenna' },
-      { x: 1, y: 4, type: 'portal_blue', targetPortalId: 'p3', movable: true },
-      { x: 7, y: 3, type: 'portal_blue', portalId: 'p3', movable: true },
-      { x: 2, y: 2, type: 'bifurcator', movable: true },
-      { x: 12, y: 0, type: 'reflector_ne', movable: true },
-      { x: 12, y: 8, type: 'reflector_nw', movable: true },
-      // Side barrier
-      { x: 5, y: 0 }, /* gap at y:1 opened */ { x: 5, y: 2 }, { x: 5, y: 3 },
-      { x: 5, y: 5 }, { x: 5, y: 6 }, /* gap at y:7 opened */ { x: 5, y: 8 },
-      // Block antenna
-      { x: 12, y: 2 }, { x: 12, y: 3 }, { x: 12, y: 4 }, { x: 12, y: 5 }, { x: 12, y: 6 },
+      { x: 0, y: 2, type: 'ship', dir: 'right' },
+      { x: 7, y: 1, type: 'antenna' },
+      { x: 1, y: 2, type: 'portal_blue', targetPortalId: 'p1', movable: true },
+      { x: 5, y: 2, type: 'portal_blue', portalId: 'p1', movable: true },
+      { x: 7, y: 0, type: 'reflector_nw', movable: true },
+      // Central barrier
+      { x: 3, y: 0 }, { x: 3, y: 1 }, { x: 3, y: 3 }, { x: 3, y: 4 },
+      // Side walls
+      { x: 0, y: 0 }, { x: 0, y: 1 }, { x: 0, y: 3 }, { x: 0, y: 4 },
+      { x: 7, y: 2 }, { x: 7, y: 3 }, { x: 7, y: 4 },
     ].map(c => c.type ? c : { ...c, type: 'wall' }),
     quiz: [],
   },
   {
+    // Sector Gamma+: Advanced portal chains
     name: 'Sector Gamma+',
     difficulty: 'hard',
-    cols: 13,
-    rows: 10,
+    cols: 9,
+    rows: 7,
     par: 5,
     timeLimit: 85,
     hint: {
-      es: 'Desafío final: encadena dos portales movibles, bifurcación y espejos para máxima complejidad.',
-      en: 'Final challenge: chain two movable portals, bifurcation, and mirrors with maximum complexity.'
+      es: 'Dos pares de portales crean rutas complejas. El bifurcador abre múltiples caminos.',
+      en: 'Two portal pairs create complex routes. The bifurcator opens multiple paths.'
     },
     cells: [
-      { x: 0, y: 5, type: 'ship', dir: 'right' },
-      { x: 12, y: 1, type: 'antenna' },
-      { x: 12, y: 8, type: 'antenna' },
-      { x: 1, y: 5, type: 'portal_blue', targetPortalId: 'p4', movable: true },
-      { x: 8, y: 3, type: 'portal_blue', portalId: 'p4', movable: true },
+      { x: 0, y: 3, type: 'ship', dir: 'right' },
+      { x: 8, y: 1, type: 'antenna' },
+      { x: 8, y: 5, type: 'antenna' },
       { x: 2, y: 3, type: 'bifurcator', movable: true },
-      { x: 12, y: 0, type: 'reflector_ne', movable: true },
-      { x: 12, y: 9, type: 'reflector_nw', movable: true },
-      { x: 10, y: 2, type: 'reflector_ne', movable: true },
-      // Complex maze
-      { x: 5, y: 0 }, { x: 5, y: 2 }, { x: 5, y: 3 },
-      { x: 5, y: 4 }, { x: 5, y: 5 }, { x: 5, y: 6 }, { x: 5, y: 7 }, { x: 5, y: 9 },
-      // Block antenna
-      { x: 12, y: 2 }, { x: 12, y: 3 }, { x: 12, y: 4 }, { x: 12, y: 5 },
-      { x: 12, y: 6 }, { x: 12, y: 7 },
+      // Blue portal pair
+      { x: 3, y: 3, type: 'portal_blue', targetPortalId: 'pb1', movable: true },
+      { x: 6, y: 1, type: 'portal_blue', portalId: 'pb1', movable: true },
+      // Red portal pair
+      { x: 6, y: 5, type: 'portal_red', targetPortalId: 'pr1', movable: true },
+      { x: 7, y: 3, type: 'portal_red', portalId: 'pr1', movable: true },
+      // Reflectors for final approach
+      { x: 8, y: 0, type: 'reflector_nw', movable: true },
+      { x: 8, y: 6, type: 'reflector_ne', movable: true },
+      { x: 7, y: 1, type: 'reflector_ne', movable: true },
+      // Maze walls
+      { x: 1, y: 0 }, { x: 1, y: 1 }, { x: 1, y: 2 }, { x: 1, y: 4 }, { x: 1, y: 5 }, { x: 1, y: 6 },
+      { x: 4, y: 0 }, { x: 4, y: 2 }, { x: 4, y: 4 }, { x: 4, y: 6 },
+      { x: 5, y: 4 },
+      { x: 7, y: 4 }, { x: 7, y: 5 },
+      { x: 8, y: 2 }, { x: 8, y: 3 }, { x: 8, y: 4 },
     ].map(c => c.type ? c : { ...c, type: 'wall' }),
     quiz: [
       {
-        q: '¿Cuál es la ventaja de usar portales movibles?',
-        opts: ['Multiplican el haz', 'Permiten redirigir rutas sin más espejos', 'Aumentan velocidad', 'Bloquean antenas'],
-        correct: 1,
+        q: '¿Qué hace especial el bifurcador en este nivel?',
+        opts: ['Crea dos rutas para dos antenas', 'Aumenta la velocidad', 'Cambia colores', 'Ninguna de las anteriores'],
+        correct: 0,
       },
       {
-        q: 'Movimientos mínimos en el desafío final:',
-        opts: ['1', '2', '3', '5 o más'],
-        correct: 3,
+        q: 'Los dos pares de portales permiten:',
+        opts: ['Ir más rápido', 'Saltar múltiples barreras sin espejos adicionales', 'Viajar atrás en el tiempo', 'Nada especial'],
+        correct: 1,
       },
     ],
   }
@@ -305,7 +306,7 @@ export function traceBeam(grid, cols, rows) {
     else if (type === 'reflector_ne') { beamCells.add(cellKey); queue.push({ x:nx, y:ny, dir: DEFLECT_NE[dir] }); }
     else if (type === 'reflector_nw') { beamCells.add(cellKey); queue.push({ x:nx, y:ny, dir: DEFLECT_NW[dir] }); }
     else if (type === 'bifurcator') { beamCells.add(cellKey); BIFURCATE[dir].forEach(d => queue.push({ x:nx, y:ny, dir:d })); }
-    else if (type === 'portal_blue') {
+    else if (type === 'portal_blue' || type === 'portal_red') {
       beamCells.add(cellKey);
       const otherPortalKey = findLinkedPortalKey(grid, cellKey, cell);
       if (otherPortalKey) { const [px, py] = otherPortalKey.split(',').map(Number); queue.push({ x:px, y:py, dir }); }
@@ -323,18 +324,19 @@ export const buildGrid = (level) => {
 function findLinkedPortalKey(grid, cellKey, cell) {
   const targetPortalId = cell?.targetPortalId;
   const portalId = cell?.portalId;
+  const cellType = cell?.type;
 
   if (targetPortalId) {
-    const match = Object.keys(grid).find((key) => key !== cellKey && grid[key].type === 'portal_blue' && grid[key].portalId === targetPortalId);
+    const match = Object.keys(grid).find((key) => key !== cellKey && grid[key].type === cellType && grid[key].portalId === targetPortalId);
     if (match) return match;
   }
 
   if (portalId) {
-    const match = Object.keys(grid).find((key) => key !== cellKey && grid[key].type === 'portal_blue' && grid[key].targetPortalId === portalId);
+    const match = Object.keys(grid).find((key) => key !== cellKey && grid[key].type === cellType && grid[key].targetPortalId === portalId);
     if (match) return match;
   }
 
-  const fallback = Object.keys(grid).find((key) => key !== cellKey && grid[key].type === 'portal_blue');
+  const fallback = Object.keys(grid).find((key) => key !== cellKey && (grid[key].type === 'portal_blue' || grid[key].type === 'portal_red'));
   return fallback || null;
 }
 
@@ -551,6 +553,7 @@ const LaserPuzzleGame = ({ isActive, onEndGame, isDemo, showBriefing = true, tim
     else if (type === 'reflector_nw') { bg = isSel ? '#a7f3d0' : 'rgba(20,184,166,0.1)'; border = isSel ? '2px solid #14b8a6' : '1px solid rgba(20,184,166,0.3)'; cursor = 'pointer'; content = <span style={{ color:'#0d9488', fontSize:'1.8rem', fontWeight:'900' }}>\</span>; }
     else if (type === 'bifurcator') { bg = isSel ? '#fed7aa' : 'rgba(249,115,22,0.1)'; border = isSel ? '2px solid #f97316' : '1px solid rgba(249,115,22,0.3)'; cursor = 'pointer'; content = <span style={{ color:'#ea580c', fontSize:'1.6rem', fontWeight:'900' }}>+</span>; }
     else if (type === 'portal_blue') { bg = isSel ? '#c7d2fe' : 'rgba(99,102,241,0.08)'; border = isSel ? '2px solid #6366f1' : '1px dashed rgba(99,102,241,0.5)'; cursor = 'pointer'; content = <span style={{ color:'#4f46e5', fontSize:'1.4rem', fontWeight:'900' }}>P</span>; }
+    else if (type === 'portal_red') { bg = isSel ? '#fecaca' : 'rgba(239,68,68,0.08)'; border = isSel ? '2px solid #ef4444' : '1px dashed rgba(239,68,68,0.5)'; cursor = 'pointer'; content = <span style={{ color:'#dc2626', fontSize:'1.4rem', fontWeight:'900' }}>P</span>; }
     else if (type === 'antenna') { 
       bg = isLit ? 'rgba(16,185,129,0.2)' : 'rgba(217,70,239,0.1)'; 
       border = isLit ? '2px solid #10b981' : '1px solid rgba(217,70,239,0.4)'; 
