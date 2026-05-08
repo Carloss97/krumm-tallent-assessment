@@ -425,7 +425,8 @@ const LaserPuzzleGame = ({ isActive, onEndGame, isDemo, showBriefing = true, tim
   const levelEfficiency = currentLevel ? getLaserEfficiency(moves, currentLevel.par) : 100;
 
   useEffect(() => {
-    if (isActive) {
+    // Only initialize/reset if game is active AND hasn't finished
+    if (isActive && gamePhase !== 'done') {
         hasEndedRef.current = false;
         startTracking();
         quizScore.current = 0;
@@ -444,7 +445,7 @@ const LaserPuzzleGame = ({ isActive, onEndGame, isDemo, showBriefing = true, tim
           setBriefing(isDemo && showBriefing ? getBriefing(0, language) : null);
         }, 0);
     }
-  }, [isActive, isDemo, showBriefing, startTracking, language]);
+  }, [isActive, isDemo, showBriefing, startTracking, language, gamePhase]);
   
   const handleCellClick = useCallback((x, y) => {
     if (gamePhase !== 'playing') return;
@@ -608,6 +609,15 @@ const LaserPuzzleGame = ({ isActive, onEndGame, isDemo, showBriefing = true, tim
   return (
     <div style={{ width:'100%', height:'100%', display:'flex', flexDirection:'column', alignItems:'center', justifyContent:'center', padding:isMobile ? '12px' : '20px', gap:isMobile ? '10px' : '12px', position:'relative' }}>
       <AnimatePresence mode="wait">
+        {gamePhase === 'done' && (
+          <motion.div key="game-complete" initial={{ scale: 0.8, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ opacity: 0 }} className="glass-panel" style={{ padding: '56px', maxWidth: '600px', textAlign: 'center' }}>
+            <div style={{ color: '#059669', fontSize: '0.9rem', textTransform: 'uppercase', letterSpacing: '4px', marginBottom: '20px', fontWeight: '900' }}>Game Complete</div>
+            <p style={{ color: '#1e1b4b', marginBottom: '48px', fontSize: '1.4rem', fontWeight: '800', lineHeight: 1.3 }}>
+              {language === 'es' ? 'Has completado todos los niveles. ¡Excelente trabajo!' : 'You completed all levels. Excellent work!'}
+            </p>
+            <Confetti />
+          </motion.div>
+        )}
         {(gamePhase === 'playing' || gamePhase === 'levelComplete') && level && (
           <motion.div key={`level-${levelIdx}`} initial={{ opacity:0, y:20 }} animate={{ opacity:1, y:0 }} exit={{ opacity:0 }} className="glass-panel" style={{ padding:isMobile ? '24px' : '32px', display:'flex', flexDirection:'column', alignItems:'center', gap:isMobile ? '16px' : '20px', background: 'rgba(255,255,255,0.95)', backdropFilter: 'blur(12px)', maxWidth: '100%' }}>
             <div style={{ display:'grid', gridTemplateColumns:isMobile ? 'repeat(2, minmax(0, 1fr))' : 'repeat(5, minmax(0, auto))', justifyContent:'space-between', width:'100%', fontSize:isMobile ? '0.78rem' : '0.9rem', fontWeight:'900', color:'#1e1b4b', textTransform:'uppercase', letterSpacing:isMobile ? '1px' : '2px', gap:isMobile ? '8px' : '16px' }}>

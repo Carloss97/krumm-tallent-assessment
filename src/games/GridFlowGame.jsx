@@ -635,9 +635,9 @@ const GridFlowGame = ({ isActive, onEndGame, isDemo, showBriefing = true }) => {
             <div style={{ display:'grid', gridTemplateColumns:isMobile ? 'repeat(3, minmax(0, 1fr))' : 'repeat(6, minmax(0, 1fr))', width:'100%', color:'#1e1b4b', textTransform:'uppercase', letterSpacing:isMobile ? '1px' : '3px', fontSize:isMobile ? '0.78rem' : '1rem', fontWeight:'900', gap:isMobile ? '10px' : '24px', whiteSpace:'nowrap' }}>
               <span>Round {round+1}/{effectiveMaxRounds}</span>
               <span style={{ color: levelTimeLeft<10?'#dc2626':'#059669' }}>⏱ {levelTimeLeft}s</span>
-              {lvlData.energyDrain>0 && <span style={{ color: energy<30?'#dc2626':'#1e1b4b' }}>⚡ {energy}%</span>}
-              <span style={{ color:satColor }}>★ {avgSat}%</span>
-              <span style={{ color:'#0f766e' }}>Eff: {liveEfficiency}%</span>
+              {lvlData.energyDrain>0 && <span style={{ color: energy<30?'#dc2626':'#1e1b4b' }}>⚡ {Math.round(energy)}%</span>}
+              <span style={{ color:satColor }}>★ {Math.round(avgSat)}%</span>
+              <span style={{ color:'#0f766e' }}>Eff: {Math.round(liveEfficiency)}%</span>
               <span style={{ color:'#4f46e5' }}>Pts: {score}</span>
             </div>
             
