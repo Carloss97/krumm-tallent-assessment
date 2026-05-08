@@ -111,7 +111,7 @@ export const LASER_DEMO_LEVELS = [
       { x: 10, y: 6, type: 'reflector_nw', movable: true },
       // Middle barrier
       { x: 4, y: 1 }, { x: 4, y: 2 }, { x: 4, y: 3 },
-      { x: 5, y: 0 }, { x: 5, y: 2 }, { x: 5, y: 3 },
+      { x: 5, y: 2 }, { x: 5, y: 3 },
       { x: 5, y: 4 }, { x: 5, y: 5 }, { x: 5, y: 6 },
       { x: 10, y: 2 }, { x: 10, y: 3 }, { x: 10, y: 4 }, { x: 10, y: 5 },
     ].map(c => c.type ? c : { ...c, type: 'wall' }),
@@ -193,8 +193,8 @@ export const LASER_DEMO_LEVELS = [
       { x: 12, y: 0, type: 'reflector_ne', movable: true },
       { x: 12, y: 8, type: 'reflector_nw', movable: true },
       // Side barrier
-      { x: 5, y: 0 }, { x: 5, y: 1 }, { x: 5, y: 2 }, { x: 5, y: 3 },
-      { x: 5, y: 4 }, { x: 5, y: 5 }, { x: 5, y: 6 }, { x: 5, y: 7 }, { x: 5, y: 8 },
+      { x: 5, y: 0 }, /* gap at y:1 opened */ { x: 5, y: 2 }, { x: 5, y: 3 },
+      { x: 5, y: 5 }, { x: 5, y: 6 }, /* gap at y:7 opened */ { x: 5, y: 8 },
       // Block antenna
       { x: 12, y: 2 }, { x: 12, y: 3 }, { x: 12, y: 4 }, { x: 12, y: 5 }, { x: 12, y: 6 },
     ].map(c => c.type ? c : { ...c, type: 'wall' }),
