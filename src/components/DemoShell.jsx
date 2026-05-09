@@ -27,45 +27,54 @@ import './DemoShell.css';
 
 // Adapter wrappers so DemoShell can call games with the expected onComplete() callback
 // For the demo we intentionally allow full-mode versions
-const BalloonProtoWrapper = ({ onComplete, est }) => (
-  <ProtoBalloon
-    isActive={true}
-    isDemo={true}
-    showBriefing={false}
-    timeLimit={est}
-    onEndGame={() => { setTimeout(() => onComplete && onComplete('balloon'), 50); }}
-  />
-);
-const GridProtoWrapper = ({ onComplete, est }) => (
-  <GridFlowGame
-    isActive={true}
-    isDemo={true}
-    showBriefing={false}
-    timeLimit={est}
-    onEndGame={() => { 
-      console.log('[GridFlow-WRAPPER] onEndGame fired, calling onComplete in 50ms');
-      setTimeout(() => {
-        console.log('[GridFlow-WRAPPER] Calling onComplete callback for grid');
-        onComplete && onComplete('grid');
-      }, 50); 
-    }}
-  />
-);
-const LaserProtoWrapper = ({ onComplete, est }) => (
-  <LaserPuzzleGame
-    isActive={true}
-    isDemo={true}
-    showBriefing={false}
-    timeLimit={est}
-    onEndGame={() => { 
-      console.log('[LaserPuzzle-WRAPPER] onEndGame fired, calling onComplete in 50ms');
-      setTimeout(() => {
-        console.log('[LaserPuzzle-WRAPPER] Calling onComplete callback for laser');
-        onComplete && onComplete('laser');
-      }, 50); 
-    }}
-  />
-);
+const BalloonProtoWrapper = ({ onComplete, est }) => {
+  console.log('[DEMO-TRACE] BalloonProtoWrapper render, est=', est, 'onComplete=', typeof onComplete);
+  return (
+    <ProtoBalloon
+      isActive={true}
+      isDemo={true}
+      showBriefing={false}
+      timeLimit={est}
+      onEndGame={() => { setTimeout(() => onComplete && onComplete('balloon'), 50); }}
+    />
+  );
+};
+const GridProtoWrapper = ({ onComplete, est }) => {
+  console.log('[DEMO-TRACE] GridProtoWrapper render, est=', est, 'onComplete=', typeof onComplete);
+  return (
+    <GridFlowGame
+      isActive={true}
+      isDemo={true}
+      showBriefing={false}
+      timeLimit={est}
+      onEndGame={() => { 
+        console.log('[GridFlow-WRAPPER] onEndGame fired, calling onComplete in 50ms');
+        setTimeout(() => {
+          console.log('[GridFlow-WRAPPER] Calling onComplete callback for grid');
+          onComplete && onComplete('grid');
+        }, 50); 
+      }}
+    />
+  );
+};
+const LaserProtoWrapper = ({ onComplete, est }) => {
+  console.log('[DEMO-TRACE] LaserProtoWrapper render, est=', est, 'onComplete=', typeof onComplete);
+  return (
+    <LaserPuzzleGame
+      isActive={true}
+      isDemo={true}
+      showBriefing={false}
+      timeLimit={est}
+      onEndGame={() => { 
+        console.log('[LaserPuzzle-WRAPPER] onEndGame fired, calling onComplete in 50ms');
+        setTimeout(() => {
+          console.log('[LaserPuzzle-WRAPPER] Calling onComplete callback for laser');
+          onComplete && onComplete('laser');
+        }, 50); 
+      }}
+    />
+  );
+};
 const GoNoGoProtoWrapper = ({ onComplete, est }) => <ProtoGoNoGo isActive={true} isDemo={false} timeLimit={est} onEndGame={() => onComplete('gng')} />;
 const NBackProtoWrapper = ({ onComplete, est }) => <ProtoNBack isActive={true} isDemo={false} timeLimit={est} onEndGame={() => onComplete('nback')} />;
 const MemoryProtoWrapper = ({ onComplete, est }) => <MemoryGame isActive={true} isDemo={false} timeLimit={est} onEndGame={() => onComplete('memory')} />;
