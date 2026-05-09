@@ -417,19 +417,7 @@ const DemoShell = () => {
     }
   }, [step, ACTIVITIES.length]);
 
-  // Debug wrapper to trace mounts/unmounts of activities
-  const DebugActivityWrapper = ({ ActivityComponent, id, est }) => {
-    useEffect(() => {
-      console.log(`[DEMO-TRACE] Mounting activity component: ${id}`);
-      return () => console.log(`[DEMO-TRACE] Unmounting activity component: ${id}`);
-    }, [id]);
-
-    useEffect(() => {
-      console.log(`[DEMO-TRACE] activityStarted=${activityStarted} showInstructions=${showInstructions} for ${id}`);
-    }, [activityStarted, showInstructions, id]);
-
-    return <ActivityComponent onComplete={() => onComplete(id)} est={est} />;
-  };
+  // NOTE: Removed inline debug wrapper to avoid remounts on every render.
 
   const onComplete = useCallback((id) => {
     // Prevent double-counting or race conditions
@@ -633,8 +621,10 @@ const DemoShell = () => {
 
               <div className="game-stage">
                 {activityStarted && ACTIVITIES[step] && !showInstructions && !showPermission ? (() => {
-                  const ActivityComponent = ACTIVITIES[step].component;
-                  return <DebugActivityWrapper key={ACTIVITIES[step].id} ActivityComponent={ActivityComponent} id={ACTIVITIES[step].id} est={ACTIVITIES[step].est} />;
+                  const currentActivity = ACTIVITIES[step];
+                  const ActivityComponent = currentActivity.component;
+                  const currentId = currentActivity.id;
+                  return <ActivityComponent key={currentId} onComplete={() => onComplete(currentId)} est={currentActivity.est} />;
                 })() : (
                   <div style={{ textAlign: 'center', color: '#64748b' }}>
                     {showPermission ? null : <p>{demoCopy[language]?.readyMessage || demoCopy.es.readyMessage}</p>}
