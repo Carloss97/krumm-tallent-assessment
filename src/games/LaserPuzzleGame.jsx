@@ -429,25 +429,21 @@ const LaserPuzzleGame = ({ isActive, onEndGame, isDemo, showBriefing = true, tim
   useEffect(() => {
     // Initialize only on inactive->active transition (not on every internal state update)
     if (isActive && !wasActiveRef.current) {
+      console.log('[LaserPuzzle-TRACE] Initializing LaserPuzzleGame, isActive=true, wasActiveRef=false');
       hasEndedRef.current = false;
       startTracking();
       quizScore.current = 0;
-      setProcLevels(null);
       setLevelIdx(0);
-      setGrid({});
       setMoves(0);
       setTotalMoves(0);
-      setGamePhase(isDemo && showBriefing ? 'briefing' : 'playing');
       setQuizStep(0);
-
-      if (initTimeoutRef.current) clearTimeout(initTimeoutRef.current);
-      initTimeoutRef.current = setTimeout(() => {
-        setProcLevels(LASER_DEMO_LEVELS);
-        setLevelIdx(0);
-        setGrid(buildGrid(LASER_DEMO_LEVELS[0]));
-        setBriefing(isDemo && showBriefing ? getBriefing(0, language) : null);
-        initTimeoutRef.current = null;
-      }, 0);
+      
+      // Set levels and grid immediately (no setTimeout delay)
+      setProcLevels(LASER_DEMO_LEVELS);
+      setGrid(buildGrid(LASER_DEMO_LEVELS[0]));
+      setBriefing(isDemo && showBriefing ? getBriefing(0, language) : null);
+      setGamePhase(isDemo && showBriefing ? 'briefing' : 'playing');
+      console.log('[LaserPuzzle-TRACE] Initialization complete, gamePhase=', isDemo && showBriefing ? 'briefing' : 'playing');
     }
 
     if (!isActive) {

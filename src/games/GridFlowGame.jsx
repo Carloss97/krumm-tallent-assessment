@@ -421,6 +421,7 @@ const GridFlowGame = ({ isActive, onEndGame, isDemo, showBriefing = true }) => {
 
   useEffect(() => { 
     if (isActive) { 
+      console.log('[GridFlow-TRACE] Initializing GridFlowGame, isActive=true');
       hasEndedRef.current = false;
       startTracking();
       quizScoreRef.current = 0;
@@ -428,9 +429,11 @@ const GridFlowGame = ({ isActive, onEndGame, isDemo, showBriefing = true }) => {
       setGameState(isDemo && !showBriefing ? 'playing' : 'briefing');
       setQuizStep(0);
       setScore(0);
+      console.log('[GridFlow-TRACE] Calling loadLevel(0), isDemo=', isDemo, 'showBriefing=', showBriefing);
       loadLevel(0);
+      console.log('[GridFlow-TRACE] Initialization complete');
     } 
-  }, [isActive, loadLevel, startTracking]);
+  }, [isActive, loadLevel, startTracking, isDemo, showBriefing]);
 
   useEffect(() => {
     if (!isActive || gameState !== 'playing') {
