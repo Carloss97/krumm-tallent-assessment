@@ -417,6 +417,20 @@ const DemoShell = () => {
     }
   }, [step, ACTIVITIES.length]);
 
+  // Debug wrapper to trace mounts/unmounts of activities
+  const DebugActivityWrapper = ({ ActivityComponent, id, est }) => {
+    useEffect(() => {
+      console.log(`[DEMO-TRACE] Mounting activity component: ${id}`);
+      return () => console.log(`[DEMO-TRACE] Unmounting activity component: ${id}`);
+    }, [id]);
+
+    useEffect(() => {
+      console.log(`[DEMO-TRACE] activityStarted=${activityStarted} showInstructions=${showInstructions} for ${id}`);
+    }, [activityStarted, showInstructions, id]);
+
+    return <ActivityComponent onComplete={() => onComplete(id)} est={est} />;
+  };
+
   const onComplete = useCallback((id) => {
     // Prevent double-counting or race conditions
     if (completed[id] || completingRef.current === id) {
@@ -441,7 +455,7 @@ const DemoShell = () => {
 
     setCompleted(nextCompleted);
 
-    // Use a slight delay to allow game completion animation before showing transition
+    // Short delay to allow brief completion animation, then transition quickly
     setTimeout(() => {
       if (doneCount >= ACTIVITIES.length) {
         console.log(`[DEMO-TRACE] All activities complete, showing report`);
@@ -454,7 +468,7 @@ const DemoShell = () => {
       }
       // Always clear the lock after transition
       completingRef.current = null;
-    }, 1500);
+    }, 200);
   }, [completed, step, ACTIVITIES, ACTIVITIES.length, isEn, recordTrialEvent, handleDemoComplete]);
 
   const restart = () => {
@@ -620,7 +634,7 @@ const DemoShell = () => {
               <div className="game-stage">
                 {activityStarted && ACTIVITIES[step] && !showInstructions && !showPermission ? (() => {
                   const ActivityComponent = ACTIVITIES[step].component;
-                  return <ActivityComponent key={ACTIVITIES[step].id} onComplete={() => onComplete(ACTIVITIES[step].id)} est={ACTIVITIES[step].est} />;
+                  return <DebugActivityWrapper key={ACTIVITIES[step].id} ActivityComponent={ActivityComponent} id={ACTIVITIES[step].id} est={ACTIVITIES[step].est} />;
                 })() : (
                   <div style={{ textAlign: 'center', color: '#64748b' }}>
                     {showPermission ? null : <p>{demoCopy[language]?.readyMessage || demoCopy.es.readyMessage}</p>}
