@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { GRID_LEVELS, getAdaptiveGridNextRound, getGridEfficiency } from './GridFlowGame';
+import { GRID_LEVELS, getAdaptiveGridNextRound, getGridEfficiency, getGridFeedbackToastProps } from './GridFlowGame';
 
 describe('GridFlowGame levels', () => {
   it('defines a readable adaptive six-step progression', () => {
@@ -107,6 +107,23 @@ describe('GridFlowGame levels', () => {
     expect(getGridEfficiency(0, totalPoints)).toBe(0);
     expect(getGridEfficiency(totalPoints, totalPoints)).toBe(100);
     expect(getGridEfficiency(Math.floor(totalPoints / 2), totalPoints)).toBeGreaterThan(40);
+  });
+
+
+
+  it('keeps transient pickup, delivery, and recharge feedback inside the board viewport', () => {
+    ['pickup', 'deliver', 'charge'].forEach((variant) => {
+      const { initial, animate, style } = getGridFeedbackToastProps(variant, false);
+
+      expect(style.position).toBe('absolute');
+      expect(style.zIndex).toBeGreaterThanOrEqual(30);
+      expect(style.maxWidth).toBe('calc(100% - 24px)');
+      expect(style.boxSizing).toBe('border-box');
+      expect(style.pointerEvents).toBe('none');
+      expect(String(style.top), `${variant} should declare a safe top anchor`).not.toBe('');
+      expect(Number(animate.y || 0), `${variant} should not animate upward out of the clipped board`).toBeGreaterThanOrEqual(0);
+      expect(Number(initial.y || 0), `${variant} should not start far above the clipped board`).toBeGreaterThanOrEqual(-8);
+    });
   });
 
   it('lets the final level exit to the quiz instead of reloading itself', () => {

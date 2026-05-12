@@ -100,7 +100,7 @@ Before starting, ensure you have:
 
 1. In Neon console, go to **Connection Details**
 2. Switch to **Pooled Connection** (important for serverless!)
-   - Format: `postgresql://user:password@hostname.neon.tech/dbname?sslmode=require`
+   - Format: `postgresql://[REDACTED]`
 3. Copy the **Pooled endpoint** URL
 4. Store in a secure location (will use in Render config)
 

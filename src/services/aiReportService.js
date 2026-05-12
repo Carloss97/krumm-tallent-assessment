@@ -1,15 +1,17 @@
 import { GoogleGenerativeAI } from '@google/generative-ai';
-
-// Initialize Gemini client
-const genAI = new GoogleGenerativeAI(import.meta.env.VITE_GOOGLE_API_KEY);
+import { getCurrentToken } from './backendService';
 let lastAIFailureReason = '';
 let lastAIDebugTrace = [];
 const DEFAULT_GEMINI_MODEL = 'gemini-1.5-flash-latest';
 const IS_TEST_ENV = import.meta?.env?.MODE === 'test';
+const IS_DEV_ENV = import.meta?.env?.DEV === true;
 const USE_BACKEND_GEMINI_PROXY = !IS_TEST_ENV && import.meta?.env?.VITE_USE_BACKEND_GEMINI_PROXY !== 'false';
-const ALLOW_BROWSER_GEMINI_FALLBACK = IS_TEST_ENV || import.meta?.env?.VITE_ALLOW_BROWSER_GEMINI_FALLBACK === 'true';
+const ALLOW_BROWSER_GEMINI_FALLBACK = IS_TEST_ENV || (IS_DEV_ENV && import.meta?.env?.VITE_ALLOW_BROWSER_GEMINI_FALLBACK === 'true');
 const API_BASE_URL = import.meta?.env?.VITE_API_BASE_URL || '';
-const USE_PROXY_BASE_FALLBACKS = import.meta?.env?.VITE_PROXY_BASE_FALLBACK !== 'false';
+const USE_PROXY_BASE_FALLBACKS = IS_DEV_ENV && import.meta?.env?.VITE_PROXY_BASE_FALLBACK !== 'false';
+const genAI = ALLOW_BROWSER_GEMINI_FALLBACK
+  ? new GoogleGenerativeAI(import.meta.env.VITE_GOOGLE_API_KEY || '')
+  : null;
 const GEMINI_HEALTH_CACHE_TTL_MS = 30000;
 let geminiHealthCache = {
   key: '',
@@ -68,11 +70,12 @@ async function callGeminiProxy(path, options = {}) {
 
   for (const baseUrl of proxyBases) {
     const endpoint = buildApiUrl(path, baseUrl);
-    console.log(`[callGeminiProxy] Attempting ${path} at ${endpoint}`);
+    const token = getCurrentToken();
     try {
       const response = await fetch(endpoint, {
         headers: {
           'Content-Type': 'application/json',
+          ...(token ? { Authorization: `Bearer ${token}` } : {}),
           ...(options.headers || {}),
         },
         ...options,
@@ -168,11 +171,13 @@ export async function checkGeminiHealth(modelName) {
     }
   }
 
-  if (!key) {
+  if (!ALLOW_BROWSER_GEMINI_FALLBACK || !genAI || !key) {
     return writeGeminiHealthCache(cacheKey, {
       ok: false,
       code: 'MISSING_KEY',
-      message: 'Missing VITE_GOOGLE_API_KEY in environment.',
+      message: ALLOW_BROWSER_GEMINI_FALLBACK
+        ? 'Missing VITE_GOOGLE_API_KEY in environment.'
+        : 'Browser Gemini fallback is disabled outside local development.',
       model: preferredModel,
     });
   }
@@ -418,6 +423,11 @@ export async function generateAIReport(sessionData, mode = 'recruitment', langua
       }
     }
 
+    if (!ALLOW_BROWSER_GEMINI_FALLBACK || !genAI) {
+      lastAIFailureReason = 'Browser Gemini fallback is disabled outside local development.';
+      return null;
+    }
+
     const modelCandidates = Array.from(new Set([preferredModel, 'gemini-1.5-flash']));
 
     let lastError = null;
@@ -553,6 +563,10 @@ export async function generateAIReport(sessionData, mode = 'recruitment', langua
 }
 
 async function requestJsonRepair(rawResponse, modelName) {
+  if (!genAI) {
+    return null;
+  }
+
   const repairModel = genAI.getGenerativeModel({
     model: modelName,
     generationConfig: {

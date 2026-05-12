@@ -17,7 +17,7 @@ const initializeRedis = async () => {
   const redisToken = process.env.UPSTASH_REDIS_REST_TOKEN;
   
   if (!redisUrl || !redisToken) {
-    console.log('[Middleware] Redis not configured. Using in-memory rate limiting (single instance only).');
+    logger.info({ event: 'rate_limit', backend: 'memory' }, 'Redis not configured; using in-memory rate limiting')
     redisClient = false;
     return;
   }
@@ -32,10 +32,9 @@ const initializeRedis = async () => {
     
     // Test connection
     await redisClient.ping();
-    console.log('[Middleware] Redis (Upstash) initialized successfully');
+    logger.info({ event: 'rate_limit', backend: 'redis' }, 'Redis rate limiter initialized')
   } catch (err) {
-    console.error('[Middleware] Failed to initialize Redis:', err.message);
-    console.log('[Middleware] Falling back to in-memory rate limiting');
+    logger.warn({ err: err?.message }, 'Redis rate limiter initialization failed; falling back to memory')
     redisClient = false;
   }
 };
@@ -53,7 +52,7 @@ export const requestLogger = (req, res, next) => {
       event: 'http_request',
       requestId: rid,
       method: req.method,
-      url: req.originalUrl,
+      path: req.path,
       status: res.statusCode,
       durationMs,
       ip: req.ip || req.connection?.remoteAddress || 'unknown',
@@ -71,7 +70,8 @@ export const requestLogger = (req, res, next) => {
  * - Uses Redis (Upstash) if available for distributed rate limiting
  * - Falls back to in-memory buckets for development/single-instance
  */
-export const rateLimiter = ({ windowMs = 60_000, maxRequests = 120 } = {}) => {
+export const rateLimiter = ({ name = 'global', windowMs = 60_000, maxRequests = 120 } = {}) => {
+  const scope = String(name).replace(/[^a-z0-9:_-]/gi, '_') || 'global';
   return async (req, res, next) => {
     try {
       // Initialize Redis on first request if available
@@ -82,7 +82,7 @@ export const rateLimiter = ({ windowMs = 60_000, maxRequests = 120 } = {}) => {
       const now = Date.now();
       const ip = req.ip || req.connection?.remoteAddress || 'unknown';
       const windowKey = Math.floor(now / windowMs);
-      const redisKey = `rate_limit:${ip}:${windowKey}`;
+      const redisKey = `rate_limit:${scope}:${ip}:${windowKey}`;
 
       let requestCount = 0;
 
@@ -98,7 +98,7 @@ export const rateLimiter = ({ windowMs = 60_000, maxRequests = 120 } = {}) => {
           
           requestCount = count;
         } catch (err) {
-          console.error('[Middleware] Redis error:', err.message);
+          logger.warn({ err: err?.message, scope }, 'Redis rate limiter error; allowing request')
           // Fail open - allow request if Redis fails
           return next();
         }
@@ -125,14 +125,12 @@ export const rateLimiter = ({ windowMs = 60_000, maxRequests = 120 } = {}) => {
         return res.status(429).json({
           error: 'Rate limit exceeded. Please retry shortly.',
           retryAfterMs: windowMs,
-          currentRequests: requestCount,
-          maxRequests,
         });
       }
 
       next();
     } catch (err) {
-      console.error('[Middleware] Rate limiter error:', err);
+      logger.warn({ err: err?.message, scope }, 'Rate limiter error; allowing request')
       // Fail open - allow request on unexpected errors
       next();
     }

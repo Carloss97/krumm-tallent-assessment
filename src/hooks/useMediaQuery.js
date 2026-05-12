@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useSyncExternalStore } from 'react';
 
 /**
  * Hook para detectar cambios en media queries
@@ -6,45 +6,36 @@ import { useState, useEffect } from 'react';
  * @returns {boolean} - True si la media query coincide
  */
 export const useMediaQuery = (query) => {
-  const [matches, setMatches] = useState(false);
-
-  useEffect(() => {
+  const subscribe = (onStoreChange) => {
     if (typeof window === 'undefined' || typeof window.matchMedia !== 'function') {
-      return undefined;
+      return () => {};
     }
 
     const mediaQuery = window.matchMedia(query);
-    
-    // Set initial value
-    setMatches(mediaQuery.matches);
+    const handleChange = () => onStoreChange();
 
-    // Handler para cambios
-    const handleChange = (e) => {
-      setMatches(e.matches);
-    };
-
-    // Agregar listener
     if (typeof mediaQuery.addEventListener === 'function') {
       mediaQuery.addEventListener('change', handleChange);
-    } else {
-      mediaQuery.addListener(handleChange);
+      return () => mediaQuery.removeEventListener('change', handleChange);
     }
 
-    // Cleanup
-    return () => {
-      if (typeof mediaQuery.removeEventListener === 'function') {
-        mediaQuery.removeEventListener('change', handleChange);
-      } else {
-        mediaQuery.removeListener(handleChange);
-      }
-    };
-  }, [query]);
+    mediaQuery.addListener(handleChange);
+    return () => mediaQuery.removeListener(handleChange);
+  };
 
-  return matches;
+  const getSnapshot = () => {
+    if (typeof window === 'undefined' || typeof window.matchMedia !== 'function') {
+      return false;
+    }
+
+    return window.matchMedia(query).matches;
+  };
+
+  return useSyncExternalStore(subscribe, getSnapshot, () => false);
 };
 
 /**
- * Detectar si es m�vil (<768px)
+ * Detectar si es móvil (<768px)
  */
 export const useIsMobile = () => useMediaQuery('(max-width: 767px)');
 
@@ -59,7 +50,7 @@ export const useIsTablet = () => useMediaQuery('(min-width: 768px) and (max-widt
 export const useIsDesktop = () => useMediaQuery('(min-width: 1024px)');
 
 /**
- * Detectar orientaci�n landscape
+ * Detectar orientación landscape
  */
 export const useIsLandscape = () => useMediaQuery('(orientation: landscape)');
 

@@ -1,25 +1,30 @@
 # Dependencies
-/node_modules
+node_modules/
 
-# Build artifacts
-/dist
-/coverage
+# Build and coverage artifacts
+dist/
+coverage/
 
-# Environment variables
+# Environment variables and local secrets
 .env
-.env.local
-.env.development.local
-.env.test.local
-.env.production.local
 .env.*
+!.env.example
+!.env.*.example
 
-# Log files
+# Local databases and runtime state
+server/*.db
+*.db
+*.sqlite
+*.sqlite3
+
+# Logs
+*.log
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
 pnpm-debug.log*
 
-# IDE/Editor directories
+# IDE/editor directories
 .vscode/
 .idea/
 
@@ -29,15 +34,3 @@ Thumbs.db
 
 # Gemini CLI temp files
 .gemini/tmp/
-node_modules
-node_modules
-node_modules
-node_modules
-node_modules
-node_modules
-node_modules
-node_modules
-node_modules
-node_modules
-node_modules
-node_modules

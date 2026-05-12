@@ -59,7 +59,7 @@ See the [Deployment Checklists](#deployment-checklists) section below for Render
 | Variable | Type | Required | Default | Purpose |
 |----------|------|----------|---------|---------|
 | `DB_CLIENT` | string | No | `sqlite` | Database client: `sqlite` \| `pg` |
-| `DATABASE_URL` | string | No | — | PostgreSQL connection string (format: `postgresql://user:password@host:port/dbname?sslmode=require`) |
+| `DATABASE_URL` | string | No | — | PostgreSQL connection string (format: `postgresql://[REDACTED]`) |
 
 **How it works:**
 - If `DATABASE_URL` is set → uses `pg` (Postgres) automatically
@@ -182,7 +182,7 @@ From `.env.render.example`, gather:
 2. Create account and new project
 3. Copy **Connection String** (pooled endpoint):
    ```
-   postgresql://user:password@hostname.neon.tech/dbname?sslmode=require
+   postgresql://[REDACTED]
    ```
 4. This is your `DATABASE_URL`
 

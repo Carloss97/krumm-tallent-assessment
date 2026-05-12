@@ -48,14 +48,22 @@ const parseInteger = (value, fallback) => {
 	return Number.isFinite(parsed) ? parsed : fallback;
 };
 
+const timingSafeEqualString = (left, right) => {
+	const leftBuffer = Buffer.from(String(left || ''));
+	const rightBuffer = Buffer.from(String(right || ''));
+	return leftBuffer.length === rightBuffer.length && crypto.timingSafeEqual(leftBuffer, rightBuffer);
+};
+
+if (isProd && (!process.env.JWT_SECRET_KEY || process.env.JWT_SECRET_KEY.length < 32)) {
+	throw new Error('JWT_SECRET_KEY must be configured and at least 32 characters in production.');
+}
+
 const allowedOrigins = parseCsv(
 	process.env.ALLOWED_ORIGINS,
 	isProd ? [] : ['http://localhost:5173', 'http://localhost:5174']
 );
-const allowAllOrigins = allowedOrigins.length === 0;
-
-if (isProd && allowAllOrigins) {
-	logger.warn({ event: 'cors', detail: 'ALLOWED_ORIGINS not configured; allowing all origins.' });
+if (isProd && allowedOrigins.length === 0) {
+	throw new Error('ALLOWED_ORIGINS must be configured in production.');
 }
 
 app.set('trust proxy', 1);
@@ -75,22 +83,19 @@ app.use(requestLogger);
 
 app.use(cors({
 	origin: (origin, callback) => {
-		if (!origin || allowAllOrigins) return callback(null, true);
+		if (!origin) return callback(null, true);
 		if (allowedOrigins.includes(origin)) return callback(null, true);
-		// Normalize URL and check (handle www prefix variations)
-		const normalizedOrigin = origin ? origin.replace(/^https?:\/\/(www\.)?/, '') : '';
-		const normalizedAllowed = allowedOrigins.map(o => o.replace(/^https?:\/\/(www\.)?/, ''));
-		if (normalizedAllowed.includes(normalizedOrigin)) return callback(null, true);
-		console.warn(`[CORS] Blocked origin: ${origin}, allowed: ${allowedOrigins.join(', ')}`);
-		return callback(new Error('Not allowed by CORS'));
+		logger.warn({ event: 'cors_blocked', origin }, 'cors_blocked');
+		return callback(null, false);
 	},
 	methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
 	allowedHeaders: ['Content-Type', 'Authorization'],
 	credentials: false,
 }));
 
-const globalLimiter = rateLimiter(serverConfig.rateLimit.global);
-const aiLimiter = rateLimiter(serverConfig.rateLimit.ai);
+const globalLimiter = rateLimiter({ name: 'global', ...serverConfig.rateLimit.global });
+const aiLimiter = rateLimiter({ name: 'ai', ...serverConfig.rateLimit.ai });
+const authLimiter = rateLimiter({ name: 'auth', ...serverConfig.rateLimit.auth });
 
 app.use('/api', (req, res, next) => {
 	const fullPath = `${req.baseUrl}${req.path}`;
@@ -170,14 +175,23 @@ app.post('/api/telemetry', (req, res) => {
 	res.status(204).end();
 });
 
-app.post('/api/auth/participant', async (req, res) => {
+app.post('/api/auth/participant', authLimiter, async (req, res) => {
 	const participantId = String(req.body?.participantId || '').trim();
 	const accessCode = String(req.body?.accessCode || '').trim();
+	const configuredAccessCode = process.env.PARTICIPANT_ACCESS_CODE;
 	const email = typeof req.body?.email === 'string' ? req.body.email.trim() : undefined;
 	const fullName = typeof req.body?.fullName === 'string' ? req.body.fullName.trim() : undefined;
 
 	if (!participantId || !accessCode) {
 		return res.status(400).json({ error: 'participantId and accessCode are required.' });
+	}
+
+	if (isProd && !configuredAccessCode) {
+		return res.status(503).json({ error: 'Participant authentication is not configured.' });
+	}
+
+	if (configuredAccessCode && !timingSafeEqualString(accessCode, configuredAccessCode)) {
+		return res.status(401).json({ error: 'Invalid participant credentials.' });
 	}
 
 	const authenticatedAt = new Date().toISOString();
@@ -204,7 +218,7 @@ app.post('/api/auth/participant', async (req, res) => {
 	});
 });
 
-app.post('/api/auth/recruiter', (req, res) => {
+app.post('/api/auth/recruiter', authLimiter, (req, res) => {
 	const configuredEmail = process.env.RECRUITER_EMAIL;
 	const configuredPassword = process.env.RECRUITER_PASSWORD;
 
@@ -215,7 +229,7 @@ app.post('/api/auth/recruiter', (req, res) => {
 	const email = String(req.body?.email || '').trim();
 	const password = String(req.body?.password || '').trim();
 
-	if (email !== configuredEmail || password !== configuredPassword) {
+	if (!timingSafeEqualString(email, configuredEmail) || !timingSafeEqualString(password, configuredPassword)) {
 		return res.status(401).json({ error: 'Invalid recruiter credentials.' });
 	}
 
@@ -240,8 +254,21 @@ app.post('/api/session', authenticateToken, requireParticipant, async (req, res)
 		return res.status(400).json({ error: 'Session validation failed.', detail });
 	}
 
+	if (payload.participant?.participantId !== req.user.participantId) {
+		return res.status(403).json({ error: 'Session participant does not match authenticated token.' });
+	}
+
+	const safePayload = {
+		...payload,
+		participant: {
+			...payload.participant,
+			participantId: req.user.participantId,
+			email: req.user.email || payload.participant?.email,
+		},
+	};
+
 	try {
-		const sessionId = await saveSession(payload);
+		const sessionId = await saveSession(safePayload);
 		return res.json({ sessionId });
 	} catch (error) {
 		logger.error({ err: error?.message, requestId: req.requestId }, 'save_session_failed');
@@ -326,7 +353,7 @@ app.get('/api/recruiter/analytics/v2', authenticateToken, requireRecruiter, asyn
 	}
 });
 
-app.get('/api/ai/health', aiLimiter, async (req, res) => {
+app.get('/api/ai/health', authenticateToken, aiLimiter, async (req, res) => {
 	const preferredModel = typeof req.query?.model === 'string' ? req.query.model : undefined;
 	const genAI = getGeminiClient();
 	if (!genAI) {
@@ -382,7 +409,7 @@ app.get('/api/ai/health', aiLimiter, async (req, res) => {
 	});
 });
 
-app.post('/api/ai/generate', aiLimiter, async (req, res) => {
+app.post('/api/ai/generate', authenticateToken, aiLimiter, async (req, res) => {
 	const prompt = typeof req.body?.prompt === 'string' ? req.body.prompt : '';
 	const preferredModel = typeof req.body?.preferredModel === 'string' ? req.body.preferredModel : undefined;
 	const genAI = getGeminiClient();
@@ -488,7 +515,7 @@ try {
 const port = parseInteger(process.env.PORT, 4000);
 app.listen(port, '0.0.0.0', () => {
 	if (!process.env.JWT_SECRET_KEY || process.env.JWT_SECRET_KEY.length < 32) {
-		logger.warn({ event: 'jwt', detail: 'JWT_SECRET_KEY is missing or too short for production.' });
+		logger.warn({ event: 'jwt', detail: 'JWT_SECRET_KEY is using a per-process development fallback. Configure a 32+ character secret before production.' });
 	}
 	logger.info({ event: 'startup', port }, `Server running on port ${port}`);
 });

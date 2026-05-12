@@ -167,6 +167,21 @@ describe('LaserPuzzleGame levels', () => {
   });
 
 
+
+
+  it('requires more than three authored moves in each of the first four laser levels', () => {
+    const minimumMoves = [4, 5, 5, 5];
+
+    LASER_DEMO_LEVELS.slice(0, 4).forEach((level, index) => {
+      const meaningfulMoves = level.solutionPlacements.filter(([fromKey, toKey]) => fromKey !== toKey).length;
+      const movablePieces = level.cells.filter((cell) => cell.movable).length;
+
+      expect(meaningfulMoves, `level ${index} should not solve in three moves`).toBeGreaterThanOrEqual(minimumMoves[index]);
+      expect(level.par, `level ${index} should budget meaningful reasoning time`).toBeGreaterThanOrEqual(minimumMoves[index] + 2);
+      expect(movablePieces, `level ${index} should include decoys beyond the intended chain`).toBeGreaterThanOrEqual(minimumMoves[index] + 2);
+    });
+  });
+
   it('requires substantially more than three moves in the late laser levels', () => {
     const lateLevels = LASER_DEMO_LEVELS.slice(-2);
 

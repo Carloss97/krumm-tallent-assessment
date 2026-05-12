@@ -50,7 +50,7 @@
 
 **Format (don't copy this, use the one from Neon):**
 ```
-postgresql://user:password@hostname.neon.tech/dbname?sslmode=require
+postgresql://[REDACTED]
 ```
 
 ## Step 1.3: Verify Connection (Optional)

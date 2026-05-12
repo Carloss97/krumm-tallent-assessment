@@ -4,10 +4,26 @@
  */
 
 
+import crypto from 'node:crypto';
 import jwt from 'jsonwebtoken';
 
-const SECRET_KEY = process.env.JWT_SECRET_KEY || 'dev-secret-key-change-in-production';
-const TOKEN_EXPIRATION = '24h'; // Short-lived tokens for sensitive data
+const MIN_SECRET_LENGTH = 32;
+const DEV_SECRET_KEY = crypto.randomBytes(32).toString('hex');
+const TOKEN_EXPIRATION = process.env.JWT_PARTICIPANT_EXPIRES_IN || '15m';
+const RECRUITER_TOKEN_EXPIRATION = process.env.JWT_RECRUITER_EXPIRES_IN || '8h';
+
+export const getJwtSecretKey = () => {
+  const configuredSecret = process.env.JWT_SECRET_KEY;
+  if (configuredSecret && configuredSecret.length >= MIN_SECRET_LENGTH) {
+    return configuredSecret;
+  }
+
+  if (process.env.NODE_ENV === 'production') {
+    throw new Error('JWT_SECRET_KEY must be configured and at least 32 characters in production.');
+  }
+
+  return DEV_SECRET_KEY;
+};
 
 /**
  * Generate JWT token for authenticated participant
@@ -20,7 +36,7 @@ export const generateParticipantToken = (participantId, email) => {
     iat: Math.floor(Date.now() / 1000)
   };
 
-  const token = jwt.sign(payload, SECRET_KEY, {
+  const token = jwt.sign(payload, getJwtSecretKey(), {
     expiresIn: TOKEN_EXPIRATION,
     algorithm: 'HS256'
   });
@@ -43,14 +59,14 @@ export const generateRecruiterToken = (recruiterId, company) => {
     iat: Math.floor(Date.now() / 1000)
   };
 
-  const token = jwt.sign(payload, SECRET_KEY, {
-    expiresIn: '7d',
+  const token = jwt.sign(payload, getJwtSecretKey(), {
+    expiresIn: RECRUITER_TOKEN_EXPIRATION,
     algorithm: 'HS256'
   });
 
   return {
     token,
-    expiresIn: '7d',
+    expiresIn: RECRUITER_TOKEN_EXPIRATION,
     recruiterId
   };
 };
@@ -60,7 +76,7 @@ export const generateRecruiterToken = (recruiterId, company) => {
  */
 export const verifyToken = (token) => {
   try {
-    const decoded = jwt.verify(token, SECRET_KEY, {
+    const decoded = jwt.verify(token, getJwtSecretKey(), {
       algorithms: ['HS256']
     });
     return {
@@ -120,6 +136,7 @@ export default {
   generateParticipantToken,
   generateRecruiterToken,
   verifyToken,
+  getJwtSecretKey,
   authenticateToken,
   requireParticipant,
   requireRecruiter

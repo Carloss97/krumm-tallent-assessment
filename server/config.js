@@ -28,6 +28,10 @@ export const serverConfig = {
       windowMs: parsePositiveInt(process.env.RATE_LIMIT_AI_WINDOW_MS, 60_000),
       maxRequests: parsePositiveInt(process.env.RATE_LIMIT_AI_MAX_REQUESTS, 20),
     },
+    auth: {
+      windowMs: parsePositiveInt(process.env.RATE_LIMIT_AUTH_WINDOW_MS, 15 * 60_000),
+      maxRequests: parsePositiveInt(process.env.RATE_LIMIT_AUTH_MAX_REQUESTS, 8),
+    },
     bypassPaths: parseCsv(process.env.RATE_LIMIT_BYPASS_PATHS, ['/health', '/api/feature-flags']),
   },
 };

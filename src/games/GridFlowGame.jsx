@@ -213,6 +213,80 @@ export const getGridEfficiency = (score, totalPossiblePoints) => {
   return Math.min(100, Math.round((score / Math.max(1, totalPossiblePoints)) * 100));
 };
 
+export const getGridFeedbackToastProps = (variant, isMobile = false) => {
+  const baseStyle = {
+    position: 'absolute',
+    left: '50%',
+    zIndex: 50,
+    maxWidth: 'calc(100% - 24px)',
+    boxSizing: 'border-box',
+    pointerEvents: 'none',
+    textAlign: 'center',
+    whiteSpace: 'nowrap',
+    overflow: 'hidden',
+    textOverflow: 'ellipsis',
+    boxShadow: '0 18px 45px -16px rgba(15,23,42,0.55)',
+  };
+
+  const compactPad = isMobile ? '9px 16px' : '12px 28px';
+
+  if (variant === 'deliver') {
+    return {
+      initial: { scale: 0.92, opacity: 0, y: 0 },
+      animate: { scale: 1.08, opacity: 1, y: 0 },
+      exit: { opacity: 0 },
+      style: {
+        ...baseStyle,
+        top: '50%',
+        transform: 'translate(-50%, -50%)',
+        background: 'linear-gradient(135deg, #10b981, #059669)',
+        padding: isMobile ? '14px 24px' : '20px 42px',
+        borderRadius: 20,
+        color: '#fff',
+        fontWeight: 950,
+        fontSize: isMobile ? '1.05rem' : '1.35rem',
+      },
+    };
+  }
+
+  if (variant === 'charge') {
+    return {
+      initial: { scale: 0.95, opacity: 0, y: 0 },
+      animate: { scale: 1, opacity: 1, y: 0 },
+      exit: { opacity: 0 },
+      style: {
+        ...baseStyle,
+        top: isMobile ? '10px' : '14px',
+        transform: 'translateX(-50%)',
+        background: '#fbbf24',
+        padding: compactPad,
+        borderRadius: 16,
+        color: '#111827',
+        fontWeight: 950,
+        fontSize: isMobile ? '0.95rem' : '1.05rem',
+      },
+    };
+  }
+
+  return {
+    initial: { y: -6, opacity: 0 },
+    animate: { y: 0, opacity: 1 },
+    exit: { opacity: 0 },
+    style: {
+      ...baseStyle,
+      top: isMobile ? '10px' : '14px',
+      transform: 'translateX(-50%)',
+      background: '#1e293b',
+      padding: compactPad,
+      borderRadius: 32,
+      color: '#fff',
+      fontWeight: 900,
+      fontSize: isMobile ? '0.95rem' : '1.05rem',
+    },
+  };
+};
+
+
 const QUIZ = [
   { 
     q: '¿Qué sucede con la satisfacción del paquete cuando no se entrega rápidamente?', 
@@ -790,6 +864,9 @@ const GridFlowGame = ({ isActive, onEndGame, isDemo, showBriefing = true }) => {
   const boardPixelWidth = gridPixelWidth + (paddingSize * 2);
   const liveEfficiency = getGridEfficiency(score, totalPossiblePoints);
   const currentQuestion = quizQuestions[quizStep];
+  const pickupToastProps = getGridFeedbackToastProps('pickup', isMobile);
+  const deliverToastProps = getGridFeedbackToastProps('deliver', isMobile);
+  const chargeToastProps = getGridFeedbackToastProps('charge', isMobile);
 
   return (
       <div style={{ width:'100%', height:'100%', display:'flex', flexDirection:'column', alignItems:'center', justifyContent:'center', padding:isMobile ? '12px' : '20px', gap:isMobile ? '12px' : '20px', position:'relative' }}>
@@ -807,18 +884,18 @@ const GridFlowGame = ({ isActive, onEndGame, isDemo, showBriefing = true }) => {
             
             <div style={{ position:'relative', padding:`${paddingSize}px`, border:'2px solid rgba(99,102,241,0.2)', borderRadius:'20px', background:'#f8fafc', boxShadow: 'inset 0 4px 12px rgba(0,0,0,0.1)', width: `${boardPixelWidth}px`, maxWidth: '100%', overflow: 'hidden', boxSizing: 'border-box' }}>
               {showPickupAnim && (
-                <motion.div initial={{ y:10, opacity:0 }} animate={{ y:-50, opacity:1 }} exit={{ opacity:0 }} style={{ position: 'absolute', left: '50%', transform: 'translateX(-50%)', zIndex: 30, background: '#1e293b', padding: '12px 32px', borderRadius: 32, color: '#fff', fontWeight: 900, fontSize: '1.1rem' }}>
+                <motion.div {...pickupToastProps}>
                   {language === 'es' ? '+ RECOGIDO' : '+ COLLECTED'}
                 </motion.div>
               )}
               {showDeliverAnim && (
-                <motion.div initial={{ scale:0.8, opacity:0 }} animate={{ scale:1.3, opacity:1 }} exit={{ opacity:0 }} style={{ position: 'absolute', left: '50%', top: '40%', transform: 'translate(-50%, -50%)', zIndex: 30, background: 'linear-gradient(135deg, #10b981, #059669)', padding: '24px 48px', borderRadius: 20, color: '#fff', fontWeight: 950, fontSize: '1.5rem', boxShadow: '0 30px 60px -10px rgba(0,0,0,0.4)' }}>
+                <motion.div {...deliverToastProps}>
                   {language === 'es' ? 'ENTREGADO' : 'DELIVERED'}
                 </motion.div>
               )}
               {showChargeAnim && (
-                <motion.div initial={{ scale:0.5, opacity:0 }} animate={{ scale:1, opacity:1 }} exit={{ opacity:0 }} style={{ position: 'absolute', right: '30px', top: '30px', zIndex: 30, background: '#fbbf24', padding: '10px 20px', borderRadius: 16, color: '#000', fontWeight: 950, fontSize: '1.1rem' }}>
-                  ⚡ RECARGA
+                <motion.div {...chargeToastProps}>
+                  {language === 'es' ? '⚡ RECARGA' : '⚡ RECHARGE'}
                 </motion.div>
               )}
               {showDeliverAnim && (<div style={{ position: 'absolute', inset: 0, pointerEvents: 'none', zIndex: 40 }}><Confetti count={30} spread={100} duration={1.5} /></div>)}

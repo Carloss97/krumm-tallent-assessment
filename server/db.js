@@ -20,7 +20,6 @@ try {
   // If native bindings fail (better-sqlite3) or other import errors, fall back to in-memory adapter
   // This avoids crashing the dev server for common local issues (missing native build, incompatible Node ABI)
   // Log a warning for visibility
-  // eslint-disable-next-line no-console
   console.warn('DB adapter import failed, falling back to in-memory adapter:', err?.message || err);
   implementation = await import('./db.memory.js');
 }

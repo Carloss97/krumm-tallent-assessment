@@ -95,7 +95,7 @@ Uses SQLite, in-memory rate limiting, local Gemini API key
 
 **Render Environment Variables:**
 ```
-DATABASE_URL=postgresql://...  (from Neon)
+DATABASE_URL=postgresql://[REDACTED]  (from Neon)
 GEMINI_API_KEY=sk-...          (from Google)
 JWT_SECRET_KEY=xxx             (32+ char random string)
 UPSTASH_REDIS_REST_URL=https://...
@@ -136,14 +136,14 @@ See **ENV_GUIDE.md** for complete reference.
 npm run dev
 
 # To test with Postgres locally:
-export DATABASE_URL="postgresql://..."
+export DATABASE_URL="postgresql://[REDACTED]"
 npm run dev:server
 ```
 
 ### On Render (Set in Environment)
 ```
 DB_CLIENT=pg
-DATABASE_URL=postgresql://...  (from Neon)
+DATABASE_URL=postgresql://[REDACTED]  (from Neon)
 ```
 
 The adapter (`server/db.js`) automatically selects the right implementation.

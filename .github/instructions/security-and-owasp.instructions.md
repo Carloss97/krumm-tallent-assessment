@@ -438,10 +438,10 @@ const API_KEY = process.env.API_KEY;
 
 ```bash
 # BAD
-NEXT_PUBLIC_DATABASE_URL=postgresql://...
+NEXT_PUBLIC_DATABASE_URL=postgresql://[REDACTED]
 
 # GOOD
-DATABASE_URL=postgresql://...
+DATABASE_URL=postgresql://[REDACTED]
 NEXT_PUBLIC_API_URL=https://api.example.com
 ```
 

@@ -299,7 +299,7 @@ DATABASE_URL=file:./app.db
 NODE_ENV=staging
 PORT=4000
 LOG_LEVEL=info
-DATABASE_URL=postgresql://...
+DATABASE_URL=postgresql://[REDACTED]
 ```
 
 ### Production
@@ -307,7 +307,7 @@ DATABASE_URL=postgresql://...
 NODE_ENV=production
 PORT=4000
 LOG_LEVEL=warn
-DATABASE_URL=postgresql://...
+DATABASE_URL=postgresql://[REDACTED]
 JWT_PUBLIC_KEY=...
 ```
 

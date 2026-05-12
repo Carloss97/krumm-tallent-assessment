@@ -47,7 +47,6 @@
     "react-dom": "^19.2.4",
     "react-router-dom": "^7.13.1",
     "recharts": "^3.8.0",
-    "onnxruntime-web": "^1.14.0",
     "uuid": "^14.0.0"
   },
   "devDependencies": {
@@ -65,5 +64,8 @@
     "onnx-proto": "^8.0.1",
     "vite": "^8.0.0",
     "vitest": "^4.1.0"
+  },
+  "overrides": {
+    "protobufjs": "^7.5.6"
   }
 }

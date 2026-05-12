@@ -23,7 +23,7 @@ Usuario
        - start: npm start
        - health: /health
        - DB_CLIENT=pg
-       - DATABASE_URL=postgresql://... [REDACTED]
+       - DATABASE_URL=postgresql://[REDACTED] [REDACTED]
   -> Azure Database for PostgreSQL Flexible Server
   -> Azure Cache for Redis opcional
 ```
