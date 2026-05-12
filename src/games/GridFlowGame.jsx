@@ -184,7 +184,6 @@ export const GRID_LEVELS = [
 export const getAdaptiveGridNextRound = (currentRound, score, maxPossibleScore, totalLevels) => {
   const efficiency = (score / Math.max(1, maxPossibleScore)) * 100;
   
-  console.log(`[GridFlow-ADAPTIVE] Round ${currentRound}: score=${score}/${maxPossibleScore}, efficiency=${efficiency.toFixed(1)}%`);
   
   // Determine next round based on performance
   // efficiency > 80%: Jump to hard variant
@@ -197,13 +196,7 @@ export const getAdaptiveGridNextRound = (currentRound, score, maxPossibleScore, 
     // Check if current round has a hard variant (hard variant index = easy index + 1)
     if ((currentRound * 2 + 1) < totalLevels) {
       nextRound = currentRound * 2 + 1; // Jump to hard variant
-      console.log(`[GridFlow-ADAPTIVE] ✓ High efficiency (${efficiency.toFixed(1)}%) - advancing to hard variant (round ${nextRound})`);
     }
-  } else if (efficiency < 50 && currentRound < 2) {
-    // Low efficiency - stay at current round (implicit repeat)
-    console.log(`[GridFlow-ADAPTIVE] ⚠ Low efficiency (${efficiency.toFixed(1)}%) - consider easier approach`);
-  } else {
-    console.log(`[GridFlow-ADAPTIVE] ~ Standard progression: ${efficiency.toFixed(1)}% - moving to next round`);
   }
   
   return Math.min(nextRound, totalLevels);
@@ -488,10 +481,8 @@ const GridFlowGame = ({ isActive, onEndGame, isDemo, showBriefing = true }) => {
 
   const finishGame = useCallback(() => {
     if (hasEndedRef.current) {
-      console.log('[GridFlow-TRACE] finishGame called but hasEndedRef.current already true, skipping');
       return;
     }
-    console.log('[GridFlow-TRACE] finishGame executing - setting state to done and calling onEndGame');
     hasEndedRef.current = true;
     setGameState('done');
     
@@ -503,7 +494,6 @@ const GridFlowGame = ({ isActive, onEndGame, isDemo, showBriefing = true }) => {
       efficiency,
       totalMoves: stateRef.current.totalMoves
     });
-    console.log('[GridFlow-TRACE] Calling onEndGame callback with score:', stateRef.current.score);
     onEndGame(stateRef.current.score, quizScoreRef.current);
   }, [onEndGame, stopTracking]);
 
@@ -551,7 +541,6 @@ const GridFlowGame = ({ isActive, onEndGame, isDemo, showBriefing = true }) => {
 
   useEffect(() => { 
     if (isActive) { 
-      console.log('[GridFlow-TRACE] Initializing GridFlowGame, isActive=true');
       hasEndedRef.current = false;
       startTracking();
       quizScoreRef.current = 0;
@@ -559,9 +548,7 @@ const GridFlowGame = ({ isActive, onEndGame, isDemo, showBriefing = true }) => {
       setGameState(isDemo && !showBriefing ? 'playing' : 'briefing');
       setQuizStep(0);
       setScore(0);
-      console.log('[GridFlow-TRACE] Calling loadLevel(0), isDemo=', isDemo, 'showBriefing=', showBriefing);
       loadLevel(0);
-      console.log('[GridFlow-TRACE] Initialization complete');
     } 
   }, [isActive, loadLevel, startTracking, isDemo, showBriefing]);
 
@@ -772,18 +759,14 @@ const GridFlowGame = ({ isActive, onEndGame, isDemo, showBriefing = true }) => {
 
   const handleQuizAnswer = (idx) => {
     if (hasEndedRef.current) {
-      console.log('[GridFlow-TRACE] handleQuizAnswer called but game already ended');
       return;
     }
     const currentQuestion = quizQuestions[quizStep];
     const isCorrect = idx===currentQuestion.correct;
-    console.log(`[GridFlow-TRACE] Quiz answer submitted. Question ${quizStep+1}/${quizQuestions.length}, Answer correct: ${isCorrect}`);
     if (isCorrect) quizScoreRef.current+=1; else recordError();
     if (quizStep+1<quizQuestions.length) {
-      console.log(`[GridFlow-TRACE] Moving to next quiz question ${quizStep+2}/${quizQuestions.length}`);
       setQuizStep(p=>p+1);
     } else {
-      console.log('[GridFlow-TRACE] All quiz questions answered, calling finishGame()');
       finishGame();
     }
   };

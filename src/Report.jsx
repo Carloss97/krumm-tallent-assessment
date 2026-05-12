@@ -71,32 +71,22 @@ const Report = ({ isDummy = false, useDummyData = false, demoSummary = null }) =
     if (demoSummary && demoSummary.activities && demoSummary.activities.length > 0) {
       // Reconstruct session data from demo activities
       const reconstructed = {};
-      console.log('[Report] ===== RECONSTRUCTING FROM DEMO =====');
-      console.log(`[Report] demoSummary.activities length: ${demoSummary.activities.length}`);
-      demoSummary.activities.forEach((act, idx) => {
+      demoSummary.activities.forEach((act) => {
         const telKey = act.telemetryId || act.id;
         const data = act.analytics || act;
-        console.log(`[Report]   [${idx}] ${act.id} (telKey: ${telKey}): has analytics=${!!act.analytics}`);
-        if (act.analytics) {
-          console.log(`        confidence=${act.analytics.confidence}, coverage=${act.analytics.gameCoverage}`);
-        }
         if (telKey && (data.score !== undefined || data.duration !== undefined || data.confidence !== undefined || Object.keys(data).length > 2)) {
           reconstructed[telKey] = data;
         }
       });
-      console.log('[Report] Reconstructed keys:', Object.keys(reconstructed));
       if (Object.keys(reconstructed).length > 0) {
-        console.log('[Report] ✓ Using reconstructed demo data');
         return reconstructed;
       }
     }
-    console.log('[Report] No valid demoSummary, using sessionData from context:', Object.keys(sessionData || {}));
     return sessionData;
   }, [demoSummary, sessionData]);
 
   // Check if we have sufficient data or should use dummy data
   const hasRealData = hasMinimumAssessmentData(effectiveSessionData);
-  console.log('[Report] hasRealData:', hasRealData, 'effectiveSessionData keys:', Object.keys(effectiveSessionData || {}));
   // Support demo-specific dummy subsets via ?demoCount=5 to show only N dummy games
   const demoCountParam = searchParams.get('demoCount');
   const demoCount = demoCountParam ? Number(demoCountParam) : null;
@@ -105,11 +95,9 @@ const Report = ({ isDummy = false, useDummyData = false, demoSummary = null }) =
   const reportData = useMemo(() => {
     // Prefer real data if available, only use dummy as fallback
     if (hasRealData) {
-      console.log('[Report] Using real data from assessment');
       return effectiveSessionData;
     }
     if (shouldShowDummyData) {
-      console.log('[Report] Using dummy data (demo mode enabled)');
       const base = generateDummyReportData();
       if (demoCount && typeof base === 'object' && Object.keys(base).length > 0) {
         const entries = Object.keys(base).filter((k) => k !== 'futureModules');
@@ -121,7 +109,6 @@ const Report = ({ isDummy = false, useDummyData = false, demoSummary = null }) =
       }
       return base;
     }
-    console.log('[Report] Using fallback heuristic (no real or dummy data)');
     return effectiveSessionData;
   }, [hasRealData, shouldShowDummyData, effectiveSessionData, demoCount]);
 
@@ -339,7 +326,6 @@ const Report = ({ isDummy = false, useDummyData = false, demoSummary = null }) =
 
             const token = getCurrentToken();
             if (!token || !participantProfile?.participantId) {
-              console.info('[Report] Skipping backend session save because no authenticated participant token is available.');
               return;
             }
 

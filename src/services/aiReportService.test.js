@@ -1,5 +1,5 @@
 import { vi } from 'vitest';
-import { generateAIReport, generateHeuristicReport } from './aiReportService';
+import { generateAIReport, generateHeuristicReport, normalizeProxyGeminiHealth } from './aiReportService';
 
 // Mock the Google Generative AI to avoid real API calls
 vi.mock('@google/generative-ai', () => {
@@ -83,6 +83,23 @@ describe('AI Report Service', () => {
       expect(result).toHaveProperty('strengths');
       expect(result).toHaveProperty('recommendation');
       expect(result.source).toBe('gemini');
+    });
+
+    it('should preserve successful backend proxy health as ready', () => {
+      const result = normalizeProxyGeminiHealth({
+        ok: true,
+        code: 'OK',
+        message: 'Proxy ready',
+        model: 'gemini-test',
+      }, 'fallback-model');
+
+      expect(result).toMatchObject({
+        ok: true,
+        code: 'OK',
+        message: 'Proxy ready',
+        model: 'gemini-test',
+        status: 200,
+      });
     });
   });
 

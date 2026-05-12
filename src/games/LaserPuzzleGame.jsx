@@ -443,17 +443,14 @@ const LaserPuzzleGame = ({ isActive, onEndGame, isDemo, showBriefing = true, tim
 
   const finishGame = useCallback((tm) => {
     if(hasEndedRef.current) {
-      console.log('[LaserPuzzle-TRACE] finishGame called but hasEndedRef.current already true, skipping');
       return;
     }
-    console.log('[LaserPuzzle-TRACE] finishGame executing - setting phase to done and calling onEndGame');
     hasEndedRef.current = true;
     const parTotal = procLevels ? procLevels.reduce((s, l) => s + l.par, 0) : 6;
     const efficiency = Math.min(100, Math.round((parTotal / Math.max(1, tm)) * 100));
     setGamePhase('done');
     try { playSuccessSound(); } catch (error) { void error; }
     stopTracking('game7', efficiency, quizScore.current, { efficiency, quizScore: quizScore.current, totalMoves: tm });
-    console.log('[LaserPuzzle-TRACE] Calling onEndGame callback with efficiency:', efficiency);
     onEndGame(efficiency, quizScore.current);
   }, [procLevels, onEndGame, stopTracking]);
 
@@ -466,7 +463,6 @@ const LaserPuzzleGame = ({ isActive, onEndGame, isDemo, showBriefing = true, tim
     const currentLevelData = procLevels[levelIdx];
     const efficiency = currentLevelData ? getLaserEfficiency(moves, currentLevelData.par) : 100;
     
-    console.log(`[LaserPuzzle-ADAPTIVE] Level ${levelIdx} (${currentLevelData?.name}) completed with efficiency ${efficiency}%`);
     
     // Use adaptive branching if level completed (high efficiency) or fallback to standard progression
     let nextLevelIdx = levelIdx + 1;
@@ -475,11 +471,9 @@ const LaserPuzzleGame = ({ isActive, onEndGame, isDemo, showBriefing = true, tim
       const hardVariantIdx = procLevels.findIndex((lvl, idx) => idx > levelIdx && lvl.difficulty === 'hard');
       if (hardVariantIdx >= 0 && hardVariantIdx < procLevels.length) {
         nextLevelIdx = hardVariantIdx;
-        console.log(`[LaserPuzzle-ADAPTIVE] ✓ High efficiency (${efficiency}%) - advancing to hard variant at index ${hardVariantIdx}`);
       }
     } else if (efficiency < 50 && levelIdx > 0) {
       // Low efficiency - might want to repeat, but for demo we'll progress anyway with a note
-      console.log(`[LaserPuzzle-ADAPTIVE] ⚠ Low efficiency (${efficiency}%) - consider repeating, but progressing for demo`);
     }
     
     // Progress to next level or finish
@@ -509,7 +503,6 @@ const LaserPuzzleGame = ({ isActive, onEndGame, isDemo, showBriefing = true, tim
   useEffect(() => {
     // Initialize only on inactive->active transition (not on every internal state update)
     if (isActive && !wasActiveRef.current) {
-      console.log('[LaserPuzzle-TRACE] Initializing LaserPuzzleGame, isActive=true, wasActiveRef=false');
       hasEndedRef.current = false;
       startTracking();
       quizScore.current = 0;
@@ -523,7 +516,6 @@ const LaserPuzzleGame = ({ isActive, onEndGame, isDemo, showBriefing = true, tim
       setGrid(buildGrid(LASER_DEMO_LEVELS[0]));
       setBriefing(isDemo && showBriefing ? getLaserDemoBriefing(0, language) : null);
       setGamePhase(isDemo && showBriefing ? 'briefing' : 'playing');
-      console.log('[LaserPuzzle-TRACE] Initialization complete, gamePhase=', isDemo && showBriefing ? 'briefing' : 'playing');
     }
 
     if (!isActive) {
@@ -577,7 +569,6 @@ const LaserPuzzleGame = ({ isActive, onEndGame, isDemo, showBriefing = true, tim
 
   const handleQuizAnswer = (idx) => {
     if (hasEndedRef.current) {
-      console.log('[LaserPuzzle-TRACE] handleQuizAnswer called but game already ended');
       return;
     }
     const level = procLevels?.[levelIdx];
@@ -588,14 +579,11 @@ const LaserPuzzleGame = ({ isActive, onEndGame, isDemo, showBriefing = true, tim
       return;
     }
     const isCorrect = idx === q.correct;
-    console.log(`[LaserPuzzle-TRACE] Quiz answer submitted. Question ${quizStep+1}/${quizItems.length}, Answer correct: ${isCorrect}`);
     if (isCorrect) quizScore.current += 1;
     else recordError();
     if (quizStep + 1 < quizItems.length) {
-      console.log(`[LaserPuzzle-TRACE] Moving to next quiz question ${quizStep+2}/${quizItems.length}`);
       setQuizStep(s => s + 1);
     } else {
-      console.log('[LaserPuzzle-TRACE] All quiz questions answered, calling finishGame()');
       finishGame(totalMoves);
     }
   };

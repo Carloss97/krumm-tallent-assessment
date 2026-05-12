@@ -99,7 +99,6 @@ const createTables = async () => {
       ON session_metrics(session_id)
     `);
 
-    console.log('[DB] PostgreSQL schema initialized successfully');
   } catch (err) {
     console.error('[DB] Error initializing PostgreSQL schema:', err.message);
     throw err;

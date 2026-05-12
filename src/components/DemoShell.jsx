@@ -23,7 +23,6 @@ import './DemoShell.css';
 // Adapter wrappers so DemoShell can call games with the expected onComplete() callback
 // For the demo we intentionally allow full-mode versions
 const BalloonProtoWrapper = ({ onComplete, est }) => {
-  console.log('[DEMO-TRACE] BalloonProtoWrapper render, est=', est, 'onComplete=', typeof onComplete);
   return (
     <ProtoBalloon
       isActive={true}
@@ -35,7 +34,6 @@ const BalloonProtoWrapper = ({ onComplete, est }) => {
   );
 };
 const GridProtoWrapper = ({ onComplete, est }) => {
-  console.log('[DEMO-TRACE] GridProtoWrapper render, est=', est, 'onComplete=', typeof onComplete);
   return (
     <GridFlowGame
       isActive={true}
@@ -43,9 +41,7 @@ const GridProtoWrapper = ({ onComplete, est }) => {
       showBriefing={true}
       timeLimit={est}
       onEndGame={() => { 
-        console.log('[GridFlow-WRAPPER] onEndGame fired, calling onComplete in 50ms');
         setTimeout(() => {
-          console.log('[GridFlow-WRAPPER] Calling onComplete callback for grid');
           onComplete && onComplete('grid');
         }, 50); 
       }}
@@ -53,7 +49,6 @@ const GridProtoWrapper = ({ onComplete, est }) => {
   );
 };
 const LaserProtoWrapper = ({ onComplete, est }) => {
-  console.log('[DEMO-TRACE] LaserProtoWrapper render, est=', est, 'onComplete=', typeof onComplete);
   return (
     <LaserPuzzleGame
       isActive={true}
@@ -61,9 +56,7 @@ const LaserProtoWrapper = ({ onComplete, est }) => {
       showBriefing={true}
       timeLimit={est}
       onEndGame={() => { 
-        console.log('[LaserPuzzle-WRAPPER] onEndGame fired, calling onComplete in 50ms');
         setTimeout(() => {
-          console.log('[LaserPuzzle-WRAPPER] Calling onComplete callback for laser');
           onComplete && onComplete('laser');
         }, 50); 
       }}
@@ -276,11 +269,9 @@ const DemoShell = () => {
 
   const handleDemoComplete = useCallback((completedObj, reason = 'completed') => {
     if (completionLockRef.current) {
-      console.log('[DEMO-TRACE] handleDemoComplete re-entry guard: already processing, skipping');
       return;
     }
     completionLockRef.current = true;
-    console.log('[DEMO-TRACE] handleDemoComplete executing with reason:', reason);
     
     const completedIds = Object.keys(completedObj || {});
     const timeUsedSec = Math.round((Date.now() - startedAtRef.current) / 1000);
@@ -304,10 +295,6 @@ const DemoShell = () => {
       analytics: null,
     }));
 
-    console.log('[DEMO-TRACE] ===== DEMO COMPLETE SUMMARY ====');
-    console.log(`[DEMO-TRACE] Total activities: ${ACTIVITIES.length}, Completed: ${completedIds.length}`);
-    console.log('[DEMO-TRACE] Real report analytics disabled for public demo');
-    console.log('[DEMO-TRACE] Calling setDemoSummary with summary object');
     setDemoSummary({
       reason,
       timeUsedSec,
@@ -387,17 +374,14 @@ const DemoShell = () => {
   // Only the first activity uses the instructions gate; later rounds auto-start.
   useEffect(() => {
     completingRef.current = null; // Unlock for next activity
-    console.log(`[DEMO-TRACE] step useEffect fired: step=${step}, ACTIVITIES.length=${ACTIVITIES.length}`);
 
     if (step === 0) {
-      console.log(`[DEMO-TRACE] Showing instructions for first activity`);
       setShowInstructions(true);
       setActivityStarted(false);
       return;
     }
 
     if (step < ACTIVITIES.length) {
-      console.log(`[DEMO-TRACE] Auto-starting activity at step ${step}`);
       setShowInstructions(false);
       setActivityStarted(true);
     }
@@ -408,12 +392,10 @@ const DemoShell = () => {
   const onComplete = useCallback((id) => {
     // Prevent double-counting or race conditions
     if (completed[id] || completingRef.current === id) {
-      console.log(`[DEMO-TRACE] onComplete debounced for ${id} (already completed or processing)`);
       return;
     }
     completingRef.current = id;
 
-    console.log(`[DEMO-TRACE] onComplete called for: ${id}, current step: ${step}, activities remaining: ${ACTIVITIES.length - (Object.keys(completed).length + 1)}`);
 
     try {
       recordTrialEvent && recordTrialEvent({ event: 'demo_activity_complete', payload: { id, step } });
@@ -425,18 +407,14 @@ const DemoShell = () => {
 
     const nextCompleted = { ...completed, [id]: true };
     const doneCount = Object.keys(nextCompleted).length;
-    console.log(`[DEMO-TRACE] Game completed count: ${doneCount}/${ACTIVITIES.length}`);
 
     setCompleted(nextCompleted);
 
     // Short delay to allow brief completion animation, then transition quickly
     setTimeout(() => {
       if (doneCount >= ACTIVITIES.length) {
-        console.log(`[DEMO-TRACE] All activities complete, showing report`);
         handleDemoComplete(nextCompleted, 'completed');
       } else {
-        const nextStep = step + 1;
-        console.log(`[DEMO-TRACE] Advancing to next activity: step ${step} → ${nextStep}, ACTIVITIES[${nextStep}]=${ACTIVITIES[nextStep]?.id}`);
         setToast(isEn ? 'Preparing next assessment module...' : 'Preparando siguiente módulo...');
         setStep((prevStep) => prevStep + 1);
       }

@@ -133,6 +133,16 @@ export function getLastAIDebugTrace() {
   return Array.isArray(lastAIDebugTrace) ? [...lastAIDebugTrace] : [];
 }
 
+export function normalizeProxyGeminiHealth(proxyResult = {}, preferredModel = DEFAULT_GEMINI_MODEL) {
+  return {
+    ok: true,
+    code: proxyResult.code || 'OK',
+    message: proxyResult.message || 'Gemini health check completed via backend proxy.',
+    model: proxyResult.model || preferredModel,
+    status: proxyResult.status || 200,
+  };
+}
+
 export async function checkGeminiHealth(modelName) {
   lastAIDebugTrace = [];
   const key = import.meta?.env?.VITE_GOOGLE_API_KEY;
@@ -150,13 +160,7 @@ export async function checkGeminiHealth(modelName) {
         method: 'GET',
       });
       lastAIDebugTrace = Array.isArray(proxyResult.attempts) ? [...proxyResult.attempts] : [];
-      return writeGeminiHealthCache(cacheKey, {
-        ok: false,
-        code: proxyResult.code || 'OK',
-        message: proxyResult.message || 'Gemini health check completed via backend proxy.',
-        model: proxyResult.model || preferredModel,
-        status: 200,
-      });
+      return writeGeminiHealthCache(cacheKey, normalizeProxyGeminiHealth(proxyResult, preferredModel));
     } catch (error) {
       lastAIDebugTrace = Array.isArray(error?.attempts) ? [...error.attempts] : [];
       if (!ALLOW_BROWSER_GEMINI_FALLBACK) {
@@ -453,7 +457,6 @@ export async function generateAIReport(sessionData, mode = 'recruitment', langua
           code: 'OK',
           message: 'Generation succeeded.',
         });
-        // console.log('Using model', modelName);
         break;
       } catch (err) {
         lastError = err;
