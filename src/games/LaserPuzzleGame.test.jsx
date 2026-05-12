@@ -15,16 +15,6 @@ describe('LaserPuzzleGame levels', () => {
     return grid;
   };
 
-  const expectSolvedArrangement = (level, placements) => {
-    const antennaKeys = level.cells
-      .filter((cell) => cell.type === 'antenna')
-      .map((cell) => `${cell.x},${cell.y}`);
-
-    const finalGrid = buildPlacedGrid(level, placements);
-    const { litAntennas } = traceBeam(finalGrid, level.cols, level.rows);
-
-    expect(antennaKeys.every((antennaKey) => litAntennas.has(antennaKey))).toBe(true);
-  };
 
   it('defines a progressive adaptive six-level puzzle set', () => {
     expect(LASER_DEMO_LEVELS).toHaveLength(6);

@@ -1,121 +1,193 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { motion } from 'framer-motion';
 import { useLanguage } from '../context/LanguageContext';
-import { CheckCircle2, ArrowRight, Mail, RefreshCcw } from 'lucide-react';
-import Report from '../Report';
+import { CheckCircle2, Mail, RefreshCcw, LockKeyhole, FileText } from 'lucide-react';
+import './PostDemoScreen.css';
+
+const formatTime = (seconds = 0) => {
+  const safeSeconds = Math.max(0, Math.floor(seconds || 0));
+  const minutes = Math.floor(safeSeconds / 60);
+  const remainder = safeSeconds % 60;
+  return `${minutes}m ${remainder}s`;
+};
+
+const DUMMY_REPORT = {
+  es: {
+    candidate: 'Candidata Demo',
+    role: 'Perfil referencial · Analista de Operaciones',
+    fit: '82%',
+    confidence: 'Alta',
+    topSignals: ['Toma de riesgo calibrada', 'Ruteo espacial eficiente', 'Priorización bajo presión'],
+    sections: [
+      { title: 'Resumen ejecutivo', body: 'El perfil muestra buena adaptación a tareas dinámicas, con consistencia en planificación y tolerancia al riesgo moderada.' },
+      { title: 'Fortalezas observadas', body: 'Ejecución ordenada, lectura rápida de restricciones y mejora progresiva cuando se introducen nuevas reglas.' },
+      { title: 'Áreas a profundizar', body: 'Validar el desempeño con la batería completa, entrevistas estructuradas y comparación contra benchmarks del cargo.' },
+    ],
+  },
+  en: {
+    candidate: 'Demo Candidate',
+    role: 'Reference profile · Operations Analyst',
+    fit: '82%',
+    confidence: 'High',
+    topSignals: ['Calibrated risk taking', 'Efficient spatial routing', 'Prioritization under pressure'],
+    sections: [
+      { title: 'Executive summary', body: 'The profile shows good adaptation to dynamic tasks, consistent planning, and moderate risk tolerance.' },
+      { title: 'Observed strengths', body: 'Structured execution, fast constraint reading, and progressive improvement as new rules are introduced.' },
+      { title: 'Areas to deepen', body: 'Validate performance with the full battery, structured interviews, and role benchmark comparison.' },
+    ],
+  },
+};
 
 const PostDemoScreen = ({ summary = null, onRestart }) => {
   const { language } = useLanguage();
-  const [showFullReport, setShowReport] = useState(false);
 
   const copy = {
     es: {
-      title: '¡Simulación Completada!',
-      subtitle: 'Hemos analizado tu perfil conductual durante la demo.',
-      viewReport: 'Ver Reporte de IA',
-      restartButton: 'Reiniciar Demo',
-      continueLabel: 'Continuar al reporte',
-      contactTitle: '¿Te interesa para tu organización?',
-      contactBody: 'Obtén la batería completa de 14 juegos y análisis avanzado de Google Gemini.',
-      emailUs: 'Contactar a Ventas',
-      generating: 'Generando informe final...',
-      timeUsed: 'Tiempo utilizado',
-      coverage: 'Cobertura de datos',
+      title: '¡Simulación completada!',
+      subtitle: 'Esta demo muestra la experiencia de juego. El informe real requiere la batería completa y validación del contexto del cargo.',
+      lockedTitle: 'Reporte demo bloqueado',
+      lockedBody: 'Este documento está blurreado y usa datos referenciales. Para recibir el reporte real con datos de una evaluación completa, contactarnos y armamos una demo guiada.',
+      dummyNotice: 'Vista previa con datos referenciales',
+      restartButton: 'Reiniciar demo',
+      contactTitle: '¿Quieres ver el reporte real?',
+      contactBody: 'Te mostramos la batería completa, benchmarks por cargo y el informe sin bloqueo para tu organización.',
+      emailUs: 'Contactar a ventas',
+      generating: 'Preparando vista demo...',
+      timeUsed: 'Tiempo demo',
+      completed: 'Módulos completados',
+      fitLabel: 'Ajuste estimado',
+      confidenceLabel: 'Confianza',
+      signalsLabel: 'Señales destacadas',
     },
     en: {
-      title: 'Simulation Completed!',
-      subtitle: 'We have analyzed your behavioral profile during the demo.',
-      viewReport: 'View AI Report',
-      restartButton: 'Restart Demo',
-      continueLabel: 'Continue to report',
-      contactTitle: 'Interested for your organization?',
-      contactBody: 'Get the full 14-game battery and advanced Google Gemini analysis.',
-      emailUs: 'Contact Sales',
-      generating: 'Generating final report...',
-      timeUsed: 'Time used',
-      coverage: 'Data coverage',
+      title: 'Simulation completed!',
+      subtitle: 'This demo shows the game experience. The real report requires the full battery and role-context validation.',
+      lockedTitle: 'Locked demo report',
+      lockedBody: 'This document is blurred and uses reference data. To receive the real report from a full assessment, contact us and we will set up a guided demo.',
+      dummyNotice: 'Preview with reference dummy data',
+      restartButton: 'Restart demo',
+      contactTitle: 'Want to see the real report?',
+      contactBody: 'We will show the full battery, role benchmarks, and the unlocked report for your organization.',
+      emailUs: 'Contact sales',
+      generating: 'Preparing demo preview...',
+      timeUsed: 'Demo time',
+      completed: 'Modules completed',
+      fitLabel: 'Estimated fit',
+      confidenceLabel: 'Confidence',
+      signalsLabel: 'Highlighted signals',
     }
   };
 
   const c = copy[language] || copy.es;
+  const report = DUMMY_REPORT[language] || DUMMY_REPORT.es;
 
   if (!summary) {
     return (
-      <div style={{ height: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#f8fafc' }}>
-        <motion.div animate={{ rotate: 360 }} transition={{ repeat: Infinity, duration: 1, ease: 'linear' }} style={{ width: 40, height: 40, border: '4px solid #e2e8f0', borderTopColor: '#6366f1', borderRadius: '50%' }} />
-        <span style={{ marginLeft: 16, fontWeight: 600, color: '#64748b' }}>{c.generating}</span>
-      </div>
-    );
-  }
-
-  if (showFullReport) {
-    return (
-      <div className="full-report-overlay" style={{ height: '100vh', overflow: 'auto', background: '#f8fafc', position: 'relative', zIndex: 1000 }}>
-        <div style={{ position: 'sticky', top: 0, zIndex: 100, padding: '12px 24px', background: 'rgba(255,255,255,0.8)', backdropFilter: 'blur(8px)', borderBottom: '1px solid #e2e8f0', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-          <span style={{ fontWeight: 800, color: '#1e1b4b' }}>KRUMM <span style={{ color: '#6366f1' }}>INSIGHTS</span></span>
-          <button className="btn" onClick={onRestart} style={{ padding: '8px 16px', fontSize: '0.85rem', display: 'flex', alignItems: 'center', gap: '8px' }}>
-            <RefreshCcw size={16} /> {language === 'es' ? 'Volver a la demo' : 'Back to demo'}
-          </button>
-        </div>
-        <Report demoSummary={summary} />
+      <div className="post-demo-loading">
+        <motion.div animate={{ rotate: 360 }} transition={{ repeat: Infinity, duration: 1, ease: 'linear' }} className="post-demo-spinner" />
+        <span>{c.generating}</span>
       </div>
     );
   }
 
   return (
-    <div className="post-demo-container" style={{ height: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#f8fafc', padding: '24px', overflow: 'hidden' }}>
-      <motion.div 
-        initial={{ opacity: 0, scale: 0.95 }}
-        animate={{ opacity: 1, scale: 1 }}
-        className="glass-panel"
-        style={{ maxWidth: '800px', width: '100%', padding: '48px', textAlign: 'center', borderRadius: '32px' }}
+    <div className="post-demo-container">
+      <motion.section
+        initial={{ opacity: 0, y: 18 }}
+        animate={{ opacity: 1, y: 0 }}
+        className="post-demo-shell"
       >
-        <div style={{ width: '80px', height: '80px', background: '#ecfdf5', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 24px' }}>
-          <CheckCircle2 size={48} color="#10b981" />
-        </div>
-
-        <h1 style={{ fontSize: '2.5rem', fontWeight: 850, color: '#1e1b4b', marginBottom: '12px', letterSpacing: '-0.02em' }}>{c.title}</h1>
-        <p style={{ fontSize: '1.15rem', color: '#64748b', marginBottom: '40px' }}>{c.subtitle}</p>
-
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '20px', marginBottom: '40px' }}>
-          <div style={{ padding: '24px', background: '#ffffff', borderRadius: '20px', border: '1px solid #f1f5f9', textAlign: 'left' }}>
-            <span style={{ fontSize: '0.7rem', fontWeight: 800, color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '1px' }}>{c.timeUsed}</span>
-            <div style={{ fontSize: '1.5rem', fontWeight: 900, color: '#1e1b4b' }}>{Math.floor(summary.timeUsedSec / 60)}m {summary.timeUsedSec % 60}s</div>
+        <header className="post-demo-hero">
+          <div className="post-demo-success-icon">
+            <CheckCircle2 size={42} color="#10b981" />
           </div>
-          <div style={{ padding: '24px', background: '#ffffff', borderRadius: '20px', border: '1px solid #f1f5f9', textAlign: 'left' }}>
-            <span style={{ fontSize: '0.7rem', fontWeight: 800, color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '1px' }}>{c.coverage}</span>
-            <div style={{ fontSize: '1.5rem', fontWeight: 900, color: '#6366f1' }}>{summary.telemetry?.captureCoverage}%</div>
+          <div>
+            <p className="post-demo-eyebrow">KRUMM DEMO</p>
+            <h1>{c.title}</h1>
+            <p>{c.subtitle}</p>
           </div>
-        </div>
+        </header>
 
-        <div style={{ display: 'flex', gap: '20px', justifyContent: 'center', marginBottom: '48px', flexWrap: 'wrap' }}>
-          <button 
-            className="btn btn-primary" 
-            onClick={() => setShowReport(true)}
-            style={{ padding: '20px 48px', fontSize: '1.1rem', borderRadius: '20px', display: 'flex', alignItems: 'center', gap: '12px' }}
-          >
-            {c.continueLabel} <ArrowRight size={20} />
-          </button>
-          <button
-            className="btn"
-            onClick={onRestart}
-            style={{ padding: '20px 48px', fontSize: '1.1rem', borderRadius: '20px', display: 'flex', alignItems: 'center', gap: '12px', background: '#fff', color: '#1e1b4b', border: '1px solid #cbd5e1' }}
-          >
-            <RefreshCcw size={20} /> {c.restartButton}
-          </button>
-        </div>
+        <div className="post-demo-content-grid">
+          <aside className="post-demo-summary-card">
+            <div className="summary-metric">
+              <span>{c.timeUsed}</span>
+              <strong>{formatTime(summary.timeUsedSec)}</strong>
+            </div>
+            <div className="summary-metric">
+              <span>{c.completed}</span>
+              <strong>{summary.completedCount || 0}/{summary.totalActivities || 0}</strong>
+            </div>
+            <div className="summary-metric accent">
+              <span>{c.dummyNotice}</span>
+              <strong>Dummy</strong>
+            </div>
 
-        <div style={{ paddingTop: '40px', borderTop: '1px solid #f1f5f9' }}>
-          <h3 style={{ fontSize: '1.1rem', fontWeight: 800, color: '#1e1b4b', marginBottom: '8px' }}>{c.contactTitle}</h3>
-          <p style={{ color: '#64748b', fontSize: '0.95rem', marginBottom: '24px' }}>{c.contactBody}</p>
-          <a 
-            href="mailto:contacto@krumm.cl" 
-            style={{ display: 'inline-flex', alignItems: 'center', gap: '8px', color: '#6366f1', fontWeight: 700, textDecoration: 'none', background: 'rgba(99,102,241,0.06)', padding: '10px 20px', borderRadius: '12px' }}
-          >
-            <Mail size={18} /> {c.emailUs}
-          </a>
+            <div className="post-demo-contact-card">
+              <h2>{c.contactTitle}</h2>
+              <p>{c.contactBody}</p>
+              <a href="mailto:contacto@krumm.cl?subject=Quiero%20ver%20el%20reporte%20Krumm" className="post-demo-mail-link">
+                <Mail size={18} /> {c.emailUs}
+              </a>
+              <button type="button" className="post-demo-restart" onClick={onRestart}>
+                <RefreshCcw size={18} /> {c.restartButton}
+              </button>
+            </div>
+          </aside>
+
+          <article className="demo-report-preview" aria-label={c.lockedTitle}>
+            <div className="report-lock-overlay">
+              <div className="report-lock-badge">
+                <LockKeyhole size={24} />
+              </div>
+              <h2>{c.lockedTitle}</h2>
+              <p>{c.lockedBody}</p>
+              <a href="mailto:contacto@krumm.cl?subject=Quiero%20el%20reporte%20real%20Krumm" className="report-lock-cta">
+                {c.emailUs}
+              </a>
+            </div>
+
+            <div className="demo-report-document" aria-hidden="true">
+              <div className="report-document-header">
+                <div>
+                  <div className="report-brand"><FileText size={18} /> KRUMM INSIGHTS</div>
+                  <h3>{report.candidate}</h3>
+                  <p>{report.role}</p>
+                </div>
+                <div className="report-fit-pill">
+                  <span>{c.fitLabel}</span>
+                  <strong>{report.fit}</strong>
+                </div>
+              </div>
+
+              <div className="report-metrics-row">
+                <div>
+                  <span>{c.confidenceLabel}</span>
+                  <strong>{report.confidence}</strong>
+                </div>
+                <div>
+                  <span>{c.completed}</span>
+                  <strong>{summary.completedCount || 3}/3</strong>
+                </div>
+              </div>
+
+              <section className="report-section">
+                <h4>{c.signalsLabel}</h4>
+                <ul>
+                  {report.topSignals.map((signal) => <li key={signal}>{signal}</li>)}
+                </ul>
+              </section>
+
+              {report.sections.map((section) => (
+                <section className="report-section" key={section.title}>
+                  <h4>{section.title}</h4>
+                  <p>{section.body}</p>
+                </section>
+              ))}
+            </div>
+          </article>
         </div>
-      </motion.div>
+      </motion.section>
     </div>
   );
 };

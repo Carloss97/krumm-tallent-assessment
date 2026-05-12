@@ -33,37 +33,61 @@ const DIRS = { right: [1, 0], left: [-1, 0], up: [0, -1], down: [0, 1] };
 const DEMO_BRIEFINGS = {
   es: [
     {
-      title: 'Fase I: Alineación de Haz',
-      body: 'Iniciando calibración óptica. El objetivo es guiar el haz de fotones hacia los receptores utilizando las unidades de reflexión (/). Arrastra las unidades para cambiar la trayectoria.'
+      title: 'Paso 1: espejos y dirección del haz',
+      body: 'Selecciona un espejo y muévelo a una celda libre para redirigir el haz hacia la antena. Observa la línea iluminada: te muestra en tiempo real si el camino funciona.'
     },
     {
-      title: 'Fase II: Distribución de Señal',
-      body: 'Nuevos nodos de recepción detectados. Utiliza el módulo de bifurcación (+) para dividir el flujo de luz y cubrir múltiples objetivos simultáneamente.'
+      title: 'Paso 2: bifurcador de señal',
+      body: 'El bifurcador (+) divide el haz en dos rutas. Úsalo cuando hay dos antenas: una rama debe subir y la otra bajar hasta iluminar ambos objetivos a la vez.'
     },
     {
-      title: 'Fase III: Puentes Cuánticos',
-      body: 'Obstrucciones detectadas en el Sector Gamma. Los portales (P) permiten trasladar el haz de luz a través de vacíos espaciales. Planifica el salto para superar los bloqueos.'
+      title: 'Paso 3: espejos encadenados',
+      body: 'Ahora la solución requiere más de un giro. Piensa la ruta en tramos: salir del emisor, esquivar el bloqueo y hacer el último giro hacia la antena.'
+    },
+    {
+      title: 'Paso 4: bifurcación con obstáculos',
+      body: 'La división de señal sigue siendo la clave, pero los muros obligan a separar rutas. Ubica primero el bifurcador y luego ajusta los espejos de cada rama.'
+    },
+    {
+      title: 'Paso 5: portales',
+      body: 'Los portales trasladan el haz de una entrada a otra manteniendo su dirección. Úsalos para saltar obstáculos y después corrige la trayectoria con un espejo.'
+    },
+    {
+      title: 'Paso 6: portales + bifurcador',
+      body: 'Último desafío: combina portal, bifurcador y espejos. Primero crea el salto, luego divide la señal y finalmente ajusta cada rama hacia su antena.'
     }
   ],
   en: [
     {
-      title: 'Phase I: Beam Alignment',
-      body: 'Starting optical calibration. The objective is to guide the photon beam towards the receivers using reflection units (/). Drag the units to change the trajectory.'
+      title: 'Step 1: mirrors and beam direction',
+      body: 'Select a mirror and move it to an empty cell to redirect the beam toward the antenna. Watch the lit path: it shows in real time whether the route works.'
     },
     {
-      title: 'Phase II: Signal Distribution',
-      body: 'New reception nodes detected. Use the bifurcation module (+) to split the light flow and cover multiple targets simultaneously.'
+      title: 'Step 2: signal bifurcator',
+      body: 'The bifurcator (+) splits the beam into two paths. Use it when there are two antennas: one branch should go up and the other down to light both targets at once.'
     },
     {
-      title: 'Phase III: Quantum Bridges',
-      body: 'Obstructions detected in Sector Gamma. Portals (P) allow transferring the light beam through spatial voids. Plan the jump to overcome blockages.'
+      title: 'Step 3: chained mirrors',
+      body: 'The solution now needs more than one turn. Think in segments: leave the emitter, avoid the blocker, then make the final turn toward the antenna.'
+    },
+    {
+      title: 'Step 4: bifurcation with blockers',
+      body: 'Signal splitting is still the key, but walls force separated routes. Place the bifurcator first, then adjust each branch mirror.'
+    },
+    {
+      title: 'Step 5: portals',
+      body: 'Portals move the beam from one entry to another while preserving its direction. Use them to jump over blockers, then correct the trajectory with a mirror.'
+    },
+    {
+      title: 'Step 6: portals + bifurcator',
+      body: 'Final challenge: combine portal, bifurcator, and mirrors. Create the jump first, split the signal, then tune each branch toward its antenna.'
     }
   ]
 };
 
-const getBriefing = (idx, language) => {
+export const getLaserDemoBriefing = (idx, language = 'es') => {
   const pack = DEMO_BRIEFINGS[language] || DEMO_BRIEFINGS.es;
-  return pack[idx] || null;
+  return pack[Math.min(Math.max(idx, 0), pack.length - 1)];
 };
 
 export const LASER_DEMO_LEVELS = [
@@ -407,7 +431,7 @@ const LaserPuzzleGame = ({ isActive, onEndGame, isDemo, showBriefing = true, tim
       setLevelIdx(nextLevelIdx);
       setGrid(buildGrid(procLevels[nextLevelIdx]));
       setMoves(0);
-      setBriefing(isDemo && showBriefing ? getBriefing(nextLevelIdx, language) : null);
+      setBriefing(isDemo && showBriefing ? getLaserDemoBriefing(nextLevelIdx, language) : null);
       setGamePhase(isDemo && !showBriefing ? 'playing' : (isDemo ? 'briefing' : 'playing'));
       try { playLevelUpSound(); } catch (error) { void error; }
     } else {
@@ -420,7 +444,7 @@ const LaserPuzzleGame = ({ isActive, onEndGame, isDemo, showBriefing = true, tim
       }
       else finishGame(totalMoves);
     }
-  }, [levelIdx, totalMoves, procLevels, finishGame, isDemo, language, moves]);
+  }, [levelIdx, totalMoves, procLevels, finishGame, isDemo, showBriefing, language, moves]);
   
   const levelTimeLimit = isDemo && currentLevel?.timeLimit ? currentLevel.timeLimit : timeLimit;
   const timeLeft = useGameTimer({ isActive: isActive && gamePhase === 'playing', timeLimit: levelTimeLimit, onEnd: advanceLevel });
@@ -441,7 +465,7 @@ const LaserPuzzleGame = ({ isActive, onEndGame, isDemo, showBriefing = true, tim
       // Set levels and grid immediately (no setTimeout delay)
       setProcLevels(LASER_DEMO_LEVELS);
       setGrid(buildGrid(LASER_DEMO_LEVELS[0]));
-      setBriefing(isDemo && showBriefing ? getBriefing(0, language) : null);
+      setBriefing(isDemo && showBriefing ? getLaserDemoBriefing(0, language) : null);
       setGamePhase(isDemo && showBriefing ? 'briefing' : 'playing');
       console.log('[LaserPuzzle-TRACE] Initialization complete, gamePhase=', isDemo && showBriefing ? 'briefing' : 'playing');
     }

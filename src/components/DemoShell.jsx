@@ -14,15 +14,10 @@ import ProtoNBack from '../games/NBackGame';
 import MemoryGame from '../games/MemoryGame';
 import ColorWordGame from '../games/ColorWordGame';
 import TrailMakingGame from '../games/TrailMakingGame';
-import PermissionModal from './PermissionModal';
 import PostDemoScreen from './PostDemoScreen';
 import GameGallery from './GameGallery';
 import ProgressTracker from './ProgressTracker';
-import LiveDemoTelemetryHud from './LiveDemoTelemetryHud';
-import { analyzeDemoTelemetry } from '../utils/advancedTelemetryAnalytics';
 import { useIsMobile } from '../hooks/useMediaQuery';
-import { useWebcamCapture } from '../hooks/useWebcamCapture';
-import { preloadEdgeLocalModel } from '../services/edgeLocalInferenceService';
 import './DemoShell.css';
 
 // Adapter wrappers so DemoShell can call games with the expected onComplete() callback
@@ -45,7 +40,7 @@ const GridProtoWrapper = ({ onComplete, est }) => {
     <GridFlowGame
       isActive={true}
       isDemo={true}
-      showBriefing={false}
+      showBriefing={true}
       timeLimit={est}
       onEndGame={() => { 
         console.log('[GridFlow-WRAPPER] onEndGame fired, calling onComplete in 50ms');
@@ -63,7 +58,7 @@ const LaserProtoWrapper = ({ onComplete, est }) => {
     <LaserPuzzleGame
       isActive={true}
       isDemo={true}
-      showBriefing={false}
+      showBriefing={true}
       timeLimit={est}
       onEndGame={() => { 
         console.log('[LaserPuzzle-WRAPPER] onEndGame fired, calling onComplete in 50ms');
@@ -98,8 +93,8 @@ const ALL_GAMES = {
     id: 'grid',
     title: { es: 'Grid Flow', en: 'Grid Flow' },
     instructions: {
-      es: 'Iniciando protocolo de optimización de ruteo logístico. Debe asegurar la integridad de los paquetes de datos y transferirlos a los nodos de descarga correspondientes antes de que la latencia (satisfacción) degrade la operación. Gestione el consumo energético del sistema. Pulsa comenzar para iniciar.',
-      en: 'Initiating logistic routing optimization protocol. You must ensure data packet integrity and transfer them to the corresponding download nodes before latency (satisfaction) degrades the operation. Manage system energy consumption. Press start to begin.'
+      es: 'Juego 2 · Grid Flow. Primero aprenderás a mover el operador, recoger un paquete y llevarlo a su nodo. Luego aparecerán energía, estaciones de carga y rutas con obstáculos. Cada nivel agrega una regla antes de subir la dificultad.',
+      en: 'Game 2 · Grid Flow. First you will move the operator, pick up one packet, and deliver it to its node. Then energy, recharge stations, and blocked routes appear. Each level adds one rule before difficulty increases.'
     },
     component: GridProtoWrapper,
     est: 110,
@@ -109,8 +104,8 @@ const ALL_GAMES = {
     id: 'laser',
     title: { es: 'Laser Puzzle', en: 'Laser Puzzle' },
     instructions: {
-      es: 'Iniciando fase de calibración óptica. Utilice las unidades de reflexión para alinear el haz de fotones con los receptores de señal. Despliegue el módulo de bifurcación para cubrir múltiples objetivos. Optimice la secuencia de ruteo para máxima precisión. Pulsa comenzar para iniciar.',
-      en: 'Starting optical calibration phase. Use reflection units to align the photon beam with signal receivers. Deploy the bifurcation module to cover multiple targets. Optimize routing sequence for maximum precision. Press start to begin.'
+      es: 'Juego 3 · Laser Puzzle. Comenzarás con espejos simples para redirigir un haz. Después se suman bifurcadores para dividir la señal y portales para saltar obstáculos. El briefing de cada fase explica solo la mecánica nueva.',
+      en: 'Game 3 · Laser Puzzle. You start with simple mirrors to redirect a beam. Then bifurcators split the signal and portals jump over blockers. Each phase briefing explains only the new mechanic.'
     },
     component: LaserProtoWrapper,
     est: 100,
@@ -168,7 +163,7 @@ const ALL_GAMES = {
   }
 };
 
-const DEMO_FIXED_IDS = ['balloon', 'laser', 'grid'];
+const DEMO_FIXED_IDS = ['balloon', 'grid', 'laser'];
 // Default selection (short demo)
 const DEFAULT_ACTIVITIES = DEMO_FIXED_IDS;
 
@@ -179,25 +174,19 @@ const DemoShell = () => {
   const [timeLeft, setTimeLeft] = useState(null);
   const [completed, setCompleted] = useState({});
   const [toast, setToast] = useState(null);
-  // Demo-specific UI state
-  const [showPermission, setShowPermission] = useState(true);
+  // Demo-specific UI state: public demo intentionally skips camera/microphone
+  // prompts and report-generation telemetry. The final report is a locked dummy
+  // preview handled by PostDemoScreen.
   const [showInstructions, setShowInstructions] = useState(true);
   const [activityStarted, setActivityStarted] = useState(false);
-  const [showReport, setShowReport] = useState(false);
   const [demoSummary, setDemoSummary] = useState(null);
-  const { sessionData, setIsDemo, startTracking, stopTracking, recordTrialEvent, recordWebcamFrame, setConsent } = useTelemetry();
+  const { setIsDemo, startTracking, stopTracking, recordTrialEvent } = useTelemetry();
   const { language } = useLanguage();
   const isEn = language === 'en';
   const isMobile = useIsMobile();
   
   // Use a ref as a lock to prevent double-incrementing step
   const completingRef = useRef(null);
-
-  const videoRef = useWebcamCapture({
-    isActive: !gameSelectionMode && !showReport,
-    shouldCapture: !gameSelectionMode && !showReport,
-    onFrameCapture: recordWebcamFrame
-  });
 
   // Build ACTIVITIES from selected games
   const ACTIVITIES = useMemo(() => {
@@ -271,13 +260,9 @@ const DemoShell = () => {
 
   const handleStartDemo = () => {
     setGameSelectionMode(false);
-    setShowPermission(true); // Always ask for permissions when demo starts
     setTimeLeft(TOTAL_TIME);
     setActivityStarted(false);
-    setShowInstructions(false); // Hide instructions until permissions are handled
-    void preloadEdgeLocalModel().catch((error) => {
-      console.warn('[DemoShell] edge-local model preload failed:', error?.message || error);
-    });
+    setShowInstructions(true);
   };
 
   const handleGameSelectionChange = () => {
@@ -309,27 +294,19 @@ const DemoShell = () => {
       telemetryId: activity.telemetryId || activity.id,
     }));
 
-    console.log('[DEMO-TRACE] Analyzing telemetry with sessionData:', Object.keys(sessionData || {}));
-    const telemetryReport = analyzeDemoTelemetry(sessionData, activityRows);
-    console.log('[DEMO-TRACE] telemetryReport.perGame:', telemetryReport.perGame);
-    const gameRowsById = new Map(telemetryReport.perGame.map((item) => [item.id, item]));
-    const enrichedActivities = activityRows.map((activity) => {
-      // Try to find analytics by telemetryId first, then by activity.id
-      const analytics = gameRowsById.get(activity.telemetryId) || gameRowsById.get(activity.id) || sessionData[activity.telemetryId] || null;
-      console.log(`[DEMO-TRACE] Activity ${activity.id} (telemetryId: ${activity.telemetryId}): found analytics =`, !!analytics);
-      if (analytics) {
-        console.log(`  ↳ Analytics keys: ${Object.keys(analytics).slice(0, 5).join(', ')}...`);
-        console.log(`  ↳ Confidence: ${analytics.confidence}, Coverage: ${analytics.gameCoverage}`);
-      }
-      return {
-        ...activity,
-        analytics,
-      };
-    });
+    const demoTelemetryPlaceholder = {
+      mode: 'dummy_preview',
+      captureCoverage: null,
+      note: 'Public demo does not generate a real telemetry report.',
+    };
+    const enrichedActivities = activityRows.map((activity) => ({
+      ...activity,
+      analytics: null,
+    }));
 
     console.log('[DEMO-TRACE] ===== DEMO COMPLETE SUMMARY ====');
     console.log(`[DEMO-TRACE] Total activities: ${ACTIVITIES.length}, Completed: ${completedIds.length}`);
-    console.log(`[DEMO-TRACE] enrichedActivities with analytics: ${enrichedActivities.filter(a => !!a.analytics).length}`);
+    console.log('[DEMO-TRACE] Real report analytics disabled for public demo');
     console.log('[DEMO-TRACE] Calling setDemoSummary with summary object');
     setDemoSummary({
       reason,
@@ -339,7 +316,7 @@ const DemoShell = () => {
       selectedIds: selectedGameIds,
       completedIds,
       activities: enrichedActivities,
-      telemetry: telemetryReport,
+      telemetry: demoTelemetryPlaceholder,
     });
     try {
       stopTracking('demo', 0, null, { completedIds, timeUsedSec });
@@ -350,15 +327,15 @@ const DemoShell = () => {
 
     // Mark finished only after summary and telemetry recorded
     finishedRef.current = true;
-  }, [ACTIVITIES, sessionData, selectedGameIds, stopTracking, recordTrialEvent]);
+  }, [ACTIVITIES, selectedGameIds, stopTracking, recordTrialEvent]);
 
   useEffect(() => {
     // Only start timer if demo is running
-    if (gameSelectionMode || !ACTIVITIES.length || showPermission || !activityStarted) return;
+    if (gameSelectionMode || !ACTIVITIES.length || !activityStarted) return;
     
     const t = setInterval(() => setTimeLeft((s) => Math.max(0, s - 1)), 1000);
     return () => clearInterval(t);
-  }, [gameSelectionMode, ACTIVITIES.length, showPermission, activityStarted]);
+  }, [gameSelectionMode, ACTIVITIES.length, activityStarted]);
 
   useEffect(() => {
     if (gameSelectionMode || !timeLeft || timeLeft > 0) return;
@@ -475,7 +452,6 @@ const DemoShell = () => {
     setTimeLeft(TOTAL_TIME);
     setCompleted({});
     setDemoSummary(null);
-    setShowReport(false);
     setGameSelectionMode(true);
   };
 
@@ -487,35 +463,6 @@ const DemoShell = () => {
       />
     );
   }
-
-  const requestPermissions = async () => {
-    let cursorConsent = true; // Assume cursor consent if they proceed
-    let webcamConsent = false;
-    
-    if (typeof navigator !== 'undefined' && navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
-      try {
-        const s = await navigator.mediaDevices.getUserMedia({ audio: false, video: true });
-        if (s) {
-          webcamConsent = true;
-          if (s.getTracks) s.getTracks().forEach(t => t.stop());
-        }
-      } catch (error) {
-        console.warn('Webcam permission denied:', error);
-      }
-    }
-    
-    setConsent(cursorConsent, webcamConsent);
-    setShowPermission(false);
-    setShowInstructions(true);
-    setActivityStarted(false);
-  };
-
-  const continueWithoutPermissions = () => {
-    setConsent(true, false);
-    setShowPermission(false);
-    setShowInstructions(true);
-    setActivityStarted(false);
-  };
 
   return (
     <div className="demo-shell">
@@ -591,23 +538,10 @@ const DemoShell = () => {
             </div>
 
             <main className="demo-fullscreen-main">
-              <LiveDemoTelemetryHud
-                activeGameId={ACTIVITIES[step]?.id}
-                activeGameLabel={(ACTIVITIES[step]?.title && typeof ACTIVITIES[step].title === 'object')
-                  ? (ACTIVITIES[step].title[language] || ACTIVITIES[step].title.es)
-                  : ACTIVITIES[step]?.title}
-              />
-              
               {toast && <motion.div initial={{ opacity:0, y:20 }} animate={{ opacity:1, y:0 }} className="demo-toast">{toast}</motion.div>}
 
-              <PermissionModal
-                open={showPermission}
-                onClose={continueWithoutPermissions}
-                onRequest={requestPermissions}
-              />
-
               <AnimatePresence>
-                {showInstructions && !showPermission && (
+                {showInstructions && (
                   <motion.div 
                     initial={{ opacity: 0 }}
                     animate={{ opacity: 1 }}
@@ -629,14 +563,14 @@ const DemoShell = () => {
               </AnimatePresence>
 
               <div className="game-stage">
-                {activityStarted && ACTIVITIES[step] && !showInstructions && !showPermission ? (() => {
+                {activityStarted && ACTIVITIES[step] && !showInstructions ? (() => {
                   const currentActivity = ACTIVITIES[step];
                   const ActivityComponent = currentActivity.component;
                   const currentId = currentActivity.id;
                   return <ActivityComponent key={currentId} onComplete={() => onComplete(currentId)} est={currentActivity.est} />;
                 })() : (
                   <div style={{ textAlign: 'center', color: '#64748b' }}>
-                    {showPermission ? null : <p>{demoCopy[language]?.readyMessage || demoCopy.es.readyMessage}</p>}
+                    <p>{demoCopy[language]?.readyMessage || demoCopy.es.readyMessage}</p>
                   </div>
                 )}
               </div>
@@ -646,7 +580,6 @@ const DemoShell = () => {
       </AnimatePresence>
 
       <div id="demo-live-announcer" className="sr-only" role="status" aria-live="polite" />
-      <video ref={videoRef} style={{ display: 'none' }} playsInline muted />
     </div>
   );
 };

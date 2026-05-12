@@ -231,32 +231,61 @@ const buildQuizQuestions = (language) => {
 const DEMO_BRIEFINGS = {
   es: [
     {
-      title: 'Protocolo I: Flujo Logístico',
-      body: 'Iniciando simulación de ruteo. Tu objetivo es interceptar los paquetes de datos y transferirlos a sus respectivos nodos de descarga. La precisión en la ruta es fundamental para evitar la pérdida de integridad.'
+      title: 'Paso 1: mover, recoger y entregar',
+      body: 'Mueve el operador por la grilla. Toca un paquete para recogerlo y llévalo al nodo marcado del mismo color. En este primer paso no hay obstáculos: enfócate en entender recoger → entregar.'
     },
     {
-      title: 'Protocolo II: Gestión Energética',
-      body: 'Se han activado restricciones de consumo. Cada desplazamiento consume energía del sistema. Utiliza las estaciones de carga (⚡) para reponer reservas antes de que el sistema se bloquee.'
+      title: 'Paso 2: mismo flujo, más destinos',
+      body: 'El objetivo no cambia: recoger y entregar. Ahora hay más paquetes y nodos. Mantén el mismo flujo, decide el orden antes de moverte y evita hacer recorridos duplicados.'
     },
     {
-      title: 'Protocolo III: Optimización Crítica',
-      body: 'Escenario de alta interferencia. La red presenta obstáculos estructurales y el flujo de datos es inestable. Planifica una ruta eficiente para múltiples paquetes minimizando el gasto energético.'
+      title: 'Paso 3: energía y estaciones de carga',
+      body: 'Cada movimiento consume energía. Las estaciones ⚡ recargan el sistema. Mira el indicador de energía antes de cruzar la grilla y planifica paradas cortas si vas a quedar al límite.'
+    },
+    {
+      title: 'Paso 4: rutas con obstáculos',
+      body: 'Aparecen muros y corredores. Antes de recoger un paquete, identifica por dónde podrás entregarlo. Si una ruta está bloqueada, busca una vuelta segura en vez de gastar energía probando.'
+    },
+    {
+      title: 'Paso 5: priorización por tiempo',
+      body: 'Los paquetes pierden satisfacción con el tiempo. Prioriza los que están más lejos o se degradan antes, y combina entregas cercanas para no volver dos veces al mismo sector.'
+    },
+    {
+      title: 'Paso 6: optimización crítica',
+      body: 'Última fase: planifica, prioriza y ejecuta con eficiencia. Balancea energía, obstáculos y valor de cada entrega. No necesitas hacerlo perfecto: muestra cómo decides bajo presión.'
     }
   ],
   en: [
     {
-      title: 'Protocol I: Logistic Flow',
-      body: 'Starting routing simulation. Your objective is to intercept data packets and transfer them to their respective download nodes. Routing precision is fundamental to prevent integrity loss.'
+      title: 'Step 1: move, pick up, and deliver',
+      body: 'Move the operator through the grid. Touch one packet to pick it up and carry it to the matching colored node. There are no blockers yet: focus on pick up → deliver.'
     },
     {
-      title: 'Protocol II: Energy Management',
-      body: 'Consumption restrictions have been activated. Each movement consumes system energy. Use charging stations (⚡) to replenish reserves before the system locks down.'
+      title: 'Step 2: same flow, more destinations',
+      body: 'The goal is the same: pick up and deliver. Now there are more packets and nodes. Keep the same flow, decide the order before moving, and avoid duplicate routes.'
     },
     {
-      title: 'Protocol III: Critical Optimization',
-      body: 'High interference scenario. The network has structural obstacles and data flow is unstable. Plan an efficient route for multiple packets while minimizing energy expenditure.'
+      title: 'Step 3: energy and recharge stations',
+      body: 'Every move consumes energy. ⚡ stations recharge the system. Check energy before crossing the grid and plan short stops if you are close to the limit.'
+    },
+    {
+      title: 'Step 4: blocked routes',
+      body: 'Walls and corridors appear. Before picking up a packet, identify how you will deliver it. If a route is blocked, find a safe detour instead of spending energy by trial and error.'
+    },
+    {
+      title: 'Step 5: time prioritization',
+      body: 'Packets lose satisfaction over time. Prioritize distant or faster-degrading packets, and combine nearby deliveries so you do not return twice to the same sector.'
+    },
+    {
+      title: 'Step 6: critical optimization',
+      body: 'Final phase: plan, prioritize, and execute efficiently. Balance energy, blockers, and delivery value. It does not need to be perfect: show how you decide under pressure.'
     }
   ]
+};
+
+export const getGridDemoBriefing = (idx, language = 'es') => {
+  const pack = DEMO_BRIEFINGS[language] || DEMO_BRIEFINGS.es;
+  return pack[Math.min(Math.max(idx, 0), pack.length - 1)];
 };
 
 // Helper: Randomize target positions within grid (except last level)
@@ -413,11 +442,11 @@ const GridFlowGame = ({ isActive, onEndGame, isDemo, showBriefing = true }) => {
     setEnergy(newState.energy);
     setTargets(newState.targets);
     
-    const pack = DEMO_BRIEFINGS[language] || DEMO_BRIEFINGS.es;
-    setBriefing(isDemo && showBriefing ? pack[idx] || null : null);
-    setGameState(isDemo && !showBriefing ? 'playing' : 'briefing');
+    const nextBriefing = getGridDemoBriefing(idx, language);
+    setBriefing(isDemo && showBriefing ? nextBriefing : null);
+    setGameState(isDemo && showBriefing ? 'briefing' : 'playing');
 
-  }, [transitionToQuiz, effectiveMaxRounds, language]);
+  }, [transitionToQuiz, effectiveMaxRounds, language, isDemo, showBriefing]);
 
   useEffect(() => { 
     if (isActive) { 
@@ -757,7 +786,7 @@ const GridFlowGame = ({ isActive, onEndGame, isDemo, showBriefing = true }) => {
               </div>
             </div>
 
-            <div style={{ width: '100%', display: 'flex', justifyContent: 'center', gap: '60px', alignItems: 'center' }}>
+            <div style={{ width: '100%', display: 'flex', flexDirection: isMobile ? 'column' : 'row', justifyContent: 'center', gap: isMobile ? '18px' : '60px', alignItems: 'center' }}>
                <div style={{ display:'flex', flexDirection:'column', alignItems:'center', gap:'12px' }}>
                 <ArrowBtn dir="up" label="↑" />
                 <div style={{ display:'flex', gap:'12px' }}>
