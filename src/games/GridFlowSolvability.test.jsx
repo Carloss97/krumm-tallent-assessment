@@ -1,9 +1,7 @@
 import { describe, it, expect } from 'vitest';
 import { GRID_LEVELS } from './GridFlowGame';
 
-const GRID_SIZE = 10;
-
-const existsPath = (wallsSet, from, to) => {
+const existsPath = (wallsSet, from, to, cols, rows) => {
   const key = (p) => `${p.x},${p.y}`;
   const visited = new Set();
   const q = [from];
@@ -20,7 +18,7 @@ const existsPath = (wallsSet, from, to) => {
       { x: cur.x, y: cur.y - 1 },
     ];
     neighbors.forEach(n => {
-      if (n.x < 0 || n.y < 0 || n.x >= GRID_SIZE || n.y >= GRID_SIZE) return;
+      if (n.x < 0 || n.y < 0 || n.x >= cols || n.y >= rows) return;
       if (wallsSet.has(`${n.x},${n.y}`)) return;
       if (!visited.has(`${n.x},${n.y}`)) q.push(n);
     });
@@ -31,16 +29,25 @@ const existsPath = (wallsSet, from, to) => {
 describe('GridFlow solvability', () => {
   it('each target pickup and dropZone is reachable (ignoring energy/time)', () => {
     GRID_LEVELS.forEach((level, idx) => {
+      const cols = level.cols;
+      const rows = level.rows;
       const wallsSet = new Set(level.walls);
       const start = level.startPos || { x: 0, y: 0 };
+
+      expect(start.x).toBeGreaterThanOrEqual(0);
+      expect(start.y).toBeGreaterThanOrEqual(0);
+      expect(start.x).toBeLessThan(cols);
+      expect(start.y).toBeLessThan(rows);
+      expect(wallsSet.has(`${start.x},${start.y}`)).toBe(false);
+
       level.targets.forEach((t) => {
         const pickup = { x: t.x, y: t.y };
         const drop = { x: t.dropZone.x, y: t.dropZone.y };
 
-        const canReachPickup = existsPath(wallsSet, start, pickup);
+        const canReachPickup = existsPath(wallsSet, start, pickup, cols, rows);
         expect(canReachPickup, `Level ${idx} start -> pickup ${pickup.x},${pickup.y}`).toBe(true);
 
-        const canDeliver = existsPath(wallsSet, pickup, drop);
+        const canDeliver = existsPath(wallsSet, pickup, drop, cols, rows);
         expect(canDeliver, `Level ${idx} pickup -> drop ${drop.x},${drop.y}`).toBe(true);
       });
     });

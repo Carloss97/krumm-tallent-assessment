@@ -8,7 +8,7 @@ import { useGameTimer } from '../hooks/useGameTimer';
 import { useLanguage } from '../context/LanguageContext';
 import { useIsMobile, useIsTablet } from '../hooks/useMediaQuery';
 
-const CELL = 56; // Larger board for demo
+const CELL = 40; // Large maps stay visible on desktop
 const MOBILE_CELL = 24;
 const TABLET_CELL = 38;
 const MOBILE_GRID_GAP = 2;
@@ -24,11 +24,26 @@ const getLaserMetrics = (isMobile, isTablet) => {
   return { cellSize, gridGap, boardPadding };
 };
 
-const SHIP_ARROW = { right: '→', left: '←', up: '↑', down: '↓' };
-const DEFLECT_NE = { right: 'up', left: 'down', up: 'right', down: 'left' };
-const DEFLECT_NW = { right: 'down', left: 'up', up: 'left', down: 'right' };
-const BIFURCATE = { right: ['up', 'down'], left: ['up', 'down'], up: ['left', 'right'], down: ['left', 'right'] };
-const DIRS = { right: [1, 0], left: [-1, 0], up: [0, -1], down: [0, 1] };
+const SHIP_ARROW = {
+  right: '→', left: '←', up: '↑', down: '↓',
+  upRight: '↗', downRight: '↘', downLeft: '↙', upLeft: '↖',
+};
+const DEFLECT_NE = {
+  right: 'up', left: 'down', up: 'right', down: 'left',
+  downRight: 'upLeft', upLeft: 'downRight', upRight: 'upRight', downLeft: 'downLeft',
+};
+const DEFLECT_NW = {
+  right: 'down', left: 'up', up: 'left', down: 'right',
+  downRight: 'downRight', upLeft: 'upLeft', upRight: 'downLeft', downLeft: 'upRight',
+};
+const BIFURCATE = {
+  right: ['up', 'down'], left: ['up', 'down'], up: ['left', 'right'], down: ['left', 'right'],
+  upRight: ['up', 'right'], downRight: ['down', 'right'], downLeft: ['down', 'left'], upLeft: ['up', 'left'],
+};
+const DIRS = {
+  right: [1, 0], left: [-1, 0], up: [0, -1], down: [0, 1],
+  upRight: [1, -1], downRight: [1, 1], downLeft: [-1, 1], upLeft: [-1, -1],
+};
 
 const DEMO_BRIEFINGS = {
   es: [
@@ -90,177 +105,202 @@ export const getLaserDemoBriefing = (idx, language = 'es') => {
   return pack[Math.min(Math.max(idx, 0), pack.length - 1)];
 };
 
+const wallRect = (x1, y1, x2, y2) => {
+  const cells = [];
+  for (let y = y1; y <= y2; y += 1) {
+    for (let x = x1; x <= x2; x += 1) {
+      cells.push(`${x},${y}`);
+    }
+  }
+  return cells;
+};
+
+const makeLaserCells = (objects, rectangles, reserved = []) => {
+  const reservedKeys = new Set([
+    ...objects.map((cell) => `${cell.x},${cell.y}`),
+    ...reserved.map((cell) => `${cell.x},${cell.y}`),
+  ]);
+
+  const walls = [...new Set(rectangles.flatMap(([x1, y1, x2, y2]) => wallRect(x1, y1, x2, y2)))]
+    .filter((key) => !reservedKeys.has(key))
+    .map((key) => {
+      const [x, y] = key.split(',').map(Number);
+      return { x, y, type: 'wall' };
+    });
+
+  return [...walls, ...objects];
+};
+
 export const LASER_DEMO_LEVELS = [
   {
     name: 'Sector Alpha',
     difficulty: 'easy',
-    cols: 10,
-    rows: 7,
-    par: 2,
-    timeLimit: 60,
+    cols: 12,
+    rows: 10,
+    par: 4,
+    timeLimit: 95,
     hint: {
-      es: 'Coloca los dos espejos en secuencia: primero uno para subir, luego otro para girar hacia la antena.',
-      en: 'Place both mirrors in sequence: first one to rise, then another to turn toward the antenna.'
+      es: 'Traza primero los tramos libres: salida horizontal, subida por el corredor y último giro hacia la antena.',
+      en: 'Trace the open segments first: horizontal exit, vertical climb through the corridor, then the final turn toward the antenna.'
     },
-    cells: [
-      { x: 0, y: 3, type: 'ship', dir: 'right' },
-      { x: 8, y: 0, type: 'antenna' },
-      { x: 1, y: 4, type: 'reflector_ne', movable: true },
-      { x: 8, y: 1, type: 'reflector_ne', movable: true },
-      // Force wall barrier in middle
-      { x: 4, y: 1 }, { x: 4, y: 2 }, { x: 4, y: 3 },
-      { x: 4, y: 4 }, { x: 4, y: 5 }, { x: 4, y: 6 },
-      // Block antenna approach
-      { x: 8, y: 2 }, { x: 8, y: 3 }, { x: 8, y: 4 }, { x: 8, y: 5 }, { x: 8, y: 6 },
-    ].map(c => c.type ? c : { ...c, type: 'wall' }),
+    solutionPlacements: [['1,8', '4,5'], ['9,8', '4,2']],
+    cells: makeLaserCells([
+      { x: 0, y: 5, type: 'ship', dir: 'right' },
+      { x: 10, y: 2, type: 'antenna' },
+      { x: 1, y: 8, type: 'reflector_ne', movable: true },
+      { x: 9, y: 8, type: 'reflector_ne', movable: true },
+      { x: 10, y: 8, type: 'reflector_nw', movable: true },
+      { x: 11, y: 7, type: 'reflector_ne', movable: true },
+    ], [
+      [2,0,3,1], [6,3,8,4], [0,7,4,9], [7,7,11,9], [10,0,11,1], [5,6,6,7], [1,1,1,3],
+    ], [{ x:4, y:5 }, { x:4, y:2 }, { x:1, y:8 }, { x:9, y:8 }, { x:10, y:8 }, { x:11, y:7 }]),
     quiz: [],
   },
   {
     name: 'Sector Alpha+',
     difficulty: 'hard',
-    cols: 11,
-    rows: 8,
-    par: 3,
-    timeLimit: 65,
+    cols: 12,
+    rows: 10,
+    par: 5,
+    timeLimit: 100,
     hint: {
-      es: 'Bifurca el haz y coloca dos espejos para alcanzar ambas antenas simultáneamente.',
-      en: 'Bifurcate the beam and place two mirrors to reach both antennas simultaneously.'
+      es: 'Ubica el bifurcador en el eje central y usa un espejo para cerrar cada rama hacia su antena.',
+      en: 'Place the bifurcator on the central axis and use one mirror to close each branch toward its antenna.'
     },
-    cells: [
-      { x: 0, y: 3, type: 'ship', dir: 'right' },
-      { x: 10, y: 0, type: 'antenna' },
-      { x: 10, y: 7, type: 'antenna' },
-      { x: 2, y: 2, type: 'bifurcator', movable: true },
-      { x: 10, y: 1, type: 'reflector_ne', movable: true },
-      { x: 10, y: 6, type: 'reflector_nw', movable: true },
-      // Middle barrier
-      { x: 4, y: 1 }, { x: 4, y: 2 }, { x: 4, y: 3 },
-      { x: 5, y: 2 }, { x: 5, y: 3 },
-      { x: 5, y: 4 }, { x: 5, y: 5 }, { x: 5, y: 6 },
-      { x: 10, y: 2 }, { x: 10, y: 3 }, { x: 10, y: 4 }, { x: 10, y: 5 },
-    ].map(c => c.type ? c : { ...c, type: 'wall' }),
+    solutionPlacements: [['1,8', '4,5'], ['9,0', '4,1'], ['9,9', '4,8']],
+    cells: makeLaserCells([
+      { x: 0, y: 5, type: 'ship', dir: 'right' },
+      { x: 11, y: 1, type: 'antenna' },
+      { x: 11, y: 8, type: 'antenna' },
+      { x: 1, y: 8, type: 'bifurcator', movable: true },
+      { x: 9, y: 0, type: 'reflector_ne', movable: true },
+      { x: 9, y: 9, type: 'reflector_nw', movable: true },
+      { x: 10, y: 4, type: 'reflector_ne', movable: true },
+      { x: 2, y: 0, type: 'reflector_nw', movable: true },
+    ], [
+      [2,0,3,3], [6,2,7,3], [9,2,10,4], [6,6,7,7], [1,1,1,3], [1,6,2,9], [9,6,10,7],
+    ], [{ x:4, y:5 }, { x:4, y:1 }, { x:4, y:8 }, { x:1, y:8 }, { x:9, y:0 }, { x:9, y:9 }, { x:10, y:4 }, { x:2, y:0 }]),
     quiz: [],
   },
   {
-    // Sector Beta: Intro reflection puzzle (guaranteed solvable)
     name: 'Sector Beta',
     difficulty: 'easy',
-    cols: 6,
-    rows: 5,
-    par: 2,
-    timeLimit: 60,
+    cols: 13,
+    rows: 11,
+    par: 7,
+    timeLimit: 110,
     hint: {
-      es: 'Espejos pre-colocados forman una ruta. Aprende cómo funciona la reflexión.',
-      en: 'Pre-placed mirrors form a route. Learn how reflection works.'
+      es: 'La ruta correcta zigzaguea por cuatro tramos. Pensá en cada espejo como una esquina de la trayectoria.',
+      en: 'The correct route zigzags through four segments. Think of each mirror as a corner in the path.'
     },
-    cells: [
-      { x: 0, y: 2, type: 'ship', dir: 'right' },
-      { x: 4, y: 0, type: 'antenna' },
-      { x: 2, y: 2, type: 'reflector_ne', movable: true },
-      { x: 4, y: 1, type: 'reflector_ne', movable: true },
-      // Vertical barrier with top gap, forcing a two-mirror route
-      { x: 3, y: 1 }, { x: 3, y: 2 }, { x: 3, y: 3 }, { x: 3, y: 4 },
-      { x: 5, y: 2 }, { x: 5, y: 3 }, { x: 5, y: 4 },
-    ].map(c => c.type ? c : { ...c, type: 'wall' }),
+    solutionPlacements: [['1,1', '3,8'], ['11,1', '3,2'], ['1,9', '7,2'], ['11,9', '7,6']],
+    cells: makeLaserCells([
+      { x: 0, y: 8, type: 'ship', dir: 'right' },
+      { x: 12, y: 6, type: 'antenna' },
+      { x: 1, y: 1, type: 'reflector_ne', movable: true },
+      { x: 11, y: 1, type: 'reflector_ne', movable: true },
+      { x: 1, y: 9, type: 'reflector_nw', movable: true },
+      { x: 11, y: 9, type: 'reflector_nw', movable: true },
+      { x: 10, y: 0, type: 'reflector_ne', movable: true },
+      { x: 12, y: 10, type: 'reflector_nw', movable: true },
+    ], [
+      [1,3,2,6], [5,0,6,1], [9,0,10,1], [5,4,6,5], [9,4,11,5], [1,9,2,10], [4,9,5,10], [8,8,10,10], [12,0,12,4], [0,0,0,3],
+    ], [{ x:3, y:8 }, { x:3, y:2 }, { x:7, y:2 }, { x:7, y:6 }, { x:1, y:1 }, { x:11, y:1 }, { x:1, y:9 }, { x:11, y:9 }, { x:10, y:0 }, { x:12, y:10 }]),
     quiz: [],
   },
   {
-    // Sector Beta+: Bifurcation to two antennas (guaranteed solvable)
     name: 'Sector Beta+',
     difficulty: 'hard',
-    cols: 8,
-    rows: 6,
-    par: 4,
-    timeLimit: 75,
+    cols: 14,
+    rows: 11,
+    par: 8,
+    timeLimit: 120,
     hint: {
-      es: 'El bifurcador divide el haz. Los espejos guían cada mitad hacia una antena.',
-      en: 'The bifurcator splits the beam. Mirrors guide each half to an antenna.'
+      es: 'El mapa se resuelve desde el centro: primero bifurcador, después un espejo por rama y control de obstáculos.',
+      en: 'Solve the map from the center: bifurcator first, then one mirror per branch while respecting blockers.'
     },
-    cells: [
-      { x: 0, y: 3, type: 'ship', dir: 'right' },
-      { x: 7, y: 1, type: 'antenna' },
-      { x: 7, y: 5, type: 'antenna' },
-      { x: 1, y: 0, type: 'bifurcator', movable: true },
-      { x: 6, y: 0, type: 'reflector_ne', movable: true },
-      { x: 6, y: 4, type: 'reflector_nw', movable: true },
-      // Corridor-like walls while keeping the solved routes open on rows 1 and 5
-      { x: 4, y: 0 }, { x: 4, y: 2 }, { x: 4, y: 3 }, { x: 4, y: 4 },
-      { x: 5, y: 2 }, { x: 5, y: 4 },
-      { x: 6, y: 2 }, { x: 6, y: 3 },
-    ].map(c => c.type ? c : { ...c, type: 'wall' }),
+    solutionPlacements: [['2,9', '5,5'], ['12,0', '5,1'], ['12,10', '5,9']],
+    cells: makeLaserCells([
+      { x: 0, y: 5, type: 'ship', dir: 'right' },
+      { x: 13, y: 1, type: 'antenna' },
+      { x: 13, y: 9, type: 'antenna' },
+      { x: 2, y: 9, type: 'bifurcator', movable: true },
+      { x: 12, y: 0, type: 'reflector_ne', movable: true },
+      { x: 12, y: 10, type: 'reflector_nw', movable: true },
+      { x: 1, y: 1, type: 'reflector_ne', movable: true },
+      { x: 8, y: 10, type: 'reflector_nw', movable: true },
+      { x: 11, y: 4, type: 'bifurcator', movable: true },
+    ], [
+      [2,0,3,3], [7,2,8,3], [10,2,11,3], [2,7,3,10], [7,7,8,8], [10,7,11,8], [0,1,1,3], [0,7,1,9], [9,4,12,6], [4,3,4,4], [4,6,4,7],
+    ], [{ x:5, y:5 }, { x:5, y:1 }, { x:5, y:9 }, { x:2, y:9 }, { x:12, y:0 }, { x:12, y:10 }, { x:1, y:1 }, { x:8, y:10 }, { x:11, y:4 }]),
     quiz: [],
   },
   {
-    // Sector Gamma: Portal introduction (guaranteed solvable)
     name: 'Sector Gamma',
     difficulty: 'easy',
-    cols: 8,
-    rows: 5,
-    par: 3,
-    timeLimit: 70,
+    cols: 14,
+    rows: 12,
+    par: 7,
+    timeLimit: 125,
     hint: {
-      es: 'Portales teleportan el haz. Salta la barrera y refleja a la antena.',
-      en: 'Portals teleport the beam. Jump the barrier and reflect to the antenna.'
+      es: 'Usá el portal para saltar la barrera principal. Luego dos espejos corrigen la salida hasta la antena.',
+      en: 'Use the portal to jump the main barrier. Then two mirrors correct the exit toward the antenna.'
     },
-    cells: [
-      { x: 0, y: 2, type: 'ship', dir: 'right' },
-      { x: 6, y: 1, type: 'antenna' },
-      { x: 1, y: 4, type: 'portal_blue', targetPortalId: 'p1', movable: true },
-      { x: 5, y: 2, type: 'portal_blue', portalId: 'p1', movable: true },
-      { x: 7, y: 4, type: 'reflector_ne', movable: true },
-      // Central barrier
-      { x: 3, y: 0 }, { x: 3, y: 1 }, { x: 3, y: 3 }, { x: 3, y: 4 },
-      // Side walls
-      { x: 0, y: 0 }, { x: 0, y: 1 }, { x: 0, y: 3 }, { x: 0, y: 4 },
-      { x: 7, y: 2 }, { x: 7, y: 3 },
-    ].map(c => c.type ? c : { ...c, type: 'wall' }),
+    solutionPlacements: [['1,10', '3,6'], ['10,10', '10,6'], ['2,1', '12,6'], ['12,10', '12,2']],
+    cells: makeLaserCells([
+      { x: 0, y: 6, type: 'ship', dir: 'right' },
+      { x: 13, y: 2, type: 'antenna' },
+      { x: 1, y: 10, type: 'portal_blue', targetPortalId: 'p1', movable: true },
+      { x: 10, y: 10, type: 'portal_blue', portalId: 'p1', movable: true },
+      { x: 2, y: 1, type: 'reflector_ne', movable: true },
+      { x: 12, y: 10, type: 'reflector_ne', movable: true },
+      { x: 9, y: 1, type: 'reflector_nw', movable: true },
+      { x: 13, y: 11, type: 'portal_red', portalId: 'r1', movable: true },
+    ], [
+      [5,0,6,11], [1,0,3,2], [8,0,10,2], [1,4,3,5], [8,4,9,5], [1,8,4,11], [8,8,11,11], [13,4,13,5],
+    ], [{ x:3, y:6 }, { x:10, y:6 }, { x:12, y:6 }, { x:12, y:2 }, { x:1, y:10 }, { x:10, y:10 }, { x:2, y:1 }, { x:12, y:10 }, { x:9, y:1 }, { x:13, y:11 }]),
     quiz: [],
   },
   {
-    // Sector Gamma+: Dual-portal + bifurcation challenge (guaranteed solvable)
     name: 'Sector Gamma+',
     difficulty: 'hard',
-    cols: 9,
-    rows: 7,
-    par: 5,
-    timeLimit: 85,
+    cols: 15,
+    rows: 12,
+    par: 9,
+    timeLimit: 140,
     hint: {
-      es: 'Dos pares de portales crean rutas complejas. El bifurcador abre múltiples caminos.',
-      en: 'Two portal pairs create complex routes. The bifurcator opens multiple paths.'
+      es: 'El emisor diagonal entra por portal, reaparece cerca del centro y el bifurcador separa dos rutas finales.',
+      en: 'The diagonal emitter enters a portal, reappears near the center, and the bifurcator splits the final two routes.'
     },
-    cells: [
-      { x: 0, y: 3, type: 'ship', dir: 'right' },
-      { x: 8, y: 1, type: 'antenna' },
-      { x: 8, y: 5, type: 'antenna' },
-      { x: 1, y: 0, type: 'bifurcator', movable: true },
-      // Blue portal pair
-      { x: 1, y: 1, type: 'portal_blue', targetPortalId: 'pb1', movable: true },
-      { x: 6, y: 1, type: 'portal_blue', portalId: 'pb1', movable: true },
-      // Red portal pair
-      { x: 1, y: 5, type: 'portal_red', targetPortalId: 'pr1', movable: true },
-      { x: 6, y: 5, type: 'portal_red', portalId: 'pr1', movable: true },
-      // Reflectors for final approach
-      { x: 8, y: 0, type: 'reflector_ne', movable: true },
-      { x: 8, y: 6, type: 'reflector_nw', movable: true },
-      { x: 8, y: 2, type: 'reflector_ne', movable: true },
-      // Structured walls with open lanes at y=1, y=3 and y=5
-      { x: 3, y: 0 }, { x: 3, y: 2 }, { x: 3, y: 4 }, { x: 3, y: 6 },
-      { x: 5, y: 0 }, { x: 5, y: 2 }, { x: 5, y: 4 }, { x: 5, y: 6 },
-      { x: 8, y: 3 },
-    ].map(c => c.type ? c : { ...c, type: 'wall' }),
+    solutionPlacements: [['1,10', '3,3'], ['9,9', '9,9'], ['12,1', '10,10']],
+    cells: makeLaserCells([
+      { x: 0, y: 0, type: 'ship', dir: 'downRight' },
+      { x: 14, y: 10, type: 'antenna' },
+      { x: 10, y: 11, type: 'antenna' },
+      { x: 1, y: 10, type: 'portal_blue', targetPortalId: 'pb1', movable: true },
+      { x: 9, y: 9, type: 'portal_blue', portalId: 'pb1', movable: true },
+      { x: 12, y: 1, type: 'bifurcator', movable: true },
+      { x: 2, y: 10, type: 'portal_red', targetPortalId: 'pr1', movable: true },
+      { x: 13, y: 3, type: 'portal_red', portalId: 'pr1', movable: true },
+      { x: 4, y: 10, type: 'reflector_ne', movable: true },
+      { x: 13, y: 8, type: 'reflector_nw', movable: true },
+      { x: 7, y: 2, type: 'reflector_ne', movable: true },
+    ], [
+      [5,5,5,5], [2,0,4,1], [7,0,9,2], [11,0,14,2], [0,4,2,6], [4,4,6,6], [8,4,11,6], [13,4,14,6], [0,8,2,11], [5,8,7,11], [11,8,12,9],
+    ], [{ x:3, y:3 }, { x:9, y:9 }, { x:10, y:10 }, { x:1, y:10 }, { x:12, y:1 }, { x:2, y:10 }, { x:13, y:3 }, { x:4, y:10 }, { x:13, y:8 }, { x:7, y:2 }]),
     quiz: [
       {
-        q: '¿Qué hace especial el bifurcador en este nivel?',
-        opts: ['Crea dos rutas para dos antenas', 'Aumenta la velocidad', 'Cambia colores', 'Ninguna de las anteriores'],
+        q: '¿Qué aporta el emisor diagonal en este nivel?',
+        opts: ['Permite entrar al portal por una ruta oblicua', 'Duplica puntos automáticamente', 'Elimina obstáculos', 'No cambia la trayectoria'],
         correct: 0,
       },
       {
-        q: 'Los dos pares de portales permiten:',
-        opts: ['Ir más rápido', 'Saltar múltiples barreras sin espejos adicionales', 'Viajar atrás en el tiempo', 'Nada especial'],
-        correct: 1,
+        q: 'El bifurcador final permite:',
+        opts: ['Separar dos rutas hacia dos antenas', 'Mover muros', 'Cambiar combustible', 'Finalizar sin alinear el haz'],
+        correct: 0,
       },
     ],
-  }
+  },
 ];
 
 // Helper function to get next level(s) based on performance
@@ -308,7 +348,9 @@ export function traceBeam(grid, cols, rows) {
     if (visited.has(stateKey)) continue;
     visited.add(stateKey);
 
-    const [dx, dy] = DIRS[dir];
+    const directionVector = DIRS[dir];
+    if (!directionVector) continue;
+    const [dx, dy] = directionVector;
     const nx = x + dx, ny = y + dy;
     if (nx < 0 || ny < 0 || nx >= cols || ny >= rows) continue;
 
@@ -324,7 +366,7 @@ export function traceBeam(grid, cols, rows) {
     }
     else if (type === 'reflector_ne') { beamCells.add(cellKey); queue.push({ x:nx, y:ny, dir: DEFLECT_NE[dir] }); }
     else if (type === 'reflector_nw') { beamCells.add(cellKey); queue.push({ x:nx, y:ny, dir: DEFLECT_NW[dir] }); }
-    else if (type === 'bifurcator') { beamCells.add(cellKey); BIFURCATE[dir].forEach(d => queue.push({ x:nx, y:ny, dir:d })); }
+    else if (type === 'bifurcator') { beamCells.add(cellKey); (BIFURCATE[dir] || []).forEach(d => queue.push({ x:nx, y:ny, dir:d })); }
     else if (type === 'portal_blue' || type === 'portal_red') {
       beamCells.add(cellKey);
       const otherPortalKey = findLinkedPortalKey(grid, cellKey, cell);

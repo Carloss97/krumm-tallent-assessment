@@ -7,20 +7,23 @@ import Confetti from '../components/Confetti';
 import { useLanguage } from '../context/LanguageContext';
 import { useIsMobile, useIsTablet } from '../hooks/useMediaQuery';
 
-const GRID = 10;
+const DEFAULT_GRID = 16;
 const SAT_DECAY = 1; // % per second (reduced from 2 for better pacing)
-const CELL = 60; // Larger cells for better screen occupancy
-const MOBILE_CELL = 28;
-const TABLET_CELL = 45;
+const CELL = 32;
+const MOBILE_CELL = 20;
+const TABLET_CELL = 26;
 const GRID_GAP = 3;
 const BOARD_PADDING = 12;
+
+const getLevelCols = (level) => level?.cols || DEFAULT_GRID;
+const getLevelRows = (level) => level?.rows || DEFAULT_GRID;
 
 const getGridMetrics = (isMobile, isTablet) => {
   const cellSize = isMobile ? MOBILE_CELL : isTablet ? TABLET_CELL : CELL;
   const gapSize = isMobile ? 2 : GRID_GAP;
   const paddingSize = isMobile ? 10 : BOARD_PADDING;
   const stepSize = cellSize + gapSize;
-  const boardSize = (GRID * cellSize) + ((GRID - 1) * gapSize) + (paddingSize * 2);
+  const boardSize = (18 * cellSize) + ((18 - 1) * gapSize) + (paddingSize * 2);
 
   return {
     cellSize,
@@ -39,122 +42,142 @@ const COLOR_POINT_VALUES = {
   pink: 200,
 };
 
+const rect = (x1, y1, x2, y2) => {
+  const cells = [];
+  for (let y = y1; y <= y2; y += 1) {
+    for (let x = x1; x <= x2; x += 1) {
+      cells.push(`${x},${y}`);
+    }
+  }
+  return cells;
+};
+
+const cityWalls = (rectangles, reserved = []) => {
+  const reservedSet = new Set(reserved.map((p) => `${p.x},${p.y}`));
+  return [...new Set(rectangles.flatMap(([x1, y1, x2, y2]) => rect(x1, y1, x2, y2)))]
+    .filter((key) => !reservedSet.has(key));
+};
+
+const routePoints = (level) => [
+  level.startPos,
+  ...level.stations,
+  ...level.targets.flatMap((target) => [{ x: target.x, y: target.y }, target.dropZone]),
+];
+
+const withCityWalls = (level, rectangles) => ({
+  ...level,
+  walls: cityWalls(rectangles, routePoints(level)),
+});
+
 export const GRID_LEVELS = [
-  {
-    // NIVEL 1: Intro - Simple route, single target
+  withCityWalls({
     difficulty: 'easy',
-    walls: [],
+    cols: 14,
+    rows: 14,
     targets: [
-      { id:1, x:5, y:2, color:'#ef4444', points:100, dropZone:{x:5,y:9} }, 
-    ], 
-    stations: [{ x:5, y:5 }],
-    energyDrain: 0.5, 
-    timeLimit: 45, 
-    startPos: { x:5, y:9 } 
-  },
-  {
-    // NIVEL 1-HARD: Three targets, simple paths
-    difficulty: 'hard',
-    walls: [
-      '2,0', '2,1', '2,2', '2,3', '2,4', '2,5', '2,6', '2,7',
-      '7,3', '7,4', '7,5', '7,6', '7,7', '7,8', '7,9'
+      { id:1, x:1, y:2, color:'#ef4444', points:110, dropZone:{x:12,y:11} },
+      { id:2, x:11, y:1, color:'#3b82f6', points:120, dropZone:{x:2,y:12} },
     ],
-    targets: [
-      { id:1, x:1, y:1, color:'#ef4444', points:120, dropZone:{x:8,y:1} },
-      { id:2, x:5, y:5, color:'#3b82f6', points:120, dropZone:{x:1,y:8} },
-      { id:3, x:8, y:8, color:'#10b981', points:120, dropZone:{x:8,y:1} },
-    ], 
-    stations: [{ x:0, y:5 }, { x:9, y:5 }],
-    energyDrain: 1.2,
-    timeLimit: 50,
-    startPos: { x:5, y:9 } 
-  },
-  {
-    // NIVEL 2: City grid - structured paths, 2 targets
-    // Vertical lanes at x=2,5,8; horizontal paths at y=3,6
-    difficulty: 'easy',
-    walls: [
-      // Vertical lanes (walls on sides create corridors)
-      '1,0','1,1','1,2','1,3','1,4','1,5','1,6','1,7','1,8',
-      '3,0','3,1','3,2','3,3','3,4','3,5','3,6','3,7','3,8',
-      '6,0','6,1','6,2','6,3','6,4','6,5','6,6','6,7','6,8',
-      '8,0','8,1','8,2','8,3','8,4','8,5','8,6','8,7','8,8',
-      // Horizontal paths
-      '4,2','5,2','6,2', '7,2',
-      '4,5','5,5','6,5', '7,5',
-      '4,7','5,7','6,7', '7,7',
-    ].map(c => c),
-    targets: [
-      { id:1, x:0, y:0, color:'#ef4444', points:150, dropZone:{x:9,y:9} },
-      { id:2, x:9, y:9, color:'#3b82f6', points:150, dropZone:{x:0,y:0} },
-    ], 
-    stations: [{ x:2, y:3 }, { x:7, y:6 }],
-    energyDrain: 1.5,
-    timeLimit: 60,
-    startPos: { x:0, y:5 } 
-  },
-  {
-    // NIVEL 2-HARD: Complex grid, 3 targets, tight energy
+    stations: [{ x:7, y:2 }, { x:7, y:11 }],
+    energyDrain: 0.7,
+    timeLimit: 58,
+    startPos: { x:1, y:12 },
+  }, [
+    [3,1,4,4], [8,1,10,3], [6,5,8,7], [1,7,3,9], [10,8,12,10], [5,10,6,12],
+  ]),
+  withCityWalls({
     difficulty: 'hard',
-    walls: [
-      // Main vertical paths (keep structure but allow top/bottom crossings)
-      '3,1','3,2','3,3','3,4','3,5','3,6','3,7','3,8','3,9',
-      '7,1','7,2','7,3','7,4','7,5','7,6','7,7','7,8','7,9',
-      // Main horizontal paths  
-      '2,5','5,5','6,5','8,5',
-      '2,3','5,3','6,3','8,3',
-    ].map(c => c),
+    cols: 15,
+    rows: 15,
     targets: [
-      { id:1, x:0, y:1, color:'#ef4444', points:200, dropZone:{x:8,y:9} },
-      { id:2, x:0, y:8, color:'#3b82f6', points:200, dropZone:{x:8,y:0} },
-      { id:3, x:4, y:5, color:'#10b981', points:200, dropZone:{x:0,y:5} },
-    ], 
-    stations: [{ x:2, y:0 }, { x:6, y:9 }],
-    energyDrain: 2.0,
-    timeLimit: 55,
-    startPos: { x:0, y:0 } 
-  },
-  {
-    // NIVEL 3: Open grid - fewer walls, focus on efficient routing, 3 targets
-    difficulty: 'easy',
-    walls: [
-      // Simplified for connectivity while keeping a column pattern
-      '2,2','2,3','2,4',
-      '5,2','5,5','5,7',
-      '7,4','8,6',
-    ].map(c => c),
-    targets: [
-      { id:1, x:1, y:1, color:'#ef4444', points:180, dropZone:{x:9,y:8} },
-      { id:2, x:5, y:0, color:'#3b82f6', points:180, dropZone:{x:0,y:9} },
-      { id:3, x:9, y:5, color:'#10b981', points:180, dropZone:{x:1,y:1} },
-    ], 
-    stations: [{ x:1, y:5 }, { x:9, y:3 }],
-    energyDrain: 1.8,
-    timeLimit: 75,
-    startPos: { x:5, y:9 } 
-  },
-  {
-    // NIVEL 3-HARD: Complex maze - max targets, challenging routing, dynamic energy
-    difficulty: 'hard',
-    walls: [
-      // Moderate obstacles but keep connectivity for all pickups/drops
-      '2,2','2,3','2,4',
-      '4,6','4,7','4,8',
-      '6,2','6,3','6,4',
-      '8,6','8,7','8,8',
-      '1,5','3,5','7,5','9,5',
+      { id:1, x:1, y:1, color:'#ef4444', points:140, dropZone:{x:13,y:13} },
+      { id:2, x:13, y:2, color:'#3b82f6', points:140, dropZone:{x:1,y:13} },
+      { id:3, x:6, y:12, color:'#10b981', points:150, dropZone:{x:12,y:6} },
     ],
+    stations: [{ x:2, y:7 }, { x:7, y:2 }, { x:12, y:10 }],
+    energyDrain: 1.15,
+    timeLimit: 66,
+    startPos: { x:7, y:14 },
+  }, [
+    [3,0,4,4], [8,0,10,3], [12,0,13,4], [1,5,2,6], [5,5,7,7], [10,5,13,6],
+    [2,9,4,12], [7,10,9,13], [12,11,13,14],
+  ]),
+  withCityWalls({
+    difficulty: 'easy',
+    cols: 16,
+    rows: 16,
     targets: [
-      { id:1, x:0, y:0, color:'#ef4444', points:250, dropZone:{x:9,y:9} },
-      { id:2, x:1, y:4, color:'#3b82f6', points:250, dropZone:{x:9,y:3} },
-      { id:3, x:9, y:9, color:'#10b981', points:250, dropZone:{x:1,y:6} },
-      { id:4, x:5, y:5, color:'#f59e0b', points:250, dropZone:{x:3,y:1} },
-    ], 
-    stations: [{ x:0, y:5 }, { x:5, y:0 }, { x:9, y:8 }],
-    energyDrain: 2.3,
-    timeLimit: 70,
-    startPos: { x:5, y:9 } 
-  },
+      { id:1, x:1, y:1, color:'#ef4444', points:165, dropZone:{x:14,y:14} },
+      { id:2, x:14, y:2, color:'#3b82f6', points:165, dropZone:{x:2,y:13} },
+      { id:3, x:4, y:14, color:'#10b981', points:175, dropZone:{x:13,y:5} },
+      { id:4, x:11, y:11, color:'#f59e0b', points:185, dropZone:{x:3,y:4} },
+    ],
+    stations: [{ x:1, y:8 }, { x:8, y:1 }, { x:14, y:8 }],
+    energyDrain: 1.35,
+    timeLimit: 78,
+    startPos: { x:8, y:15 },
+  }, [
+    [3,1,5,3], [8,1,10,4], [12,1,14,3], [1,5,3,7], [5,6,7,9], [10,6,12,8],
+    [13,6,14,10], [2,10,4,13], [7,11,9,14], [11,12,13,14],
+  ]),
+  withCityWalls({
+    difficulty: 'hard',
+    cols: 17,
+    rows: 16,
+    targets: [
+      { id:1, x:1, y:2, color:'#ef4444', points:210, dropZone:{x:15,y:13} },
+      { id:2, x:15, y:1, color:'#3b82f6', points:210, dropZone:{x:1,y:14} },
+      { id:3, x:4, y:13, color:'#10b981', points:220, dropZone:{x:14,y:6} },
+      { id:4, x:13, y:11, color:'#f59e0b', points:230, dropZone:{x:3,y:5} },
+      { id:5, x:8, y:3, color:'#8b5cf6', points:240, dropZone:{x:8,y:14} },
+    ],
+    stations: [{ x:2, y:8 }, { x:8, y:1 }, { x:8, y:9 }, { x:15, y:8 }],
+    energyDrain: 1.75,
+    timeLimit: 88,
+    startPos: { x:8, y:15 },
+  }, [
+    [3,0,5,4], [10,0,12,4], [14,2,15,5], [1,5,2,7], [5,6,7,8], [9,6,11,9],
+    [13,7,16,9], [2,10,2,14], [4,10,4,14], [6,11,7,15], [10,11,12,14], [14,12,15,15],
+  ]),
+  withCityWalls({
+    difficulty: 'easy',
+    cols: 18,
+    rows: 16,
+    targets: [
+      { id:1, x:1, y:1, color:'#ef4444', points:205, dropZone:{x:16,y:14} },
+      { id:2, x:16, y:2, color:'#3b82f6', points:205, dropZone:{x:1,y:13} },
+      { id:3, x:5, y:14, color:'#10b981', points:215, dropZone:{x:15,y:6} },
+      { id:4, x:13, y:12, color:'#f59e0b', points:225, dropZone:{x:4,y:5} },
+      { id:5, x:9, y:3, color:'#8b5cf6', points:235, dropZone:{x:9,y:14} },
+    ],
+    stations: [{ x:2, y:8 }, { x:9, y:1 }, { x:9, y:8 }, { x:16, y:9 }],
+    energyDrain: 1.6,
+    timeLimit: 96,
+    startPos: { x:9, y:15 },
+  }, [
+    [3,0,5,4], [8,0,10,2], [13,0,15,4], [1,5,2,7], [5,6,7,9], [10,5,10,8], [12,5,12,8],
+    [15,6,17,9], [2,10,2,14], [4,10,4,14], [7,11,8,15], [11,11,13,14], [15,12,16,15],
+  ]),
+  withCityWalls({
+    difficulty: 'hard',
+    cols: 18,
+    rows: 16,
+    targets: [
+      { id:1, x:1, y:1, color:'#ef4444', points:250, dropZone:{x:16,y:14} },
+      { id:2, x:16, y:1, color:'#3b82f6', points:250, dropZone:{x:1,y:14} },
+      { id:3, x:3, y:12, color:'#10b981', points:260, dropZone:{x:15,y:5} },
+      { id:4, x:14, y:12, color:'#f59e0b', points:270, dropZone:{x:4,y:4} },
+      { id:5, x:8, y:3, color:'#8b5cf6', points:280, dropZone:{x:8,y:14} },
+      { id:6, x:11, y:6, color:'#ec4899', points:300, dropZone:{x:2,y:8} },
+    ],
+    stations: [{ x:2, y:7 }, { x:8, y:1 }, { x:9, y:9 }, { x:15, y:8 }, { x:16, y:13 }],
+    energyDrain: 2.05,
+    timeLimit: 105,
+    startPos: { x:9, y:15 },
+  }, [
+    [3,0,5,4], [8,0,10,2], [13,0,15,4], [1,5,2,7], [5,6,7,9], [10,5,10,8], [12,5,12,8],
+    [15,6,17,9], [2,10,2,14], [4,10,4,14], [6,11,8,15], [11,10,13,14], [15,12,16,15], [4,7,4,9],
+  ]),
 ];
 
 // Helper to determine next level adaptively based on performance
@@ -290,8 +313,8 @@ export const getGridDemoBriefing = (idx, language = 'es') => {
 
 // Helper: Randomize target positions within grid (except last level)
 const randomizeTargetPositions = (level, round, totalRounds) => {
-  if (round === totalRounds - 1) {
-    // Last level: keep original positions for structured spawning
+  if (!level.randomizeTargets || round === totalRounds - 1) {
+    // Preserve authored city pickup/drop geometry unless a level opts into randomization.
     return level.targets.map(t => ({ ...t }));
   }
   
@@ -303,8 +326,8 @@ const randomizeTargetPositions = (level, round, totalRounds) => {
     let x, y;
     let attempts = 0;
     do {
-      x = Math.floor(Math.random() * GRID);
-      y = Math.floor(Math.random() * GRID);
+      x = Math.floor(Math.random() * getLevelCols(level));
+      y = Math.floor(Math.random() * getLevelRows(level));
       attempts++;
     } while ((walls.has(`${x},${y}`) || occupied.has(`${x},${y}`)) && attempts < 50);
     
@@ -324,8 +347,8 @@ const generateSpontaneousTarget = (levelIndex, currentTargets, walls) => {
   const occupied = new Set(currentTargets.map(t => `${t.x},${t.y}`));
   
   do {
-    x = Math.floor(Math.random() * GRID);
-    y = Math.floor(Math.random() * GRID);
+    x = Math.floor(Math.random() * getLevelCols(GRID_LEVELS[levelIndex]));
+    y = Math.floor(Math.random() * getLevelRows(GRID_LEVELS[levelIndex]));
     attempts++;
   } while ((walls.has(`${x},${y}`) || occupied.has(`${x},${y}`)) && attempts < 50);
   
@@ -342,7 +365,7 @@ const generateSpontaneousTarget = (levelIndex, currentTargets, walls) => {
     y,
     color: randomColor,
     points: 150,
-    dropZone: { x: Math.floor(Math.random() * GRID), y: Math.floor(Math.random() * GRID) },
+    dropZone: { x: Math.floor(Math.random() * getLevelCols(GRID_LEVELS[levelIndex])), y: Math.floor(Math.random() * getLevelRows(GRID_LEVELS[levelIndex])) },
     active: true
   };
 };
@@ -572,9 +595,9 @@ const GridFlowGame = ({ isActive, onEndGame, isDemo, showBriefing = true }) => {
 
     let nx=p.x, ny=p.y;
     if (dir==='up') ny=Math.max(0,p.y-1);
-    if (dir==='down') ny=Math.min(GRID-1,p.y+1);
+    if (dir==='down') ny=Math.min(getLevelRows(lvl)-1,p.y+1);
     if (dir==='left') nx=Math.max(0,p.x-1);
-    if (dir==='right') nx=Math.min(GRID-1,p.x+1);
+    if (dir==='right') nx=Math.min(getLevelCols(lvl)-1,p.x+1);
     if (walls.has(`${nx},${ny}`) || (nx===p.x && ny===p.y)) return;
 
     let newEnergy = Math.max(0, eng - lvl.energyDrain);
@@ -674,8 +697,8 @@ const GridFlowGame = ({ isActive, onEndGame, isDemo, showBriefing = true }) => {
     const walls = new Set(lvl.walls);
     const revealedDrop = inventory ? inventory.dropZone : null;
     const cells = [];
-    for (let y=0; y<GRID; y++) {
-      for (let x=0; x<GRID; x++) {
+    for (let y=0; y<getLevelRows(lvl); y++) {
+      for (let x=0; x<getLevelCols(lvl); x++) {
         const isWall = walls.has(`${x},${y}`);
         const station = lvl.stations.find(s=>s.x===x&&s.y===y);
         const target = targets.find(t=>t.active&&t.x===x&&t.y===y);
@@ -737,6 +760,11 @@ const GridFlowGame = ({ isActive, onEndGame, isDemo, showBriefing = true }) => {
   }
 
   const lvlData = GRID_LEVELS[round];
+  const gridCols = getLevelCols(lvlData);
+  const gridRows = getLevelRows(lvlData);
+  const gridPixelWidth = gridCols * cellSize + ((gridCols - 1) * gapSize);
+  const gridPixelHeight = gridRows * cellSize + ((gridRows - 1) * gapSize);
+  const boardPixelWidth = gridPixelWidth + (paddingSize * 2);
   const liveEfficiency = getGridEfficiency(score, totalPossiblePoints);
   const currentQuestion = quizQuestions[quizStep];
 
@@ -744,7 +772,7 @@ const GridFlowGame = ({ isActive, onEndGame, isDemo, showBriefing = true }) => {
       <div style={{ width:'100%', height:'100%', display:'flex', flexDirection:'column', alignItems:'center', justifyContent:'center', padding:isMobile ? '12px' : '20px', gap:isMobile ? '12px' : '20px', position:'relative' }}>
       <AnimatePresence>
         {gameState === 'playing' && (
-          <motion.div initial={{ opacity:0, y:20 }} animate={{ opacity:1, y:0 }} exit={{ opacity:0 }} className="glass-panel" style={{ padding:isMobile ? '24px' : '40px', display:'flex', flexDirection:'column', alignItems:'center', gap:isMobile ? '20px' : '32px', background: 'rgba(255,255,255,0.95)', backdropFilter: 'blur(12px)', width: 'fit-content', minWidth: `${boardSize}px`, maxWidth: '100%' }}>
+          <motion.div initial={{ opacity:0, y:20 }} animate={{ opacity:1, y:0 }} exit={{ opacity:0 }} className="glass-panel" style={{ padding:isMobile ? '24px' : '40px', display:'flex', flexDirection:'column', alignItems:'center', gap:isMobile ? '20px' : '32px', background: 'rgba(255,255,255,0.95)', backdropFilter: 'blur(12px)', width: 'fit-content', minWidth: `${Math.min(boardSize, boardPixelWidth)}px`, maxWidth: '100%' }}>
             <div style={{ display:'grid', gridTemplateColumns:isMobile ? 'repeat(3, minmax(0, 1fr))' : 'repeat(6, minmax(0, 1fr))', width:'100%', color:'#1e1b4b', textTransform:'uppercase', letterSpacing:isMobile ? '1px' : '3px', fontSize:isMobile ? '0.78rem' : '1rem', fontWeight:'900', gap:isMobile ? '10px' : '24px', whiteSpace:'nowrap' }}>
               <span>Round {round+1}/{effectiveMaxRounds}</span>
               <span style={{ color: levelTimeLeft<10?'#dc2626':'#059669' }}>⏱ {levelTimeLeft}s</span>
@@ -754,7 +782,7 @@ const GridFlowGame = ({ isActive, onEndGame, isDemo, showBriefing = true }) => {
               <span style={{ color:'#4f46e5' }}>Pts: {score}</span>
             </div>
             
-            <div style={{ position:'relative', padding:`${paddingSize}px`, border:'2px solid rgba(99,102,241,0.2)', borderRadius:'20px', background:'#f8fafc', boxShadow: 'inset 0 4px 12px rgba(0,0,0,0.1)', width: `${boardSize}px`, maxWidth: '100%', overflow: 'hidden', boxSizing: 'border-box' }}>
+            <div style={{ position:'relative', padding:`${paddingSize}px`, border:'2px solid rgba(99,102,241,0.2)', borderRadius:'20px', background:'#f8fafc', boxShadow: 'inset 0 4px 12px rgba(0,0,0,0.1)', width: `${boardPixelWidth}px`, maxWidth: '100%', overflow: 'hidden', boxSizing: 'border-box' }}>
               {showPickupAnim && (
                 <motion.div initial={{ y:10, opacity:0 }} animate={{ y:-50, opacity:1 }} exit={{ opacity:0 }} style={{ position: 'absolute', left: '50%', transform: 'translateX(-50%)', zIndex: 30, background: '#1e293b', padding: '12px 32px', borderRadius: 32, color: '#fff', fontWeight: 900, fontSize: '1.1rem' }}>
                   {language === 'es' ? '+ RECOGIDO' : '+ COLLECTED'}
@@ -771,8 +799,8 @@ const GridFlowGame = ({ isActive, onEndGame, isDemo, showBriefing = true }) => {
                 </motion.div>
               )}
               {showDeliverAnim && (<div style={{ position: 'absolute', inset: 0, pointerEvents: 'none', zIndex: 40 }}><Confetti count={30} spread={100} duration={1.5} /></div>)}
-              <div style={{ position: 'relative', display:'inline-block', width: `${GRID * cellSize + ((GRID - 1) * gapSize)}px`, height: `${GRID * cellSize + ((GRID - 1) * gapSize)}px`, overflow: 'hidden' }}>
-                <div style={{ display:'grid', gridTemplateColumns:`repeat(${GRID}, ${cellSize}px)`, gap:`${gapSize}px` }}>{renderGrid()}</div>
+              <div style={{ position: 'relative', display:'inline-block', width: `${gridPixelWidth}px`, height: `${gridPixelHeight}px`, overflow: 'hidden' }}>
+                <div style={{ display:'grid', gridTemplateColumns:`repeat(${gridCols}, ${cellSize}px)`, gap:`${gapSize}px` }}>{renderGrid()}</div>
                 <motion.div
                   aria-hidden="true"
                   style={{ position:'absolute', left: 0, top: 0, width: cellSize, height: cellSize, zIndex: 20, pointerEvents: 'none' }}

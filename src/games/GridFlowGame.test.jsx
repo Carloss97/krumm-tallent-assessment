@@ -12,9 +12,9 @@ describe('GridFlowGame levels', () => {
     expect(GRID_LEVELS[5].difficulty).toBe('hard');
     expect(GRID_LEVELS[0].energyDrain).toBeLessThan(1);
     expect(GRID_LEVELS[1].energyDrain).toBeGreaterThan(0);
-    expect(GRID_LEVELS[5].targets).toHaveLength(4);
-    expect(GRID_LEVELS[1].stations.length).toBeGreaterThanOrEqual(1);
-    expect(GRID_LEVELS[5].stations.length).toBeGreaterThanOrEqual(3);
+    expect(GRID_LEVELS[5].targets).toHaveLength(6);
+    expect(GRID_LEVELS[1].stations.length).toBeGreaterThanOrEqual(2);
+    expect(GRID_LEVELS[5].stations.length).toBeGreaterThanOrEqual(4);
     expect(GRID_LEVELS[0].timeLimit).toBeLessThan(GRID_LEVELS[1].timeLimit + 10);
     expect(GRID_LEVELS[1].timeLimit).toBeGreaterThan(0);
     GRID_LEVELS.forEach((level) => {
@@ -63,13 +63,29 @@ describe('GridFlowGame levels', () => {
   });
 
   it('increases target count and energy drain with progression', () => {
-    expect(GRID_LEVELS[0].targets).toHaveLength(1);
+    expect(GRID_LEVELS[0].targets.length).toBeGreaterThanOrEqual(2);
     expect(GRID_LEVELS[1].targets.length).toBeGreaterThan(GRID_LEVELS[0].targets.length);
     expect(GRID_LEVELS[5].targets.length).toBeGreaterThanOrEqual(GRID_LEVELS[4].targets.length);
 
     expect(GRID_LEVELS[0].energyDrain).toBeLessThanOrEqual(GRID_LEVELS[1].energyDrain);
     expect(GRID_LEVELS[1].energyDrain).toBeLessThanOrEqual(GRID_LEVELS[3].energyDrain);
     expect(GRID_LEVELS[4].energyDrain).toBeLessThanOrEqual(GRID_LEVELS[5].energyDrain);
+  });
+
+  it('uses large fixed city-scale maps with passenger-like pickup/drop routing complexity', () => {
+    GRID_LEVELS.forEach((level, index) => {
+      expect(level.cols, `level ${index} should declare a large map width`).toBeGreaterThanOrEqual(14);
+      expect(level.rows, `level ${index} should declare a large map height`).toBeGreaterThanOrEqual(14);
+      expect(level.randomizeTargets, `level ${index} should preserve authored pickup/drop spawn geometry`).not.toBe(true);
+      expect(level.targets.length, `level ${index} should have multiple concurrent route objectives`).toBeGreaterThanOrEqual(index < 2 ? 2 : 4);
+      expect(level.walls.length, `level ${index} should have district/block obstacles`).toBeGreaterThanOrEqual(index < 2 ? 30 : 60);
+    });
+
+    const finalLevel = GRID_LEVELS[GRID_LEVELS.length - 1];
+    expect(finalLevel.cols).toBeGreaterThanOrEqual(18);
+    expect(finalLevel.rows).toBeGreaterThanOrEqual(16);
+    expect(finalLevel.targets.length).toBeGreaterThanOrEqual(6);
+    expect(finalLevel.stations.length).toBeGreaterThanOrEqual(4);
   });
 
   it('provides sufficient stations for energy management', () => {

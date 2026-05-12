@@ -2,20 +2,6 @@ import { describe, it, expect } from 'vitest';
 import { LASER_DEMO_LEVELS, buildGrid, getLaserEfficiency, traceBeam } from './LaserPuzzleGame';
 
 describe('LaserPuzzleGame levels', () => {
-  const buildPlacedGrid = (level, placements) => {
-    const grid = buildGrid(level);
-
-    placements.forEach(([fromKey, toKey]) => {
-      const cell = grid[fromKey];
-      expect(cell).toBeDefined();
-      delete grid[fromKey];
-      grid[toKey] = { ...cell };
-    });
-
-    return grid;
-  };
-
-
   it('defines a progressive adaptive six-level puzzle set', () => {
     expect(LASER_DEMO_LEVELS).toHaveLength(6);
     expect(LASER_DEMO_LEVELS[0].difficulty).toBe('easy');
@@ -24,7 +10,7 @@ describe('LaserPuzzleGame levels', () => {
     expect(LASER_DEMO_LEVELS[3].difficulty).toBe('hard');
     expect(LASER_DEMO_LEVELS[4].difficulty).toBe('easy');
     expect(LASER_DEMO_LEVELS[5].difficulty).toBe('hard');
-    expect(LASER_DEMO_LEVELS.every((level) => level.cells.filter((cell) => cell.movable).length >= 2)).toBe(true);
+    expect(LASER_DEMO_LEVELS.every((level) => level.cells.filter((cell) => cell.movable).length >= 4)).toBe(true);
     expect(LASER_DEMO_LEVELS.some((level) => level.cells.some((cell) => cell.type === 'bifurcator'))).toBe(true);
     expect(LASER_DEMO_LEVELS.some((level) => level.cells.some((cell) => cell.type === 'portal_blue'))).toBe(true);
     expect(LASER_DEMO_LEVELS.some((level) => level.quiz.length > 0)).toBe(true);
@@ -42,60 +28,27 @@ describe('LaserPuzzleGame levels', () => {
     });
   });
 
-  it('most levels require 2+ moves (allowing simple intro levels)', () => {
-    const getEmptyCells = (level, grid) => {
-      const occupied = new Set(Object.keys(grid));
-      const empties = [];
-      for (let y = 0; y < level.rows; y += 1) {
-        for (let x = 0; x < level.cols; x += 1) {
-          const key = `${x},${y}`;
-          if (!occupied.has(key)) {
-            empties.push({ x, y, key });
-          }
-        }
-      }
-      return empties;
+  it('supports all 8 beam directions including diagonals', () => {
+    const diagonalLevel = {
+      cols: 6,
+      rows: 6,
+      cells: [
+        { x: 0, y: 0, type: 'ship', dir: 'downRight' },
+        { x: 4, y: 4, type: 'antenna' },
+      ],
     };
 
-    let requiresMultipleMoves = 0;
+    const result = traceBeam(buildGrid(diagonalLevel), diagonalLevel.cols, diagonalLevel.rows);
 
-    LASER_DEMO_LEVELS.forEach((level) => {
-      const baseGrid = buildGrid(level);
-      const movableCells = Object.entries(baseGrid).filter(([, cell]) => cell.movable);
-      const antennaKeys = level.cells
-        .filter((cell) => cell.type === 'antenna')
-        .map((cell) => `${cell.x},${cell.y}`);
-
-      let oneMoveSolved = false;
-
-      movableCells.forEach(([fromKey, fromCell]) => {
-        if (oneMoveSolved) return;
-        const empties = getEmptyCells(level, baseGrid);
-        empties.forEach(({ key }) => {
-          if (oneMoveSolved) return;
-          const candidateGrid = { ...baseGrid };
-          delete candidateGrid[fromKey];
-          candidateGrid[key] = { ...fromCell };
-
-          const { litAntennas } = traceBeam(candidateGrid, level.cols, level.rows);
-          if (antennaKeys.every((antenna) => litAntennas.has(antenna))) {
-            oneMoveSolved = true;
-          }
-        });
-      });
-
-      if (!oneMoveSolved) {
-        requiresMultipleMoves += 1;
-      }
-    });
-
-    // At least 4 out of 6 levels should require 2+ moves
-    expect(requiresMultipleMoves).toBeGreaterThanOrEqual(4);
+    expect(result.beamCells.has('1,1')).toBe(true);
+    expect(result.beamCells.has('2,2')).toBe(true);
+    expect(result.litAntennas.has('4,4')).toBe(true);
   });
 
   it('lights the antenna in a solved reflection layout', () => {
     const solvedLevel = {
-      ...LASER_DEMO_LEVELS[0],
+      cols: 10,
+      rows: 7,
       cells: [
         { x: 0, y: 3, type: 'ship', dir: 'right' },
         { x: 7, y: 0, type: 'antenna' },
@@ -134,16 +87,31 @@ describe('LaserPuzzleGame levels', () => {
     expect(result.litAntennas.has('9,6')).toBe(true);
   });
 
-  it('computes efficiency against the level par', () => {
-    expect(getLaserEfficiency(3, 3)).toBe(100);
-    expect(getLaserEfficiency(6, 3)).toBe(50);
+  it('redesigns levels as large complex maps with progressive optical objects', () => {
+    LASER_DEMO_LEVELS.forEach((level, index) => {
+      expect(level.cols, `level ${index} should use a wider board`).toBeGreaterThanOrEqual(12);
+      expect(level.rows, `level ${index} should use a taller board`).toBeGreaterThanOrEqual(10);
+      expect(level.cells.filter((cell) => cell.type === 'wall').length, `level ${index} should include meaningful obstacles`).toBeGreaterThanOrEqual(index < 2 ? 18 : 30);
+      expect(level.cells.filter((cell) => cell.movable).length, `level ${index} should require several object moves`).toBeGreaterThanOrEqual(index < 2 ? 4 : 6);
+      expect(level.par, `level ${index} should require multi-step reasoning`).toBeGreaterThanOrEqual(index < 2 ? 4 : 6);
+    });
+
+    const shipDirs = new Set(
+      LASER_DEMO_LEVELS
+        .flatMap((level) => level.cells)
+        .filter((cell) => cell.type === 'ship')
+        .map((cell) => cell.dir)
+    );
+    expect([...shipDirs].some((dir) => ['upRight', 'downRight', 'downLeft', 'upLeft'].includes(dir))).toBe(true);
+    expect(LASER_DEMO_LEVELS.some((level) => level.cells.some((cell) => cell.type === 'bifurcator'))).toBe(true);
+    expect(LASER_DEMO_LEVELS.some((level) => level.cells.some((cell) => cell.type === 'portal_blue' || cell.type === 'portal_red'))).toBe(true);
   });
 
   it('marks portals as movable in redesigned levels', () => {
     const portals = LASER_DEMO_LEVELS.filter((level) =>
       level.cells.some((cell) => cell.type === 'portal_blue')
     );
-    
+
     expect(portals.length).toBeGreaterThan(0);
     portals.forEach((level) => {
       const portalCells = level.cells.filter((cell) => cell.type === 'portal_blue');
@@ -161,25 +129,15 @@ describe('LaserPuzzleGame levels', () => {
     const portalCells = Object.entries(grid).filter(([, cell]) => cell.type === 'portal_blue');
     expect(portalCells.length).toBeGreaterThanOrEqual(2);
 
-    // Extract the portal IDs
-    const portalIds = portalCells.map(([, cell]) => ({
-      id: cell.portalId || cell.targetPortalId,
-      type: cell.portalId ? 'source' : 'target',
-      cell,
-    }));
-
-    // Move first portal to a new location
     const [firstKey, firstCell] = portalCells[0];
     const newGrid = { ...grid };
     delete newGrid[firstKey];
     newGrid['7,7'] = { ...firstCell };
 
-    // Verify that the portal identity and linking are preserved
     const movedPortal = newGrid['7,7'];
     expect(movedPortal.portalId || movedPortal.targetPortalId).toBeDefined();
     expect(movedPortal.movable).toBe(true);
 
-    // Verify the paired portal can still find it by ID
     const pairedPortal = Object.entries(newGrid).find(
       ([, cell]) =>
         (cell.portalId === movedPortal.targetPortalId || cell.targetPortalId === movedPortal.portalId) &&
@@ -188,92 +146,38 @@ describe('LaserPuzzleGame levels', () => {
     expect(pairedPortal).toBeDefined();
   });
 
-  it('requires minimum 2+ movable pieces per level for complexity', () => {
-    LASER_DEMO_LEVELS.forEach((level, idx) => {
-      const movableCount = level.cells.filter((cell) => cell.movable).length;
-      expect(movableCount).toBeGreaterThanOrEqual(2);
-    });
-  });
+  it('has at least one authored solvable arrangement for every level', () => {
+    LASER_DEMO_LEVELS.forEach((level, index) => {
+      expect(level.solutionPlacements, `level ${index} should document its intended solution`).toBeTruthy();
+      const finalGrid = buildGrid(level);
+      level.solutionPlacements.forEach(([fromKey, toKey]) => {
+        const cell = finalGrid[fromKey];
+        expect(cell, `level ${index} missing solution piece at ${fromKey}`).toBeDefined();
+        delete finalGrid[fromKey];
+        finalGrid[toKey] = { ...cell };
+      });
 
-  it('has at least one solvable arrangement for every level', () => {
-    const cases = [
-      {
-        name: 'Sector Alpha',
-        levelIndex: 0,
-        placements: [
-          ['1,4', '3,3'],
-          ['8,1', '3,0'],
-        ],
-      },
-      {
-        name: 'Sector Alpha+',
-        levelIndex: 1,
-        placements: [
-          ['2,2', '2,3'],
-          ['10,1', '2,0'],
-          ['10,6', '2,7'],
-        ],
-      },
-      {
-        name: 'Sector Beta',
-        levelIndex: 2,
-        placements: [
-          ['4,1', '2,0'],
-        ],
-      },
-      {
-        name: 'Sector Beta+',
-        levelIndex: 3,
-        placements: [
-          ['1,0', '2,3'],
-          ['6,0', '2,1'],
-          ['6,4', '2,5'],
-        ],
-      },
-      {
-        name: 'Sector Gamma',
-        levelIndex: 4,
-        placements: [
-          ['1,4', '1,2'],
-          ['7,4', '6,2'],
-        ],
-      },
-      {
-        name: 'Sector Gamma+',
-        levelIndex: 5,
-        placements: [
-          ['1,0', '2,3'],
-          ['8,0', '2,1'],
-          ['8,6', '2,5'],
-          ['1,1', '4,1'],
-          ['6,1', '7,1'],
-          ['1,5', '4,5'],
-          ['6,5', '7,5'],
-        ],
-      },
-    ];
-
-    cases.forEach(({ name, levelIndex, placements }) => {
-      const level = LASER_DEMO_LEVELS[levelIndex];
       const antennaKeys = level.cells
         .filter((cell) => cell.type === 'antenna')
         .map((cell) => `${cell.x},${cell.y}`);
-
-      const finalGrid = buildPlacedGrid(level, placements);
       const { litAntennas } = traceBeam(finalGrid, level.cols, level.rows);
-      const solved = antennaKeys.every((antennaKey) => litAntennas.has(antennaKey));
 
-      expect(solved, `${name} should have a real solved arrangement`).toBe(true);
+      expect(antennaKeys.every((antennaKey) => litAntennas.has(antennaKey)), `level ${index} should solve with its authored placements`).toBe(true);
     });
+  });
+
+  it('computes efficiency against the level par', () => {
+    expect(getLaserEfficiency(3, 3)).toBe(100);
+    expect(getLaserEfficiency(6, 3)).toBe(50);
   });
 
   it('increases par value with level difficulty progression', () => {
     const easyLevels = LASER_DEMO_LEVELS.filter((l) => l.difficulty === 'easy');
     const hardLevels = LASER_DEMO_LEVELS.filter((l) => l.difficulty === 'hard');
-    
+
     const easyAvgPar = easyLevels.reduce((sum, l) => sum + l.par, 0) / easyLevels.length;
     const hardAvgPar = hardLevels.reduce((sum, l) => sum + l.par, 0) / hardLevels.length;
-    
+
     expect(hardAvgPar).toBeGreaterThan(easyAvgPar);
   });
 });

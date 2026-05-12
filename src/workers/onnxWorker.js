@@ -13,7 +13,7 @@ async function tryLoadRuntime() {
     // Dynamic import ensures the runtime is bundled separately for the worker
     ort = await import('onnxruntime-web');
     return ort;
-  } catch (err) {
+  } catch {
     // Runtime not available in bundle or network failed
     ort = null;
     return null;
@@ -139,7 +139,7 @@ self.addEventListener('message', async (ev) => {
           };
           self.postMessage({ type: 'infer:result', id: msg.id || null, result });
           return;
-        } catch (err) {
+        } catch {
           // model inference failed: fall through to deterministic
         }
       }

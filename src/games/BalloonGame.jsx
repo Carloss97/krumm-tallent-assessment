@@ -20,11 +20,15 @@ const BalloonGame = ({ isActive, onEndGame, isDemo, showBriefing = true }) => {
   const [showConfetti, setShowConfetti] = useState(false);
   const [shake, setShake] = useState(0);
   const [briefing, setBriefing] = useState(Boolean(isDemo && showBriefing));
+  const [retryUsed, setRetryUsed] = useState(false);
+  const [reviewScore, setReviewScore] = useState(0);
+  const [reviewPops, setReviewPops] = useState(0);
 
   const totalPointsRef = useRef(0);
   const popsRef = useRef(0);
   const hasEndedRef = useRef(false);
   const roundRef = useRef(1);
+  const retryUsedRef = useRef(false);
 
   const initRound = useCallback(() => {
     setCurrentBalloonSize(1);
@@ -45,6 +49,20 @@ const BalloonGame = ({ isActive, onEndGame, isDemo, showBriefing = true }) => {
     if (nextRound > MAX_ROUNDS) {
       hasEndedRef.current = true;
       stopTracking('game4', totalPointsRef.current, popsRef.current, { pops: popsRef.current });
+      if (isDemo) {
+        recordTrialEvent({
+          event: 'balloon_review_shown',
+          payload: {
+            score: totalPointsRef.current,
+            pops: popsRef.current,
+            retryAvailable: !retryUsedRef.current,
+          },
+        });
+        setReviewScore(totalPointsRef.current);
+        setReviewPops(popsRef.current);
+        setGameState('review');
+        return;
+      }
       // Defer onEndGame to avoid calling parent setState during a render cycle
       queueMicrotask(() => onEndGame(totalPointsRef.current, popsRef.current));
       return;
@@ -53,7 +71,33 @@ const BalloonGame = ({ isActive, onEndGame, isDemo, showBriefing = true }) => {
     roundRef.current = nextRound;
     setRound(nextRound);
     setTimeout(() => initRound(), 0);
-  }, [MAX_ROUNDS, onEndGame, initRound, stopTracking]);
+  }, [MAX_ROUNDS, onEndGame, initRound, stopTracking, isDemo, recordTrialEvent]);
+
+  const restartDemoOnce = useCallback(() => {
+    if (retryUsedRef.current || !isDemo) return;
+
+    retryUsedRef.current = true;
+    setRetryUsed(true);
+    hasEndedRef.current = false;
+    totalPointsRef.current = 0;
+    popsRef.current = 0;
+    roundRef.current = 1;
+    setRound(1);
+    setTotalPoints(0);
+    setReviewScore(0);
+    setReviewPops(0);
+    recordTrialEvent({ event: 'balloon_retry_selected', payload: { previousScore: reviewScore, previousPops: reviewPops } });
+    startTracking();
+    initRound();
+  }, [initRound, isDemo, recordTrialEvent, reviewPops, reviewScore, startTracking]);
+
+  const continueAfterReview = useCallback(() => {
+    recordTrialEvent({
+      event: 'balloon_review_continued',
+      payload: { score: reviewScore, pops: reviewPops, retryUsed: retryUsedRef.current },
+    });
+    queueMicrotask(() => onEndGame(reviewScore, reviewPops));
+  }, [onEndGame, recordTrialEvent, reviewPops, reviewScore]);
 
   const handlePump = useCallback(() => {
     if (gameState !== 'playing' || hasEndedRef.current || briefing) return;
@@ -103,10 +147,14 @@ const BalloonGame = ({ isActive, onEndGame, isDemo, showBriefing = true }) => {
       hasEndedRef.current = false;
       totalPointsRef.current = 0;
       popsRef.current = 0;
+      retryUsedRef.current = false;
       startTracking();
       roundRef.current = 1;
       setRound(1);
       setTotalPoints(0);
+      setRetryUsed(false);
+      setReviewScore(0);
+      setReviewPops(0);
       initRound();
       setBriefing(Boolean(isDemo && showBriefing));
     }
@@ -140,7 +188,15 @@ const BalloonGame = ({ isActive, onEndGame, isDemo, showBriefing = true }) => {
       ariaBank: 'Capturar puntos en reserva (Enter)',
       briefTitle: 'Protocolo de Riesgo',
       briefBody: 'Iniciando evaluación de captura de valor. Debe gestionar el crecimiento del activo mediante ciclos de optimización. Mayor volumen implica mayor recompensa, pero incrementa exponencialmente la probabilidad de colapso de la integridad. Utilice el comando Capturar para asegurar el rendimiento acumulado.',
-      startBtn: 'Iniciar Operación'
+      startBtn: 'Iniciar Operación',
+      reviewTitle: '¿Querés reintentar este primer juego?',
+      reviewBody: 'Tu resultado queda registrado para la demo. Si no estás conforme, podés reiniciar este juego una sola vez antes de continuar.',
+      reviewDoneTitle: 'Segundo intento completado',
+      reviewDoneBody: 'Ya usaste el reintento disponible. Continuemos con los desafíos de rutas y razonamiento espacial.',
+      retryBtn: 'Reintentar una vez',
+      continueBtn: 'Continuar',
+      scoreLabel: 'Puntaje',
+      popsLabel: 'Colapsos'
     },
     en: {
       trialLabel: 'Phase',
@@ -153,7 +209,15 @@ const BalloonGame = ({ isActive, onEndGame, isDemo, showBriefing = true }) => {
       ariaBank: 'Capture points to reserve (Enter)',
       briefTitle: 'Risk Protocol',
       briefBody: 'Initiating value capture assessment. You must manage asset growth through optimization cycles. Higher volume implies higher reward, but exponentially increases the probability of integrity collapse. Use the Capture command to secure accumulated yield.',
-      startBtn: 'Start Operation'
+      startBtn: 'Start Operation',
+      reviewTitle: 'Do you want to retry this first game?',
+      reviewBody: 'Your result is recorded for the demo. If you are not satisfied, you can restart this game one time before continuing.',
+      reviewDoneTitle: 'Second attempt completed',
+      reviewDoneBody: 'You already used the available retry. Let’s continue with the routing and spatial reasoning challenges.',
+      retryBtn: 'Retry once',
+      continueBtn: 'Continue',
+      scoreLabel: 'Score',
+      popsLabel: 'Collapses'
     }
   };
 
@@ -180,6 +244,56 @@ const BalloonGame = ({ isActive, onEndGame, isDemo, showBriefing = true }) => {
     <div style={{ width: '100%', minHeight: '600px', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '20px', gap: '20px', position: 'relative', overflow: 'hidden' }}>
       
       <AnimatePresence>
+        {gameState === 'review' && (
+          <motion.div
+            key="review"
+            initial={{ opacity: 0, y: 20, scale: 0.96 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0 }}
+            className="glass-panel"
+            style={{
+              padding: '40px',
+              maxWidth: '560px',
+              width: 'min(92vw, 560px)',
+              textAlign: 'center',
+              border: '1px solid rgba(99,102,241,0.18)',
+              boxShadow: '0 30px 70px -24px rgba(15,23,42,0.35)',
+              background: 'rgba(255,255,255,0.96)',
+              zIndex: 120,
+            }}
+          >
+            <div style={{ color: '#4f46e5', fontSize: '0.78rem', fontWeight: 900, textTransform: 'uppercase', letterSpacing: '3px', marginBottom: '12px' }}>
+              {language === 'es' ? 'Cierre del primer juego' : 'First game checkpoint'}
+            </div>
+            <h4 style={{ margin: 0, color: '#1e1b4b', fontSize: '1.75rem', fontWeight: 950, letterSpacing: '-0.03em' }}>
+              {retryUsed ? t.reviewDoneTitle : t.reviewTitle}
+            </h4>
+            <p style={{ margin: '18px 0 26px', color: '#475569', lineHeight: 1.65, fontSize: '1rem', fontWeight: 500 }}>
+              {retryUsed ? t.reviewDoneBody : t.reviewBody}
+            </p>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, minmax(0, 1fr))', gap: '12px', marginBottom: '28px' }}>
+              <div style={{ padding: '16px', borderRadius: '18px', background: '#eef2ff', border: '1px solid rgba(99,102,241,0.2)' }}>
+                <div style={{ color: '#64748b', fontSize: '0.72rem', textTransform: 'uppercase', letterSpacing: '2px', fontWeight: 900 }}>{t.scoreLabel}</div>
+                <div style={{ color: '#1e1b4b', fontSize: '1.8rem', fontWeight: 950 }}>{reviewScore}</div>
+              </div>
+              <div style={{ padding: '16px', borderRadius: '18px', background: '#fef2f2', border: '1px solid rgba(239,68,68,0.16)' }}>
+                <div style={{ color: '#64748b', fontSize: '0.72rem', textTransform: 'uppercase', letterSpacing: '2px', fontWeight: 900 }}>{t.popsLabel}</div>
+                <div style={{ color: '#b91c1c', fontSize: '1.8rem', fontWeight: 950 }}>{reviewPops}</div>
+              </div>
+            </div>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+              {!retryUsed && (
+                <button className="btn" type="button" onClick={restartDemoOnce} style={{ padding: '16px', borderRadius: '18px', fontWeight: 900, border: '2px solid #4f46e5', color: '#4f46e5' }}>
+                  {t.retryBtn}
+                </button>
+              )}
+              <button className="btn btn-primary" type="button" onClick={continueAfterReview} style={{ padding: '16px', borderRadius: '18px', fontWeight: 900 }}>
+                {t.continueBtn}
+              </button>
+            </div>
+          </motion.div>
+        )}
+
         {briefing && (
           <motion.div initial={{ opacity:0 }} animate={{ opacity:1 }} exit={{ opacity:0 }} style={{ position:'absolute', inset:0, background:'rgba(15,23,42,0.6)', backdropFilter: 'blur(4px)', display:'flex', alignItems:'center', justifyContent:'center', zIndex: 200, borderRadius: '16px' }}>
             <motion.div initial={{ y:20, scale:0.95 }} animate={{ y:0, scale:1 }} style={{ background:'#ffffff', padding:'32px', borderRadius:'20px', maxWidth:'440px', textAlign:'center', border:'1px solid rgba(15,23,42,0.1)', boxShadow:'0 25px 50px -12px rgba(0,0,0,0.25)' }}>

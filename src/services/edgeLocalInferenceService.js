@@ -301,7 +301,7 @@ export async function generateEdgeLocalReportModel(sessionData, language = 'en',
       // Timeout fallback
       const to = setTimeout(() => {
         worker.removeEventListener('message', onMessage);
-        try { worker.terminate(); } catch (e) {}
+        try { worker.terminate(); } catch { /* ignore termination errors */ }
         reject(new Error('Worker timeout'));
       }, 2000);
 
@@ -311,14 +311,14 @@ export async function generateEdgeLocalReportModel(sessionData, language = 'en',
       } catch (err) {
         clearTimeout(to);
         worker.removeEventListener('message', onMessage);
-        try { worker.terminate(); } catch (e) {}
+        try { worker.terminate(); } catch { /* ignore termination errors */ }
         reject(err);
       }
     });
 
     try {
       const result = await promise;
-      try { worker.terminate(); } catch (e) {}
+      try { worker.terminate(); } catch { /* ignore termination errors */ }
 
       // Map worker result to report-shaped object
       const latencyMs = result.latencyMs || 0;
@@ -353,9 +353,9 @@ export async function generateEdgeLocalReportModel(sessionData, language = 'en',
           biometricSignalQualityScore: features.stabilityScore,
         }
       };
-    } catch (err) {
+    } catch {
       // Worker failed or timed out — fallback to heuristic
-      try { worker.terminate(); } catch (e) {}
+      try { worker.terminate(); } catch { /* ignore termination errors */ }
       return generateEdgeLocalReport(sessionData, language);
     }
   } catch (err) {
@@ -380,7 +380,7 @@ export async function preloadEdgeLocalModel(options = {}) {
   }
 
   if (preloadedWorker && preloadedWorkerModelUrl !== modelUrl) {
-    try { preloadedWorker.terminate(); } catch (e) {}
+    try { preloadedWorker.terminate(); } catch { /* ignore termination errors */ }
     preloadedWorker = null;
     preloadedWorkerReady = null;
     preloadedWorkerModelUrl = '';
@@ -421,7 +421,7 @@ export async function preloadEdgeLocalModel(options = {}) {
 
 export function clearEdgeLocalModelCache() {
   if (preloadedWorker) {
-    try { preloadedWorker.terminate(); } catch (e) {}
+    try { preloadedWorker.terminate(); } catch { /* ignore termination errors */ }
   }
   preloadedWorker = null;
   preloadedWorkerModelUrl = '';
