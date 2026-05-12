@@ -2,7 +2,7 @@ import { act, fireEvent, render, screen, cleanup } from '@testing-library/react'
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import React from 'react';
 import { TelemetryProvider } from '../TelemetryContext';
-import BalloonGame from './BalloonGame';
+import BalloonGame, { getBalloonLayoutMetrics } from './BalloonGame';
 import { BrowserRouter } from 'react-router-dom';
 
 // Mock audio utilities
@@ -12,6 +12,17 @@ vi.mock('../utils/audio', () => ({
   playSuccessSound: vi.fn(),
   playErrorSound: vi.fn(),
 }));
+
+describe('BalloonGame responsive layout', () => {
+  it('does not reserve a fixed 600px game body on low-height desktop screens', () => {
+    const metrics = getBalloonLayoutMetrics({ width: 1366, height: 768 });
+
+    expect(metrics.containerMinHeight).toBe(0);
+    expect(metrics.containerHeight).toBe('100%');
+    expect(metrics.maxVisualScale).toBeLessThan(2.8);
+    expect(metrics.controlsBottom).toBeLessThanOrEqual(40);
+  });
+});
 
 describe('BalloonGame Telemetry Integration', () => {
   beforeEach(() => {

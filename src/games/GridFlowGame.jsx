@@ -18,19 +18,63 @@ const BOARD_PADDING = 12;
 const getLevelCols = (level) => level?.cols || DEFAULT_GRID;
 const getLevelRows = (level) => level?.rows || DEFAULT_GRID;
 
-const getGridMetrics = (isMobile, isTablet) => {
-  const cellSize = isMobile ? MOBILE_CELL : isTablet ? TABLET_CELL : CELL;
-  const gapSize = isMobile ? 2 : GRID_GAP;
-  const paddingSize = isMobile ? 10 : BOARD_PADDING;
+const DEFAULT_VIEWPORT = { width: 1366, height: 768 };
+
+const clamp = (value, min, max) => Math.min(max, Math.max(min, value));
+
+const getCurrentViewport = () => {
+  if (typeof window === 'undefined') return DEFAULT_VIEWPORT;
+  return {
+    width: window.innerWidth || DEFAULT_VIEWPORT.width,
+    height: window.innerHeight || DEFAULT_VIEWPORT.height,
+  };
+};
+
+const useViewportSize = () => {
+  const [viewport, setViewport] = useState(getCurrentViewport);
+
+  useEffect(() => {
+    if (typeof window === 'undefined') return undefined;
+
+    const updateViewport = () => setViewport(getCurrentViewport());
+    window.addEventListener('resize', updateViewport);
+    window.visualViewport?.addEventListener?.('resize', updateViewport);
+
+    return () => {
+      window.removeEventListener('resize', updateViewport);
+      window.visualViewport?.removeEventListener?.('resize', updateViewport);
+    };
+  }, []);
+
+  return viewport;
+};
+
+export const getGridMetrics = (isMobile, isTablet, level = {}, viewport = DEFAULT_VIEWPORT) => {
+  const preferredCell = isMobile ? MOBILE_CELL : isTablet ? TABLET_CELL : CELL;
+  const gapSize = isMobile || viewport.height <= 700 ? 2 : GRID_GAP;
+  const paddingSize = isMobile || viewport.height <= 700 ? 10 : BOARD_PADDING;
+  const minCellSize = isMobile ? 18 : isTablet ? 18 : 20;
+  const cols = getLevelCols(level);
+  const rows = getLevelRows(level);
+  const safeWidth = Math.max(260, viewport.width - (isMobile ? 36 : 146));
+  const safeHeight = Math.max(260, viewport.height - (isMobile ? 250 : 300));
+  const maxCellByWidth = (safeWidth - (paddingSize * 2) - ((cols - 1) * gapSize)) / cols;
+  const maxCellByHeight = (safeHeight - (paddingSize * 2) - ((rows - 1) * gapSize)) / rows;
+  const fittedCell = Math.floor(Math.min(preferredCell, maxCellByWidth, maxCellByHeight));
+  const cellSize = clamp(Number.isFinite(fittedCell) ? fittedCell : preferredCell, minCellSize, preferredCell);
   const stepSize = cellSize + gapSize;
-  const boardSize = (18 * cellSize) + ((18 - 1) * gapSize) + (paddingSize * 2);
+  const boardWidth = Math.ceil((cols * cellSize) + ((cols - 1) * gapSize) + (paddingSize * 2));
+  const boardHeight = Math.ceil((rows * cellSize) + ((rows - 1) * gapSize) + (paddingSize * 2));
 
   return {
     cellSize,
     gapSize,
     paddingSize,
     stepSize,
-    boardSize,
+    boardSize: boardWidth,
+    boardWidth,
+    boardHeight,
+    isCompact: viewport.height <= 820 || viewport.width <= 1180,
   };
 };
 
@@ -443,16 +487,14 @@ const GridFlowGame = ({ isActive, onEndGame, isDemo, showBriefing = true }) => {
   const isMobile = useIsMobile();
   const isTablet = useIsTablet();
 
+  const viewportSize = useViewportSize();
+
   const effectiveMaxRounds = GRID_LEVELS.length;
   const hasEndedRef = useRef(false);
 
   const totalPossiblePoints = useMemo(
     () => GRID_LEVELS.reduce((sum, lvl) => sum + lvl.targets.reduce((targetSum, t) => targetSum + t.points, 0), 0),
     []
-  );
-  const { cellSize, gapSize, paddingSize, stepSize, boardSize } = useMemo(
-    () => getGridMetrics(isMobile, isTablet),
-    [isMobile, isTablet]
   );
 
   const [gameState, setGameState] = useState('playing');
@@ -478,6 +520,12 @@ const GridFlowGame = ({ isActive, onEndGame, isDemo, showBriefing = true }) => {
   const levelTimerRef = useRef(null);
   const satTimerRef = useRef(null);
   const levelTransitionRef = useRef(false);
+
+  const currentLevel = GRID_LEVELS[round] || GRID_LEVELS[0];
+  const { cellSize, gapSize, paddingSize, stepSize, boardSize, isCompact: isCompactViewport } = useMemo(
+    () => getGridMetrics(isMobile, isTablet, currentLevel, viewportSize),
+    [isMobile, isTablet, currentLevel, viewportSize.width, viewportSize.height]
+  );
 
   const finishGame = useCallback(() => {
     if (hasEndedRef.current) {
@@ -812,11 +860,17 @@ const GridFlowGame = ({ isActive, onEndGame, isDemo, showBriefing = true }) => {
 
   const lastMoveRef = useRef(0);
   const [flashDir, setFlashDir] = useState(null);
+  const arrowSize = isCompactViewport && !isMobile ? 46 : 64;
+  const arrowGap = isCompactViewport && !isMobile ? 8 : 12;
+  const panelPadding = isMobile ? 24 : isCompactViewport ? 16 : 40;
+  const panelGap = isMobile ? 20 : isCompactViewport ? 14 : 32;
+  const stagePadding = isMobile ? 12 : isCompactViewport ? 8 : 20;
+  const controlsGap = isMobile ? 18 : isCompactViewport ? 28 : 60;
   const ArrowBtn = ({ dir, label }) => (
     <motion.button
       whileTap={{ scale: 0.9 }}
       onPointerDown={(e) => { e.preventDefault(); const now = Date.now(); if (now - lastMoveRef.current < 100) return; lastMoveRef.current = now; setFlashDir(dir); setTimeout(() => setFlashDir(null), 150); move(dir); }}
-      style={{ width:64, height:64, background: flashDir === dir ? '#4f46e5' : 'rgba(255,255,255,0.85)', border: `2px solid ${flashDir === dir ? '#4f46e5' : 'rgba(99,102,241,0.25)'}`, borderRadius:'18px', fontSize:'1.6rem', color: flashDir === dir ? '#fff' : '#1e1b4b', cursor:'pointer', display:'flex', alignItems:'center', justifyContent:'center', boxShadow: '0 8px 12px -2px rgba(0,0,0,0.1)' }}
+      style={{ width:arrowSize, height:arrowSize, background: flashDir === dir ? '#4f46e5' : 'rgba(255,255,255,0.85)', border: `2px solid ${flashDir === dir ? '#4f46e5' : 'rgba(99,102,241,0.25)'}`, borderRadius:isCompactViewport && !isMobile ? '14px' : '18px', fontSize:isCompactViewport && !isMobile ? '1.35rem' : '1.6rem', color: flashDir === dir ? '#fff' : '#1e1b4b', cursor:'pointer', display:'flex', alignItems:'center', justifyContent:'center', boxShadow: '0 8px 12px -2px rgba(0,0,0,0.1)' }}
     >{label}</motion.button>
   );
 
@@ -852,11 +906,11 @@ const GridFlowGame = ({ isActive, onEndGame, isDemo, showBriefing = true }) => {
   const chargeToastProps = getGridFeedbackToastProps('charge', isMobile);
 
   return (
-      <div style={{ width:'100%', height:'100%', display:'flex', flexDirection:'column', alignItems:'center', justifyContent:'center', padding:isMobile ? '12px' : '20px', gap:isMobile ? '12px' : '20px', position:'relative' }}>
+      <div style={{ width:'100%', height:'100%', display:'flex', flexDirection:'column', alignItems:'center', justifyContent:'center', padding:stagePadding, gap:isMobile ? '12px' : isCompactViewport ? '8px' : '20px', position:'relative', overflow:'hidden', boxSizing:'border-box' }}>
       <AnimatePresence>
         {gameState === 'playing' && (
-          <motion.div initial={{ opacity:0, y:20 }} animate={{ opacity:1, y:0 }} exit={{ opacity:0 }} className="glass-panel" style={{ padding:isMobile ? '24px' : '40px', display:'flex', flexDirection:'column', alignItems:'center', gap:isMobile ? '20px' : '32px', background: 'rgba(255,255,255,0.95)', backdropFilter: 'blur(12px)', width: 'fit-content', minWidth: `${Math.min(boardSize, boardPixelWidth)}px`, maxWidth: '100%' }}>
-            <div style={{ display:'grid', gridTemplateColumns:isMobile ? 'repeat(3, minmax(0, 1fr))' : 'repeat(6, minmax(0, 1fr))', width:'100%', color:'#1e1b4b', textTransform:'uppercase', letterSpacing:isMobile ? '1px' : '3px', fontSize:isMobile ? '0.78rem' : '1rem', fontWeight:'900', gap:isMobile ? '10px' : '24px', whiteSpace:'nowrap' }}>
+          <motion.div initial={{ opacity:0, y:20 }} animate={{ opacity:1, y:0 }} exit={{ opacity:0 }} className="glass-panel" style={{ padding:panelPadding, display:'flex', flexDirection:'column', alignItems:'center', gap:panelGap, background: 'rgba(255,255,255,0.95)', backdropFilter: 'blur(12px)', width: 'fit-content', minWidth: `${Math.min(boardSize, boardPixelWidth)}px`, maxWidth: '100%', maxHeight:'100%', overflow:'hidden', boxSizing:'border-box' }}>
+            <div style={{ display:'grid', gridTemplateColumns:isMobile ? 'repeat(3, minmax(0, 1fr))' : 'repeat(6, minmax(0, 1fr))', width:'100%', color:'#1e1b4b', textTransform:'uppercase', letterSpacing:isMobile ? '1px' : isCompactViewport ? '1.5px' : '3px', fontSize:isMobile ? '0.78rem' : isCompactViewport ? '0.78rem' : '1rem', fontWeight:'900', gap:isMobile ? '10px' : isCompactViewport ? '12px' : '24px', whiteSpace:'nowrap' }}>
               <span>Round {round+1}/{effectiveMaxRounds}</span>
               <span style={{ color: levelTimeLeft<10?'#dc2626':'#059669' }}>⏱ {levelTimeLeft}s</span>
               {lvlData.energyDrain>0 && <span style={{ color: energy<30?'#dc2626':'#1e1b4b' }}>⚡ {Math.round(energy)}%</span>}
@@ -897,10 +951,10 @@ const GridFlowGame = ({ isActive, onEndGame, isDemo, showBriefing = true }) => {
               </div>
             </div>
 
-            <div style={{ width: '100%', display: 'flex', flexDirection: isMobile ? 'column' : 'row', justifyContent: 'center', gap: isMobile ? '18px' : '60px', alignItems: 'center' }}>
-               <div style={{ display:'flex', flexDirection:'column', alignItems:'center', gap:'12px' }}>
+            <div style={{ width: '100%', display: 'flex', flexDirection: isMobile ? 'column' : 'row', justifyContent: 'center', gap: controlsGap, alignItems: 'center' }}>
+               <div style={{ display:'flex', flexDirection:'column', alignItems:'center', gap:arrowGap }}>
                 <ArrowBtn dir="up" label="↑" />
-                <div style={{ display:'flex', gap:'12px' }}>
+                <div style={{ display:'flex', gap:arrowGap }}>
                   <ArrowBtn dir="left" label="←" /><ArrowBtn dir="down" label="↓" /><ArrowBtn dir="right" label="→" />
                 </div>
               </div>

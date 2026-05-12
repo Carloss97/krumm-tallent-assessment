@@ -15,13 +15,61 @@ const MOBILE_GRID_GAP = 2;
 const TABLET_GRID_GAP = 4;
 const MOBILE_BOARD_PADDING = 8;
 const TABLET_BOARD_PADDING = 10;
+const DEFAULT_VIEWPORT = { width: 1366, height: 768 };
 
-const getLaserMetrics = (isMobile, isTablet) => {
-  const cellSize = isMobile ? MOBILE_CELL : isTablet ? TABLET_CELL : CELL;
-  const gridGap = isMobile ? MOBILE_GRID_GAP : isTablet ? TABLET_GRID_GAP : 6;
-  const boardPadding = isMobile ? MOBILE_BOARD_PADDING : isTablet ? TABLET_BOARD_PADDING : 12;
+const clamp = (value, min, max) => Math.min(max, Math.max(min, value));
 
-  return { cellSize, gridGap, boardPadding };
+const getCurrentViewport = () => {
+  if (typeof window === 'undefined') return DEFAULT_VIEWPORT;
+  return {
+    width: window.innerWidth || DEFAULT_VIEWPORT.width,
+    height: window.innerHeight || DEFAULT_VIEWPORT.height,
+  };
+};
+
+const useViewportSize = () => {
+  const [viewport, setViewport] = useState(getCurrentViewport);
+
+  useEffect(() => {
+    if (typeof window === 'undefined') return undefined;
+
+    const updateViewport = () => setViewport(getCurrentViewport());
+    window.addEventListener('resize', updateViewport);
+    window.visualViewport?.addEventListener?.('resize', updateViewport);
+
+    return () => {
+      window.removeEventListener('resize', updateViewport);
+      window.visualViewport?.removeEventListener?.('resize', updateViewport);
+    };
+  }, []);
+
+  return viewport;
+};
+
+export const getLaserMetrics = (isMobile, isTablet, level = {}, viewport = DEFAULT_VIEWPORT) => {
+  const preferredCell = isMobile ? MOBILE_CELL : isTablet ? TABLET_CELL : CELL;
+  const gridGap = isMobile ? MOBILE_GRID_GAP : viewport.height <= 820 ? TABLET_GRID_GAP : isTablet ? TABLET_GRID_GAP : 6;
+  const boardPadding = isMobile ? MOBILE_BOARD_PADDING : viewport.height <= 820 ? TABLET_BOARD_PADDING : isTablet ? TABLET_BOARD_PADDING : 12;
+  const minCellSize = isMobile ? 20 : isTablet ? 22 : 24;
+  const cols = level?.cols || 12;
+  const rows = level?.rows || 10;
+  const safeWidth = Math.max(260, viewport.width - (isMobile ? 32 : 146));
+  const safeHeight = Math.max(260, viewport.height - (isMobile ? 260 : 318));
+  const maxCellByWidth = (safeWidth - (boardPadding * 2) - ((cols - 1) * gridGap)) / cols;
+  const maxCellByHeight = (safeHeight - (boardPadding * 2) - ((rows - 1) * gridGap)) / rows;
+  const fittedCell = Math.floor(Math.min(preferredCell, maxCellByWidth, maxCellByHeight));
+  const cellSize = clamp(Number.isFinite(fittedCell) ? fittedCell : preferredCell, minCellSize, preferredCell);
+  const boardWidth = Math.ceil((cols * cellSize) + ((cols - 1) * gridGap) + (boardPadding * 2));
+  const boardHeight = Math.ceil((rows * cellSize) + ((rows - 1) * gridGap) + (boardPadding * 2));
+
+  return {
+    cellSize,
+    gridGap,
+    boardPadding,
+    boardWidth,
+    boardHeight,
+    isCompact: viewport.height <= 820 || viewport.width <= 1180,
+  };
 };
 
 const SHIP_ARROW = {
@@ -420,6 +468,7 @@ const LaserPuzzleGame = ({ isActive, onEndGame, isDemo, showBriefing = true, tim
   const { language } = useLanguage();
   const isMobile = useIsMobile();
   const isTablet = useIsTablet();
+  const viewportSize = useViewportSize();
   const [procLevels, setProcLevels] = useState(null);
   const [levelIdx, setLevelIdx] = useState(0);
   const [grid, setGrid] = useState({});
@@ -434,12 +483,12 @@ const LaserPuzzleGame = ({ isActive, onEndGame, isDemo, showBriefing = true, tim
   const wasActiveRef = useRef(false);
   const initTimeoutRef = useRef(null);
   const advanceTimeoutRef = useRef(null);
-  const { cellSize, gridGap, boardPadding } = useMemo(
-    () => getLaserMetrics(isMobile, isTablet),
-    [isMobile, isTablet]
-  );
   
-  const currentLevel = useMemo(() => procLevels ? procLevels[levelIdx] : null, [procLevels, levelIdx]);
+  const currentLevel = useMemo(() => procLevels ? procLevels[levelIdx] : LASER_DEMO_LEVELS[levelIdx] || LASER_DEMO_LEVELS[0], [procLevels, levelIdx]);
+  const { cellSize, gridGap, boardPadding, boardWidth, boardHeight, isCompact: isCompactViewport } = useMemo(
+    () => getLaserMetrics(isMobile, isTablet, currentLevel, viewportSize),
+    [isMobile, isTablet, currentLevel, viewportSize.width, viewportSize.height]
+  );
 
   const finishGame = useCallback((tm) => {
     if(hasEndedRef.current) {
@@ -703,9 +752,13 @@ const LaserPuzzleGame = ({ isActive, onEndGame, isDemo, showBriefing = true, tim
   const satColor = timeLeft < 15 ? '#dc2626' : timeLeft < 30 ? '#f59e0b' : '#059669';
   const quizItems = procLevels?.[levelIdx]?.quiz || [];
   const currentQuiz = quizItems[quizStep] || null;
+  const stagePadding = isMobile ? 12 : isCompactViewport ? 8 : 20;
+  const panelPadding = isMobile ? 24 : isCompactViewport ? 16 : 32;
+  const panelGap = isMobile ? 16 : isCompactViewport ? 12 : 20;
+  const headerGap = isMobile ? 8 : isCompactViewport ? 10 : 16;
 
   return (
-    <div style={{ width:'100%', height:'100%', display:'flex', flexDirection:'column', alignItems:'center', justifyContent:'center', padding:isMobile ? '12px' : '20px', gap:isMobile ? '10px' : '12px', position:'relative' }}>
+    <div style={{ width:'100%', height:'100%', display:'flex', flexDirection:'column', alignItems:'center', justifyContent:'center', padding:stagePadding, gap:isMobile ? '10px' : isCompactViewport ? '8px' : '12px', position:'relative', overflow:'hidden', boxSizing:'border-box' }}>
       <AnimatePresence mode="wait">
         {gamePhase === 'done' && (
           <motion.div key="game-complete" initial={{ scale: 0.8, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ opacity: 0 }} className="glass-panel" style={{ padding: '56px', maxWidth: '600px', textAlign: 'center' }}>
@@ -717,8 +770,8 @@ const LaserPuzzleGame = ({ isActive, onEndGame, isDemo, showBriefing = true, tim
           </motion.div>
         )}
         {(gamePhase === 'playing' || gamePhase === 'levelComplete') && level && (
-          <motion.div key={`level-${levelIdx}`} initial={{ opacity:0, y:20 }} animate={{ opacity:1, y:0 }} exit={{ opacity:0 }} className="glass-panel" style={{ padding:isMobile ? '24px' : '32px', display:'flex', flexDirection:'column', alignItems:'center', gap:isMobile ? '16px' : '20px', background: 'rgba(255,255,255,0.95)', backdropFilter: 'blur(12px)', maxWidth: '100%' }}>
-            <div style={{ display:'grid', gridTemplateColumns:isMobile ? 'repeat(2, minmax(0, 1fr))' : 'repeat(5, minmax(0, auto))', justifyContent:'space-between', width:'100%', fontSize:isMobile ? '0.78rem' : '0.9rem', fontWeight:'900', color:'#1e1b4b', textTransform:'uppercase', letterSpacing:isMobile ? '1px' : '2px', gap:isMobile ? '8px' : '16px' }}>
+          <motion.div key={`level-${levelIdx}`} initial={{ opacity:0, y:20 }} animate={{ opacity:1, y:0 }} exit={{ opacity:0 }} className="glass-panel" style={{ padding:panelPadding, display:'flex', flexDirection:'column', alignItems:'center', gap:panelGap, background: 'rgba(255,255,255,0.95)', backdropFilter: 'blur(12px)', maxWidth: '100%', maxHeight:'100%', overflow:'hidden', boxSizing:'border-box' }}>
+            <div style={{ display:'grid', gridTemplateColumns:isMobile ? 'repeat(2, minmax(0, 1fr))' : 'repeat(5, minmax(0, auto))', justifyContent:'space-between', width:'100%', fontSize:isMobile ? '0.78rem' : isCompactViewport ? '0.78rem' : '0.9rem', fontWeight:'900', color:'#1e1b4b', textTransform:'uppercase', letterSpacing:isMobile ? '1px' : isCompactViewport ? '1px' : '2px', gap:headerGap }}>
               <span>{level.name}</span>
               <span style={{ color:satColor }}>⏱ {timeLeft}s</span>
               <span>Moves: <span style={{ color:'#4f46e5' }}>{moves}</span></span>
@@ -726,15 +779,15 @@ const LaserPuzzleGame = ({ isActive, onEndGame, isDemo, showBriefing = true, tim
               <span>Antennas: <span style={{ color: litCount === allAntennas.length ? '#059669' : '#b91c1c' }}>{litCount}/{allAntennas.length}</span></span>
             </div>
             
-            <div style={{ border:'2px solid rgba(99,102,241,0.15)', borderRadius:'16px', background:'rgba(248,250,252,0.8)', padding:`${boardPadding}px`, boxShadow: 'inset 0 4px 10px rgba(0,0,0,0.08)', width: '100%', maxWidth: '100%', overflowX: 'auto' }}>
+            <div style={{ border:'2px solid rgba(99,102,241,0.15)', borderRadius:'16px', background:'rgba(248,250,252,0.8)', padding:`${boardPadding}px`, boxShadow: 'inset 0 4px 10px rgba(0,0,0,0.08)', width: `${boardWidth}px`, height: `${boardHeight}px`, maxWidth: '100%', overflow: 'hidden', boxSizing:'border-box', flexShrink:0 }}>
               <div style={{ display:'grid', gridTemplateColumns:`repeat(${level.cols}, ${cellSize}px)`, gap:`${gridGap}px`, width: 'fit-content', margin: '0 auto' }}>
                 {Array.from({ length:level.rows }, (_, y) => Array.from({ length:level.cols }, (_, x) => renderCell(x, y)))}
               </div>
             </div>
 
-            <div style={{ display:'flex', gap:'12px', alignItems:'center', width:'100%', justifyContent:'space-between', marginTop: '8px' }}>
-              <span style={{ fontSize:'0.85rem', color:'#64748b', fontStyle:'italic', fontWeight: 500 }}>{language === 'es' ? 'Pista:' : 'Hint:'} {hintText}</span>
-              <button onClick={handleReset} className="btn" style={{ padding: '10px 20px', fontSize: '0.85rem', fontWeight: 700 }}>Reset</button>
+            <div style={{ display:'flex', gap:isCompactViewport ? '8px' : '12px', alignItems:'center', width:'100%', justifyContent:'space-between', marginTop: isCompactViewport ? 0 : '8px' }}>
+              <span style={{ fontSize:isCompactViewport ? '0.78rem' : '0.85rem', color:'#64748b', fontStyle:'italic', fontWeight: 500, lineHeight:1.3 }}>{language === 'es' ? 'Pista:' : 'Hint:'} {hintText}</span>
+              <button onClick={handleReset} className="btn" style={{ padding: isCompactViewport ? '8px 14px' : '10px 20px', fontSize: '0.85rem', fontWeight: 700 }}>Reset</button>
             </div>
           </motion.div>
         )}

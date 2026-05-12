@@ -1,3 +1,4 @@
+/* eslint-disable react-refresh/only-export-components */
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { playBalloonPump, playBalloonPop, playSuccessSound, playErrorSound } from '../utils/audio';
@@ -5,11 +6,65 @@ import Confetti from '../components/Confetti';
 import { useTelemetry } from '../TelemetryContext';
 import { useLanguage } from '../context/LanguageContext';
 
+const DEFAULT_VIEWPORT = { width: 1366, height: 768 };
+
+const getCurrentViewport = () => {
+  if (typeof window === 'undefined') return DEFAULT_VIEWPORT;
+  return {
+    width: window.innerWidth || DEFAULT_VIEWPORT.width,
+    height: window.innerHeight || DEFAULT_VIEWPORT.height,
+  };
+};
+
+const useViewportSize = () => {
+  const [viewport, setViewport] = useState(getCurrentViewport);
+
+  useEffect(() => {
+    if (typeof window === 'undefined') return undefined;
+
+    const updateViewport = () => setViewport(getCurrentViewport());
+    window.addEventListener('resize', updateViewport);
+    window.visualViewport?.addEventListener?.('resize', updateViewport);
+
+    return () => {
+      window.removeEventListener('resize', updateViewport);
+      window.visualViewport?.removeEventListener?.('resize', updateViewport);
+    };
+  }, []);
+
+  return viewport;
+};
+
+export const getBalloonLayoutMetrics = (viewport = DEFAULT_VIEWPORT) => {
+  const height = viewport?.height || DEFAULT_VIEWPORT.height;
+  const width = viewport?.width || DEFAULT_VIEWPORT.width;
+  const isCompact = height <= 820 || width <= 1180;
+  const isVeryShort = height <= 680;
+
+  return {
+    isCompact,
+    containerMinHeight: isCompact ? 0 : 600,
+    containerHeight: isCompact ? '100%' : 'auto',
+    maxVisualScale: isVeryShort ? 2.2 : isCompact ? 2.45 : 2.8,
+    controlsBottom: isVeryShort ? 30 : isCompact ? 36 : 60,
+    hintBottom: isCompact ? 10 : 20,
+    statsTop: isVeryShort ? 18 : isCompact ? 24 : 40,
+    padding: isCompact ? 12 : 20,
+    gap: isCompact ? 12 : 20,
+    buttonWidth: width <= 420 ? 136 : isCompact ? 148 : 160,
+    buttonPadding: isCompact ? 14 : 18,
+    bodyBottomReserve: isCompact ? 124 : 150,
+    bodyTopReserve: isCompact ? 86 : 112,
+  };
+};
+
 const BalloonGame = ({ isActive, onEndGame, isDemo, showBriefing = true }) => {
   const MAX_ROUNDS = isDemo ? 10 : 10;
   const MIN_PUMPS = 6;
   const { startTracking, stopTracking, recordError, recordTrialEvent } = useTelemetry();
   const { language } = useLanguage();
+  const viewportSize = useViewportSize();
+  const layoutMetrics = getBalloonLayoutMetrics(viewportSize);
 
   const [round, setRound] = useState(1);
   const [currentBalloonSize, setCurrentBalloonSize] = useState(1);
@@ -233,7 +288,7 @@ const BalloonGame = ({ isActive, onEndGame, isDemo, showBriefing = true }) => {
   }
 
   const rawScale = 1 + (currentBalloonSize * 0.12);
-  const visualScale = Math.min(rawScale, 2.8);
+  const visualScale = Math.min(rawScale, layoutMetrics.maxVisualScale);
   
   // Dynamic color based on size (risk)
   const hue = Math.max(0, 240 - (currentBalloonSize * 15)); // Starts blue, goes to red
@@ -241,7 +296,7 @@ const BalloonGame = ({ isActive, onEndGame, isDemo, showBriefing = true }) => {
   const balloonGradient = `radial-gradient(circle at 35% 35%, hsl(${hue}, 60%, 75%) 0%, ${balloonColor} 50%, hsl(${hue}, 80%, 25%) 100%)`;
 
   return (
-    <div style={{ width: '100%', minHeight: '600px', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '20px', gap: '20px', position: 'relative', overflow: 'hidden' }}>
+    <div style={{ width: '100%', height: layoutMetrics.containerHeight, minHeight: layoutMetrics.containerMinHeight, maxHeight: '100%', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: layoutMetrics.padding, gap: layoutMetrics.gap, position: 'relative', overflow: 'hidden', boxSizing: 'border-box' }}>
       
       <AnimatePresence>
         {gameState === 'review' && (
@@ -310,18 +365,18 @@ const BalloonGame = ({ isActive, onEndGame, isDemo, showBriefing = true }) => {
         )}
       </AnimatePresence>
 
-      <div style={{ display: 'flex', justifyContent: 'space-between', width: '100%', maxWidth: '500px', padding: '0 20px', position: 'absolute', top: '40px', zIndex: 10 }}>
-        <div className="glass-panel" style={{ padding: '10px 20px', display: 'flex', flexDirection: 'column', alignItems: 'center', border: '1px solid rgba(99,102,241,0.15)', background: 'rgba(255,255,255,0.8)' }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', width: '100%', maxWidth: '500px', padding: layoutMetrics.isCompact ? '0 12px' : '0 20px', position: 'absolute', top: layoutMetrics.statsTop, zIndex: 10 }}>
+        <div className="glass-panel" style={{ padding: layoutMetrics.isCompact ? '8px 16px' : '10px 20px', display: 'flex', flexDirection: 'column', alignItems: 'center', border: '1px solid rgba(99,102,241,0.15)', background: 'rgba(255,255,255,0.8)' }}>
           <span style={{ fontSize: '0.7rem', color: '#64748b', textTransform: 'uppercase', fontWeight: 800 }}>{t.trialLabel}</span>
           <span style={{ fontSize: '1.4rem', fontWeight: 900, color: '#1e1b4b' }}>{round}<span style={{ color: '#94a3b8', fontSize: '1rem', fontWeight: 500 }}>/{MAX_ROUNDS}</span></span>
         </div>
-        <div className="glass-panel" style={{ padding: '10px 20px', display: 'flex', flexDirection: 'column', alignItems: 'center', border: '1px solid rgba(16,185,129,0.15)', background: 'rgba(255,255,255,0.8)' }}>
+        <div className="glass-panel" style={{ padding: layoutMetrics.isCompact ? '8px 16px' : '10px 20px', display: 'flex', flexDirection: 'column', alignItems: 'center', border: '1px solid rgba(16,185,129,0.15)', background: 'rgba(255,255,255,0.8)' }}>
           <span style={{ fontSize: '0.7rem', color: '#64748b', textTransform: 'uppercase', fontWeight: 800 }}>{t.bankTitle}</span>
           <span style={{ fontSize: '1.4rem', fontWeight: 900, color: '#059669' }}>{totalPoints}</span>
         </div>
       </div>
 
-      <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', width: '100%', position: 'relative' }}>
+      <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', width: '100%', minHeight: 0, position: 'relative', paddingTop: layoutMetrics.bodyTopReserve, paddingBottom: layoutMetrics.bodyBottomReserve, boxSizing: 'border-box' }}>
         <AnimatePresence mode="wait">
           {gameState === 'playing' && (
             <motion.div
@@ -401,7 +456,7 @@ const BalloonGame = ({ isActive, onEndGame, isDemo, showBriefing = true }) => {
         {showConfetti && <Confetti count={25} spread={100} duration={1.5} />}
       </div>
 
-      <div style={{ position: 'absolute', bottom: '60px', left: '50%', transform: 'translateX(-50%)', display: 'flex', gap: '20px', zIndex: 100 }}>
+      <div style={{ position: 'absolute', bottom: layoutMetrics.controlsBottom, left: '50%', transform: 'translateX(-50%)', display: 'flex', gap: layoutMetrics.isCompact ? '14px' : '20px', zIndex: 100 }}>
         <motion.button
           whileHover={{ scale: 1.05, boxShadow: '0 10px 20px -5px rgba(79,70,229,0.4)' }}
           whileTap={{ scale: 0.95 }}
@@ -409,7 +464,7 @@ const BalloonGame = ({ isActive, onEndGame, isDemo, showBriefing = true }) => {
           aria-label={t.ariaPump}
           onClick={handlePump}
           disabled={gameState !== 'playing' || briefing}
-          style={{ width: '160px', padding: '18px', borderRadius: '20px', fontWeight: 800, fontSize: '1.1rem', background: 'linear-gradient(135deg, #6366f1, #4f46e5)' }}
+          style={{ width: layoutMetrics.buttonWidth, padding: layoutMetrics.buttonPadding, borderRadius: '20px', fontWeight: 800, fontSize: layoutMetrics.isCompact ? '1rem' : '1.1rem', background: 'linear-gradient(135deg, #6366f1, #4f46e5)' }}
         >
           {t.pumpLabel}
         </motion.button>
@@ -420,13 +475,13 @@ const BalloonGame = ({ isActive, onEndGame, isDemo, showBriefing = true }) => {
           aria-label={t.ariaBank}
           onClick={handleBank}
           disabled={gameState !== 'playing' || currentBalloonSize === 1 || briefing}
-          style={{ width: '160px', padding: '18px', borderRadius: '20px', fontWeight: 800, fontSize: '1.1rem', border: '2px solid #10b981', color: '#059669', background: 'transparent' }}
+          style={{ width: layoutMetrics.buttonWidth, padding: layoutMetrics.buttonPadding, borderRadius: '20px', fontWeight: 800, fontSize: layoutMetrics.isCompact ? '1rem' : '1.1rem', border: '2px solid #10b981', color: '#059669', background: 'transparent' }}
         >
           {t.bankBtn}
         </motion.button>
       </div>
 
-      <div style={{ position: 'absolute', bottom: '20px', fontSize: '0.75rem', color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '1.5px', fontWeight: 600 }}>
+      <div style={{ position: 'absolute', bottom: layoutMetrics.hintBottom, fontSize: layoutMetrics.isCompact ? '0.68rem' : '0.75rem', color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '1.5px', fontWeight: 600 }}>
         {language === 'es' ? 'ESPACIO: INFLAR • ENTER: ASEGURAR' : 'SPACE: PUMP • ENTER: BANK'}
       </div>
     </div>

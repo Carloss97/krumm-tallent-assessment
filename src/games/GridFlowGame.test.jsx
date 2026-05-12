@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { GRID_LEVELS, getAdaptiveGridNextRound, getGridEfficiency, getGridFeedbackToastProps } from './GridFlowGame';
+import { GRID_LEVELS, getAdaptiveGridNextRound, getGridEfficiency, getGridFeedbackToastProps, getGridMetrics } from './GridFlowGame';
 
 describe('GridFlowGame levels', () => {
   it('defines a readable adaptive six-step progression', () => {
@@ -123,6 +123,18 @@ describe('GridFlowGame levels', () => {
       expect(String(style.top), `${variant} should declare a safe top anchor`).not.toBe('');
       expect(Number(animate.y || 0), `${variant} should not animate upward out of the clipped board`).toBeGreaterThanOrEqual(0);
       expect(Number(initial.y || 0), `${variant} should not start far above the clipped board`).toBeGreaterThanOrEqual(-8);
+    });
+  });
+
+  it('shrinks every city map to fit a low-height desktop viewport without board scroll', () => {
+    const lowResolutionPc = { width: 1366, height: 768 };
+
+    GRID_LEVELS.forEach((level, index) => {
+      const metrics = getGridMetrics(false, false, level, lowResolutionPc);
+
+      expect(metrics.boardWidth, `level ${index} board width`).toBeLessThanOrEqual(1220);
+      expect(metrics.boardHeight, `level ${index} board height`).toBeLessThanOrEqual(470);
+      expect(metrics.cellSize, `level ${index} should remain playable`).toBeGreaterThanOrEqual(20);
     });
   });
 

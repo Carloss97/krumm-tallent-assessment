@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { LASER_DEMO_LEVELS, buildGrid, getLaserEfficiency, traceBeam } from './LaserPuzzleGame';
+import { LASER_DEMO_LEVELS, buildGrid, getLaserEfficiency, getLaserMetrics, traceBeam } from './LaserPuzzleGame';
 
 describe('LaserPuzzleGame levels', () => {
   it('defines a progressive adaptive six-level puzzle set', () => {
@@ -193,6 +193,18 @@ describe('LaserPuzzleGame levels', () => {
       expect(meaningfulMoves, `level ${index} should require a multi-object solution`).toBeGreaterThanOrEqual(offset === 0 ? 5 : 6);
       expect(level.par, `level ${index} should budget substantial reasoning moves`).toBeGreaterThanOrEqual(offset === 0 ? 10 : 12);
       expect(movablePieces, `level ${index} should include decoys and movable alternatives`).toBeGreaterThanOrEqual(9);
+    });
+  });
+
+  it('shrinks every optical board to fit a low-height desktop viewport without board scroll', () => {
+    const lowResolutionPc = { width: 1366, height: 768 };
+
+    LASER_DEMO_LEVELS.forEach((level, index) => {
+      const metrics = getLaserMetrics(false, false, level, lowResolutionPc);
+
+      expect(metrics.boardWidth, `level ${index} board width`).toBeLessThanOrEqual(1220);
+      expect(metrics.boardHeight, `level ${index} board height`).toBeLessThanOrEqual(450);
+      expect(metrics.cellSize, `level ${index} should remain playable`).toBeGreaterThanOrEqual(24);
     });
   });
 
