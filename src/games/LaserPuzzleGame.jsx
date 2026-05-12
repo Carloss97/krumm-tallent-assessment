@@ -240,25 +240,28 @@ export const LASER_DEMO_LEVELS = [
     difficulty: 'easy',
     cols: 14,
     rows: 12,
-    par: 7,
-    timeLimit: 125,
+    par: 10,
+    timeLimit: 135,
     hint: {
-      es: 'Usá el portal para saltar la barrera principal. Luego dos espejos corrigen la salida hasta la antena.',
-      en: 'Use the portal to jump the main barrier. Then two mirrors correct the exit toward the antenna.'
+      es: 'Usá el portal para saltar la barrera principal. Luego encadena tres giros: salida, corrección vertical y último ajuste hacia la antena.',
+      en: 'Use the portal to jump the main barrier. Then chain three turns: exit, vertical correction, and final alignment toward the antenna.'
     },
-    solutionPlacements: [['1,10', '3,6'], ['10,10', '10,6'], ['2,1', '12,6'], ['12,10', '12,2']],
+    solutionPlacements: [['1,10', '3,6'], ['10,10', '10,6'], ['2,1', '12,6'], ['12,10', '12,2'], ['9,1', '13,2']],
     cells: makeLaserCells([
       { x: 0, y: 6, type: 'ship', dir: 'right' },
-      { x: 13, y: 2, type: 'antenna' },
+      { x: 13, y: 0, type: 'antenna' },
       { x: 1, y: 10, type: 'portal_blue', targetPortalId: 'p1', movable: true },
       { x: 10, y: 10, type: 'portal_blue', portalId: 'p1', movable: true },
       { x: 2, y: 1, type: 'reflector_ne', movable: true },
       { x: 12, y: 10, type: 'reflector_ne', movable: true },
-      { x: 9, y: 1, type: 'reflector_nw', movable: true },
+      { x: 9, y: 1, type: 'reflector_ne', movable: true },
       { x: 13, y: 11, type: 'portal_red', portalId: 'r1', movable: true },
+      { x: 0, y: 11, type: 'reflector_nw', movable: true },
+      { x: 0, y: 0, type: 'bifurcator', movable: true },
+      { x: 13, y: 8, type: 'reflector_ne', movable: true },
     ], [
       [5,0,6,11], [1,0,3,2], [8,0,10,2], [1,4,3,5], [8,4,9,5], [1,8,4,11], [8,8,11,11], [13,4,13,5],
-    ], [{ x:3, y:6 }, { x:10, y:6 }, { x:12, y:6 }, { x:12, y:2 }, { x:1, y:10 }, { x:10, y:10 }, { x:2, y:1 }, { x:12, y:10 }, { x:9, y:1 }, { x:13, y:11 }]),
+    ], [{ x:3, y:6 }, { x:10, y:6 }, { x:12, y:6 }, { x:12, y:2 }, { x:13, y:2 }, { x:13, y:0 }, { x:1, y:10 }, { x:10, y:10 }, { x:2, y:1 }, { x:12, y:10 }, { x:9, y:1 }, { x:13, y:11 }, { x:0, y:11 }, { x:0, y:0 }, { x:13, y:8 }]),
     quiz: [],
   },
   {
@@ -266,28 +269,29 @@ export const LASER_DEMO_LEVELS = [
     difficulty: 'hard',
     cols: 15,
     rows: 12,
-    par: 9,
-    timeLimit: 140,
+    par: 13,
+    timeLimit: 155,
     hint: {
-      es: 'El emisor diagonal entra por portal, reaparece cerca del centro y el bifurcador separa dos rutas finales.',
-      en: 'The diagonal emitter enters a portal, reappears near the center, and the bifurcator splits the final two routes.'
+      es: 'El emisor diagonal debe entrar a un portal, reaparecer en el centro, dividirse y encadenar espejos independientes para dos antenas.',
+      en: 'The diagonal emitter must enter a portal, reappear near the center, split, and chain independent mirrors toward two antennas.'
     },
-    solutionPlacements: [['1,10', '3,3'], ['9,9', '9,9'], ['12,1', '10,10']],
+    solutionPlacements: [['1,10', '4,4'], ['9,9', '8,8'], ['12,1', '10,10'], ['4,10', '10,11'], ['13,8', '12,10'], ['7,2', '12,7']],
     cells: makeLaserCells([
       { x: 0, y: 0, type: 'ship', dir: 'downRight' },
-      { x: 14, y: 10, type: 'antenna' },
-      { x: 10, y: 11, type: 'antenna' },
+      { x: 14, y: 7, type: 'antenna' },
+      { x: 14, y: 11, type: 'antenna' },
       { x: 1, y: 10, type: 'portal_blue', targetPortalId: 'pb1', movable: true },
       { x: 9, y: 9, type: 'portal_blue', portalId: 'pb1', movable: true },
       { x: 12, y: 1, type: 'bifurcator', movable: true },
       { x: 2, y: 10, type: 'portal_red', targetPortalId: 'pr1', movable: true },
       { x: 13, y: 3, type: 'portal_red', portalId: 'pr1', movable: true },
-      { x: 4, y: 10, type: 'reflector_ne', movable: true },
-      { x: 13, y: 8, type: 'reflector_nw', movable: true },
+      { x: 4, y: 10, type: 'reflector_nw', movable: true },
+      { x: 13, y: 8, type: 'reflector_ne', movable: true },
       { x: 7, y: 2, type: 'reflector_ne', movable: true },
+      { x: 14, y: 3, type: 'reflector_nw', movable: true },
     ], [
-      [5,5,5,5], [2,0,4,1], [7,0,9,2], [11,0,14,2], [0,4,2,6], [4,4,6,6], [8,4,11,6], [13,4,14,6], [0,8,2,11], [5,8,7,11], [11,8,12,9],
-    ], [{ x:3, y:3 }, { x:9, y:9 }, { x:10, y:10 }, { x:1, y:10 }, { x:12, y:1 }, { x:2, y:10 }, { x:13, y:3 }, { x:4, y:10 }, { x:13, y:8 }, { x:7, y:2 }]),
+      [5,5,5,5], [2,0,4,1], [7,0,9,2], [11,0,14,2], [0,4,2,6], [4,4,6,6], [8,4,11,6], [13,4,14,6], [0,8,2,11], [5,8,7,11], [11,8,11,9],
+    ], [{ x:4, y:4 }, { x:8, y:8 }, { x:10, y:10 }, { x:10, y:11 }, { x:12, y:10 }, { x:12, y:7 }, { x:14, y:7 }, { x:14, y:11 }, { x:1, y:10 }, { x:9, y:9 }, { x:12, y:1 }, { x:2, y:10 }, { x:13, y:3 }, { x:4, y:10 }, { x:13, y:8 }, { x:7, y:2 }, { x:14, y:3 }]),
     quiz: [
       {
         q: '¿Qué aporta el emisor diagonal en este nivel?',

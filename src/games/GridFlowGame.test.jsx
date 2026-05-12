@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { GRID_LEVELS, getGridEfficiency } from './GridFlowGame';
+import { GRID_LEVELS, getAdaptiveGridNextRound, getGridEfficiency } from './GridFlowGame';
 
 describe('GridFlowGame levels', () => {
   it('defines a readable adaptive six-step progression', () => {
@@ -108,4 +108,12 @@ describe('GridFlowGame levels', () => {
     expect(getGridEfficiency(totalPoints, totalPoints)).toBe(100);
     expect(getGridEfficiency(Math.floor(totalPoints / 2), totalPoints)).toBeGreaterThan(40);
   });
+
+  it('lets the final level exit to the quiz instead of reloading itself', () => {
+    const finalRound = GRID_LEVELS.length - 1;
+    const finalRoundMax = GRID_LEVELS[finalRound].targets.reduce((sum, target) => sum + target.points, 0);
+
+    expect(getAdaptiveGridNextRound(finalRound, finalRoundMax, finalRoundMax, GRID_LEVELS.length)).toBe(GRID_LEVELS.length);
+  });
+
 });

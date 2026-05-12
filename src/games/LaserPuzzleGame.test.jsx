@@ -166,6 +166,21 @@ describe('LaserPuzzleGame levels', () => {
     });
   });
 
+
+  it('requires substantially more than three moves in the late laser levels', () => {
+    const lateLevels = LASER_DEMO_LEVELS.slice(-2);
+
+    lateLevels.forEach((level, offset) => {
+      const index = LASER_DEMO_LEVELS.length - lateLevels.length + offset;
+      const meaningfulMoves = level.solutionPlacements.filter(([fromKey, toKey]) => fromKey !== toKey).length;
+      const movablePieces = level.cells.filter((cell) => cell.movable).length;
+
+      expect(meaningfulMoves, `level ${index} should require a multi-object solution`).toBeGreaterThanOrEqual(offset === 0 ? 5 : 6);
+      expect(level.par, `level ${index} should budget substantial reasoning moves`).toBeGreaterThanOrEqual(offset === 0 ? 10 : 12);
+      expect(movablePieces, `level ${index} should include decoys and movable alternatives`).toBeGreaterThanOrEqual(9);
+    });
+  });
+
   it('computes efficiency against the level par', () => {
     expect(getLaserEfficiency(3, 3)).toBe(100);
     expect(getLaserEfficiency(6, 3)).toBe(50);

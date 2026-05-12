@@ -206,7 +206,7 @@ export const getAdaptiveGridNextRound = (currentRound, score, maxPossibleScore, 
     console.log(`[GridFlow-ADAPTIVE] ~ Standard progression: ${efficiency.toFixed(1)}% - moving to next round`);
   }
   
-  return Math.min(nextRound, totalLevels - 1);
+  return Math.min(nextRound, totalLevels);
 };
 
 export const getGridEfficiency = (score, totalPossiblePoints) => {
@@ -410,6 +410,7 @@ const GridFlowGame = ({ isActive, onEndGame, isDemo, showBriefing = true }) => {
   const satsRef = useRef({});
   const levelTimerRef = useRef(null);
   const satTimerRef = useRef(null);
+  const levelTransitionRef = useRef(false);
 
   const finishGame = useCallback(() => {
     if (hasEndedRef.current) {
@@ -434,6 +435,7 @@ const GridFlowGame = ({ isActive, onEndGame, isDemo, showBriefing = true }) => {
 
   const transitionToQuiz = useCallback(() => {
     if (hasEndedRef.current) return;
+    levelTransitionRef.current = true;
     clearInterval(levelTimerRef.current);
     clearInterval(satTimerRef.current);
     setGameState('quiz');
@@ -442,6 +444,8 @@ const GridFlowGame = ({ isActive, onEndGame, isDemo, showBriefing = true }) => {
   const loadLevel = useCallback((idx) => {
     if (idx >= effectiveMaxRounds) { transitionToQuiz(); return; }
     
+    levelTransitionRef.current = false;
+
     const lvl = GRID_LEVELS[idx];
     // Randomize target positions for dynamic "street-like" gameplay
     const randomizedTargets = randomizeTargetPositions(lvl, idx, effectiveMaxRounds);
@@ -501,13 +505,15 @@ const GridFlowGame = ({ isActive, onEndGame, isDemo, showBriefing = true }) => {
     levelTimerRef.current = setInterval(() => {
       setLevelTimeLeft(prev => {
         if (prev <= 1) {
+          if (levelTransitionRef.current) return 0;
+          levelTransitionRef.current = true;
           clearInterval(levelTimerRef.current);
+          clearInterval(satTimerRef.current);
           const r = stateRef.current.round;
           const currentRoundScore = stateRef.current.score;
           const maxPossibleScore = GRID_LEVELS[r].targets.reduce((sum, t) => sum + t.points, 0);
           
-          // Use adaptive branching based on score
-          const nextRound = getAdaptiveGridNextRound(r, currentRoundScore, maxPossibleScore, effectiveMaxRounds);
+          const nextRound = isDemo ? r + 1 : getAdaptiveGridNextRound(r, currentRoundScore, maxPossibleScore, effectiveMaxRounds);
           
           if (nextRound < effectiveMaxRounds) {
             loadLevel(nextRound);
@@ -538,11 +544,14 @@ const GridFlowGame = ({ isActive, onEndGame, isDemo, showBriefing = true }) => {
           if (expiredTargets.some((t, i) => t.active !== stateRef.current.targets[i].active)) {
             stateRef.current.targets = expiredTargets;
             setTargets([...expiredTargets]);
-            if (expiredTargets.every(t => !t.active) && !inv) {
+            if (expiredTargets.every(t => !t.active) && !inv && !levelTransitionRef.current) {
+              levelTransitionRef.current = true;
+              clearInterval(levelTimerRef.current);
+              clearInterval(satTimerRef.current);
               const r = stateRef.current.round;
               const currentRoundScore = stateRef.current.score;
               const maxPossibleScore = GRID_LEVELS[r].targets.reduce((sum, t) => sum + t.points, 0);
-              const nextRound = getAdaptiveGridNextRound(r, currentRoundScore, maxPossibleScore, effectiveMaxRounds);
+              const nextRound = isDemo ? r + 1 : getAdaptiveGridNextRound(r, currentRoundScore, maxPossibleScore, effectiveMaxRounds);
               if (nextRound < effectiveMaxRounds) loadLevel(nextRound); else transitionToQuiz();
             }
           }
@@ -573,7 +582,7 @@ const GridFlowGame = ({ isActive, onEndGame, isDemo, showBriefing = true }) => {
         clearInterval(satTimerRef.current);
         if (spawnTimerRef) clearInterval(spawnTimerRef);
     };
-  }, [isActive, gameState, round, loadLevel, transitionToQuiz, effectiveMaxRounds]);
+  }, [isActive, gameState, round, loadLevel, transitionToQuiz, effectiveMaxRounds, isDemo]);
 
   const move = useCallback((dir) => {
     if (!isActive || gameState !== 'playing') return;
@@ -583,13 +592,17 @@ const GridFlowGame = ({ isActive, onEndGame, isDemo, showBriefing = true }) => {
     const walls = new Set(lvl.walls);
 
     if (eng <= 0 && lvl.energyDrain > 0) {
+      if (levelTransitionRef.current) return;
+      levelTransitionRef.current = true;
       recordError();
       setFuelEmpty(true);
       clearInterval(levelTimerRef.current);
+      clearInterval(satTimerRef.current);
       setTimeout(() => {
         setFuelEmpty(false);
-        if (r+1 < effectiveMaxRounds) loadLevel(r+1); else transitionToQuiz();
-      }, 2000);
+        const nextRound = isDemo ? r + 1 : getAdaptiveGridNextRound(r, sc, GRID_LEVELS[r].targets.reduce((sum, t) => sum + t.points, 0), effectiveMaxRounds);
+        if (nextRound < effectiveMaxRounds) loadLevel(nextRound); else transitionToQuiz();
+      }, 1600);
       return;
     }
 
@@ -649,20 +662,30 @@ const GridFlowGame = ({ isActive, onEndGame, isDemo, showBriefing = true }) => {
     });
 
     if (newEnergy <= 0 && lvl.energyDrain > 0) {
+      if (levelTransitionRef.current) return;
+      levelTransitionRef.current = true;
       setFuelEmpty(true);
       clearInterval(levelTimerRef.current);
-      setTimeout(transitionToQuiz, 2000);
+      clearInterval(satTimerRef.current);
+      setTimeout(() => {
+        setFuelEmpty(false);
+        const nextRound = isDemo ? r + 1 : getAdaptiveGridNextRound(r, newScore, GRID_LEVELS[r].targets.reduce((sum, t) => sum + t.points, 0), effectiveMaxRounds);
+        if (nextRound < effectiveMaxRounds) loadLevel(nextRound); else transitionToQuiz();
+      }, 1600);
       return;
     }
     
-    if (newTargets.every(t=>!t.active) && !newInv) {
+    if (newTargets.every(t=>!t.active) && !newInv && !levelTransitionRef.current) {
+      levelTransitionRef.current = true;
+      clearInterval(levelTimerRef.current);
+      clearInterval(satTimerRef.current);
       const r = stateRef.current.round;
       const currentRoundScore = stateRef.current.score;
       const maxPossibleScore = GRID_LEVELS[r].targets.reduce((sum, t) => sum + t.points, 0);
-      const nextRound = getAdaptiveGridNextRound(r, currentRoundScore, maxPossibleScore, effectiveMaxRounds);
+      const nextRound = isDemo ? r + 1 : getAdaptiveGridNextRound(r, currentRoundScore, maxPossibleScore, effectiveMaxRounds);
       if (nextRound < effectiveMaxRounds) loadLevel(nextRound); else transitionToQuiz();
     }
-  }, [isActive, gameState, loadLevel, transitionToQuiz, recordError, effectiveMaxRounds, recordTrialEvent]);
+  }, [isActive, gameState, loadLevel, transitionToQuiz, recordError, effectiveMaxRounds, recordTrialEvent, isDemo]);
 
   const handleKeyDown = useCallback((e) => {
     const map = { ArrowUp:'up', ArrowDown:'down', ArrowLeft:'left', ArrowRight:'right', w:'up', s:'down', a:'left', d:'right' };
