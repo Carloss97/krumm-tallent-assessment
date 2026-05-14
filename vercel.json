@@ -41,6 +41,19 @@
           "value": "no-store, private, must-revalidate"
         }
       ]
+    },
+    {
+      "source": "/dev/:path*",
+      "headers": [
+        {
+          "key": "Cache-Control",
+          "value": "no-store, private, max-age=0"
+        },
+        {
+          "key": "X-Robots-Tag",
+          "value": "noindex, nofollow"
+        }
+      ]
     }
   ],
   "rewrites": [
