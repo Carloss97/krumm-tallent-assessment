@@ -11,6 +11,7 @@ export const useWebcamCapture = ({
   windowMs = 5000,
   modelAssetPath,
   wasmBaseUrl,
+  faceLandmarkerClient,
   debug = false,
 }) => {
   const videoRef = useRef(null);
@@ -24,7 +25,7 @@ export const useWebcamCapture = ({
     }
 
     const initializeCapture = async () => {
-      if (!videoRef.current || typeof navigator === 'undefined' || !navigator.mediaDevices?.getUserMedia) {
+      if (!videoRef.current) {
         return;
       }
 
@@ -35,6 +36,7 @@ export const useWebcamCapture = ({
         windowMs,
         modelAssetPath,
         wasmBaseUrl,
+        faceLandmarkerClient,
         logger: debug ? console : null,
       });
       const initialized = await captureRef.current.initialize(videoRef.current);
@@ -55,7 +57,7 @@ export const useWebcamCapture = ({
       captureRef.current?.cleanup();
       captureRef.current = null;
     };
-  }, [isActive, shouldCapture, onFrameCapture, gameId, sessionId, sampleFps, windowMs, modelAssetPath, wasmBaseUrl, debug]);
+  }, [isActive, shouldCapture, onFrameCapture, gameId, sessionId, sampleFps, windowMs, modelAssetPath, wasmBaseUrl, faceLandmarkerClient, debug]);
 
   return videoRef;
 };
