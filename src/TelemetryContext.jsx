@@ -83,6 +83,26 @@ const getFacialWindowKey = (window) => [
   window?.endedAtMs ?? '',
 ].join(':');
 
+const DIAGNOSTIC_FACIAL_WINDOW_FLAGS = new Set([
+  'camera_denied',
+  'facial_model_unavailable',
+  'facial_capture_error',
+  'performance_degraded',
+]);
+
+const hasDiagnosticFacialWindowFlag = (window) => (
+  (window?.quality?.flags || []).some((flag) => DIAGNOSTIC_FACIAL_WINDOW_FLAGS.has(flag))
+);
+
+const reconcileLateFacialFlushFlags = (qualityFlags = [], facialSummary) => {
+  const nextFlags = qualityFlags.filter((flag) => {
+    if (flag === 'face_not_detected') return false;
+    if (flag === 'insufficient_webcam_signal' && facialSummary.webcamQualityScore >= 60) return false;
+    return true;
+  });
+  return dedupe(nextFlags);
+};
+
 const summarizeFacialWindows = (facialWindows = []) => {
   if (!Array.isArray(facialWindows) || facialWindows.length === 0) {
     return {
@@ -169,6 +189,7 @@ export const TelemetryProvider = ({ children }) => {
   const activeTrackingRef = useRef(false);
   const currentGameIdRef = useRef(null);
   const lateFacialFlushRef = useRef({ gameId: null, expiresAtMs: 0 });
+  const pendingDiagnosticFacialWindowsRef = useRef([]);
   const currentDataRef = useRef({
     mouseMovements: [],
     clicks: [],
@@ -334,19 +355,31 @@ export const TelemetryProvider = ({ children }) => {
     activeTrackingRef.current = true;
     currentGameIdRef.current = gameId;
     lateFacialFlushRef.current = { gameId: null, expiresAtMs: 0 };
+
+    const pendingForGame = [];
+    pendingDiagnosticFacialWindowsRef.current = pendingDiagnosticFacialWindowsRef.current.filter((window) => {
+      const matchesGame = !window?.gameId || !gameId || window.gameId === gameId;
+      if (matchesGame) {
+        pendingForGame.push(window);
+        return false;
+      }
+      return true;
+    });
+    const pendingFacialSummary = summarizeFacialWindows(pendingForGame);
+
     currentDataRef.current = {
       mouseMovements: [],
       clicks: [],
       webcamFrames: [],
-      facialWindows: [],
+      facialWindows: pendingForGame,
       trialEvents: [],
       startTime: Date.now(),
       errors: 0,
       score: 0,
-      qualityFlags: [],
-      webcamQualityScore: 0,
-      facialCoverageScore: 0,
-      facialWindowCount: 0,
+      qualityFlags: pendingFacialSummary.qualityFlags,
+      webcamQualityScore: pendingFacialSummary.webcamQualityScore,
+      facialCoverageScore: pendingFacialSummary.facialCoverageScore,
+      facialWindowCount: pendingFacialSummary.facialWindowCount,
     };
   }, []);
 
@@ -500,6 +533,15 @@ export const TelemetryProvider = ({ children }) => {
       && (!webcamData.gameId || webcamData.gameId === lateFlush.gameId);
 
     if (!activeWebcamRecording && !isLateFacialFlush) {
+      if (webcamEnabled && isFacialWindow(webcamData) && hasDiagnosticFacialWindowFlag(webcamData)) {
+        assertFacialWindowPrivacySafe(webcamData);
+        const incomingKey = getFacialWindowKey(webcamData);
+        const alreadyPending = pendingDiagnosticFacialWindowsRef.current
+          .some((window) => getFacialWindowKey(window) === incomingKey);
+        if (!alreadyPending) {
+          pendingDiagnosticFacialWindowsRef.current.push(webcamData);
+        }
+      }
       return;
     }
 
@@ -517,6 +559,7 @@ export const TelemetryProvider = ({ children }) => {
           const alreadyStored = existingWindows.some((window) => getFacialWindowKey(window) === incomingKey);
           const facialWindows = alreadyStored ? existingWindows : [...existingWindows, webcamData];
           const facialSummary = summarizeFacialWindows(facialWindows);
+          const reconciledExistingFlags = reconcileLateFacialFlushFlags(existing.qualityFlags || [], facialSummary);
 
           return {
             ...prev,
@@ -526,7 +569,7 @@ export const TelemetryProvider = ({ children }) => {
               webcamQualityScore: facialSummary.webcamQualityScore,
               facialCoverageScore: facialSummary.facialCoverageScore,
               facialWindowCount: facialSummary.facialWindowCount,
-              qualityFlags: dedupe([...(existing.qualityFlags || []), ...facialSummary.qualityFlags]),
+              qualityFlags: dedupe([...reconciledExistingFlags, ...facialSummary.qualityFlags]),
             },
           };
         });

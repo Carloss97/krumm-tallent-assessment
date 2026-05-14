@@ -140,6 +140,11 @@ function buildFacialSignalAudit(data, games = [], language = 'en') {
         ? 'Se detectaron múltiples rostros en algunas ventanas; se reduce la confianza.'
         : 'Multiple faces were detected in some windows; confidence is reduced.');
     }
+    if (qualityFlags.includes('camera_denied') || qualityFlags.includes('facial_model_unavailable')) {
+      caveats.push(language === 'es'
+        ? 'La cámara o el modelo facial local no estuvo disponible; no comparar señales visuales contra sesiones con cobertura completa.'
+        : 'Camera or the local facial model was unavailable; do not compare visual signals against full-coverage sessions.');
+    }
 
     return {
       biometricSignalQualityScore,

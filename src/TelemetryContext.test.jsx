@@ -261,6 +261,59 @@ describe('TelemetryContext', () => {
     });
   });
 
+  it('preserves diagnostic facial windows emitted before game tracking starts', async () => {
+    let telemetryInstance;
+    render(
+      <TelemetryProvider>
+        <TestComponent action={(t) => { telemetryInstance = t; }} />
+      </TelemetryProvider>
+    );
+
+    await act(async () => {
+      telemetryInstance.setConsent(true, true);
+    });
+
+    const preTrackingDiagnostic = createFacialWindow({
+      gameId: 'ospan_game_1',
+      startedAtMs: 100,
+      endedAtMs: 100,
+      durationMs: 0,
+      sampleCount: 0,
+      quality: {
+        facePresenceRatio: 0,
+        meanDetectionConfidence: 0,
+        signalQualityScore: 0,
+        flags: ['camera_denied'],
+      },
+      confidence: {
+        windowConfidence: 0,
+        interpretationAllowed: false,
+        reasonIfLowConfidence: 'webcam capture unavailable',
+      },
+    });
+
+    act(() => {
+      telemetryInstance.recordWebcamFrame(preTrackingDiagnostic);
+      telemetryInstance.startTracking('ospan_game_1');
+    });
+
+    await waitFor(() => {
+      const current = telemetryInstance.getCurrentTelemetry();
+      expect(current.facialWindows).toHaveLength(1);
+      expect(current.qualityFlags).toContain('camera_denied');
+      expect(current.facialWindowCount).toBe(1);
+    });
+
+    act(() => {
+      telemetryInstance.stopTracking('ospan_game_1', 82, 0);
+    });
+
+    await waitFor(() => {
+      expect(telemetryInstance.sessionData.ospan_game_1.facialWindows).toHaveLength(1);
+      expect(telemetryInstance.sessionData.ospan_game_1.qualityFlags).toContain('camera_denied');
+    });
+  });
+
   it('merges a final facial window flushed immediately after stopTracking into the saved game session', async () => {
     let telemetryInstance;
     render(
@@ -305,6 +358,8 @@ describe('TelemetryContext', () => {
       expect(telemetryInstance.sessionData.game1.facialWindows).toHaveLength(1);
       expect(telemetryInstance.sessionData.game1.webcamQualityScore).toBe(74);
       expect(telemetryInstance.sessionData.game1.qualityFlags).toContain('partial_window_flush');
+      expect(telemetryInstance.sessionData.game1.qualityFlags).not.toContain('face_not_detected');
+      expect(telemetryInstance.sessionData.game1.qualityFlags).not.toContain('insufficient_webcam_signal');
     });
   });
 

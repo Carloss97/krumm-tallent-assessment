@@ -126,4 +126,40 @@ describe('generateEdgeLocalReport facial signal audit', () => {
       },
     });
   });
+
+  it('surfaces camera and local model failures as explicit interpretation caveats', () => {
+    const unavailableWindow = createFacialWindow({
+      gameId: 'ospan_game_1',
+      durationMs: 0,
+      sampleCount: 0,
+      quality: {
+        facePresenceRatio: 0,
+        meanDetectionConfidence: 0,
+        signalQualityScore: 0,
+        flags: ['camera_denied', 'facial_model_unavailable'],
+      },
+      confidence: {
+        windowConfidence: 0,
+        interpretationAllowed: false,
+        reasonIfLowConfidence: 'webcam capture unavailable',
+      },
+    });
+
+    const report = generateEdgeLocalReport({
+      game1: { score: 72, duration: 60000, facialWindows: [unavailableWindow] },
+      game2: { score: 68, duration: 60000, facialWindows: [unavailableWindow] },
+      game3: { score: 64, duration: 60000, facialWindows: [unavailableWindow] },
+    }, 'en');
+
+    expect(report.signalAudit.qualityFlags).toEqual(expect.arrayContaining([
+      'camera_denied',
+      'facial_model_unavailable',
+    ]));
+    expect(report.signalAudit.caveats).toContain(
+      'Camera or the local facial model was unavailable; do not compare visual signals against full-coverage sessions.',
+    );
+    expect(report.assessmentFeatureVector.caveats).toContain(
+      'Camera or local facial model was unavailable for part of the session; do not compare visual-signal features against full-coverage sessions.',
+    );
+  });
 });

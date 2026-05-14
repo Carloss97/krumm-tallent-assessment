@@ -269,4 +269,39 @@ describe('Report Component', () => {
       { timeout: 10000 },
     );
   });
+
+  it('shows camera/model failure caveats in the report signal audit', async () => {
+    const unavailableWindow = createFacialWindow({
+      durationMs: 0,
+      sampleCount: 0,
+      quality: {
+        facePresenceRatio: 0,
+        meanDetectionConfidence: 0,
+        signalQualityScore: 0,
+        flags: ['camera_denied', 'facial_model_unavailable'],
+      },
+      confidence: {
+        windowConfidence: 0,
+        interpretationAllowed: false,
+        reasonIfLowConfidence: 'webcam capture unavailable',
+      },
+    });
+    const mockSessionData = {
+      game1: { score: 70, errors: 1, duration: 60000, facialWindows: [unavailableWindow] },
+      game2: { score: 72, errors: 1, duration: 65000, facialWindows: [unavailableWindow] },
+      game3: { score: 68, errors: 2, duration: 55000, facialWindows: [unavailableWindow] },
+    };
+
+    mockUseTelemetry.mockReturnValue({ sessionData: mockSessionData });
+
+    renderReport({ useDummyData: false });
+
+    await waitFor(
+      () => {
+        expect(screen.getByText(/camera or the local facial model was unavailable|la cámara o el modelo facial local no estuvo disponible/i)).toBeDefined();
+        expect(screen.getByText(/quality flag: camera_denied|flag de calidad: camera_denied/i)).toBeDefined();
+      },
+      { timeout: 10000 },
+    );
+  });
 });
