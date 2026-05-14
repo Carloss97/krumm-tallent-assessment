@@ -1,5 +1,6 @@
 import { describe, it, expect, vi, afterEach } from 'vitest';
-import { buildEdgeLocalLiveInsight } from './edgeLocalInferenceService';
+import { buildEdgeLocalLiveInsight, generateEdgeLocalReport } from './edgeLocalInferenceService';
+import { createFacialWindow } from '../telemetry/facial/facialTelemetrySchema';
 
 afterEach(() => {
   vi.restoreAllMocks();
@@ -36,5 +37,93 @@ describe('buildEdgeLocalLiveInsight', () => {
     expect(insight.signals).toContain('Quality flags active');
     expect(insight.signals).toContain('Webcam quality is low');
     expect(insight.signals).toContain('Hesitation is increasing');
+  });
+
+  it('summarizes aggregated facial windows for audit-only HUD signals', () => {
+    vi.spyOn(Date, 'now').mockReturnValue(130000);
+
+    const window = createFacialWindow({
+      gameId: 'sst_game_2',
+      durationMs: 5000,
+      sampleCount: 15,
+      quality: {
+        facePresenceRatio: 0.42,
+        meanDetectionConfidence: 0.52,
+        meanIlluminationScore: 0.4,
+        signalQualityScore: 38,
+        flags: ['insufficient_facial_coverage', 'low_light'],
+      },
+      facialSignals: {
+        blinkRatePerMin: 16,
+        visualStabilityScore: 61,
+        offScreenOrFaceAwayRatio: 0.33,
+      },
+      confidence: {
+        windowConfidence: 0.44,
+        interpretationAllowed: false,
+        reasonIfLowConfidence: 'facial coverage below threshold',
+      },
+    });
+
+    const insight = buildEdgeLocalLiveInsight({
+      startTime: 100000,
+      mouseMovements: [],
+      clicks: [],
+      trialEvents: [],
+      webcamFrames: [],
+      facialWindows: [window],
+    });
+
+    expect(insight.facialWindowCount).toBe(1);
+    expect(insight.facePresencePercent).toBe(42);
+    expect(insight.facialSignalQuality).toBe(38);
+    expect(insight.visualStabilityScore).toBe(61);
+    expect(insight.blinkRatePerMin).toBe(16);
+    expect(insight.signals).toContain('Facial coverage is low');
+    expect(insight.signals).toContain('Facial telemetry confidence is low');
+  });
+});
+
+describe('generateEdgeLocalReport facial signal audit', () => {
+  it('derives biometric signal quality from aggregate facial windows', () => {
+    const sessionData = {
+      game1: {
+        score: 72,
+        facialWindows: [createFacialWindow({
+          quality: { facePresenceRatio: 0.9, signalQualityScore: 80, flags: [] },
+          confidence: { windowConfidence: 0.8, interpretationAllowed: true },
+        })],
+      },
+      game2: {
+        score: 68,
+        facialWindows: [createFacialWindow({
+          quality: { facePresenceRatio: 0.8, signalQualityScore: 70, flags: ['low_light'] },
+          confidence: { windowConfidence: 0.7, interpretationAllowed: true },
+        })],
+      },
+      game3: {
+        score: 64,
+        facialWindows: [createFacialWindow({
+          quality: { facePresenceRatio: 0.7, signalQualityScore: 60, flags: ['insufficient_facial_coverage'] },
+          confidence: { windowConfidence: 0.6, interpretationAllowed: false },
+        })],
+      },
+    };
+
+    const report = generateEdgeLocalReport(sessionData, 'en');
+
+    expect(report.signalAudit.biometricSignalQualityScore).toBe(70);
+    expect(report.signalAudit.facialCoverageScore).toBe(80);
+    expect(report.signalAudit.facialWindowCount).toBe(3);
+    expect(report.signalAudit.qualityFlags).toEqual(['low_light', 'insufficient_facial_coverage']);
+    expect(report.signalAudit.caveats).toContain('Facial telemetry has low-confidence windows; interpret observable signals cautiously.');
+    expect(report.assessmentFeatureVector).toMatchObject({
+      type: 'assessment_feature_vector_v1',
+      aggregate: {
+        completedGameCount: 3,
+        meanWebcamSignalQuality: 70,
+        meanFacialCoverage: 80,
+      },
+    });
   });
 });

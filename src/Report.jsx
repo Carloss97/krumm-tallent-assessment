@@ -16,6 +16,7 @@ import {
   checkGeminiHealth,
 } from './services/aiReportService';
 import { generateEdgeLocalReportModel } from './services/edgeLocalInferenceService';
+import { buildSessionPersistencePayload } from './telemetry/persistence/sessionPersistencePayload';
 import { saveSessionToBackend, getCurrentToken } from './services/backendService';
 import { generateDummyReportData } from './utils/dummyDataGenerator';
 import './Report.css';
@@ -329,25 +330,26 @@ const Report = ({ isDummy = false, useDummyData = false, demoSummary = null }) =
               return;
             }
 
-            const sessionDataPayload = {
-              startedAt: safeMetadata.startedAt || new Date().toISOString(),
-              completedAt: new Date().toISOString(),
-              participantId: participantProfile.participantId,
-              telemetry: effectiveSessionData,
-              report: reportData,
-              demoSummary,
-            };
+            let sessionPayload;
+            try {
+              sessionPayload = buildSessionPersistencePayload({
+                participant: participantProfile,
+                telemetry: effectiveSessionData,
+                reportData,
+                demoSummary,
+                metadata: safeMetadata,
+              });
+            } catch (privacyError) {
+              console.warn('[Report] blocked unsafe telemetry payload before persistence', privacyError?.message);
+              return;
+            }
 
             const maxAttempts = 3;
             let attempt = 0;
             while (attempt < maxAttempts) {
               attempt += 1;
               try {
-                const saveRes = await saveSessionToBackend({
-                  participant: participantProfile,
-                  sessionData: sessionDataPayload,
-                  metadata: safeMetadata
-                });
+                const saveRes = await saveSessionToBackend(sessionPayload);
                 if (saveRes && saveRes.sessionId) {
                   setSessionSavedId(saveRes.sessionId);
                 }
@@ -426,6 +428,8 @@ const Report = ({ isDummy = false, useDummyData = false, demoSummary = null }) =
 
   // Use AI report if available, otherwise fallback to heuristic
   const report = aiReport || generateHeuristicReport(reportData, language);
+  const signalAudit = report?.signalAudit || null;
+  const signalAuditCaveats = Array.isArray(signalAudit?.caveats) ? signalAudit.caveats : [];
   const recommendationLabel = getRecommendationLabel(report.recommendation, isEn);
   const extendedGameRows = buildEnhancedRows(reportData, isEn);
   const actionPriorities = buildActionPriorities(report, competencyHighlights, isEn);
@@ -608,6 +612,50 @@ const Report = ({ isDummy = false, useDummyData = false, demoSummary = null }) =
             "{insightMeta.reason}"
           </p>
         </div>
+
+        {signalAudit && (
+          <div className="report-section" style={{ borderTop: '4px solid #0ea5e9' }}>
+            <h3 className="report-section-title">
+              {isEn ? 'Local Signal Audit' : 'Auditoría de señales locales'}
+            </h3>
+            <p style={{ color: '#475569', lineHeight: 1.7, marginTop: 0 }}>
+              {isEn
+                ? 'This panel reports observable signal quality and coverage only. Facial telemetry is processed locally in aggregate windows and is not used as a standalone psychological or hiring conclusion.'
+                : 'Este panel informa solo calidad y cobertura de señales observables. La telemetría facial se procesa localmente en ventanas agregadas y no se usa como conclusión psicológica ni decisión de contratación independiente.'}
+            </p>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: '16px', marginTop: '20px' }}>
+              <TelemetryStatCard
+                label={isEn ? 'Telemetry coverage' : 'Cobertura telemétrica'}
+                value={`${signalAudit.telemetryCoverageScore ?? 0}%`}
+              />
+              <TelemetryStatCard
+                label={isEn ? 'Visual signal quality' : 'Calidad señal visual'}
+                value={`${signalAudit.biometricSignalQualityScore ?? 0}%`}
+              />
+              <TelemetryStatCard
+                label={isEn ? 'Facial coverage' : 'Cobertura facial'}
+                value={`${signalAudit.facialCoverageScore ?? 0}%`}
+              />
+              <TelemetryStatCard
+                label={isEn ? 'Facial windows' : 'Ventanas faciales'}
+                value={signalAudit.facialWindowCount ?? 0}
+              />
+            </div>
+            {(signalAuditCaveats.length > 0 || (signalAudit.qualityFlags || []).length > 0) && (
+              <div style={{ marginTop: '20px', padding: '16px', background: '#fffbeb', border: '1px solid #fbbf24', borderRadius: '16px', color: '#92400e' }}>
+                <strong>{isEn ? 'Interpretation caveats' : 'Cautelas de interpretación'}</strong>
+                <ul style={{ margin: '10px 0 0', paddingLeft: '20px', lineHeight: 1.6 }}>
+                  {signalAuditCaveats.map((caveat) => (
+                    <li key={caveat}>{caveat}</li>
+                  ))}
+                  {(signalAudit.qualityFlags || []).slice(0, 4).map((flag) => (
+                    <li key={flag}>{isEn ? `Quality flag: ${flag}` : `Flag de calidad: ${flag}`}</li>
+                  ))}
+                </ul>
+              </div>
+            )}
+          </div>
+        )}
 
         <div className="report-section" style={{ marginTop: '40px' }}>
           <h3 className="report-section-title">{isEn ? 'Executive Summary' : 'Resumen ejecutivo'}</h3>

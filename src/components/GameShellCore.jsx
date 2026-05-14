@@ -62,6 +62,9 @@ const GameShellCore = ({ gameId, children }) => {
     isActive,
     shouldCapture: shouldCaptureWebcam,
     onFrameCapture: recordWebcamFrame,
+    gameId: gameConfig?.telemetryId || `game${gameId}`,
+    sampleFps: 6,
+    windowMs: 5000,
   });
 
   const handleStart = useCallback(() => {

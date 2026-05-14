@@ -3,6 +3,7 @@ import { render, screen, fireEvent, act } from '@testing-library/react';
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import {
   StopSignalGame,
+  TaskSwitchingGame,
   DecisionGameHTMX,
   RuleShiftGame,
 } from './HRRHGames';
@@ -13,6 +14,7 @@ const telemetry = {
   startTracking: vi.fn(),
   stopTracking: vi.fn(),
   recordError: vi.fn(),
+  recordTrialEvent: vi.fn(),
 };
 
 vi.mock('../TelemetryContext', () => ({
@@ -41,6 +43,7 @@ describe('HRRHGames scoring and transitions', () => {
     telemetry.startTracking.mockReset();
     telemetry.stopTracking.mockReset();
     telemetry.recordError.mockReset();
+    telemetry.recordTrialEvent.mockReset();
   });
 
   afterEach(() => {
@@ -137,6 +140,63 @@ describe('HRRHGames scoring and transitions', () => {
       }),
     );
     expect(onEndGame).toHaveBeenCalledWith(0, 1, expect.any(Object));
+  });
+
+  it('StopSignal records trial telemetry with inhibition metadata', () => {
+    sequenceRandom([0.1, 0.9]); // STOP first, then GO
+
+    render(
+      <StopSignalGame
+        isActive
+        onEndGame={() => {}}
+        isDemo
+        timeLimit={120}
+        language="es"
+      />,
+    );
+
+    fireEvent.click(screen.getByRole('button', { name: /start|comenzar/i }));
+    fireEvent.click(screen.getByRole('button', { name: /press|presionar/i }));
+
+    expect(telemetry.recordTrialEvent).toHaveBeenCalledWith(expect.objectContaining({
+      event: 'assessment_trial_response',
+      gameId: 'sst_game_2',
+      primaryConstruct: 'response_inhibition',
+      trialIndex: 1,
+      isCorrect: false,
+      behaviouralMarkers: expect.arrayContaining(['commission_error']),
+      stimulus: expect.objectContaining({ signal: 'STOP' }),
+      response: expect.objectContaining({ action: 'press' }),
+      expected: expect.objectContaining({ action: 'withhold' }),
+    }));
+  });
+
+  it('TaskSwitching records rule-switch response telemetry', () => {
+    sequenceRandom([0.9, 0.9]); // BLUE + TRIANGLE-ish after clamped pickRandom
+
+    render(
+      <TaskSwitchingGame
+        isActive
+        onEndGame={() => {}}
+        isDemo
+        timeLimit={120}
+        language="es"
+      />,
+    );
+
+    fireEvent.click(screen.getByRole('button', { name: /start|comenzar/i }));
+    fireEvent.click(screen.getByRole('button', { name: /triangulo|triangle/i }));
+
+    expect(telemetry.recordTrialEvent).toHaveBeenCalledWith(expect.objectContaining({
+      event: 'assessment_trial_response',
+      gameId: 'tsw_game_3',
+      primaryConstruct: 'cognitive_flexibility',
+      trialIndex: 1,
+      isCorrect: true,
+      stimulus: expect.objectContaining({ rule: 'SHAPE' }),
+      response: expect.objectContaining({ answer: 'TRIANGLE' }),
+      expected: expect.objectContaining({ answer: 'TRIANGLE' }),
+    }));
   });
 
   it('Decision game penalizes wrong choices and propagates error count to final scoring', () => {

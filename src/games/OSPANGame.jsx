@@ -2,6 +2,7 @@ import React, { useState, useRef, useCallback } from 'react';
 import { motion } from 'framer-motion';
 import { useTelemetry } from '../TelemetryContext';
 import { useGameTimer } from '../hooks/useGameTimer';
+import { buildAssessmentTrialEvent } from '../utils/assessmentTelemetry';
 import './OSPANGame.css';
 
 /**
@@ -42,7 +43,7 @@ const OSPANGame = ({ isActive, onEndGame, isDemo, timeLimit, language = 'es' }) 
 
     const operationAccuracy = totalOperations > 0 ? Math.round((correctOperations / totalOperations) * 100) : 0;
     const recallAccuracy = totalRecalls > 0 ? Math.round((correctRecalls / totalRecalls) * 100) : 0;
-    const workingMemorySpan = Math.max(...(lettersToRecall.map((arr) => arr.length) || [0]));
+    const workingMemorySpan = lettersToRecall.length > 0 ? Math.max(...lettersToRecall.map((arr) => arr.length)) : 0;
 
     stopTracking(gameIdRef.current, score, totalOperations - correctOperations, {
       operationAccuracy,
@@ -139,18 +140,28 @@ const OSPANGame = ({ isActive, onEndGame, isDemo, timeLimit, language = 'es' }) 
 
     setTotalOperations((prev) => prev + 1);
 
-    recordTrialEvent({
-      type: 'operation_response',
-      response: answer,
+    recordTrialEvent(buildAssessmentTrialEvent(gameIdRef.current, {
+      phase: 'operation_response',
+      trialIndex: totalOperations + 1,
+      stimulus: {
+        operation,
+        setSize,
+        currentTrial: currentTrial + 1,
+        displayedTruth: operationIsCorrect,
+        variant: phaseVariant,
+      },
+      response: { answer },
+      expected: { answer: expectedTrue ? 'true' : 'false' },
       isCorrect,
-      reactionTime: rt,
-      variant: phaseVariant,
-    });
+      reactionTimeMs: rt,
+      behaviouralMarkers: isCorrect ? ['processing_hit'] : ['processing_error'],
+      metrics: { setSize, operationAccuracySoFar: totalOperations > 0 ? Math.round((correctOperations / totalOperations) * 100) : undefined },
+    }));
 
     setTimeout(() => {
       nextPhase();
     }, 500);
-  }, [nextPhase, recordError, recordTrialEvent, operationIsCorrect, phaseVariant]);
+  }, [nextPhase, recordError, recordTrialEvent, operationIsCorrect, phaseVariant, operation, setSize, currentTrial, totalOperations, correctOperations]);
 
   const handleLetterConfirm = useCallback(() => {
     const rt = Date.now() - letterStartTimeRef.current;

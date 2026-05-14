@@ -1,7 +1,18 @@
 import { useEffect, useRef } from 'react';
 import WebcamCapture from '../utils/webcamCapture';
 
-export const useWebcamCapture = ({ isActive, shouldCapture, onFrameCapture }) => {
+export const useWebcamCapture = ({
+  isActive,
+  shouldCapture,
+  onFrameCapture,
+  gameId = null,
+  sessionId = null,
+  sampleFps = 6,
+  windowMs = 5000,
+  modelAssetPath,
+  wasmBaseUrl,
+  debug = false,
+}) => {
   const videoRef = useRef(null);
   const captureRef = useRef(null);
 
@@ -17,7 +28,15 @@ export const useWebcamCapture = ({ isActive, shouldCapture, onFrameCapture }) =>
         return;
       }
 
-      captureRef.current = new WebcamCapture(onFrameCapture);
+      captureRef.current = new WebcamCapture(onFrameCapture, {
+        gameId,
+        sessionId,
+        sampleFps,
+        windowMs,
+        modelAssetPath,
+        wasmBaseUrl,
+        logger: debug ? console : null,
+      });
       const initialized = await captureRef.current.initialize(videoRef.current);
 
       if (!isMounted || !initialized) {
@@ -36,7 +55,7 @@ export const useWebcamCapture = ({ isActive, shouldCapture, onFrameCapture }) =>
       captureRef.current?.cleanup();
       captureRef.current = null;
     };
-  }, [isActive, shouldCapture, onFrameCapture]);
+  }, [isActive, shouldCapture, onFrameCapture, gameId, sessionId, sampleFps, windowMs, modelAssetPath, wasmBaseUrl, debug]);
 
   return videoRef;
 };

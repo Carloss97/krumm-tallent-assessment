@@ -27,40 +27,56 @@ const LiveDemoTelemetryHud = ({ activeGameId = null, activeGameLabel = '' }) => 
   const copy = {
     es: {
       badge: 'Informe en vivo',
-      subtitle: 'Análisis de comportamiento en tiempo real y puntajes derivados',
+      subtitle: 'Señales locales observables; no es una conclusión psicológica',
       maximize: 'Maximizar',
       minimize: 'Minimizar',
       coverage: 'Cobertura',
       stability: 'Estabilidad',
-      fatigue: 'Fatiga',
-      readiness: 'Aptitud',
-      percentHint: 'Cobertura = densidad de datos.\nEstabilidad = consistencia del movimiento.\nFatiga = deriva temporal.\nAptitud = capacidad estimada para continuar.\nSignal % = calidad de webcam.',
+      fatigue: 'Tiempo',
+      readiness: 'Continuidad',
+      face: 'Rostro',
+      signal: 'Señal',
+      blink: 'Parp/min',
+      visual: 'Visual',
+      windows: 'Ventanas',
+      flags: 'Flags',
+      percentHint: 'Cobertura = densidad de datos locales.\nEstabilidad = consistencia del movimiento.\nTiempo = deriva temporal, no diagnóstico.\nContinuidad = indicador operativo para seguir la tarea.\nRostro/Señal = calidad local agregada, no rasgo psicológico.',
       noConsent: 'Sin permisos de datos',
       active: 'Analizando...',
       tooltips: {
         coverage: 'Densidad de puntos de datos capturados por segundo.',
-        stability: 'Calidad y precisión del movimiento detectado.',
-        fatigue: 'Indicadores de fatiga cognitiva y visual.',
-        readiness: 'Nivel de aptitud para la tarea basado en el perfil.'
+        stability: 'Consistencia del movimiento observada localmente.',
+        fatigue: 'Deriva temporal operacional; no diagnostica fatiga clínica.',
+        readiness: 'Señal operativa de continuidad basada en cobertura y estabilidad local.',
+        face: 'Porcentaje promedio de presencia facial en ventanas agregadas.',
+        signal: 'Calidad agregada de detección/iluminación; se degrada si la señal es mala.'
       }
     },
     en: {
       badge: 'Live report',
-      subtitle: 'Real-time behavioral analysis and derived scores',
+      subtitle: 'Observable local signals; not a psychological conclusion',
       maximize: 'Maximize',
       minimize: 'Minimize',
       coverage: 'Coverage',
       stability: 'Stability',
-      fatigue: 'Fatigue',
-      readiness: 'Readiness',
-      percentHint: 'Coverage = data density.\nStability = movement consistency.\nFatigue = time drift.\nReadiness = estimated ability to continue.\nSignal % = webcam quality.',
+      fatigue: 'Time',
+      readiness: 'Continuity',
+      face: 'Face',
+      signal: 'Signal',
+      blink: 'Blink/min',
+      visual: 'Visual',
+      windows: 'Windows',
+      flags: 'Flags',
+      percentHint: 'Coverage = local data density.\nStability = movement consistency.\nTime = temporal drift, not diagnosis.\nContinuity = operational signal for continuing the task.\nFace/Signal = aggregate local quality, not a psychological trait.',
       noConsent: 'No data consent',
       active: 'Analyzing...',
       tooltips: {
         coverage: 'Density of data points captured per second.',
-        stability: 'Quality and precision of detected motion.',
-        fatigue: 'Indicators of cognitive and visual fatigue.',
-        readiness: 'Task readiness level based on profile.'
+        stability: 'Movement consistency observed locally.',
+        fatigue: 'Operational time drift; not a clinical fatigue diagnosis.',
+        readiness: 'Operational continuity signal based on local coverage and stability.',
+        face: 'Average face presence ratio across aggregate facial windows.',
+        signal: 'Aggregate detection/lighting quality; degraded when signal is poor.'
       }
     }
   };
@@ -101,7 +117,7 @@ const LiveDemoTelemetryHud = ({ activeGameId = null, activeGameLabel = '' }) => 
     );
   }
 
-  const hasData = snapshot.cursorEvents > 0 || snapshot.webcamFrames > 0;
+  const hasData = snapshot.cursorEvents > 0 || snapshot.webcamFrames > 0 || snapshot.facialWindowCount > 0;
 
   return (
     <aside className="demo-hud" aria-label="Live telemetry insights" style={{ pointerEvents: 'auto', zIndex: 1000 }}>
@@ -132,8 +148,8 @@ const LiveDemoTelemetryHud = ({ activeGameId = null, activeGameLabel = '' }) => 
       ) : (
         <div className="demo-hud-grid">
           <MetricPill label={c.coverage} value={`${snapshot.coverageScore}%`} tone="blue" tooltip={c.tooltips.coverage} />
-          <MetricPill label={c.stability} value={`${snapshot.stabilityScore}%`} tone="green" tooltip={c.tooltips.stability} />
-          <MetricPill label={c.fatigue} value={`${snapshot.fatigueScore}%`} tone="amber" tooltip={c.tooltips.fatigue} />
+          <MetricPill label={c.signal} value={`${snapshot.webcamQuality}%`} tone="green" tooltip={c.tooltips.signal} />
+          <MetricPill label={c.face} value={`${snapshot.facePresencePercent || 0}%`} tone="amber" tooltip={c.tooltips.face} />
           <MetricPill label={c.readiness} value={`${snapshot.readinessScore}%`} tone="violet" tooltip={c.tooltips.readiness} />
         </div>
       )}
@@ -142,8 +158,9 @@ const LiveDemoTelemetryHud = ({ activeGameId = null, activeGameLabel = '' }) => 
         <div className="mini-stat"><span>Moves</span> <strong>{snapshot.cursorEvents}</strong></div>
         <div className="mini-stat"><span>Clicks</span> <strong>{snapshot.clickEvents}</strong></div>
         <div className="mini-stat"><span>Trials</span> <strong>{snapshot.trialEvents}</strong></div>
-        <div className="mini-stat"><span>Frames</span> <strong>{snapshot.webcamFrames}</strong></div>
-        <div className="mini-stat"><span>Signal %</span> <strong>{snapshot.webcamQuality}%</strong></div>
+        <div className="mini-stat"><span>{c.windows}</span> <strong>{snapshot.facialWindowCount || 0}</strong></div>
+        <div className="mini-stat"><span>{c.blink}</span> <strong>{snapshot.blinkRatePerMin || 0}</strong></div>
+        <div className="mini-stat"><span>{c.visual}</span> <strong>{snapshot.visualStabilityScore || 0}%</strong></div>
       </div>
 
       <div className="demo-hud-explainer">
@@ -152,8 +169,8 @@ const LiveDemoTelemetryHud = ({ activeGameId = null, activeGameLabel = '' }) => 
 
       <div style={{ marginTop: '14px', fontSize: '0.6rem', color: '#64748b', fontStyle: 'italic', borderTop: '1px solid rgba(255,255,255,0.05)', paddingTop: '10px' }}>
         {language === 'es' 
-          ? '* Los porcentajes indican densidad de datos y estabilidad conductual detectada localmente.' 
-          : '* Percentages indicate data density and behavioral stability detected locally.'}
+          ? '* Señales audit-only procesadas localmente. No infieren personalidad, salud mental ni decisión de contratación.' 
+          : '* Audit-only signals processed locally. They do not infer personality, mental health, or hiring decisions.'}
       </div>
 
       {Array.isArray(snapshot.signals) && snapshot.signals.length > 0 && (

@@ -1,6 +1,7 @@
 import React, { useState, useRef, useCallback, useEffect } from 'react';
 import { useTelemetry } from '../TelemetryContext';
 import { useGameTimer } from '../hooks/useGameTimer';
+import { buildAssessmentTrialEvent } from '../utils/assessmentTelemetry';
 import './HRRHGames.css';
 
 const pickRandom = (items) => items[Math.floor(Math.random() * items.length)];
@@ -25,7 +26,7 @@ const displayShape = (value, isEn) => (isEn ? value : (SHAPE_LABELS[value]?.es ?
  */
 export const StopSignalGame = ({ isActive, onEndGame, isDemo, timeLimit, language = 'es' }) => {
   const isEn = language === 'en';
-  const { startTracking, stopTracking, recordError } = useTelemetry();
+  const { startTracking, stopTracking, recordError, recordTrialEvent } = useTelemetry();
   const [gameState, setGameState] = useState('instruction');
   const [trial, setTrial] = useState(1);
   const [score, setScore] = useState(0);
@@ -95,6 +96,17 @@ export const StopSignalGame = ({ isActive, onEndGame, isDemo, timeLimit, languag
   }, [startTracking, rollTrial, clearStopTimer]);
 
   const handleGoClick = useCallback(() => {
+    const isCorrect = !isStopTrial;
+    recordTrialEvent(buildAssessmentTrialEvent('sst_game_2', {
+      phase: 'response',
+      trialIndex: trial,
+      stimulus: { signal: isStopTrial ? 'STOP' : 'GO', tempoTag },
+      response: { action: 'press' },
+      expected: { action: isStopTrial ? 'withhold' : 'press' },
+      isCorrect,
+      behaviouralMarkers: isCorrect ? ['go_hit'] : ['commission_error'],
+    }));
+
     if (isStopTrial) {
       setErrors((prev) => prev + 1);
       recordError();
@@ -103,19 +115,38 @@ export const StopSignalGame = ({ isActive, onEndGame, isDemo, timeLimit, languag
       setScore((prev) => prev + 10);
     }
     nextTrial();
-  }, [isStopTrial, nextTrial, recordError]);
+  }, [isStopTrial, nextTrial, recordError, recordTrialEvent, tempoTag, trial]);
 
   const handleMiss = useCallback(() => {
+    recordTrialEvent(buildAssessmentTrialEvent('sst_game_2', {
+      phase: 'response',
+      trialIndex: trial,
+      stimulus: { signal: 'GO', tempoTag },
+      response: { action: 'withhold' },
+      expected: { action: 'press' },
+      isCorrect: false,
+      behaviouralMarkers: ['omission_error'],
+    }));
     setErrors((prev) => prev + 1);
     recordError();
     nextTrial();
-  }, [recordError, nextTrial]);
+  }, [recordError, nextTrial, recordTrialEvent, tempoTag, trial]);
 
   useEffect(() => {
     if (gameState !== 'running' || !isStopTrial) return undefined;
 
     clearStopTimer();
     stopAutoAdvanceRef.current = setTimeout(() => {
+      recordTrialEvent(buildAssessmentTrialEvent('sst_game_2', {
+        phase: 'auto_advance',
+        trialIndex: trial,
+        stimulus: { signal: 'STOP', tempoTag },
+        response: { action: 'withhold' },
+        expected: { action: 'withhold' },
+        isCorrect: true,
+        reactionTimeMs: STOP_AUTO_ADVANCE_MS,
+        behaviouralMarkers: ['successful_inhibition'],
+      }));
       setCorrectStop((prev) => prev + 1);
       setScore((prev) => prev + 10);
       setTrial((currentTrial) => {
@@ -130,7 +161,7 @@ export const StopSignalGame = ({ isActive, onEndGame, isDemo, timeLimit, languag
     }, STOP_AUTO_ADVANCE_MS);
 
     return clearStopTimer;
-  }, [gameState, isStopTrial, clearStopTimer, endGame, MAX_TRIALS, STOP_AUTO_ADVANCE_MS, rollTrial]);
+  }, [gameState, isStopTrial, clearStopTimer, endGame, MAX_TRIALS, STOP_AUTO_ADVANCE_MS, rollTrial, recordTrialEvent, tempoTag, trial]);
 
   if (gameState === 'instruction') {
     return (
@@ -175,13 +206,14 @@ export const StopSignalGame = ({ isActive, onEndGame, isDemo, timeLimit, languag
  */
 export const TaskSwitchingGame = ({ isActive, onEndGame, isDemo, timeLimit, language = 'es' }) => {
   const isEn = language === 'en';
-  const { startTracking, stopTracking, recordError } = useTelemetry();
+  const { startTracking, stopTracking, recordError, recordTrialEvent } = useTelemetry();
   const [gameState, setGameState] = useState('instruction');
   const [score, setScore] = useState(0);
   const [trial, setTrial] = useState(1);
   const [errors, setErrors] = useState(0);
   const [stimulus, setStimulus] = useState({ color: 'RED', shape: 'CIRCLE' });
   const hasEndedRef = useRef(false);
+  const trialStartTimeRef = useRef(null);
 
   const MAX_TRIALS = isDemo ? 40 : 100;
 
@@ -202,6 +234,7 @@ export const TaskSwitchingGame = ({ isActive, onEndGame, isDemo, timeLimit, lang
       color: pickRandom(['RED', 'BLUE', 'GREEN']),
       shape: pickRandom(['CIRCLE', 'SQUARE', 'TRIANGLE']),
     });
+    trialStartTimeRef.current = Date.now();
   }, []);
 
   const beginGame = useCallback(() => {
@@ -227,14 +260,26 @@ export const TaskSwitchingGame = ({ isActive, onEndGame, isDemo, timeLimit, lang
 
   const handleSelection = useCallback((answer) => {
     const expected = currentRule === 'COLOR' ? stimulus.color : stimulus.shape;
-    if (answer === expected) {
+    const isCorrect = answer === expected;
+    recordTrialEvent(buildAssessmentTrialEvent('tsw_game_3', {
+      phase: 'rule_response',
+      trialIndex: trial,
+      stimulus: { rule: currentRule, color: stimulus.color, shape: stimulus.shape },
+      response: { answer },
+      expected: { answer: expected },
+      isCorrect,
+      reactionTimeMs: trialStartTimeRef.current ? Date.now() - trialStartTimeRef.current : undefined,
+      behaviouralMarkers: isCorrect ? ['rule_applied'] : ['rule_application_error'],
+    }));
+
+    if (isCorrect) {
       setScore((prev) => prev + 10);
     } else {
       setErrors((prev) => prev + 1);
       recordError();
     }
     nextTrial();
-  }, [currentRule, stimulus, recordError, nextTrial]);
+  }, [currentRule, stimulus, recordError, nextTrial, recordTrialEvent, trial]);
 
   if (gameState === 'instruction') {
     return (

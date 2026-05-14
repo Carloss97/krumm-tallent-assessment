@@ -78,6 +78,14 @@ describe('OSPANGame scoring validity', () => {
         totalTrials: 1,
       }),
     );
+    expect(telemetry.recordTrialEvent).toHaveBeenCalledWith(expect.objectContaining({
+      event: 'assessment_trial_response',
+      gameId: 'ospan_game_1',
+      primaryConstruct: 'working_memory_capacity',
+      phase: 'operation_response',
+      isCorrect: true,
+      response: expect.objectContaining({ answer: 'true' }),
+    }));
     expect(onEndGame).toHaveBeenCalledWith(
       10,
       0,

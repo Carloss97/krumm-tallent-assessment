@@ -6,6 +6,7 @@ import { playMemoryClick, playSuccessSound, playLevelUpSound } from '../utils/au
 import Confetti from '../components/Confetti';
 import { useLanguage } from '../context/LanguageContext';
 import { useIsMobile, useIsTablet } from '../hooks/useMediaQuery';
+import { createGridFlowLevel } from '../utils/demoLevelAuthoring';
 
 const DEFAULT_GRID = 16;
 const SAT_DECAY = 1; // % per second (reduced from 2 for better pacing)
@@ -86,31 +87,10 @@ const COLOR_POINT_VALUES = {
   pink: 200,
 };
 
-const rect = (x1, y1, x2, y2) => {
-  const cells = [];
-  for (let y = y1; y <= y2; y += 1) {
-    for (let x = x1; x <= x2; x += 1) {
-      cells.push(`${x},${y}`);
-    }
-  }
-  return cells;
-};
-
-const cityWalls = (rectangles, reserved = []) => {
-  const reservedSet = new Set(reserved.map((p) => `${p.x},${p.y}`));
-  return [...new Set(rectangles.flatMap(([x1, y1, x2, y2]) => rect(x1, y1, x2, y2)))]
-    .filter((key) => !reservedSet.has(key));
-};
-
-const routePoints = (level) => [
-  level.startPos,
-  ...level.stations,
-  ...level.targets.flatMap((target) => [{ x: target.x, y: target.y }, target.dropZone]),
-];
-
-const withCityWalls = (level, rectangles) => ({
+const withCityWalls = (level, rectangles) => createGridFlowLevel({
   ...level,
-  walls: cityWalls(rectangles, routePoints(level)),
+  start: level.startPos,
+  walls: { rects: rectangles },
 });
 
 export const GRID_LEVELS = [

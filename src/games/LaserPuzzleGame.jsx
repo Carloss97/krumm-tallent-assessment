@@ -7,6 +7,7 @@ import Confetti from '../components/Confetti';
 import { useGameTimer } from '../hooks/useGameTimer';
 import { useLanguage } from '../context/LanguageContext';
 import { useIsMobile, useIsTablet } from '../hooks/useMediaQuery';
+import { createLaserPuzzleLevel } from '../utils/demoLevelAuthoring';
 
 const CELL = 40; // Large maps stay visible on desktop
 const MOBILE_CELL = 24;
@@ -153,31 +154,13 @@ export const getLaserDemoBriefing = (idx, language = 'es') => {
   return pack[Math.min(Math.max(idx, 0), pack.length - 1)];
 };
 
-const wallRect = (x1, y1, x2, y2) => {
-  const cells = [];
-  for (let y = y1; y <= y2; y += 1) {
-    for (let x = x1; x <= x2; x += 1) {
-      cells.push(`${x},${y}`);
-    }
-  }
-  return cells;
-};
-
-const makeLaserCells = (objects, rectangles, reserved = []) => {
-  const reservedKeys = new Set([
-    ...objects.map((cell) => `${cell.x},${cell.y}`),
-    ...reserved.map((cell) => `${cell.x},${cell.y}`),
-  ]);
-
-  const walls = [...new Set(rectangles.flatMap(([x1, y1, x2, y2]) => wallRect(x1, y1, x2, y2)))]
-    .filter((key) => !reservedKeys.has(key))
-    .map((key) => {
-      const [x, y] = key.split(',').map(Number);
-      return { x, y, type: 'wall' };
-    });
-
-  return [...walls, ...objects];
-};
+const makeLaserCells = (objects, rectangles, reserved = [], cols, rows) => createLaserPuzzleLevel({
+  cols,
+  rows,
+  objects,
+  walls: { rects: rectangles },
+  reserved,
+}).cells;
 
 export const LASER_DEMO_LEVELS = [
   {
@@ -204,7 +187,7 @@ export const LASER_DEMO_LEVELS = [
       { x: 8, y: 0, type: 'reflector_ne', movable: true },
     ], [
       [1,0,2,1], [5,0,6,1], [9,0,11,1], [0,8,4,9], [5,8,6,9], [9,4,11,5], [0,2,1,3], [8,8,11,9],
-    ], [{ x:3, y:5 }, { x:3, y:2 }, { x:7, y:2 }, { x:7, y:7 }, { x:10, y:7 }, { x:1, y:8 }, { x:9, y:8 }, { x:10, y:8 }, { x:11, y:7 }, { x:11, y:0 }, { x:5, y:9 }, { x:8, y:0 }]),
+    ], [{ x:3, y:5 }, { x:3, y:2 }, { x:7, y:2 }, { x:7, y:7 }, { x:10, y:7 }, { x:1, y:8 }, { x:9, y:8 }, { x:10, y:8 }, { x:11, y:7 }, { x:11, y:0 }, { x:5, y:9 }, { x:8, y:0 }], 12, 10),
     quiz: [],
   },
   {
@@ -233,7 +216,7 @@ export const LASER_DEMO_LEVELS = [
       { x: 11, y: 4, type: 'bifurcator', movable: true },
     ], [
       [1,0,2,1], [6,0,7,1], [10,0,11,2], [6,3,7,4], [0,7,2,9], [6,6,7,7], [10,6,11,9], [1,2,2,3], [11,4,11,5],
-    ], [{ x:4, y:5 }, { x:4, y:2 }, { x:9, y:2 }, { x:4, y:8 }, { x:9, y:8 }, { x:9, y:4 }, { x:9, y:6 }, { x:1, y:8 }, { x:9, y:0 }, { x:2, y:0 }, { x:9, y:9 }, { x:10, y:4 }, { x:1, y:1 }, { x:8, y:9 }, { x:11, y:4 }]),
+    ], [{ x:4, y:5 }, { x:4, y:2 }, { x:9, y:2 }, { x:4, y:8 }, { x:9, y:8 }, { x:9, y:4 }, { x:9, y:6 }, { x:1, y:8 }, { x:9, y:0 }, { x:2, y:0 }, { x:9, y:9 }, { x:10, y:4 }, { x:1, y:1 }, { x:8, y:9 }, { x:11, y:4 }], 12, 10),
     quiz: [],
   },
   {
@@ -261,7 +244,7 @@ export const LASER_DEMO_LEVELS = [
       { x: 12, y: 8, type: 'reflector_ne', movable: true },
     ], [
       [1,3,2,6], [5,0,6,1], [9,0,10,1], [5,4,6,5], [11,5,12,7], [1,9,2,10], [4,9,5,10], [8,8,10,10], [12,0,12,2], [0,0,0,3],
-    ], [{ x:3, y:8 }, { x:3, y:2 }, { x:7, y:2 }, { x:7, y:6 }, { x:10, y:6 }, { x:10, y:3 }, { x:12, y:3 }, { x:1, y:1 }, { x:11, y:1 }, { x:1, y:9 }, { x:11, y:9 }, { x:10, y:0 }, { x:12, y:10 }, { x:6, y:10 }, { x:12, y:8 }]),
+    ], [{ x:3, y:8 }, { x:3, y:2 }, { x:7, y:2 }, { x:7, y:6 }, { x:10, y:6 }, { x:10, y:3 }, { x:12, y:3 }, { x:1, y:1 }, { x:11, y:1 }, { x:1, y:9 }, { x:11, y:9 }, { x:10, y:0 }, { x:12, y:10 }, { x:6, y:10 }, { x:12, y:8 }], 13, 11),
     quiz: [],
   },
   {
@@ -290,7 +273,7 @@ export const LASER_DEMO_LEVELS = [
       { x: 13, y: 9, type: 'reflector_nw', movable: true },
     ], [
       [2,0,3,3], [7,0,8,1], [12,0,13,2], [2,7,3,10], [7,4,8,6], [11,7,13,8], [0,1,1,3], [0,7,1,9], [11,4,13,6], [4,0,4,3], [4,7,4,10],
-    ], [{ x:5, y:5 }, { x:5, y:2 }, { x:10, y:2 }, { x:5, y:8 }, { x:10, y:8 }, { x:10, y:4 }, { x:10, y:6 }, { x:2, y:9 }, { x:12, y:0 }, { x:8, y:10 }, { x:12, y:10 }, { x:1, y:1 }, { x:11, y:4 }, { x:13, y:1 }, { x:13, y:9 }]),
+    ], [{ x:5, y:5 }, { x:5, y:2 }, { x:10, y:2 }, { x:5, y:8 }, { x:10, y:8 }, { x:10, y:4 }, { x:10, y:6 }, { x:2, y:9 }, { x:12, y:0 }, { x:8, y:10 }, { x:12, y:10 }, { x:1, y:1 }, { x:11, y:4 }, { x:13, y:1 }, { x:13, y:9 }], 14, 11),
     quiz: [],
   },
   {
@@ -319,7 +302,7 @@ export const LASER_DEMO_LEVELS = [
       { x: 13, y: 8, type: 'reflector_ne', movable: true },
     ], [
       [5,0,6,11], [1,0,3,2], [8,0,10,2], [1,4,3,5], [8,4,9,5], [1,8,4,11], [8,8,11,11], [13,4,13,5],
-    ], [{ x:3, y:6 }, { x:10, y:6 }, { x:12, y:6 }, { x:12, y:2 }, { x:13, y:2 }, { x:13, y:0 }, { x:1, y:10 }, { x:10, y:10 }, { x:2, y:1 }, { x:12, y:10 }, { x:9, y:1 }, { x:13, y:11 }, { x:0, y:11 }, { x:0, y:0 }, { x:13, y:8 }]),
+    ], [{ x:3, y:6 }, { x:10, y:6 }, { x:12, y:6 }, { x:12, y:2 }, { x:13, y:2 }, { x:13, y:0 }, { x:1, y:10 }, { x:10, y:10 }, { x:2, y:1 }, { x:12, y:10 }, { x:9, y:1 }, { x:13, y:11 }, { x:0, y:11 }, { x:0, y:0 }, { x:13, y:8 }], 14, 12),
     quiz: [],
   },
   {
@@ -349,7 +332,7 @@ export const LASER_DEMO_LEVELS = [
       { x: 14, y: 3, type: 'reflector_nw', movable: true },
     ], [
       [5,5,5,5], [2,0,4,1], [7,0,9,2], [11,0,14,2], [0,4,2,6], [4,4,6,6], [8,4,11,6], [13,4,14,6], [0,8,2,11], [5,8,7,11], [11,8,11,9],
-    ], [{ x:4, y:4 }, { x:8, y:8 }, { x:10, y:10 }, { x:10, y:11 }, { x:12, y:10 }, { x:12, y:7 }, { x:14, y:7 }, { x:14, y:11 }, { x:1, y:10 }, { x:9, y:9 }, { x:12, y:1 }, { x:2, y:10 }, { x:13, y:3 }, { x:4, y:10 }, { x:13, y:8 }, { x:7, y:2 }, { x:14, y:3 }]),
+    ], [{ x:4, y:4 }, { x:8, y:8 }, { x:10, y:10 }, { x:10, y:11 }, { x:12, y:10 }, { x:12, y:7 }, { x:14, y:7 }, { x:14, y:11 }, { x:1, y:10 }, { x:9, y:9 }, { x:12, y:1 }, { x:2, y:10 }, { x:13, y:3 }, { x:4, y:10 }, { x:13, y:8 }, { x:7, y:2 }, { x:14, y:3 }], 15, 12),
     quiz: [
       {
         q: '¿Qué aporta el emisor diagonal en este nivel?',

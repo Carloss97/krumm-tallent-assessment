@@ -1,4 +1,9 @@
 import React, { createContext, useContext, useState, useRef, useCallback, useEffect } from 'react';
+import {
+  assertFacialWindowPrivacySafe,
+  assertTelemetryPayloadPrivacySafe,
+  isFacialWindow,
+} from './telemetry/facial/facialTelemetrySchema';
 
 const TelemetryContext = createContext(null);
 
@@ -54,6 +59,77 @@ const getRuntimeApiUrl = (path) => {
   return '';
 };
 
+const clampPercent = (value) => {
+  const n = Number(value);
+  if (!Number.isFinite(n)) return 0;
+  return Math.min(100, Math.max(0, Math.round(n)));
+};
+
+const average = (values) => {
+  const finite = values.map(Number).filter(Number.isFinite);
+  if (finite.length === 0) return 0;
+  return finite.reduce((sum, value) => sum + value, 0) / finite.length;
+};
+
+const dedupe = (values) => Array.from(new Set((values || []).filter(Boolean)));
+
+const LATE_FACIAL_FLUSH_WINDOW_MS = 2000;
+
+const getFacialWindowKey = (window) => [
+  window?.type || 'window',
+  window?.gameId || '',
+  window?.windowIndex ?? '',
+  window?.startedAtMs ?? '',
+  window?.endedAtMs ?? '',
+].join(':');
+
+const summarizeFacialWindows = (facialWindows = []) => {
+  if (!Array.isArray(facialWindows) || facialWindows.length === 0) {
+    return {
+      webcamQualityScore: 0,
+      facialCoverageScore: 0,
+      facialWindowCount: 0,
+      qualityFlags: [],
+    };
+  }
+
+  const signalScores = facialWindows.map((window) => window?.quality?.signalQualityScore);
+  const coverageScores = facialWindows.map((window) => (window?.quality?.facePresenceRatio ?? 0) * 100);
+  const qualityFlags = facialWindows.flatMap((window) => window?.quality?.flags || []);
+
+  return {
+    webcamQualityScore: clampPercent(average(signalScores)),
+    facialCoverageScore: clampPercent(average(coverageScores)),
+    facialWindowCount: facialWindows.length,
+    qualityFlags: dedupe(qualityFlags),
+  };
+};
+
+const sanitizeLegacyWebcamFrame = (webcamData = {}) => {
+  const qualityFlags = dedupe(webcamData.qualityFlags || webcamData.flags || []);
+  const safeFrame = {
+    type: 'legacy_webcam_metadata_v1',
+    timestamp: Number.isFinite(webcamData.timestamp) ? webcamData.timestamp : Date.now(),
+    source: webcamData.source || 'legacy_webcam_metadata',
+    faceDetected: Boolean(webcamData.faceDetected ?? webcamData.facePresent),
+  };
+
+  if (Number.isFinite(webcamData.qualityScore)) {
+    safeFrame.qualityScore = clampPercent(webcamData.qualityScore);
+  }
+  if (Number.isFinite(webcamData.detectionConfidence)) {
+    safeFrame.detectionConfidence = Math.min(1, Math.max(0, Number(webcamData.detectionConfidence)));
+  }
+  if (Number.isFinite(webcamData.illuminationScore)) {
+    safeFrame.illuminationScore = Math.min(1, Math.max(0, Number(webcamData.illuminationScore)));
+  }
+  if (qualityFlags.length > 0) {
+    safeFrame.qualityFlags = qualityFlags;
+  }
+
+  return safeFrame;
+};
+
 // eslint-disable-next-line react-refresh/only-export-components
 export const useTelemetry = () => useContext(TelemetryContext);
 
@@ -92,16 +168,20 @@ export const TelemetryProvider = ({ children }) => {
 
   const activeTrackingRef = useRef(false);
   const currentGameIdRef = useRef(null);
+  const lateFacialFlushRef = useRef({ gameId: null, expiresAtMs: 0 });
   const currentDataRef = useRef({
     mouseMovements: [],
     clicks: [],
     webcamFrames: [],
+    facialWindows: [],
     trialEvents: [],
     startTime: 0,
     errors: 0,
     score: 0,
     qualityFlags: [],
-    webcamQualityScore: 0
+    webcamQualityScore: 0,
+    facialCoverageScore: 0,
+    facialWindowCount: 0,
   });
 
   // ============================================
@@ -253,21 +333,29 @@ export const TelemetryProvider = ({ children }) => {
   const startTracking = useCallback((gameId) => {
     activeTrackingRef.current = true;
     currentGameIdRef.current = gameId;
+    lateFacialFlushRef.current = { gameId: null, expiresAtMs: 0 };
     currentDataRef.current = {
       mouseMovements: [],
       clicks: [],
       webcamFrames: [],
+      facialWindows: [],
       trialEvents: [],
       startTime: Date.now(),
       errors: 0,
       score: 0,
       qualityFlags: [],
-      webcamQualityScore: 0
+      webcamQualityScore: 0,
+      facialCoverageScore: 0,
+      facialWindowCount: 0,
     };
   }, []);
 
   const stopTracking = useCallback((gameId, finalScore = 0, finalErrors = null, details = null) => {
     activeTrackingRef.current = false;
+    lateFacialFlushRef.current = {
+      gameId,
+      expiresAtMs: Date.now() + LATE_FACIAL_FLUSH_WINDOW_MS,
+    };
     const duration = Date.now() - currentDataRef.current.startTime;
     
     // Calcular métricas de cursor si está habilitado y consentimiento otorgado
@@ -277,17 +365,40 @@ export const TelemetryProvider = ({ children }) => {
     }
 
     // Agregar quality flags si hay webcam
+    const current = currentDataRef.current;
+    const facialSummary = summarizeFacialWindows(current.facialWindows);
+    if (facialSummary.facialWindowCount > 0) {
+      current.webcamQualityScore = facialSummary.webcamQualityScore;
+      current.facialCoverageScore = facialSummary.facialCoverageScore;
+      current.facialWindowCount = facialSummary.facialWindowCount;
+      current.qualityFlags = dedupe([...current.qualityFlags, ...facialSummary.qualityFlags]);
+    }
+
     if (featureFlags.enableQualityGates && !consentState.webcam) {
-      currentDataRef.current.qualityFlags.push('no_webcam_consent');
+      current.qualityFlags.push('no_webcam_consent');
     }
-    if (currentDataRef.current.webcamQualityScore < 60 && featureFlags.enableQualityGates) {
-      currentDataRef.current.qualityFlags.push('insufficient_webcam_signal');
+    if (
+      featureFlags.enableQualityGates
+      && consentState.webcam
+      && current.facialWindowCount === 0
+      && current.webcamFrames.length === 0
+    ) {
+      current.qualityFlags.push('face_not_detected');
+      current.qualityFlags.push('insufficient_webcam_signal');
     }
+    if (
+      current.webcamQualityScore < 60
+      && featureFlags.enableQualityGates
+      && (consentState.webcam || current.facialWindowCount > 0 || current.webcamFrames.length > 0)
+    ) {
+      current.qualityFlags.push('insufficient_webcam_signal');
+    }
+    current.qualityFlags = dedupe(current.qualityFlags);
 
     setSessionData(prev => ({
       ...prev,
       [gameId]: {
-        ...currentDataRef.current,
+        ...current,
         duration,
         score: finalScore,
         errors: finalErrors !== null ? finalErrors : currentDataRef.current.errors,
@@ -306,6 +417,15 @@ export const TelemetryProvider = ({ children }) => {
 
   const recordTrialEvent = useCallback((event) => {
     const enriched = { ...event, timestamp: Date.now() };
+
+    try {
+      assertTelemetryPayloadPrivacySafe(enriched);
+    } catch (error) {
+      if (isDevEnv()) {
+        console.warn('[TelemetryContext] dropped unsafe trial event payload', error?.message || error);
+      }
+      return;
+    }
 
     if (activeTrackingRef.current) {
       currentDataRef.current.trialEvents.push(enriched);
@@ -369,15 +489,81 @@ export const TelemetryProvider = ({ children }) => {
   // WEBCAM TELEMETRY
   // ============================================
   const recordWebcamFrame = useCallback((webcamData) => {
-    if (activeTrackingRef.current && featureFlags.enableWebcamTracking && consentState.webcam) {
-      currentDataRef.current.webcamFrames.push({
-        ...webcamData,
-        timestamp: Date.now()
-      });
-      // Actualizar quality score
-      if (webcamData.qualityScore !== undefined) {
-        currentDataRef.current.webcamQualityScore = webcamData.qualityScore;
+    const webcamEnabled = featureFlags.enableWebcamTracking && consentState.webcam;
+    const activeWebcamRecording = activeTrackingRef.current && webcamEnabled;
+    const lateFlush = lateFacialFlushRef.current;
+    const isLateFacialFlush = !activeTrackingRef.current
+      && webcamEnabled
+      && isFacialWindow(webcamData)
+      && lateFlush.gameId
+      && Date.now() <= lateFlush.expiresAtMs
+      && (!webcamData.gameId || webcamData.gameId === lateFlush.gameId);
+
+    if (!activeWebcamRecording && !isLateFacialFlush) {
+      return;
+    }
+
+    if (isFacialWindow(webcamData)) {
+      assertFacialWindowPrivacySafe(webcamData);
+
+      if (isLateFacialFlush) {
+        const targetGameId = lateFlush.gameId;
+        setSessionData((prev) => {
+          const existing = prev[targetGameId];
+          if (!existing) return prev;
+
+          const existingWindows = Array.isArray(existing.facialWindows) ? existing.facialWindows : [];
+          const incomingKey = getFacialWindowKey(webcamData);
+          const alreadyStored = existingWindows.some((window) => getFacialWindowKey(window) === incomingKey);
+          const facialWindows = alreadyStored ? existingWindows : [...existingWindows, webcamData];
+          const facialSummary = summarizeFacialWindows(facialWindows);
+
+          return {
+            ...prev,
+            [targetGameId]: {
+              ...existing,
+              facialWindows,
+              webcamQualityScore: facialSummary.webcamQualityScore,
+              facialCoverageScore: facialSummary.facialCoverageScore,
+              facialWindowCount: facialSummary.facialWindowCount,
+              qualityFlags: dedupe([...(existing.qualityFlags || []), ...facialSummary.qualityFlags]),
+            },
+          };
+        });
+        return;
       }
+
+      const current = currentDataRef.current;
+      const incomingKey = getFacialWindowKey(webcamData);
+      const alreadyStored = current.facialWindows.some((window) => getFacialWindowKey(window) === incomingKey);
+      if (!alreadyStored) {
+        current.facialWindows.push(webcamData);
+      }
+
+      const facialSummary = summarizeFacialWindows(current.facialWindows);
+      current.webcamQualityScore = facialSummary.webcamQualityScore;
+      current.facialCoverageScore = facialSummary.facialCoverageScore;
+      current.facialWindowCount = facialSummary.facialWindowCount;
+      current.qualityFlags = dedupe([...current.qualityFlags, ...facialSummary.qualityFlags]);
+      return;
+    }
+
+    if (!activeWebcamRecording) {
+      return;
+    }
+
+    const current = currentDataRef.current;
+    const safeFrame = sanitizeLegacyWebcamFrame(webcamData);
+    current.webcamFrames.push(safeFrame);
+
+    if (safeFrame.qualityScore !== undefined) {
+      const legacyQualityScores = current.webcamFrames
+        .map((frame) => frame.qualityScore)
+        .filter(Number.isFinite);
+      current.webcamQualityScore = clampPercent(average(legacyQualityScores));
+    }
+    if (safeFrame.qualityFlags?.length > 0) {
+      current.qualityFlags = dedupe([...current.qualityFlags, ...safeFrame.qualityFlags]);
     }
   }, [featureFlags, consentState]);
 

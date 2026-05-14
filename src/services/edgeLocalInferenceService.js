@@ -1,3 +1,5 @@
+import { buildAssessmentFeatureVectorV1 } from '../telemetry/features/assessmentFeatureVector';
+
 const EDGE_MODEL_NAME = 'edge-linear-v1';
 const EDGE_MODEL_SIZE_MB = 0.018;
 const EDGE_LOCAL_MODEL_URL = typeof import.meta !== 'undefined' && import.meta.env?.VITE_EDGE_LOCAL_MODEL_URL
@@ -61,6 +63,112 @@ function getLocalizedLabels(language = 'en') {
   };
 }
 
+const formatPercent = (value) => Math.min(100, Math.max(0, Math.round(Number(value) || 0)));
+
+const average = (values) => {
+  const finite = values.map(Number).filter(Number.isFinite);
+  if (finite.length === 0) return 0;
+  return finite.reduce((sum, value) => sum + value, 0) / finite.length;
+};
+
+const dedupe = (values) => Array.from(new Set((values || []).filter(Boolean)));
+
+const normalizeGameEntries = (games = []) => games.map((entry) => {
+  if (typeof entry === 'string') return { id: entry, game: null };
+  if (entry && typeof entry === 'object' && 'id' in entry) return entry;
+  return { id: null, game: entry };
+});
+
+function collectFacialWindows(data, games = []) {
+  const entries = normalizeGameEntries(games);
+  const sourceEntries = entries.length > 0
+    ? entries
+    : Object.keys(data || {}).filter((key) => key !== 'futureModules').map((id) => ({ id, game: data[id] }));
+
+  return sourceEntries.flatMap((entry) => {
+    const game = entry.game || data?.[entry.id];
+    return Array.isArray(game?.facialWindows) ? game.facialWindows : [];
+  });
+}
+
+function collectLegacyWebcamQualityScores(data, games = []) {
+  const entries = normalizeGameEntries(games);
+  const sourceEntries = entries.length > 0
+    ? entries
+    : Object.keys(data || {}).filter((key) => key !== 'futureModules').map((id) => ({ id, game: data[id] }));
+
+  return sourceEntries
+    .map((entry) => {
+      const game = entry.game || data?.[entry.id];
+      return game?.webcamQualityScore;
+    })
+    .filter(Number.isFinite);
+}
+
+function buildFacialSignalAudit(data, games = [], language = 'en') {
+  const facialWindows = collectFacialWindows(data, games);
+  const windowCount = facialWindows.length;
+  const qualityFlags = dedupe(facialWindows.flatMap((window) => window?.quality?.flags || []));
+  const lowConfidenceCount = facialWindows.filter((window) => (
+    window?.confidence?.interpretationAllowed === false
+    || (Number.isFinite(window?.confidence?.windowConfidence) && window.confidence.windowConfidence < 0.6)
+  )).length;
+  const caveats = [];
+
+  if (windowCount > 0) {
+    const biometricSignalQualityScore = formatPercent(average(facialWindows.map((window) => window?.quality?.signalQualityScore)));
+    const facialCoverageScore = formatPercent(average(facialWindows.map((window) => (window?.quality?.facePresenceRatio ?? 0) * 100)));
+    const meanWindowConfidence = average(facialWindows.map((window) => window?.confidence?.windowConfidence).filter(Number.isFinite));
+
+    if (facialCoverageScore < 70) {
+      caveats.push(language === 'es'
+        ? 'Cobertura facial baja; interpretar señales observables con cautela.'
+        : 'Facial coverage is low; interpret observable signals cautiously.');
+    }
+    if (lowConfidenceCount > 0 || meanWindowConfidence < 0.6) {
+      caveats.push(language === 'es'
+        ? 'La telemetría facial tiene ventanas de baja confianza; interpretar señales observables con cautela.'
+        : 'Facial telemetry has low-confidence windows; interpret observable signals cautiously.');
+    }
+    if (qualityFlags.includes('low_light')) {
+      caveats.push(language === 'es'
+        ? 'La iluminación redujo la calidad de señal facial.'
+        : 'Low lighting reduced facial signal quality.');
+    }
+    if (qualityFlags.includes('multiple_faces_detected')) {
+      caveats.push(language === 'es'
+        ? 'Se detectaron múltiples rostros en algunas ventanas; se reduce la confianza.'
+        : 'Multiple faces were detected in some windows; confidence is reduced.');
+    }
+
+    return {
+      biometricSignalQualityScore,
+      facialCoverageScore,
+      facialWindowCount: windowCount,
+      facialLowConfidenceWindowCount: lowConfidenceCount,
+      qualityFlags,
+      caveats: dedupe(caveats),
+    };
+  }
+
+  const legacyQualityScores = collectLegacyWebcamQualityScores(data, games);
+  const fallbackQuality = legacyQualityScores.length > 0 ? formatPercent(average(legacyQualityScores)) : 0;
+  if (fallbackQuality === 0) {
+    caveats.push(language === 'es'
+      ? 'Sin ventanas faciales agregadas; el reporte usa solo telemetría de juego/cursor.'
+      : 'No aggregate facial windows were available; the report uses game/cursor telemetry only.');
+  }
+
+  return {
+    biometricSignalQualityScore: fallbackQuality,
+    facialCoverageScore: 0,
+    facialWindowCount: 0,
+    facialLowConfidenceWindowCount: 0,
+    qualityFlags: [],
+    caveats: dedupe(caveats),
+  };
+}
+
 export function generateEdgeLocalReport(sessionData, language = 'en') {
   const labels = getLocalizedLabels(language);
   const gameIds = Object.keys(sessionData || {}).filter((k) => k !== 'futureModules');
@@ -93,9 +201,10 @@ export function generateEdgeLocalReport(sessionData, language = 'en') {
   const totalScore = validGames.reduce((acc, entry) => acc + (entry.game.score || 0), 0);
   const avgScore = totalScore / validGames.length;
   
-  // Local signal audit (simulated)
+  // Local signal audit: observable game/cursor coverage plus aggregate facial quality.
   const telemetryCoverageScore = Math.min(100, Math.round((validGames.length / 7) * 100));
-  const biometricSignalQualityScore = calculateBiometricQuality(sessionData, validGames);
+  const signalAudit = buildFacialSignalAudit(sessionData, validGames, language);
+  const biometricSignalQualityScore = signalAudit.biometricSignalQualityScore;
 
   // Confidence is a function of data density + signal stability
   const confidenceScore = Math.round(
@@ -119,6 +228,9 @@ export function generateEdgeLocalReport(sessionData, language = 'en') {
   }
 
   const summary = `${labels.summaryPrefix} ${recommendation.toLowerCase()}. ${labels.confidencePrefix} (${confidenceScore}%).`;
+  const assessmentFeatureVector = buildAssessmentFeatureVectorV1(sessionData, {
+    generatedAtMs: Date.now(),
+  });
 
   return {
     summary,
@@ -141,18 +253,11 @@ export function generateEdgeLocalReport(sessionData, language = 'en') {
     },
     signalAudit: {
       telemetryCoverageScore,
+      ...signalAudit,
       biometricSignalQualityScore,
-    }
+    },
+    assessmentFeatureVector,
   };
-}
-
-function calculateBiometricQuality(data, games) {
-  const qualities = games
-    .map((id) => data[id]?.webcamQualityScore)
-    .filter((v) => typeof v === 'number');
-  
-  if (qualities.length === 0) return 0;
-  return Math.round(qualities.reduce((a, b) => a + b, 0) / qualities.length);
 }
 
 /**
@@ -187,33 +292,57 @@ export function buildEdgeLocalLiveInsight(rawTelemetry) {
   const clickEvents = toCount(rawTelemetry.clickEvents, ['clicks']);
   const trialEvents = toCount(rawTelemetry.trialEvents);
   const webcamFrames = toCount(rawTelemetry.webcamFrames);
+  const facialWindows = Array.isArray(rawTelemetry.facialWindows) ? rawTelemetry.facialWindows : [];
+  const facialWindowCount = facialWindows.length;
+  const facialSignalQuality = facialWindowCount > 0
+    ? formatPercent(average(facialWindows.map((window) => window?.quality?.signalQualityScore)))
+    : 0;
+  const facePresencePercent = facialWindowCount > 0
+    ? formatPercent(average(facialWindows.map((window) => (window?.quality?.facePresenceRatio ?? 0) * 100)))
+    : 0;
+  const visualStabilityScore = facialWindowCount > 0
+    ? formatPercent(average(facialWindows.map((window) => window?.facialSignals?.visualStabilityScore)))
+    : 0;
+  const blinkRatePerMin = facialWindowCount > 0
+    ? Math.round(average(facialWindows.map((window) => window?.facialSignals?.blinkRatePerMin)))
+    : 0;
+  const lowFacialConfidence = facialWindows.some((window) => (
+    window?.confidence?.interpretationAllowed === false
+    || (Number.isFinite(window?.confidence?.windowConfidence) && window.confidence.windowConfidence < 0.6)
+  ));
+  const facialQualityFlags = dedupe(facialWindows.flatMap((window) => window?.quality?.flags || []));
+  const qualityFlags = dedupe([...(rawTelemetry.qualityFlags || []), ...facialQualityFlags]);
   const webcamQuality = Number.isFinite(rawTelemetry.webcamQuality)
     ? rawTelemetry.webcamQuality
     : Number.isFinite(rawTelemetry.webcamQualityScore)
       ? rawTelemetry.webcamQualityScore
-      : 0;
+      : facialSignalQuality;
   
-  // Heuristic: readiness is a composite of activity levels vs time
+  // Heuristic: readiness is a composite of activity levels vs time.
   const activityDensity = (cursorEvents + (clickEvents * 5) + (trialEvents * 10)) / Math.max(1, elapsedSec);
   const coverageScore = Math.min(100, Math.round(activityDensity * 8));
   
-  // Stability: inverse of jerky movement (simplified)
+  // Stability: inverse of jerky movement (simplified cursor proxy).
   const stabilityScore = Math.max(40, Math.min(98, 100 - (cursorEvents / 100)));
   
-  // Fatigue: rises if frame count is low but time is high (proxy for eye activity drop)
+  // Fatigue remains a coarse time-based proxy; facial fatigue is not inferred in Hito 1.
   const fatigueScore = Math.min(100, Math.max(0, Math.round((elapsedSec / 180) * 100)));
 
-  // Readiness: composite
+  // Readiness: composite of interaction coverage/stability and signal quality, not a hiring decision.
   const readinessScore = Math.round((coverageScore * 0.4) + (stabilityScore * 0.4) + (webcamQuality * 0.2));
 
-  const formatPercent = (v) => Math.min(100, Math.max(0, Math.round(v)));
-
   const signals = [];
-  if (Array.isArray(rawTelemetry.qualityFlags) && rawTelemetry.qualityFlags.length > 0) {
+  if (qualityFlags.length > 0) {
     signals.push('Quality flags active');
   }
   if (webcamQuality > 0 && webcamQuality < 60) {
     signals.push('Webcam quality is low');
+  }
+  if (facialWindowCount > 0 && facePresencePercent < 70) {
+    signals.push('Facial coverage is low');
+  }
+  if (lowFacialConfidence) {
+    signals.push('Facial telemetry confidence is low');
   }
   const hesitationCount = Number.isFinite(rawTelemetry?.cursorMetrics?.hesitationCount)
     ? rawTelemetry.cursorMetrics.hesitationCount
@@ -231,12 +360,18 @@ export function buildEdgeLocalLiveInsight(rawTelemetry) {
     clickEvents,
     trialEvents,
     webcamFrames,
+    facialWindowCount,
+    facePresencePercent,
+    facialSignalQuality,
+    visualStabilityScore,
+    blinkRatePerMin,
     webcamQuality: formatPercent(webcamQuality),
     coverageScore: formatPercent(coverageScore),
     stabilityScore: formatPercent(stabilityScore),
     fatigueScore: formatPercent(fatigueScore),
     readinessScore: formatPercent(readinessScore),
-    signals,
+    qualityFlags,
+    signals: dedupe(signals),
   };
 }
 
@@ -258,7 +393,8 @@ export async function generateEdgeLocalReportModel(sessionData, language = 'en',
     const meanConfidence = games.length > 0 ? Math.round(games.reduce((s, g) => s + (Number.isFinite(g.confidence) ? g.confidence : 0), 0) / games.length) : 0;
     const readinessMean = games.length > 0 ? Math.round(games.reduce((s, g) => s + (Number.isFinite(g.readinessScore) ? g.readinessScore : 0), 0) / games.length) : 0;
     const telemetryCoverage = Math.min(100, Math.round((numGames / 7) * 100));
-    const stabilityScore = calculateBiometricQuality(sessionData, gameIds);
+    const signalAudit = buildFacialSignalAudit(sessionData, gameIds, language);
+    const stabilityScore = signalAudit.biometricSignalQualityScore;
 
     const features = {
       avgScore,
@@ -350,6 +486,7 @@ export async function generateEdgeLocalReportModel(sessionData, language = 'en',
         },
         signalAudit: {
           telemetryCoverageScore: features.telemetryCoverage,
+          ...signalAudit,
           biometricSignalQualityScore: features.stabilityScore,
         }
       };

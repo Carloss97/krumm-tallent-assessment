@@ -4,6 +4,8 @@ import React from 'react';
 import Report from './Report';
 import { BrowserRouter } from 'react-router-dom';
 import { LanguageProvider } from './context/LanguageContext';
+import { saveSessionToBackend, getCurrentToken } from './services/backendService';
+import { createFacialWindow } from './telemetry/facial/facialTelemetrySchema';
 
 const { mockUseTelemetry } = vi.hoisted(() => ({
   mockUseTelemetry: vi.fn(),
@@ -50,10 +52,14 @@ describe('Report Component', () => {
 
   beforeEach(() => {
     mockUseTelemetry.mockClear();
+    saveSessionToBackend.mockClear();
+    getCurrentToken.mockReset();
+    getCurrentToken.mockReturnValue(null);
     window.localStorage.setItem('talenttrack-language', 'en');
   });
 
   afterEach(() => {
+    vi.restoreAllMocks();
     vi.clearAllMocks();
   });
 
@@ -131,23 +137,111 @@ describe('Report Component', () => {
       game7: { score: 93, errors: 0, duration: 59000, details: {} },
     };
 
+    getCurrentToken.mockReturnValue('test-token');
     mockUseTelemetry.mockReturnValue({
       sessionData: mockSessionData,
+      participantProfile: { participantId: 'participant-123' },
+      getSessionMetadata: vi.fn(() => ({ startedAt: '2026-05-13T00:00:00.000Z' })),
       saveToBackend: vi.fn(() => Promise.resolve()),
     });
 
-    const { container } = renderReport({ useDummyData: false });
+    renderReport({ useDummyData: false });
 
-    // Verify that report renders with skills/talent signal panel
     await waitFor(
       () => {
-        const reportText = container.textContent;
-        expect(
-          reportText.includes('Skills and Talent Signal') ||
-          reportText.includes('Matriz de evaluación de habilidades') ||
-          reportText.includes('Executive Capability Snapshot') ||
-          reportText.includes('Resumen ejecutivo de capacidades')
-        ).toBeTruthy();
+        expect(saveSessionToBackend).toHaveBeenCalledWith(expect.objectContaining({
+          participant: { participantId: 'participant-123' },
+          sessionData: expect.objectContaining({
+            participantId: 'participant-123',
+            telemetry: mockSessionData,
+            assessmentFeatureVector: expect.objectContaining({
+              type: 'assessment_feature_vector_v1',
+              session: expect.objectContaining({
+                participantId: 'participant-123',
+              }),
+              aggregate: expect.objectContaining({
+                completedGameCount: 7,
+              }),
+            }),
+          }),
+        }));
+      },
+      { timeout: 10000 },
+    );
+  });
+
+  it('blocks unsafe telemetry payloads before backend persistence', async () => {
+    const mockSessionData = {
+      game1: {
+        score: 100,
+        errors: 0,
+        duration: 60000,
+        facialWindows: [],
+        diagnostic: { rawFrame: 'data:image/png;base64,unsafe' },
+      },
+      game2: { score: 95, errors: 1, duration: 65000 },
+      game3: { score: 88, errors: 2, duration: 55000 },
+      game4: { score: 92, errors: 1, duration: 58000 },
+      game5: { score: 90, errors: 4, duration: 62000 },
+      game6: { score: 87, errors: 6, duration: 61000 },
+      game7: { score: 93, errors: 0, duration: 59000 },
+    };
+
+    getCurrentToken.mockReturnValue('test-token');
+    mockUseTelemetry.mockReturnValue({
+      sessionData: mockSessionData,
+      participantProfile: { participantId: 'participant-unsafe' },
+      getSessionMetadata: vi.fn(() => ({ startedAt: '2026-05-13T00:00:00.000Z' })),
+    });
+
+    const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
+
+    renderReport({ useDummyData: false });
+
+    await waitFor(
+      () => {
+        expect(screen.getByText(/talent signal context|contexto de la señal de talento/i)).toBeDefined();
+      },
+      { timeout: 10000 },
+    );
+    expect(warnSpy).toHaveBeenCalledWith(
+      '[Report] blocked unsafe telemetry payload before persistence',
+      expect.stringContaining('rawFrame'),
+    );
+    expect(saveSessionToBackend).not.toHaveBeenCalled();
+  });
+
+  it('shows local signal audit caveats when facial coverage is low', async () => {
+    const lowQualityWindow = createFacialWindow({
+      durationMs: 5000,
+      sampleCount: 8,
+      quality: {
+        facePresenceRatio: 0.42,
+        meanDetectionConfidence: 0.5,
+        meanIlluminationScore: 0.36,
+        signalQualityScore: 38,
+        flags: ['insufficient_facial_coverage', 'low_light'],
+      },
+      confidence: {
+        windowConfidence: 0.42,
+        interpretationAllowed: false,
+      },
+    });
+    const mockSessionData = {
+      game1: { score: 70, errors: 1, duration: 60000, facialWindows: [lowQualityWindow] },
+      game2: { score: 72, errors: 1, duration: 65000, facialWindows: [lowQualityWindow] },
+      game3: { score: 68, errors: 2, duration: 55000, facialWindows: [lowQualityWindow] },
+    };
+
+    mockUseTelemetry.mockReturnValue({ sessionData: mockSessionData });
+
+    renderReport({ useDummyData: false });
+
+    await waitFor(
+      () => {
+        expect(screen.getByText(/local signal audit|auditoría de señales locales/i)).toBeDefined();
+        expect(screen.getByText(/facial coverage is low|cobertura facial baja/i)).toBeDefined();
+        expect(screen.getByText(/quality flag: low_light|flag de calidad: low_light/i)).toBeDefined();
       },
       { timeout: 10000 },
     );

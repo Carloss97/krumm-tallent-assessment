@@ -1,258 +1,204 @@
-# Krumm: Talent Assessment
+# KRUMM Talent Assessment
 
-A comprehensive, scientifically-validated cognitive assessment platform featuring 14 games designed to evaluate working memory, planning, cognitive flexibility, response inhibition, processing speed, spatial memory, and spatial reasoning.
+Plataforma React/Vite + Express para presentar KRUMM, ejecutar una demo pública, mostrar el pitch deck y correr una batería de juegos cognitivos.
 
-## 🚀 Features
+## Lo esencial del producto
 
-- **14 Cognitive Games**: Complete battery of scientifically-validated assessments
-- **Real-time Telemetry**: Live performance tracking and data collection
-- **AI-Powered Reports**: Google Gemini integration for intelligent analysis
-- **Integrated Pitch Experience**: Dedicated public route at `/pitch` aligned with KRUMM branding
-- **Performance Optimized**: Code splitting and lazy loading for fast loading
-- **Comprehensive Testing**: Full test suite with 95%+ coverage
-- **Load Tested**: Supports multiple concurrent users
-- **Modern Tech Stack**: React 19, Vite 8, Node.js, SQLite
+- **Página pública**: `/` con propuesta de valor, CTA y entrada a demo/pitch.
+- **Demo**: `/demo` con experiencia guiada y reporte teaser.
+- **Pitch deck**: `/pitch`, embebido desde `src/assets/pitchdeck.html`.
+- **Evaluación completa**: rutas de juegos definidas en `src/utils/gameFlow.js` y shell común en `src/components/GameShell.jsx`.
+- **Reportes**: `/report` con inferencia local edge-first y fallback Gemini configurable.
+- **Portales**: `/postulantes`, `/recruiter/login`, `/recruiter/dashboard`.
 
-## 🎮 Games Included
+## Stack
 
-1. **Color Word Game** - Cognitive Flexibility (Interference Matrix)
-2. **Frustration Game** - Stress Resilience (Dynamic Precision Task)
-3. **Memory Game** - Working Memory
-4. **Balloon Game** - Risk Assessment
-5. **Vigilance Game** - Sustained Attention
-6. **Grid Flow** - Planning & Logic
-7. **Laser Puzzle** - Spatial Reasoning
-8. **N-Back Task** - Working Memory
-9. **Tower of London** - Planning & Problem Solving
-10. **Wisconsin Card Sorting** - Cognitive Flexibility
-11. **Go/No-Go Task** - Response Inhibition
-12. **Trail Making Test** - Processing Speed
-13. **Corsi Block Tapping** - Spatial Memory
-14. **Mental Rotation** - Spatial Reasoning
+- React 19 + Vite 8
+- Express 5
+- SQLite local por defecto; Postgres si existe `DATABASE_URL`
+- Vitest + Testing Library
+- ONNX Runtime Web para inferencia local del reporte demo
 
-## 🛠️ Tech Stack
+## Comandos
 
-### Frontend
-- **React 19** - Latest React with concurrent features
-- **Vite 8** - Fast build tool and dev server
-- **Framer Motion** - Smooth animations and transitions
-- **React Router** - Client-side routing
-- **Recharts** - Data visualization
-
-### Backend
-- **Node.js + Express** - RESTful API server
-- **SQLite + better-sqlite3** - Fast, embedded database
-- **CORS + Helmet** - Security and cross-origin support
-
-### AI & Analytics
-- **Google Gemini API** - AI-powered cognitive analysis
-- **Custom Heuristics** - Fallback analysis algorithms
-- **Real-time Telemetry** - Performance tracking system
-
-### Testing & Quality
-- **Vitest** - Fast unit testing framework
-- **React Testing Library** - Component testing utilities
-- **Playwright** - End-to-end and load testing
-- **ESLint** - Code quality and consistency
-
-## 🚀 Getting Started
-
-### Prerequisites
-- Node.js 18+
-- npm or yarn
-
-### Installation
-
-1. **Clone and install dependencies:**
-   ```bash
-   git clone <repository-url>
-   cd krumm-talent-assessment
-   npm install
-   ```
-
-2. **Set up environment variables:**
-   ```bash
-   cp .env.example .env
-   # Edit .env with your Google Gemini API key
-   ```
-
-3. **Start the development environment:**
-   ```bash
-   # Install deps, then start the combined dev server (frontend + backend)
-   npm install
-   npm run dev
-
-   # Notes:
-   # - `npm run dev` uses the `dev` script which launches Vite with port 5174 and the backend (Express) together.
-   # - `npm run dev:full` runs `vite` and the backend separately (vite default port may differ).
-   # - Backend default port is 4000 unless `PORT` is set in your environment.
-   ```
-
-4. **Open your browser:**
-   ```
-   http://localhost:5174
-   ```
-
-## 🧪 Testing
-
-### Unit Tests
 ```bash
-npm test              # Run all tests
-npm run test:watch    # Watch mode
-npm run test:coverage # With coverage report
+npm install
+npm run dev              # frontend + backend; Vite en 5174 por script
+npm run dev:frontend     # solo Vite; usa vite.config.js
+npm run dev:server       # solo Express; puerto 4000 por defecto
+npm test                 # tests
+npm run lint             # ESLint
+npm run build            # build frontend
+npm run security:audit   # npm audit high+
 ```
 
-### Load Testing
+## Variables de entorno mínimas
+
+Copia el ejemplo que corresponda y ajusta sólo lo necesario:
+
 ```bash
-# Start the dev server first
-npm run dev:full
-
-# In another terminal, run load tests
-npm run load-test
-npm run load-test:backend
+cp .env.example .env.local
 ```
 
-The load test simulates multiple concurrent users completing assessments and provides performance metrics.
-The backend load test sends concurrent health traffic and reports p50/p95/p99 latency plus throughput.
+Frontend relevantes:
 
-### Predictive Quality Governance
-```bash
-# Calibrate scoring weights and thresholds
-npm run calibrate:scoring
+- `VITE_API_BASE_URL`: URL del backend cuando no se usa proxy local.
+- `VITE_BASE_PATH`: basename del router si se despliega bajo subruta.
+- `VITE_ALLOWED_DEV_HOSTS`: hosts permitidos para accesos de desarrollo.
+- `VITE_USE_EDGE_LOCAL_INFERENCE`: `false` para desactivar inferencia local.
+- `VITE_ENABLE_GEMINI_FALLBACK`: `true` para permitir fallback remoto.
+- `VITE_USE_BACKEND_GEMINI_PROXY`: `true` para usar el proxy backend de Gemini.
+- `VITE_GOOGLE_API_KEY`: sólo para fallback frontend controlado; preferir backend.
 
-# Evaluate KPI alerts against configured targets
-npm run quality:alerts
+Backend relevantes:
 
-# End-to-end quality check
-npm run quality:check
-```
+- `PORT`: puerto Express, por defecto `4000`.
+- `JWT_SECRET_KEY`: obligatorio en producción, mínimo 32 caracteres.
+- `ALLOWED_ORIGINS`: orígenes permitidos por CORS.
+- `GEMINI_API_KEY` / `GEMINI_MODEL`: reportes con Gemini desde backend.
+- `DATABASE_URL`: activa Postgres; si no existe, usa SQLite local.
+- `PARTICIPANT_ACCESS_CODE`, `RECRUITER_EMAIL`, `RECRUITER_PASSWORD`: acceso a portales.
+- `UPSTASH_REDIS_REST_URL`, `UPSTASH_REDIS_REST_TOKEN`: rate limiting distribuido opcional.
 
-Artifacts are generated in `data/calibration/`:
-- `latest-calibration.json`
-- `latest-kpis.json`
-- `quality-alerts.md`
+## Estructura viva
 
-## 📊 Performance Optimizations
-
-### Code Splitting
-- **Lazy Loading**: All components loaded on-demand
-- **Route-based Splitting**: Games load only when accessed
-- **Bundle Analysis**: Optimized chunk sizes (3-34KB per component)
-
-### Build Output
-```
-dist/
-├── index.html                 # Main HTML
-├── assets/
-│   ├── index-*.js            # Core React/Vendor (546KB)
-│   ├── Intro-*.js            # Intro component (3.8KB)
-│   ├── Report-*.js           # Report component (34KB)
-│   └── [Game]-*.js           # Individual games (3-12KB each)
-```
-
-### Load Testing Results
-- **Concurrent Users**: Successfully tested with 5+ simultaneous users
-- **Average Completion**: ~90 seconds per assessment
-- **Success Rate**: 100% under normal load
-- **Memory Usage**: Efficient with lazy loading
-
-## 🏗️ Project Structure
-
-```
+```text
 src/
-├── components/           # Reusable UI components
-│   ├── Intro.jsx        # Landing page
-│   ├── GlobalProgressBar.jsx
-│   └── LiveTelemetryChart.jsx
-├── games/               # 14 cognitive assessment games
-├── services/            # API and external service integrations
-│   ├── aiReportService.js
-│   └── backendService.js
-├── utils/               # Utilities and game flow logic
-├── TelemetryContext.jsx # Global state management
-├── App.jsx             # Main application router
-└── Report.jsx          # AI-powered results page
-
-server/
-├── index.js            # Express API server
-├── database.js         # SQLite database setup
-└── middleware/         # Server middleware
-
-load-test.js            # Performance testing script
+  assets/                 pitch deck y logo
+  components/             landing, demo, shell, dashboards y UI compartida
+  components/demo/        minijuegos/demo auxiliares
+  games/                  juegos de la evaluación completa
+  services/               backend, reportes, inferencia local
+  utils/                  flujo, i18n y authoring de niveles
+server/                   API Express, auth, DB, métricas y middleware
+public/models/            modelo ONNX local y metadata
+scripts/                  utilidades de build/postinstall
 ```
 
-## 🔧 Configuration
+## Juegos priorizados del test completo y telemetría
 
-### Environment Variables
-```env
-VITE_GOOGLE_API_KEY=your_gemini_api_key_here
-VITE_GEMINI_MODEL=gemini-1.5-flash
-PORT=3001
+Primera pasada implementada sobre juegos con respaldo psicométrico/documental claro y alto valor para talentos cognitivos/conductuales:
+
+| Juego | Constructo principal | Métricas finales | Eventos por trial |
+| --- | --- | --- | --- |
+| OSPAN (`ospan_game_1`) | memoria de trabajo dual-task | `operationAccuracy`, `recallAccuracy`, `workingMemorySpan`, `totalTrials` | respuesta a operación con estímulo, respuesta esperada, corrección, RT y marcador `processing_hit/error` |
+| Stop-Signal (`sst_game_2`) | inhibición de respuesta / control impulsivo | `correctGo`, `correctStop`, `accuracy`, errores de comisión/omisión | `GO/STOP`, acción `press/withhold`, esperado, corrección y marcador `commission_error`, `omission_error`, `successful_inhibition` |
+| Task Switching (`tsw_game_3`) | flexibilidad cognitiva / cambio de regla | accuracy, errores de aplicación de regla, RT | regla activa, estímulo color/forma, respuesta, esperado y marcador `rule_applied/error` |
+
+La taxonomía viva está en `src/utils/assessmentTelemetry.js`:
+
+- `ASSESSMENT_TELEMETRY_SCHEMA`: catálogo versionado de juegos, constructos, dominios de talento y métricas núcleo.
+- `buildAssessmentTrialEvent(gameId, event)`: normaliza eventos por trial con forma estable:
+
+```js
+{
+  event: 'assessment_trial_response',
+  schemaVersion: 'talent-telemetry-v1',
+  gameId: 'sst_game_2',
+  talentDomain: 'cognitive-behavioural',
+  primaryConstruct: 'response_inhibition',
+  phase: 'response',
+  trialIndex: 1,
+  stimulus: { signal: 'STOP' },
+  response: { action: 'press' },
+  expected: { action: 'withhold' },
+  isCorrect: false,
+  reactionTimeMs: 312,
+  behaviouralMarkers: ['commission_error'],
+}
 ```
 
-### Developer / Demo Mode
-
-You can enable a developer toolbar with quick navigation controls (useful during local development and demos) by setting the Vite env flag `VITE_DEV_VERSION=true` in your environment. Example:
+Tests de telemetría priorizada:
 
 ```bash
-# in a .env file at project root
-VITE_DEV_VERSION=true
-
-# then start
-npm run dev:full
+npm test -- src/utils/assessmentTelemetry.test.js src/games/OSPANGame.test.jsx src/games/HRRHGames.test.jsx
 ```
 
-When enabled a small floating panel will appear with shortcuts to games, the report page and recruiter dashboard. This is only shown in the frontend build when `VITE_DEV_VERSION` is set to `true`.
+## Algoritmo para introducir niveles externos
 
-### Footer / Contact
+El módulo `src/utils/demoLevelAuthoring.js` normaliza niveles diseñados fuera del código y los convierte al formato que consumen juegos como GridFlow y LaserPuzzle. Para introducir varios niveles a la vez, usa `createDemoLevelPacks()` con un catálogo JSON/objeto que contenga `gridFlow` y/o `laserPuzzle`.
 
-The public site includes a footer with contact information: `info@krumm.cl` and `contacto@krumm.cl`.
+Objetivo del flujo:
 
-### Vite Configuration
-- **React 19** with SWC compiler
-- **Code splitting** enabled
-- **ESLint** integration
-- **Test coverage** reporting
+1. Diseñar el nivel externamente como coordenadas simples (`[x, y]`).
+2. Describir muros como rectángulos/celdas.
+3. Marcar piezas clave: inicio, paquetes, destinos, estaciones, emisor, antenas, espejos, portales, etc.
+4. Ejecutar el importador, que valida bounds, expande muros, evita tapar celdas reservadas y genera el objeto final del juego.
+5. Correr tests de invariantes/solvabilidad antes de meterlo a la demo.
 
-## 📈 Development Workflow
+### GridFlow
 
-1. **Local Development**: `npm run dev:full`
-2. **Testing**: `npm test` (95%+ coverage target)
-3. **Load Testing**: `npm run load-test`
-4. **Build**: `npm run build`
-5. **Linting**: `npm run lint`
+```js
+import { createGridFlowLevel } from './src/utils/demoLevelAuthoring.js';
 
-## 🎯 Assessment Metrics
+const level = createGridFlowLevel({
+  name: 'Sector propio 2',
+  difficulty: 'hard',
+  cols: 12,
+  rows: 10,
+  start: [0, 9],
+  stations: [[6, 5]],
+  targets: [
+    { id: 'red', pickup: [1, 1], drop: [10, 8], color: '#ef4444', points: 120 },
+    { id: 'blue', pickup: [10, 1], drop: [1, 8], color: '#3b82f6', points: 140 },
+  ],
+  walls: {
+    rects: [[3, 0, 4, 5], [7, 4, 8, 9]],
+    cells: [[5, 5]],
+  },
+  timeLimit: 70,
+  energyDrain: 1.1,
+});
+```
 
-The platform evaluates:
-- **Working Memory** (N-Back, Memory Game)
-- **Cognitive Flexibility** (Color Word, Wisconsin Card Sorting)
-- **Planning & Problem Solving** (Tower of London, Grid Flow)
-- **Response Inhibition** (Go/No-Go Task)
-- **Processing Speed** (Trail Making Test)
-- **Spatial Reasoning** (Laser Puzzle, Mental Rotation)
-- **Spatial Memory** (Corsi Block Tapping)
-- **Risk Assessment** (Balloon Game)
-- **Stress Resilience** (Frustration Game)
-- **Sustained Attention** (Vigilance Game)
+Salida compatible: `{ cols, rows, startPos, stations, targets, walls, timeLimit, energyDrain }`.
 
-## 🤝 Contributing
+### LaserPuzzle
 
-1. Fork the repository
-2. Create a feature branch
-3. Add tests for new functionality
-4. Ensure all tests pass
-5. Submit a pull request
+```js
+import { createLaserPuzzleLevel } from './src/utils/demoLevelAuthoring.js';
 
-## 📄 License
+const level = createLaserPuzzleLevel({
+  name: 'Haz propio 3',
+  difficulty: 'hard',
+  cols: 14,
+  rows: 11,
+  par: 7,
+  objects: [
+    { type: 'ship', at: [0, 5], dir: 'right' },
+    { type: 'antenna', at: [13, 3] },
+    { type: 'reflector_ne', at: [2, 9], movable: true },
+    { type: 'bifurcator', at: [4, 9], movable: true },
+  ],
+  walls: { rects: [[2, 0, 3, 3]], cells: [[8, 5]] },
+  solution: [
+    { from: [2, 9], to: [5, 5] },
+    [[4, 9], [8, 5]],
+  ],
+  hint: { es: 'Ubica primero el bifurcador.', en: 'Place the splitter first.' },
+});
+```
 
-This project is licensed under the MIT License - see the LICENSE file for details.
+Salida compatible: `{ cols, rows, par, cells, solutionPlacements, hint, quiz }`.
 
-## 🙏 Acknowledgments
+Tests del importador:
 
-- Cognitive game designs based on established psychological assessments
-- AI analysis powered by Google Gemini
-- Built with modern React and performance best practices
-#   A I - R e a d y   T e s t 
- 
- 
+```bash
+npm test -- src/utils/demoLevelAuthoring.test.js
+```
+
+Formato de catálogo para meter niveles de los juegos 2 y 3 en lote:
+
+```js
+import { createDemoLevelPacks } from './src/utils/demoLevelAuthoring.js';
+
+const packs = createDemoLevelPacks({
+  schemaVersion: 1,
+  gridFlow: [/* specs GridFlow como el ejemplo anterior */],
+  laserPuzzle: [/* specs LaserPuzzle como el ejemplo anterior */],
+});
+
+// packs.gridFlow y packs.laserPuzzle ya salen validados y listos para el juego.
+```
+
+Para niveles nuevos de demo, añadir un test que verifique que las celdas de solución no quedan bloqueadas y que el nivel no nace resuelto accidentalmente.
