@@ -6,6 +6,10 @@ import { BrowserRouter } from 'react-router-dom';
 import { LanguageProvider } from './context/LanguageContext';
 import { saveSessionToBackend, getCurrentToken } from './services/backendService';
 import { createFacialWindow } from './telemetry/facial/facialTelemetrySchema';
+import {
+  DEV_CAMERA_REPORT_STORAGE_KEY,
+  saveDevCameraReportSnapshot,
+} from './utils/devCameraReport';
 
 const { mockUseTelemetry } = vi.hoisted(() => ({
   mockUseTelemetry: vi.fn(),
@@ -55,6 +59,7 @@ describe('Report Component', () => {
     saveSessionToBackend.mockClear();
     getCurrentToken.mockReset();
     getCurrentToken.mockReturnValue(null);
+    window.localStorage.removeItem(DEV_CAMERA_REPORT_STORAGE_KEY);
     window.localStorage.setItem('talenttrack-language', 'en');
   });
 
@@ -69,6 +74,24 @@ describe('Report Component', () => {
     renderReport({ useDummyData: false });
 
     expect(screen.getByRole('heading', { name: /no assessment data found|no se encontraron datos de evaluaci[oó]n/i })).toBeDefined();
+  });
+
+  it('links to the dev camera diagnostic when /report has no assessment data but a camera snapshot exists', () => {
+    saveDevCameraReportSnapshot({
+      facialWindows: [createFacialWindow({
+        gameId: 'dev_camera_lab',
+        sampleCount: 6,
+        quality: { facePresenceRatio: 1, signalQualityScore: 90 },
+        confidence: { windowConfidence: 0.9, interpretationAllowed: true },
+      })],
+      telemetryReport: { qualityGatePassed: true, stats: { totalFrames: 10, faceDetectedFrames: 10 } },
+    });
+    mockUseTelemetry.mockReturnValue({ sessionData: {} });
+
+    renderReport({ useDummyData: false });
+
+    expect(screen.getByText(/diagnóstico de cámara de development|development camera diagnostic/i)).toBeDefined();
+    expect(screen.getByRole('link', { name: /view camera diagnostic|ver diagnóstico de cámara/i })).toHaveAttribute('href', '/dev/report');
   });
 
   it('renders report when data is available', async () => {

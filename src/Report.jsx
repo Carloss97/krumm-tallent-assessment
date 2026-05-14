@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef, useMemo } from 'react';
-import { useSearchParams } from 'react-router-dom';
+import { Link, useSearchParams } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import {
   Radar,
@@ -19,6 +19,7 @@ import { generateEdgeLocalReportModel } from './services/edgeLocalInferenceServi
 import { buildSessionPersistencePayload } from './telemetry/persistence/sessionPersistencePayload';
 import { saveSessionToBackend, getCurrentToken } from './services/backendService';
 import { generateDummyReportData } from './utils/dummyDataGenerator';
+import { readDevCameraReportSnapshot } from './utils/devCameraReport';
 import './Report.css';
 
 const Report = ({ isDummy = false, useDummyData = false, demoSummary = null }) => {
@@ -66,6 +67,10 @@ const Report = ({ isDummy = false, useDummyData = false, demoSummary = null }) =
   );
 
   const isDevBuild = typeof import.meta !== 'undefined' && import.meta.env?.DEV;
+  const hasDevCameraSnapshot = useMemo(() => {
+    if (typeof window === 'undefined') return false;
+    return Boolean(readDevCameraReportSnapshot(window.localStorage));
+  }, []);
 
   // Use passed demo data if available, otherwise fallback to sessionData
   const effectiveSessionData = useMemo(() => {
@@ -398,6 +403,18 @@ const Report = ({ isDummy = false, useDummyData = false, demoSummary = null }) =
       <main id="report-main" className="flex-center glass-panel report-empty report-page report-empty-main" role="main" tabIndex={-1}>
         <h2>{isEn ? 'No Assessment Data Found' : 'No se encontraron datos de evaluación'}</h2>
         <p>{isEn ? 'Please complete the extended assessment to view the HR report.' : 'Completa la evaluación extendida para ver el reporte final.'}</p>
+        {hasDevCameraSnapshot && (
+          <div style={{ marginTop: '18px', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '10px' }}>
+            <p style={{ maxWidth: '620px', color: '#475569', lineHeight: 1.6, margin: 0 }}>
+              {isEn
+                ? 'A development camera diagnostic was found. It validates browser-local camera signal only; it is separate from the final assessment report.'
+                : 'Se encontró un diagnóstico de cámara de development. Valida sólo la señal browser-local de cámara; es independiente del reporte final de evaluación.'}
+            </p>
+            <Link className="btn btn-secondary" to="/dev/report">
+              {isEn ? 'View camera diagnostic' : 'Ver diagnóstico de cámara'}
+            </Link>
+          </div>
+        )}
         {dummyModeEnabled && (
           <button className="btn btn-primary" onClick={() => setShowDummyReport(true)} style={{ marginTop: '20px' }}>
             {isEn ? 'View Demo Report' : 'Ver reporte demo'}

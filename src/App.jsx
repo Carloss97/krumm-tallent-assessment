@@ -25,6 +25,7 @@ const ComplementaryIntro = lazy(() => import('./components/ComplementaryIntro'))
 const DemoShell = lazy(() => import('./components/DemoShell'));
 const PitchDeckPage = lazy(() => import('./components/PitchDeckPage'));
 const DevCameraLab = lazy(() => import('./components/DevCameraLab'));
+const DevCameraReport = lazy(() => import('./components/DevCameraReport'));
 
 // Main App Router and State
 function AppContent() {
@@ -83,6 +84,7 @@ function AppContent() {
             <Route path="/pitch" element={<PitchDeckPage />} />
             <Route path="/dev" element={<Navigate to="/dev/camera" replace />} />
             <Route path="/dev/camera" element={<DevCameraLab />} />
+            <Route path="/dev/report" element={<DevCameraReport />} />
           </Routes>
         </Suspense>
       </div>

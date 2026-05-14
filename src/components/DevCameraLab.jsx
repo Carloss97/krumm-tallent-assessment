@@ -6,6 +6,9 @@ import {
   createFacialWindow,
 } from '../telemetry/facial/facialTelemetrySchema';
 import {
+  saveDevCameraReportSnapshot,
+} from '../utils/devCameraReport';
+import {
   clearDevAccessSession,
   createDevAccessSession,
   getDevAccessSession,
@@ -211,19 +214,35 @@ function DevCameraLab() {
   const [telemetryReport, setTelemetryReport] = useState(null);
   const videoRef = useRef(null);
   const captureRef = useRef(null);
+  const facialWindowsRef = useRef([]);
   const browserFacts = useMemo(() => getBrowserFacts(), []);
   const selectedCaptureProfile = CAMERA_PROFILES[captureProfile] || CAMERA_PROFILES.light;
+
+  const buildCaptureProfileSnapshot = useCallback(() => ({
+    id: captureProfile,
+    ...selectedCaptureProfile,
+  }), [captureProfile, selectedCaptureProfile]);
 
   const enabled = isDevLabEnabled();
   const allowedHost = isDevAccessAllowedHost(browserFacts.host);
   const configured = isDevAccessConfigured();
 
   const stopCamera = useCallback(() => {
-    captureRef.current?.cleanup?.();
+    const capture = captureRef.current;
+    capture?.cleanup?.();
+    const report = capture?.getTelemetryReport?.() || telemetryReport;
+    if (report || facialWindowsRef.current.length > 0) {
+      const snapshot = saveDevCameraReportSnapshot({
+        facialWindows: facialWindowsRef.current,
+        telemetryReport: report,
+        captureProfile: buildCaptureProfileSnapshot(),
+      });
+      setTelemetryReport(snapshot.telemetryReport || report || null);
+    }
     captureRef.current = null;
     setStatus((previous) => (previous === 'capturing' ? 'stopped' : previous));
-    setStatusMessage('Captura detenida. Tracks de cámara liberados.');
-  }, []);
+    setStatusMessage('Captura detenida. Tracks de cámara liberados. Diagnóstico guardado en /dev/report.');
+  }, [buildCaptureProfileSnapshot, telemetryReport]);
 
   useEffect(() => () => {
     captureRef.current?.cleanup?.();
@@ -233,13 +252,22 @@ function DevCameraLab() {
   const handleFacialWindow = useCallback((windowPayload) => {
     try {
       assertFacialWindowPrivacySafe(windowPayload);
-      setFacialWindows((previous) => [windowPayload, ...previous].slice(0, 8));
-      setStatusMessage(`Ventana agregada recibida: calidad ${windowPayload.quality?.signalQualityScore ?? 0}/100, cobertura ${Math.round((windowPayload.quality?.facePresenceRatio ?? 0) * 100)}%.`);
+      const nextWindows = [windowPayload, ...facialWindowsRef.current].slice(0, 8);
+      facialWindowsRef.current = nextWindows;
+      const report = captureRef.current?.getTelemetryReport?.() || telemetryReport;
+      const snapshot = saveDevCameraReportSnapshot({
+        facialWindows: nextWindows,
+        telemetryReport: report,
+        captureProfile: buildCaptureProfileSnapshot(),
+      });
+      setFacialWindows(nextWindows);
+      setTelemetryReport(snapshot.telemetryReport || report || null);
+      setStatusMessage(`Ventana agregada recibida y guardada para /dev/report: calidad ${windowPayload.quality?.signalQualityScore ?? 0}/100, cobertura ${Math.round((windowPayload.quality?.facePresenceRatio ?? 0) * 100)}%.`);
     } catch (error) {
       setStatus('privacy_error');
       setStatusMessage(`Ventana descartada por privacidad: ${error?.message || error}`);
     }
-  }, []);
+  }, [buildCaptureProfileSnapshot, telemetryReport]);
 
   const startCamera = async () => {
     if (!videoRef.current) return;
@@ -263,20 +291,43 @@ function DevCameraLab() {
     const initialized = await capture.initialize(videoRef.current);
 
     if (!initialized) {
+      const report = capture.getTelemetryReport?.() || null;
       setStatus('unavailable');
-      setTelemetryReport(capture.getTelemetryReport?.() || null);
-      setStatusMessage('No se pudo abrir la cámara o el navegador no entregó permisos. Revisa HTTPS, permisos del sitio y disponibilidad del dispositivo.');
+      setTelemetryReport(report);
+      if (report) {
+        saveDevCameraReportSnapshot({
+          facialWindows: facialWindowsRef.current,
+          telemetryReport: report,
+          captureProfile: buildCaptureProfileSnapshot(),
+        });
+      }
+      setStatusMessage('No se pudo abrir la cámara o el navegador no entregó permisos. Revisa HTTPS, permisos del sitio y disponibilidad del dispositivo. Diagnóstico guardado en /dev/report.');
       return;
     }
 
     capture.startCapture();
+    const report = capture.getTelemetryReport?.() || null;
     setStatus('capturing');
-    setTelemetryReport(capture.getTelemetryReport?.() || null);
+    setTelemetryReport(report);
+    if (report) {
+      saveDevCameraReportSnapshot({
+        facialWindows: facialWindowsRef.current,
+        telemetryReport: report,
+        captureProfile: buildCaptureProfileSnapshot(),
+      });
+    }
     setStatusMessage('Capturando localmente. Espera 5 segundos para ver la primera ventana agregada.');
   };
 
   const refreshReport = () => {
-    setTelemetryReport(captureRef.current?.getTelemetryReport?.() || null);
+    const report = captureRef.current?.getTelemetryReport?.() || telemetryReport;
+    const snapshot = saveDevCameraReportSnapshot({
+      facialWindows: facialWindowsRef.current,
+      telemetryReport: report,
+      captureProfile: buildCaptureProfileSnapshot(),
+    });
+    setTelemetryReport(snapshot.telemetryReport || report || null);
+    setStatusMessage('Diagnóstico actualizado y guardado. Abre /dev/report para ver el reporte de cámara.');
   };
 
   const injectSyntheticWindow = () => {
@@ -440,7 +491,8 @@ function DevCameraLab() {
                 <Link style={linkStyle} to="/demo">Abrir demo pública</Link>
                 <Link style={linkStyle} to="/future/lab">Future Assessment Lab</Link>
                 <Link style={linkStyle} to="/pitch">Pitch deck embebido</Link>
-                <Link style={linkStyle} to="/report">Reporte local</Link>
+                <Link style={linkStyle} to="/dev/report">Reporte diagnóstico de cámara</Link>
+                <Link style={linkStyle} to="/report">Reporte final de evaluación completa</Link>
               </div>
             </div>
 
