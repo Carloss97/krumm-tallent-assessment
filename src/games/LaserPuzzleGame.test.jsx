@@ -1,19 +1,30 @@
 import { describe, it, expect } from 'vitest';
-import { LASER_DEMO_LEVELS, buildGrid, getLaserEfficiency, getLaserMetrics, traceBeam } from './LaserPuzzleGame';
+import { LASER_DEMO_LEVELS, buildGrid, getLaserDemoBriefing, getLaserEfficiency, getLaserMetrics, traceBeam } from './LaserPuzzleGame';
 
 describe('LaserPuzzleGame levels', () => {
-  it('defines a progressive adaptive six-level puzzle set', () => {
-    expect(LASER_DEMO_LEVELS).toHaveLength(6);
-    expect(LASER_DEMO_LEVELS[0].difficulty).toBe('easy');
-    expect(LASER_DEMO_LEVELS[1].difficulty).toBe('hard');
-    expect(LASER_DEMO_LEVELS[2].difficulty).toBe('easy');
-    expect(LASER_DEMO_LEVELS[3].difficulty).toBe('hard');
-    expect(LASER_DEMO_LEVELS[4].difficulty).toBe('easy');
-    expect(LASER_DEMO_LEVELS[5].difficulty).toBe('hard');
-    expect(LASER_DEMO_LEVELS.every((level) => level.cells.filter((cell) => cell.movable).length >= 4)).toBe(true);
+  it('defines a progressive nine-level puzzle set extracted from the PDF maps', () => {
+    expect(LASER_DEMO_LEVELS).toHaveLength(9);
+    expect(LASER_DEMO_LEVELS.map((level) => level.name)).toEqual([
+      'Mapa Nave 1',
+      'Mapa Nave 2',
+      'Mapa Nave 3',
+      'Mapa Nave 4',
+      'Mapa Nave 5',
+      'Mapa Nave 6',
+      'Mapa Nave 7',
+      'Mapa Nave 8',
+      'Mapa Nave 9',
+    ]);
+    expect(LASER_DEMO_LEVELS.every((level) => level.cells.filter((cell) => cell.movable).length >= 3)).toBe(true);
     expect(LASER_DEMO_LEVELS.some((level) => level.cells.some((cell) => cell.type === 'bifurcator'))).toBe(true);
     expect(LASER_DEMO_LEVELS.some((level) => level.cells.some((cell) => cell.type === 'portal_blue'))).toBe(true);
     expect(LASER_DEMO_LEVELS.some((level) => level.quiz.length > 0)).toBe(true);
+  });
+
+  it('has a distinct briefing for each extracted map', () => {
+    const briefingTitles = LASER_DEMO_LEVELS.map((_, index) => getLaserDemoBriefing(index, 'es').title);
+
+    expect(new Set(briefingTitles).size).toBe(9);
   });
 
   it('does not start with any level already solved', () => {
@@ -87,13 +98,13 @@ describe('LaserPuzzleGame levels', () => {
     expect(result.litAntennas.has('9,6')).toBe(true);
   });
 
-  it('redesigns levels as large complex maps with progressive optical objects', () => {
+  it('keeps every extracted PDF map as an 8x8 board with progressive optical objects', () => {
     LASER_DEMO_LEVELS.forEach((level, index) => {
-      expect(level.cols, `level ${index} should use a wider board`).toBeGreaterThanOrEqual(12);
-      expect(level.rows, `level ${index} should use a taller board`).toBeGreaterThanOrEqual(10);
-      expect(level.cells.filter((cell) => cell.type === 'wall').length, `level ${index} should include meaningful obstacles`).toBeGreaterThanOrEqual(index < 2 ? 18 : 30);
-      expect(level.cells.filter((cell) => cell.movable).length, `level ${index} should require several object moves`).toBeGreaterThanOrEqual(index < 2 ? 4 : 6);
-      expect(level.par, `level ${index} should require multi-step reasoning`).toBeGreaterThanOrEqual(index < 2 ? 4 : 6);
+      expect(level.cols, `level ${index} should preserve the extracted grid width`).toBe(8);
+      expect(level.rows, `level ${index} should preserve the extracted grid height`).toBe(8);
+      expect(level.cells.filter((cell) => cell.type === 'wall').length, `level ${index} should include PDF meteor obstacles`).toBeGreaterThanOrEqual(12);
+      expect(level.cells.filter((cell) => cell.movable).length, `level ${index} should scramble the movable PDF pieces`).toBeGreaterThanOrEqual(index < 6 ? 3 : 7);
+      expect(level.par, `level ${index} should budget the extracted solution moves`).toBeGreaterThanOrEqual(level.solutionPlacements.length + 1);
     });
 
     const shipDirs = new Set(
@@ -102,19 +113,19 @@ describe('LaserPuzzleGame levels', () => {
         .filter((cell) => cell.type === 'ship')
         .map((cell) => cell.dir)
     );
-    expect([...shipDirs].some((dir) => ['upRight', 'downRight', 'downLeft', 'upLeft'].includes(dir))).toBe(true);
+    expect(shipDirs).toEqual(new Set(['down', 'left', 'up', 'right']));
     expect(LASER_DEMO_LEVELS.some((level) => level.cells.some((cell) => cell.type === 'bifurcator'))).toBe(true);
     expect(LASER_DEMO_LEVELS.some((level) => level.cells.some((cell) => cell.type === 'portal_blue' || cell.type === 'portal_red'))).toBe(true);
   });
 
-  it('marks portals as movable in redesigned levels', () => {
+  it('marks portals as movable in extracted PDF levels', () => {
     const portals = LASER_DEMO_LEVELS.filter((level) =>
-      level.cells.some((cell) => cell.type === 'portal_blue')
+      level.cells.some((cell) => cell.type === 'portal_blue' || cell.type === 'portal_red')
     );
 
     expect(portals.length).toBeGreaterThan(0);
     portals.forEach((level) => {
-      const portalCells = level.cells.filter((cell) => cell.type === 'portal_blue');
+      const portalCells = level.cells.filter((cell) => cell.type === 'portal_blue' || cell.type === 'portal_red');
       expect(portalCells.every((cell) => cell.movable)).toBe(true);
     });
   });
@@ -169,30 +180,27 @@ describe('LaserPuzzleGame levels', () => {
 
 
 
-  it('requires more than three authored moves in each of the first four laser levels', () => {
-    const minimumMoves = [4, 5, 5, 5];
-
-    LASER_DEMO_LEVELS.slice(0, 4).forEach((level, index) => {
+  it('scrambles every movable PDF solution piece', () => {
+    LASER_DEMO_LEVELS.forEach((level, index) => {
       const meaningfulMoves = level.solutionPlacements.filter(([fromKey, toKey]) => fromKey !== toKey).length;
       const movablePieces = level.cells.filter((cell) => cell.movable).length;
 
-      expect(meaningfulMoves, `level ${index} should not solve in three moves`).toBeGreaterThanOrEqual(minimumMoves[index]);
-      expect(level.par, `level ${index} should budget meaningful reasoning time`).toBeGreaterThanOrEqual(minimumMoves[index] + 2);
-      expect(movablePieces, `level ${index} should include decoys beyond the intended chain`).toBeGreaterThanOrEqual(minimumMoves[index] + 2);
+      expect(meaningfulMoves, `level ${index} should move every scrambled PDF piece`).toBe(movablePieces);
+      expect(level.par, `level ${index} should budget meaningful reasoning time`).toBeGreaterThanOrEqual(meaningfulMoves + 1);
     });
   });
 
-  it('requires substantially more than three moves in the late laser levels', () => {
-    const lateLevels = LASER_DEMO_LEVELS.slice(-2);
+  it('requires portal-heavy multi-object solutions in the late extracted levels', () => {
+    const lateLevels = LASER_DEMO_LEVELS.slice(-3);
 
     lateLevels.forEach((level, offset) => {
       const index = LASER_DEMO_LEVELS.length - lateLevels.length + offset;
       const meaningfulMoves = level.solutionPlacements.filter(([fromKey, toKey]) => fromKey !== toKey).length;
       const movablePieces = level.cells.filter((cell) => cell.movable).length;
 
-      expect(meaningfulMoves, `level ${index} should require a multi-object solution`).toBeGreaterThanOrEqual(offset === 0 ? 5 : 6);
-      expect(level.par, `level ${index} should budget substantial reasoning moves`).toBeGreaterThanOrEqual(offset === 0 ? 10 : 12);
-      expect(movablePieces, `level ${index} should include decoys and movable alternatives`).toBeGreaterThanOrEqual(9);
+      expect(meaningfulMoves, `level ${index} should require a multi-object solution`).toBeGreaterThanOrEqual(7);
+      expect(level.par, `level ${index} should budget substantial reasoning moves`).toBeGreaterThanOrEqual(meaningfulMoves + 2);
+      expect(movablePieces, `level ${index} should include the portal pairs plus optical pieces`).toBeGreaterThanOrEqual(7);
     });
   });
 

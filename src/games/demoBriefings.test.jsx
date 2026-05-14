@@ -16,14 +16,14 @@ describe('progressive demo briefings', () => {
     expect(optimized.body).toMatch(/planifica|prioriza/i);
   });
 
-  it('keeps Laser Puzzle instructions progressive for all adaptive level indexes', () => {
-    const mirrors = getLaserDemoBriefing(0, 'es');
-    const split = getLaserDemoBriefing(1, 'es');
-    const portals = getLaserDemoBriefing(5, 'es');
+  it('keeps Laser Puzzle instructions aligned with the extracted PDF maps', () => {
+    const firstMap = getLaserDemoBriefing(0, 'es');
+    const bifurcatorMap = getLaserDemoBriefing(5, 'es');
+    const portalMap = getLaserDemoBriefing(8, 'es');
 
-    expect(mirrors.title).toMatch(/paso 1/i);
-    expect(mirrors.body).toMatch(/espejo|haz/i);
-    expect(split.body).toMatch(/bifurcador|divide/i);
-    expect(portals.body).toMatch(/portal|obstáculos/i);
+    expect(firstMap.title).toMatch(/mapa pdf 1/i);
+    expect(firstMap.body).toMatch(/reflectores|haz|ruta/i);
+    expect(bifurcatorMap.body).toMatch(/bifurcadores|piezas móviles/i);
+    expect(portalMap.body).toMatch(/portales enlazados|meteoritos/i);
   });
 });

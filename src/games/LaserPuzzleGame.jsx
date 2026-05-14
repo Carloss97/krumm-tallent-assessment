@@ -95,56 +95,80 @@ const DIRS = {
 };
 
 const DEMO_BRIEFINGS = {
-  es: [
+  "es": [
     {
-      title: 'Paso 1: espejos y dirección del haz',
-      body: 'Selecciona un espejo y muévelo a una celda libre para redirigir el haz hacia la antena. Observa la línea iluminada: te muestra en tiempo real si el camino funciona.'
+      "title": "Mapa PDF 1: recuperar la solución",
+      "body": "Este nivel replica el mapa 1 del PDF. Sólo se desordenaron las 3 piezas móviles; conserva meteoritos, nave y antenas como referencia y reconstruye la ruta con reflectores."
     },
     {
-      title: 'Paso 2: bifurcador de señal',
-      body: 'El bifurcador (+) divide el haz en dos rutas. Úsalo cuando hay dos antenas: una rama debe subir y la otra bajar hasta iluminar ambos objetivos a la vez.'
+      "title": "Mapa PDF 2: recuperar la solución",
+      "body": "Este nivel replica el mapa 2 del PDF. Sólo se desordenaron las 6 piezas móviles; conserva meteoritos, nave y antenas como referencia y reconstruye la ruta con reflectores."
     },
     {
-      title: 'Paso 3: espejos encadenados',
-      body: 'Ahora la solución requiere más de un giro. Piensa la ruta en tramos: salir del emisor, esquivar el bloqueo y hacer el último giro hacia la antena.'
+      "title": "Mapa PDF 3: recuperar la solución",
+      "body": "Este nivel replica el mapa 3 del PDF. Sólo se desordenaron las 3 piezas móviles; conserva meteoritos, nave y antenas como referencia y reconstruye la ruta con reflectores."
     },
     {
-      title: 'Paso 4: bifurcación con obstáculos',
-      body: 'La división de señal sigue siendo la clave, pero los muros obligan a separar rutas. Ubica primero el bifurcador y luego ajusta los espejos de cada rama.'
+      "title": "Mapa PDF 4: recuperar la solución",
+      "body": "Este nivel replica el mapa 4 del PDF. Sólo se desordenaron las 3 piezas móviles; conserva meteoritos, nave y antenas como referencia y reconstruye la ruta con bifurcadores."
     },
     {
-      title: 'Paso 5: portales',
-      body: 'Los portales trasladan el haz de una entrada a otra manteniendo su dirección. Úsalos para saltar obstáculos y después corrige la trayectoria con un espejo.'
+      "title": "Mapa PDF 5: recuperar la solución",
+      "body": "Este nivel replica el mapa 5 del PDF. Sólo se desordenaron las 5 piezas móviles; conserva meteoritos, nave y antenas como referencia y reconstruye la ruta con bifurcadores."
     },
     {
-      title: 'Paso 6: portales + bifurcador',
-      body: 'Último desafío: combina portal, bifurcador y espejos. Primero crea el salto, luego divide la señal y finalmente ajusta cada rama hacia su antena.'
+      "title": "Mapa PDF 6: recuperar la solución",
+      "body": "Este nivel replica el mapa 6 del PDF. Sólo se desordenaron las 5 piezas móviles; conserva meteoritos, nave y antenas como referencia y reconstruye la ruta con bifurcadores."
+    },
+    {
+      "title": "Mapa PDF 7: recuperar la solución",
+      "body": "Este nivel replica el mapa 7 del PDF. Sólo se desordenaron las 7 piezas móviles; conserva meteoritos, nave y antenas como referencia y reconstruye la ruta con bifurcadores, portales enlazados."
+    },
+    {
+      "title": "Mapa PDF 8: recuperar la solución",
+      "body": "Este nivel replica el mapa 8 del PDF. Sólo se desordenaron las 7 piezas móviles; conserva meteoritos, nave y antenas como referencia y reconstruye la ruta con bifurcadores, portales enlazados."
+    },
+    {
+      "title": "Mapa PDF 9: recuperar la solución",
+      "body": "Este nivel replica el mapa 9 del PDF. Sólo se desordenaron las 7 piezas móviles; conserva meteoritos, nave y antenas como referencia y reconstruye la ruta con bifurcadores, portales enlazados."
     }
   ],
-  en: [
+  "en": [
     {
-      title: 'Step 1: mirrors and beam direction',
-      body: 'Select a mirror and move it to an empty cell to redirect the beam toward the antenna. Watch the lit path: it shows in real time whether the route works.'
+      "title": "PDF Map 1: recover the solution",
+      "body": "This level reproduces map 1 from the PDF. Only the 3 movable pieces were scrambled; keep meteors, ship, and antennas as reference and rebuild the path with reflectors."
     },
     {
-      title: 'Step 2: signal bifurcator',
-      body: 'The bifurcator (+) splits the beam into two paths. Use it when there are two antennas: one branch should go up and the other down to light both targets at once.'
+      "title": "PDF Map 2: recover the solution",
+      "body": "This level reproduces map 2 from the PDF. Only the 6 movable pieces were scrambled; keep meteors, ship, and antennas as reference and rebuild the path with reflectors."
     },
     {
-      title: 'Step 3: chained mirrors',
-      body: 'The solution now needs more than one turn. Think in segments: leave the emitter, avoid the blocker, then make the final turn toward the antenna.'
+      "title": "PDF Map 3: recover the solution",
+      "body": "This level reproduces map 3 from the PDF. Only the 3 movable pieces were scrambled; keep meteors, ship, and antennas as reference and rebuild the path with reflectors."
     },
     {
-      title: 'Step 4: bifurcation with blockers',
-      body: 'Signal splitting is still the key, but walls force separated routes. Place the bifurcator first, then adjust each branch mirror.'
+      "title": "PDF Map 4: recover the solution",
+      "body": "This level reproduces map 4 from the PDF. Only the 3 movable pieces were scrambled; keep meteors, ship, and antennas as reference and rebuild the path with bifurcators."
     },
     {
-      title: 'Step 5: portals',
-      body: 'Portals move the beam from one entry to another while preserving its direction. Use them to jump over blockers, then correct the trajectory with a mirror.'
+      "title": "PDF Map 5: recover the solution",
+      "body": "This level reproduces map 5 from the PDF. Only the 5 movable pieces were scrambled; keep meteors, ship, and antennas as reference and rebuild the path with bifurcators."
     },
     {
-      title: 'Step 6: portals + bifurcator',
-      body: 'Final challenge: combine portal, bifurcator, and mirrors. Create the jump first, split the signal, then tune each branch toward its antenna.'
+      "title": "PDF Map 6: recover the solution",
+      "body": "This level reproduces map 6 from the PDF. Only the 5 movable pieces were scrambled; keep meteors, ship, and antennas as reference and rebuild the path with bifurcators."
+    },
+    {
+      "title": "PDF Map 7: recover the solution",
+      "body": "This level reproduces map 7 from the PDF. Only the 7 movable pieces were scrambled; keep meteors, ship, and antennas as reference and rebuild the path with bifurcators, linked portals."
+    },
+    {
+      "title": "PDF Map 8: recover the solution",
+      "body": "This level reproduces map 8 from the PDF. Only the 7 movable pieces were scrambled; keep meteors, ship, and antennas as reference and rebuild the path with bifurcators, linked portals."
+    },
+    {
+      "title": "PDF Map 9: recover the solution",
+      "body": "This level reproduces map 9 from the PDF. Only the 7 movable pieces were scrambled; keep meteors, ship, and antennas as reference and rebuild the path with bifurcators, linked portals."
     }
   ]
 };
@@ -154,199 +178,1409 @@ export const getLaserDemoBriefing = (idx, language = 'es') => {
   return pack[Math.min(Math.max(idx, 0), pack.length - 1)];
 };
 
-const makeLaserCells = (objects, rectangles, reserved = [], cols, rows) => createLaserPuzzleLevel({
-  cols,
-  rows,
-  objects,
-  walls: { rects: rectangles },
-  reserved,
-}).cells;
-
+// Maps extracted from /mnt/c/Users/sarlo/Downloads/Mapas de juego nave (1).pdf.
+// The PDF pages are solved layouts; movable optical pieces are scrambled here while fixed ships, antennas, and meteors stay in place.
 export const LASER_DEMO_LEVELS = [
+  createLaserPuzzleLevel(
   {
-    name: 'Sector Alpha',
-    difficulty: 'easy',
-    cols: 12,
-    rows: 10,
-    par: 6,
-    timeLimit: 105,
-    hint: {
-      es: 'Encadena cuatro esquinas: salida horizontal, subida, cruce superior, bajada y alineación final. Los espejos sobrantes son distractores.',
-      en: 'Chain four corners: horizontal exit, climb, upper crossing, descent, and final alignment. Extra mirrors are distractors.'
-    },
-    solutionPlacements: [['1,8', '3,5'], ['9,8', '3,2'], ['10,8', '7,2'], ['11,7', '7,7']],
-    cells: makeLaserCells([
-      { x: 0, y: 5, type: 'ship', dir: 'right' },
-      { x: 10, y: 7, type: 'antenna' },
-      { x: 1, y: 8, type: 'reflector_ne', movable: true },
-      { x: 9, y: 8, type: 'reflector_ne', movable: true },
-      { x: 10, y: 8, type: 'reflector_nw', movable: true },
-      { x: 11, y: 7, type: 'reflector_nw', movable: true },
-      { x: 11, y: 0, type: 'reflector_ne', movable: true },
-      { x: 5, y: 9, type: 'reflector_nw', movable: true },
-      { x: 8, y: 0, type: 'reflector_ne', movable: true },
-    ], [
-      [1,0,2,1], [5,0,6,1], [9,0,11,1], [0,8,4,9], [5,8,6,9], [9,4,11,5], [0,2,1,3], [8,8,11,9],
-    ], [{ x:3, y:5 }, { x:3, y:2 }, { x:7, y:2 }, { x:7, y:7 }, { x:10, y:7 }, { x:1, y:8 }, { x:9, y:8 }, { x:10, y:8 }, { x:11, y:7 }, { x:11, y:0 }, { x:5, y:9 }, { x:8, y:0 }], 12, 10),
-    quiz: [],
-  },
-  {
-    name: 'Sector Alpha+',
-    difficulty: 'hard',
-    cols: 12,
-    rows: 10,
-    par: 8,
-    timeLimit: 115,
-    hint: {
-      es: 'El bifurcador no alcanza por sí solo: cada rama necesita dos giros para entrar por corredores estrechos hasta su antena.',
-      en: 'The bifurcator is not enough by itself: each branch needs two turns to enter narrow lanes toward its antenna.'
-    },
-    solutionPlacements: [['1,8', '4,5'], ['9,0', '4,2'], ['2,0', '9,2'], ['9,9', '4,8'], ['10,4', '9,8']],
-    cells: makeLaserCells([
-      { x: 0, y: 5, type: 'ship', dir: 'right' },
-      { x: 9, y: 4, type: 'antenna' },
-      { x: 9, y: 6, type: 'antenna' },
-      { x: 1, y: 8, type: 'bifurcator', movable: true },
-      { x: 9, y: 0, type: 'reflector_ne', movable: true },
-      { x: 2, y: 0, type: 'reflector_nw', movable: true },
-      { x: 9, y: 9, type: 'reflector_nw', movable: true },
-      { x: 10, y: 4, type: 'reflector_ne', movable: true },
-      { x: 1, y: 1, type: 'reflector_ne', movable: true },
-      { x: 8, y: 9, type: 'reflector_nw', movable: true },
-      { x: 11, y: 4, type: 'bifurcator', movable: true },
-    ], [
-      [1,0,2,1], [6,0,7,1], [10,0,11,2], [6,3,7,4], [0,7,2,9], [6,6,7,7], [10,6,11,9], [1,2,2,3], [11,4,11,5],
-    ], [{ x:4, y:5 }, { x:4, y:2 }, { x:9, y:2 }, { x:4, y:8 }, { x:9, y:8 }, { x:9, y:4 }, { x:9, y:6 }, { x:1, y:8 }, { x:9, y:0 }, { x:2, y:0 }, { x:9, y:9 }, { x:10, y:4 }, { x:1, y:1 }, { x:8, y:9 }, { x:11, y:4 }], 12, 10),
-    quiz: [],
-  },
-  {
-    name: 'Sector Beta',
-    difficulty: 'easy',
-    cols: 13,
-    rows: 11,
-    par: 9,
-    timeLimit: 125,
-    hint: {
-      es: 'La ruta correcta zigzaguea por seis piezas. Planifica de atrás hacia adelante: la antena queda alineada sólo después del último giro.',
-      en: 'The correct route zigzags through six pieces. Plan backward: the antenna aligns only after the final turn.'
-    },
-    solutionPlacements: [['1,1', '3,8'], ['11,1', '3,2'], ['1,9', '7,2'], ['11,9', '7,6'], ['10,0', '10,6'], ['12,10', '10,3']],
-    cells: makeLaserCells([
-      { x: 0, y: 8, type: 'ship', dir: 'right' },
-      { x: 12, y: 3, type: 'antenna' },
-      { x: 1, y: 1, type: 'reflector_ne', movable: true },
-      { x: 11, y: 1, type: 'reflector_ne', movable: true },
-      { x: 1, y: 9, type: 'reflector_nw', movable: true },
-      { x: 11, y: 9, type: 'reflector_nw', movable: true },
-      { x: 10, y: 0, type: 'reflector_ne', movable: true },
-      { x: 12, y: 10, type: 'reflector_ne', movable: true },
-      { x: 6, y: 10, type: 'reflector_nw', movable: true },
-      { x: 12, y: 8, type: 'reflector_ne', movable: true },
-    ], [
-      [1,3,2,6], [5,0,6,1], [9,0,10,1], [5,4,6,5], [11,5,12,7], [1,9,2,10], [4,9,5,10], [8,8,10,10], [12,0,12,2], [0,0,0,3],
-    ], [{ x:3, y:8 }, { x:3, y:2 }, { x:7, y:2 }, { x:7, y:6 }, { x:10, y:6 }, { x:10, y:3 }, { x:12, y:3 }, { x:1, y:1 }, { x:11, y:1 }, { x:1, y:9 }, { x:11, y:9 }, { x:10, y:0 }, { x:12, y:10 }, { x:6, y:10 }, { x:12, y:8 }], 13, 11),
-    quiz: [],
-  },
-  {
-    name: 'Sector Beta+',
-    difficulty: 'hard',
-    cols: 14,
-    rows: 11,
-    par: 9,
-    timeLimit: 130,
-    hint: {
-      es: 'Resuelve desde el centro: el bifurcador abre dos ramas, pero cada rama necesita dos espejos para entrar por ventanas separadas.',
-      en: 'Solve from the center: the bifurcator opens two branches, but each branch needs two mirrors to pass through separated windows.'
-    },
-    solutionPlacements: [['2,9', '5,5'], ['12,0', '5,2'], ['8,10', '10,2'], ['12,10', '5,8'], ['1,1', '10,8']],
-    cells: makeLaserCells([
-      { x: 0, y: 5, type: 'ship', dir: 'right' },
-      { x: 10, y: 4, type: 'antenna' },
-      { x: 10, y: 6, type: 'antenna' },
-      { x: 2, y: 9, type: 'bifurcator', movable: true },
-      { x: 12, y: 0, type: 'reflector_ne', movable: true },
-      { x: 8, y: 10, type: 'reflector_nw', movable: true },
-      { x: 12, y: 10, type: 'reflector_nw', movable: true },
-      { x: 1, y: 1, type: 'reflector_ne', movable: true },
-      { x: 11, y: 4, type: 'bifurcator', movable: true },
-      { x: 13, y: 1, type: 'reflector_ne', movable: true },
-      { x: 13, y: 9, type: 'reflector_nw', movable: true },
-    ], [
-      [2,0,3,3], [7,0,8,1], [12,0,13,2], [2,7,3,10], [7,4,8,6], [11,7,13,8], [0,1,1,3], [0,7,1,9], [11,4,13,6], [4,0,4,3], [4,7,4,10],
-    ], [{ x:5, y:5 }, { x:5, y:2 }, { x:10, y:2 }, { x:5, y:8 }, { x:10, y:8 }, { x:10, y:4 }, { x:10, y:6 }, { x:2, y:9 }, { x:12, y:0 }, { x:8, y:10 }, { x:12, y:10 }, { x:1, y:1 }, { x:11, y:4 }, { x:13, y:1 }, { x:13, y:9 }], 14, 11),
-    quiz: [],
-  },
-  {
-    name: 'Sector Gamma',
-    difficulty: 'easy',
-    cols: 14,
-    rows: 12,
-    par: 10,
-    timeLimit: 135,
-    hint: {
-      es: 'Usá el portal para saltar la barrera principal. Luego encadena tres giros: salida, corrección vertical y último ajuste hacia la antena.',
-      en: 'Use the portal to jump the main barrier. Then chain three turns: exit, vertical correction, and final alignment toward the antenna.'
-    },
-    solutionPlacements: [['1,10', '3,6'], ['10,10', '10,6'], ['2,1', '12,6'], ['12,10', '12,2'], ['9,1', '13,2']],
-    cells: makeLaserCells([
-      { x: 0, y: 6, type: 'ship', dir: 'right' },
-      { x: 13, y: 0, type: 'antenna' },
-      { x: 1, y: 10, type: 'portal_blue', targetPortalId: 'p1', movable: true },
-      { x: 10, y: 10, type: 'portal_blue', portalId: 'p1', movable: true },
-      { x: 2, y: 1, type: 'reflector_ne', movable: true },
-      { x: 12, y: 10, type: 'reflector_ne', movable: true },
-      { x: 9, y: 1, type: 'reflector_ne', movable: true },
-      { x: 13, y: 11, type: 'portal_red', portalId: 'r1', movable: true },
-      { x: 0, y: 11, type: 'reflector_nw', movable: true },
-      { x: 0, y: 0, type: 'bifurcator', movable: true },
-      { x: 13, y: 8, type: 'reflector_ne', movable: true },
-    ], [
-      [5,0,6,11], [1,0,3,2], [8,0,10,2], [1,4,3,5], [8,4,9,5], [1,8,4,11], [8,8,11,11], [13,4,13,5],
-    ], [{ x:3, y:6 }, { x:10, y:6 }, { x:12, y:6 }, { x:12, y:2 }, { x:13, y:2 }, { x:13, y:0 }, { x:1, y:10 }, { x:10, y:10 }, { x:2, y:1 }, { x:12, y:10 }, { x:9, y:1 }, { x:13, y:11 }, { x:0, y:11 }, { x:0, y:0 }, { x:13, y:8 }], 14, 12),
-    quiz: [],
-  },
-  {
-    name: 'Sector Gamma+',
-    difficulty: 'hard',
-    cols: 15,
-    rows: 12,
-    par: 13,
-    timeLimit: 155,
-    hint: {
-      es: 'El emisor diagonal debe entrar a un portal, reaparecer en el centro, dividirse y encadenar espejos independientes para dos antenas.',
-      en: 'The diagonal emitter must enter a portal, reappear near the center, split, and chain independent mirrors toward two antennas.'
-    },
-    solutionPlacements: [['1,10', '4,4'], ['9,9', '8,8'], ['12,1', '10,10'], ['4,10', '10,11'], ['13,8', '12,10'], ['7,2', '12,7']],
-    cells: makeLaserCells([
-      { x: 0, y: 0, type: 'ship', dir: 'downRight' },
-      { x: 14, y: 7, type: 'antenna' },
-      { x: 14, y: 11, type: 'antenna' },
-      { x: 1, y: 10, type: 'portal_blue', targetPortalId: 'pb1', movable: true },
-      { x: 9, y: 9, type: 'portal_blue', portalId: 'pb1', movable: true },
-      { x: 12, y: 1, type: 'bifurcator', movable: true },
-      { x: 2, y: 10, type: 'portal_red', targetPortalId: 'pr1', movable: true },
-      { x: 13, y: 3, type: 'portal_red', portalId: 'pr1', movable: true },
-      { x: 4, y: 10, type: 'reflector_nw', movable: true },
-      { x: 13, y: 8, type: 'reflector_ne', movable: true },
-      { x: 7, y: 2, type: 'reflector_ne', movable: true },
-      { x: 14, y: 3, type: 'reflector_nw', movable: true },
-    ], [
-      [5,5,5,5], [2,0,4,1], [7,0,9,2], [11,0,14,2], [0,4,2,6], [4,4,6,6], [8,4,11,6], [13,4,14,6], [0,8,2,11], [5,8,7,11], [11,8,11,9],
-    ], [{ x:4, y:4 }, { x:8, y:8 }, { x:10, y:10 }, { x:10, y:11 }, { x:12, y:10 }, { x:12, y:7 }, { x:14, y:7 }, { x:14, y:11 }, { x:1, y:10 }, { x:9, y:9 }, { x:12, y:1 }, { x:2, y:10 }, { x:13, y:3 }, { x:4, y:10 }, { x:13, y:8 }, { x:7, y:2 }, { x:14, y:3 }], 15, 12),
-    quiz: [
-      {
-        q: '¿Qué aporta el emisor diagonal en este nivel?',
-        opts: ['Permite entrar al portal por una ruta oblicua', 'Duplica puntos automáticamente', 'Elimina obstáculos', 'No cambia la trayectoria'],
-        correct: 0,
+      "name": "Mapa Nave 1",
+      "difficulty": "easy",
+      "cols": 8,
+      "rows": 8,
+      "par": 4,
+      "timeLimit": 75,
+      "hint": {
+          "es": "Mapa extraído del PDF: la configuración visible era la solución. Reubica las 3 piezas móviles en sus posiciones originales sin mover meteoritos ni naves.",
+          "en": "Map extracted from the PDF: the visible layout was the solution. Move the 3 movable pieces back to their original cells without moving meteors or ships."
       },
-      {
-        q: 'El bifurcador final permite:',
-        opts: ['Separar dos rutas hacia dos antenas', 'Mover muros', 'Cambiar combustible', 'Finalizar sin alinear el haz'],
-        correct: 0,
+      "solutionPlacements": [
+          [
+              "7,7",
+              "2,0"
+          ],
+          [
+              "3,7",
+              "0,5"
+          ],
+          [
+              "0,7",
+              "2,5"
+          ]
+      ],
+      "objects": [
+          {
+              "x": 0,
+              "y": 0,
+              "type": "ship",
+              "dir": "down"
+          },
+          {
+              "x": 6,
+              "y": 0,
+              "type": "antenna"
+          },
+          {
+              "x": 7,
+              "y": 7,
+              "type": "reflector_ne",
+              "movable": true
+          },
+          {
+              "x": 3,
+              "y": 7,
+              "type": "reflector_nw",
+              "movable": true
+          },
+          {
+              "x": 0,
+              "y": 7,
+              "type": "reflector_ne",
+              "movable": true
+          }
+      ],
+      "walls": {
+          "cells": [
+              {
+                  "x": 1,
+                  "y": 0
+              },
+              {
+                  "x": 1,
+                  "y": 1
+              },
+              {
+                  "x": 3,
+                  "y": 1
+              },
+              {
+                  "x": 6,
+                  "y": 1
+              },
+              {
+                  "x": 1,
+                  "y": 2
+              },
+              {
+                  "x": 5,
+                  "y": 2
+              },
+              {
+                  "x": 1,
+                  "y": 3
+              },
+              {
+                  "x": 1,
+                  "y": 4
+              },
+              {
+                  "x": 3,
+                  "y": 4
+              },
+              {
+                  "x": 5,
+                  "y": 4
+              },
+              {
+                  "x": 2,
+                  "y": 6
+              },
+              {
+                  "x": 6,
+                  "y": 6
+              },
+              {
+                  "x": 4,
+                  "y": 7
+              }
+          ]
       },
-    ],
-  },
+      "quiz": []
+  }
+  ),
+  createLaserPuzzleLevel(
+  {
+      "name": "Mapa Nave 2",
+      "difficulty": "easy",
+      "cols": 8,
+      "rows": 8,
+      "par": 7,
+      "timeLimit": 85,
+      "hint": {
+          "es": "Mapa extraído del PDF: la configuración visible era la solución. Reubica las 6 piezas móviles en sus posiciones originales sin mover meteoritos ni naves.",
+          "en": "Map extracted from the PDF: the visible layout was the solution. Move the 6 movable pieces back to their original cells without moving meteors or ships."
+      },
+      "solutionPlacements": [
+          [
+              "6,7",
+              "1,3"
+          ],
+          [
+              "1,7",
+              "7,3"
+          ],
+          [
+              "4,6",
+              "1,5"
+          ],
+          [
+              "0,6",
+              "5,5"
+          ],
+          [
+              "3,5",
+              "5,7"
+          ],
+          [
+              "7,4",
+              "7,7"
+          ]
+      ],
+      "objects": [
+          {
+              "x": 2,
+              "y": 3,
+              "type": "ship",
+              "dir": "left"
+          },
+          {
+              "x": 5,
+              "y": 3,
+              "type": "antenna"
+          },
+          {
+              "x": 6,
+              "y": 7,
+              "type": "reflector_ne",
+              "movable": true
+          },
+          {
+              "x": 1,
+              "y": 7,
+              "type": "reflector_nw",
+              "movable": true
+          },
+          {
+              "x": 4,
+              "y": 6,
+              "type": "reflector_nw",
+              "movable": true
+          },
+          {
+              "x": 0,
+              "y": 6,
+              "type": "reflector_nw",
+              "movable": true
+          },
+          {
+              "x": 3,
+              "y": 5,
+              "type": "reflector_nw",
+              "movable": true
+          },
+          {
+              "x": 7,
+              "y": 4,
+              "type": "reflector_ne",
+              "movable": true
+          }
+      ],
+      "walls": {
+          "cells": [
+              {
+                  "x": 0,
+                  "y": 0
+              },
+              {
+                  "x": 4,
+                  "y": 0
+              },
+              {
+                  "x": 5,
+                  "y": 0
+              },
+              {
+                  "x": 2,
+                  "y": 1
+              },
+              {
+                  "x": 7,
+                  "y": 1
+              },
+              {
+                  "x": 0,
+                  "y": 2
+              },
+              {
+                  "x": 3,
+                  "y": 2
+              },
+              {
+                  "x": 5,
+                  "y": 2
+              },
+              {
+                  "x": 0,
+                  "y": 3
+              },
+              {
+                  "x": 3,
+                  "y": 3
+              },
+              {
+                  "x": 4,
+                  "y": 3
+              },
+              {
+                  "x": 2,
+                  "y": 4
+              },
+              {
+                  "x": 5,
+                  "y": 4
+              },
+              {
+                  "x": 6,
+                  "y": 5
+              },
+              {
+                  "x": 2,
+                  "y": 6
+              },
+              {
+                  "x": 6,
+                  "y": 6
+              },
+              {
+                  "x": 0,
+                  "y": 7
+              },
+              {
+                  "x": 3,
+                  "y": 7
+              }
+          ]
+      },
+      "quiz": []
+  }
+  ),
+  createLaserPuzzleLevel(
+  {
+      "name": "Mapa Nave 3",
+      "difficulty": "easy",
+      "cols": 8,
+      "rows": 8,
+      "par": 4,
+      "timeLimit": 85,
+      "hint": {
+          "es": "Mapa extraído del PDF: la configuración visible era la solución. Reubica las 3 piezas móviles en sus posiciones originales sin mover meteoritos ni naves.",
+          "en": "Map extracted from the PDF: the visible layout was the solution. Move the 3 movable pieces back to their original cells without moving meteors or ships."
+      },
+      "solutionPlacements": [
+          [
+              "7,7",
+              "2,1"
+          ],
+          [
+              "2,7",
+              "2,6"
+          ],
+          [
+              "6,6",
+              "7,6"
+          ]
+      ],
+      "objects": [
+          {
+              "x": 7,
+              "y": 1,
+              "type": "ship",
+              "dir": "left"
+          },
+          {
+              "x": 7,
+              "y": 5,
+              "type": "antenna"
+          },
+          {
+              "x": 7,
+              "y": 7,
+              "type": "reflector_ne",
+              "movable": true
+          },
+          {
+              "x": 2,
+              "y": 7,
+              "type": "reflector_nw",
+              "movable": true
+          },
+          {
+              "x": 6,
+              "y": 6,
+              "type": "reflector_ne",
+              "movable": true
+          }
+      ],
+      "walls": {
+          "cells": [
+              {
+                  "x": 1,
+                  "y": 0
+              },
+              {
+                  "x": 5,
+                  "y": 0
+              },
+              {
+                  "x": 0,
+                  "y": 2
+              },
+              {
+                  "x": 3,
+                  "y": 2
+              },
+              {
+                  "x": 7,
+                  "y": 2
+              },
+              {
+                  "x": 5,
+                  "y": 3
+              },
+              {
+                  "x": 6,
+                  "y": 3
+              },
+              {
+                  "x": 0,
+                  "y": 4
+              },
+              {
+                  "x": 6,
+                  "y": 4
+              },
+              {
+                  "x": 4,
+                  "y": 5
+              },
+              {
+                  "x": 1,
+                  "y": 6
+              },
+              {
+                  "x": 4,
+                  "y": 7
+              },
+              {
+                  "x": 6,
+                  "y": 7
+              }
+          ]
+      },
+      "quiz": []
+  }
+  ),
+  createLaserPuzzleLevel(
+  {
+      "name": "Mapa Nave 4",
+      "difficulty": "hard",
+      "cols": 8,
+      "rows": 8,
+      "par": 4,
+      "timeLimit": 95,
+      "hint": {
+          "es": "Mapa extraído del PDF: la configuración visible era la solución. Reubica las 3 piezas móviles en sus posiciones originales sin mover meteoritos ni naves.",
+          "en": "Map extracted from the PDF: the visible layout was the solution. Move the 3 movable pieces back to their original cells without moving meteors or ships."
+      },
+      "solutionPlacements": [
+          [
+              "7,7",
+              "1,3"
+          ],
+          [
+              "2,7",
+              "4,3"
+          ],
+          [
+              "6,6",
+              "6,3"
+          ]
+      ],
+      "objects": [
+          {
+              "x": 1,
+              "y": 0,
+              "type": "antenna"
+          },
+          {
+              "x": 6,
+              "y": 0,
+              "type": "antenna"
+          },
+          {
+              "x": 4,
+              "y": 7,
+              "type": "ship",
+              "dir": "up"
+          },
+          {
+              "x": 7,
+              "y": 7,
+              "type": "reflector_nw",
+              "movable": true
+          },
+          {
+              "x": 2,
+              "y": 7,
+              "type": "bifurcator",
+              "movable": true
+          },
+          {
+              "x": 6,
+              "y": 6,
+              "type": "reflector_ne",
+              "movable": true
+          }
+      ],
+      "walls": {
+          "cells": [
+              {
+                  "x": 2,
+                  "y": 0
+              },
+              {
+                  "x": 3,
+                  "y": 0
+              },
+              {
+                  "x": 5,
+                  "y": 0
+              },
+              {
+                  "x": 0,
+                  "y": 1
+              },
+              {
+                  "x": 3,
+                  "y": 2
+              },
+              {
+                  "x": 0,
+                  "y": 3
+              },
+              {
+                  "x": 1,
+                  "y": 4
+              },
+              {
+                  "x": 7,
+                  "y": 4
+              },
+              {
+                  "x": 0,
+                  "y": 5
+              },
+              {
+                  "x": 1,
+                  "y": 6
+              },
+              {
+                  "x": 5,
+                  "y": 6
+              },
+              {
+                  "x": 7,
+                  "y": 6
+              },
+              {
+                  "x": 3,
+                  "y": 7
+              }
+          ]
+      },
+      "quiz": []
+  }
+  ),
+  createLaserPuzzleLevel(
+  {
+      "name": "Mapa Nave 5",
+      "difficulty": "hard",
+      "cols": 8,
+      "rows": 8,
+      "par": 6,
+      "timeLimit": 105,
+      "hint": {
+          "es": "Mapa extraído del PDF: la configuración visible era la solución. Reubica las 5 piezas móviles en sus posiciones originales sin mover meteoritos ni naves.",
+          "en": "Map extracted from the PDF: the visible layout was the solution. Move the 5 movable pieces back to their original cells without moving meteors or ships."
+      },
+      "solutionPlacements": [
+          [
+              "7,7",
+              "0,3"
+          ],
+          [
+              "3,7",
+              "2,3"
+          ],
+          [
+              "7,6",
+              "6,3"
+          ],
+          [
+              "1,6",
+              "6,5"
+          ],
+          [
+              "2,5",
+              "2,6"
+          ]
+      ],
+      "objects": [
+          {
+              "x": 0,
+              "y": 0,
+              "type": "antenna"
+          },
+          {
+              "x": 7,
+              "y": 5,
+              "type": "antenna"
+          },
+          {
+              "x": 0,
+              "y": 6,
+              "type": "ship",
+              "dir": "right"
+          },
+          {
+              "x": 7,
+              "y": 7,
+              "type": "reflector_nw",
+              "movable": true
+          },
+          {
+              "x": 3,
+              "y": 7,
+              "type": "bifurcator",
+              "movable": true
+          },
+          {
+              "x": 7,
+              "y": 6,
+              "type": "reflector_nw",
+              "movable": true
+          },
+          {
+              "x": 1,
+              "y": 6,
+              "type": "reflector_nw",
+              "movable": true
+          },
+          {
+              "x": 2,
+              "y": 5,
+              "type": "reflector_ne",
+              "movable": true
+          }
+      ],
+      "walls": {
+          "cells": [
+              {
+                  "x": 1,
+                  "y": 0
+              },
+              {
+                  "x": 4,
+                  "y": 0
+              },
+              {
+                  "x": 7,
+                  "y": 0
+              },
+              {
+                  "x": 2,
+                  "y": 1
+              },
+              {
+                  "x": 1,
+                  "y": 2
+              },
+              {
+                  "x": 4,
+                  "y": 2
+              },
+              {
+                  "x": 5,
+                  "y": 2
+              },
+              {
+                  "x": 7,
+                  "y": 3
+              },
+              {
+                  "x": 0,
+                  "y": 4
+              },
+              {
+                  "x": 5,
+                  "y": 4
+              },
+              {
+                  "x": 0,
+                  "y": 5
+              },
+              {
+                  "x": 3,
+                  "y": 5
+              },
+              {
+                  "x": 5,
+                  "y": 6
+              },
+              {
+                  "x": 6,
+                  "y": 6
+              },
+              {
+                  "x": 0,
+                  "y": 7
+              },
+              {
+                  "x": 4,
+                  "y": 7
+              }
+          ]
+      },
+      "quiz": []
+  }
+  ),
+  createLaserPuzzleLevel(
+  {
+      "name": "Mapa Nave 6",
+      "difficulty": "hard",
+      "cols": 8,
+      "rows": 8,
+      "par": 6,
+      "timeLimit": 110,
+      "hint": {
+          "es": "Mapa extraído del PDF: la configuración visible era la solución. Reubica las 5 piezas móviles en sus posiciones originales sin mover meteoritos ni naves.",
+          "en": "Map extracted from the PDF: the visible layout was the solution. Move the 5 movable pieces back to their original cells without moving meteors or ships."
+      },
+      "solutionPlacements": [
+          [
+              "6,7",
+              "0,4"
+          ],
+          [
+              "1,7",
+              "2,4"
+          ],
+          [
+              "4,6",
+              "5,4"
+          ],
+          [
+              "7,5",
+              "0,6"
+          ],
+          [
+              "4,5",
+              "5,7"
+          ]
+      ],
+      "objects": [
+          {
+              "x": 5,
+              "y": 1,
+              "type": "antenna"
+          },
+          {
+              "x": 1,
+              "y": 6,
+              "type": "antenna"
+          },
+          {
+              "x": 2,
+              "y": 7,
+              "type": "ship",
+              "dir": "up"
+          },
+          {
+              "x": 7,
+              "y": 7,
+              "type": "antenna"
+          },
+          {
+              "x": 6,
+              "y": 7,
+              "type": "reflector_ne",
+              "movable": true
+          },
+          {
+              "x": 1,
+              "y": 7,
+              "type": "bifurcator",
+              "movable": true
+          },
+          {
+              "x": 4,
+              "y": 6,
+              "type": "bifurcator",
+              "movable": true
+          },
+          {
+              "x": 7,
+              "y": 5,
+              "type": "reflector_nw",
+              "movable": true
+          },
+          {
+              "x": 4,
+              "y": 5,
+              "type": "reflector_nw",
+              "movable": true
+          }
+      ],
+      "walls": {
+          "cells": [
+              {
+                  "x": 0,
+                  "y": 0
+              },
+              {
+                  "x": 2,
+                  "y": 0
+              },
+              {
+                  "x": 5,
+                  "y": 0
+              },
+              {
+                  "x": 1,
+                  "y": 1
+              },
+              {
+                  "x": 6,
+                  "y": 1
+              },
+              {
+                  "x": 7,
+                  "y": 2
+              },
+              {
+                  "x": 0,
+                  "y": 3
+              },
+              {
+                  "x": 3,
+                  "y": 3
+              },
+              {
+                  "x": 6,
+                  "y": 4
+              },
+              {
+                  "x": 3,
+                  "y": 5
+              },
+              {
+                  "x": 6,
+                  "y": 6
+              },
+              {
+                  "x": 0,
+                  "y": 7
+              }
+          ]
+      },
+      "quiz": []
+  }
+  ),
+  createLaserPuzzleLevel(
+  {
+      "name": "Mapa Nave 7",
+      "difficulty": "hard",
+      "cols": 8,
+      "rows": 8,
+      "par": 9,
+      "timeLimit": 125,
+      "hint": {
+          "es": "Mapa extraído del PDF: la configuración visible era la solución. Reubica las 7 piezas móviles en sus posiciones originales sin mover meteoritos ni naves.",
+          "en": "Map extracted from the PDF: the visible layout was the solution. Move the 7 movable pieces back to their original cells without moving meteors or ships."
+      },
+      "solutionPlacements": [
+          [
+              "7,7",
+              "1,2"
+          ],
+          [
+              "1,7",
+              "6,3"
+          ],
+          [
+              "5,6",
+              "1,1"
+          ],
+          [
+              "1,6",
+              "4,1"
+          ],
+          [
+              "3,5",
+              "3,2"
+          ],
+          [
+              "0,5",
+              "4,3"
+          ],
+          [
+              "5,4",
+              "2,7"
+          ]
+      ],
+      "objects": [
+          {
+              "x": 4,
+              "y": 0,
+              "type": "antenna"
+          },
+          {
+              "x": 3,
+              "y": 3,
+              "type": "antenna"
+          },
+          {
+              "x": 0,
+              "y": 7,
+              "type": "ship",
+              "dir": "right"
+          },
+          {
+              "x": 7,
+              "y": 7,
+              "type": "portal_red",
+              "movable": true,
+              "targetPortalId": "pr7"
+          },
+          {
+              "x": 1,
+              "y": 7,
+              "type": "portal_red",
+              "movable": true,
+              "portalId": "pr7"
+          },
+          {
+              "x": 5,
+              "y": 6,
+              "type": "portal_blue",
+              "movable": true,
+              "targetPortalId": "pb7"
+          },
+          {
+              "x": 1,
+              "y": 6,
+              "type": "bifurcator",
+              "movable": true
+          },
+          {
+              "x": 3,
+              "y": 5,
+              "type": "reflector_nw",
+              "movable": true
+          },
+          {
+              "x": 0,
+              "y": 5,
+              "type": "reflector_nw",
+              "movable": true
+          },
+          {
+              "x": 5,
+              "y": 4,
+              "type": "portal_blue",
+              "movable": true,
+              "portalId": "pb7"
+          }
+      ],
+      "walls": {
+          "cells": [
+              {
+                  "x": 0,
+                  "y": 0
+              },
+              {
+                  "x": 2,
+                  "y": 0
+              },
+              {
+                  "x": 5,
+                  "y": 0
+              },
+              {
+                  "x": 5,
+                  "y": 1
+              },
+              {
+                  "x": 6,
+                  "y": 1
+              },
+              {
+                  "x": 0,
+                  "y": 2
+              },
+              {
+                  "x": 1,
+                  "y": 3
+              },
+              {
+                  "x": 7,
+                  "y": 3
+              },
+              {
+                  "x": 2,
+                  "y": 4
+              },
+              {
+                  "x": 4,
+                  "y": 4
+              },
+              {
+                  "x": 5,
+                  "y": 5
+              },
+              {
+                  "x": 7,
+                  "y": 5
+              },
+              {
+                  "x": 0,
+                  "y": 6
+              },
+              {
+                  "x": 4,
+                  "y": 6
+              },
+              {
+                  "x": 3,
+                  "y": 7
+              },
+              {
+                  "x": 5,
+                  "y": 7
+              }
+          ]
+      },
+      "quiz": []
+  }
+  ),
+  createLaserPuzzleLevel(
+  {
+      "name": "Mapa Nave 8",
+      "difficulty": "hard",
+      "cols": 8,
+      "rows": 8,
+      "par": 9,
+      "timeLimit": 130,
+      "hint": {
+          "es": "Mapa extraído del PDF: la configuración visible era la solución. Reubica las 7 piezas móviles en sus posiciones originales sin mover meteoritos ni naves.",
+          "en": "Map extracted from the PDF: the visible layout was the solution. Move the 7 movable pieces back to their original cells without moving meteors or ships."
+      },
+      "solutionPlacements": [
+          [
+              "6,7",
+              "7,1"
+          ],
+          [
+              "0,7",
+              "4,7"
+          ],
+          [
+              "1,6",
+              "1,2"
+          ],
+          [
+              "5,5",
+              "3,2"
+          ],
+          [
+              "0,5",
+              "6,2"
+          ],
+          [
+              "4,4",
+              "4,6"
+          ],
+          [
+              "6,3",
+              "6,6"
+          ]
+      ],
+      "objects": [
+          {
+              "x": 3,
+              "y": 0,
+              "type": "ship",
+              "dir": "down"
+          },
+          {
+              "x": 6,
+              "y": 0,
+              "type": "antenna"
+          },
+          {
+              "x": 7,
+              "y": 3,
+              "type": "antenna"
+          },
+          {
+              "x": 6,
+              "y": 7,
+              "type": "portal_red",
+              "movable": true,
+              "targetPortalId": "pr8"
+          },
+          {
+              "x": 0,
+              "y": 7,
+              "type": "portal_red",
+              "movable": true,
+              "portalId": "pr8"
+          },
+          {
+              "x": 1,
+              "y": 6,
+              "type": "portal_blue",
+              "movable": true,
+              "targetPortalId": "pb8"
+          },
+          {
+              "x": 5,
+              "y": 5,
+              "type": "bifurcator",
+              "movable": true
+          },
+          {
+              "x": 0,
+              "y": 5,
+              "type": "reflector_ne",
+              "movable": true
+          },
+          {
+              "x": 4,
+              "y": 4,
+              "type": "reflector_ne",
+              "movable": true
+          },
+          {
+              "x": 6,
+              "y": 3,
+              "type": "portal_blue",
+              "movable": true,
+              "portalId": "pb8"
+          }
+      ],
+      "walls": {
+          "cells": [
+              {
+                  "x": 0,
+                  "y": 0
+              },
+              {
+                  "x": 1,
+                  "y": 0
+              },
+              {
+                  "x": 4,
+                  "y": 0
+              },
+              {
+                  "x": 7,
+                  "y": 0
+              },
+              {
+                  "x": 2,
+                  "y": 1
+              },
+              {
+                  "x": 5,
+                  "y": 1
+              },
+              {
+                  "x": 4,
+                  "y": 3
+              },
+              {
+                  "x": 0,
+                  "y": 4
+              },
+              {
+                  "x": 3,
+                  "y": 4
+              },
+              {
+                  "x": 5,
+                  "y": 4
+              },
+              {
+                  "x": 2,
+                  "y": 5
+              },
+              {
+                  "x": 4,
+                  "y": 5
+              },
+              {
+                  "x": 6,
+                  "y": 5
+              },
+              {
+                  "x": 2,
+                  "y": 6
+              },
+              {
+                  "x": 3,
+                  "y": 6
+              },
+              {
+                  "x": 1,
+                  "y": 7
+              },
+              {
+                  "x": 3,
+                  "y": 7
+              },
+              {
+                  "x": 7,
+                  "y": 7
+              }
+          ]
+      },
+      "quiz": []
+  }
+  ),
+  createLaserPuzzleLevel(
+  {
+      "name": "Mapa Nave 9",
+      "difficulty": "hard",
+      "cols": 8,
+      "rows": 8,
+      "par": 9,
+      "timeLimit": 140,
+      "hint": {
+          "es": "Mapa extraído del PDF: la configuración visible era la solución. Reubica las 7 piezas móviles en sus posiciones originales sin mover meteoritos ni naves.",
+          "en": "Map extracted from the PDF: the visible layout was the solution. Move the 7 movable pieces back to their original cells without moving meteors or ships."
+      },
+      "solutionPlacements": [
+          [
+              "6,7",
+              "7,5"
+          ],
+          [
+              "3,7",
+              "0,7"
+          ],
+          [
+              "6,6",
+              "3,2"
+          ],
+          [
+              "5,5",
+              "6,2"
+          ],
+          [
+              "0,5",
+              "1,4"
+          ],
+          [
+              "3,4",
+              "6,4"
+          ],
+          [
+              "6,3",
+              "3,5"
+          ]
+      ],
+      "objects": [
+          {
+              "x": 3,
+              "y": 0,
+              "type": "antenna"
+          },
+          {
+              "x": 1,
+              "y": 6,
+              "type": "ship",
+              "dir": "up"
+          },
+          {
+              "x": 7,
+              "y": 7,
+              "type": "antenna"
+          },
+          {
+              "x": 6,
+              "y": 7,
+              "type": "portal_red",
+              "movable": true,
+              "targetPortalId": "pr9"
+          },
+          {
+              "x": 3,
+              "y": 7,
+              "type": "portal_red",
+              "movable": true,
+              "portalId": "pr9"
+          },
+          {
+              "x": 6,
+              "y": 6,
+              "type": "bifurcator",
+              "movable": true
+          },
+          {
+              "x": 5,
+              "y": 5,
+              "type": "reflector_nw",
+              "movable": true
+          },
+          {
+              "x": 0,
+              "y": 5,
+              "type": "portal_blue",
+              "movable": true,
+              "targetPortalId": "pb9"
+          },
+          {
+              "x": 3,
+              "y": 4,
+              "type": "portal_blue",
+              "movable": true,
+              "portalId": "pb9"
+          },
+          {
+              "x": 6,
+              "y": 3,
+              "type": "reflector_nw",
+              "movable": true
+          }
+      ],
+      "walls": {
+          "cells": [
+              {
+                  "x": 0,
+                  "y": 0
+              },
+              {
+                  "x": 2,
+                  "y": 0
+              },
+              {
+                  "x": 4,
+                  "y": 0
+              },
+              {
+                  "x": 6,
+                  "y": 0
+              },
+              {
+                  "x": 2,
+                  "y": 1
+              },
+              {
+                  "x": 5,
+                  "y": 1
+              },
+              {
+                  "x": 6,
+                  "y": 1
+              },
+              {
+                  "x": 0,
+                  "y": 2
+              },
+              {
+                  "x": 1,
+                  "y": 2
+              },
+              {
+                  "x": 2,
+                  "y": 2
+              },
+              {
+                  "x": 7,
+                  "y": 2
+              },
+              {
+                  "x": 2,
+                  "y": 3
+              },
+              {
+                  "x": 4,
+                  "y": 3
+              },
+              {
+                  "x": 5,
+                  "y": 3
+              },
+              {
+                  "x": 0,
+                  "y": 4
+              },
+              {
+                  "x": 5,
+                  "y": 4
+              },
+              {
+                  "x": 2,
+                  "y": 5
+              },
+              {
+                  "x": 0,
+                  "y": 6
+              },
+              {
+                  "x": 3,
+                  "y": 6
+              },
+              {
+                  "x": 4,
+                  "y": 6
+              },
+              {
+                  "x": 5,
+                  "y": 6
+              },
+              {
+                  "x": 7,
+                  "y": 6
+              }
+          ]
+      },
+      "quiz": [
+          {
+              "q": "¿Qué piezas se desordenaron al convertir el mapa del PDF en puzzle?",
+              "opts": [
+                  "Sólo reflectores, bifurcadores y portales",
+                  "Meteoritos y antenas",
+                  "La nave emisora",
+                  "Todas las celdas"
+              ],
+              "correct": 0
+          },
+          {
+              "q": "¿Por qué los portales se conservan en pares?",
+              "opts": [
+                  "Para mantener el salto del haz entre entradas vinculadas",
+                  "Para duplicar el puntaje",
+                  "Para bloquear meteoritos",
+                  "Para cambiar el tamaño del tablero"
+              ],
+              "correct": 0
+          }
+      ]
+  }
+  ),
 ];
+
 
 // Helper function to get next level(s) based on performance
 export const getAdaptiveNextLevel = (currentLevelIndex, efficiency, totalLevels) => {
