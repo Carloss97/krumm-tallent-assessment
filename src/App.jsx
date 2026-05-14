@@ -9,6 +9,7 @@ import GameShell from './components/GameShell';
 import { GAME_FLOW } from './utils/gameFlow';
 import RecruiterLogin from './components/RecruiterLogin';
 import RecruiterDashboard from './components/RecruiterDashboard';
+import { shouldEnableAppScroll } from './utils/appScrollRoutes';
 import './App.css';
 // Load DevControls only in dev mode so it's not bundled into production builds
 const DevControls = import.meta.env.DEV ? lazy(() => import('./components/DevControls')) : null;
@@ -30,10 +31,7 @@ const DevCameraReport = lazy(() => import('./components/DevCameraReport'));
 // Main App Router and State
 function AppContent() {
   const location = useLocation();
-  const isHome = location.pathname === '/';
-  const isReport = location.pathname === '/report';
-  const isIntro = location.pathname === '/intro' || location.pathname === '/complementary/intro';
-  const shouldScroll = isHome || isReport || isIntro;
+  const shouldScroll = shouldEnableAppScroll(location.pathname);
 
   return (
     <div className="app-layout" style={{ height: '100vh', overflow: 'hidden' }}>

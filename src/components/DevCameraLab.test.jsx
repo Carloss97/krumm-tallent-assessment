@@ -95,6 +95,10 @@ const renderLab = () => render(
 describe('DevCameraLab', () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    mocks.isDevLabEnabled.mockReturnValue(true);
+    mocks.isDevAccessConfigured.mockReturnValue(true);
+    mocks.isDevAccessAllowedHost.mockReturnValue(true);
+    mocks.getDevAccessSession.mockReturnValue(null);
     mocks.looksLikeSha256Hex.mockReturnValue(false);
     Object.defineProperty(window, 'isSecureContext', { configurable: true, value: true });
   });
@@ -147,6 +151,22 @@ describe('DevCameraLab', () => {
 
     expect(await screen.findByText(/pegaste el sha-256/i)).toBeTruthy();
     expect(screen.queryByRole('heading', { name: /development browser lab/i })).not.toBeInTheDocument();
+  });
+
+  it('keeps local diagnostics independently scrollable so the latest safe window remains reachable', () => {
+    mocks.getDevAccessSession.mockReturnValue({ authenticatedAt: 1000, expiresAt: 2000 });
+
+    renderLab();
+
+    fireEvent.click(screen.getByRole('button', { name: /simular ventana segura/i }));
+
+    const localDiagnostic = screen.getByTestId('dev-camera-local-diagnostic');
+    const latestSafeWindow = screen.getByTestId('dev-camera-latest-safe-window');
+
+    expect(localDiagnostic).toHaveStyle({ maxHeight: '260px', overflowY: 'auto', overflowX: 'auto' });
+    expect(latestSafeWindow).toHaveStyle({ maxHeight: '360px', overflowY: 'auto', overflowX: 'auto' });
+    expect(latestSafeWindow).toHaveTextContent(/facial_window_v1/i);
+    expect(latestSafeWindow).toHaveTextContent(/rawVideoStored/i);
   });
 
   it('blocks the lab when the route is opened outside the allowed dev hosts', () => {

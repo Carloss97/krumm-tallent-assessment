@@ -71,6 +71,30 @@ const secondaryButtonStyle = {
   border: '1px solid rgba(148, 163, 184, 0.28)',
 };
 
+const diagnosticPreStyle = {
+  whiteSpace: 'pre-wrap',
+  color: '#bae6fd',
+  margin: 0,
+  fontSize: '12px',
+  lineHeight: 1.5,
+  maxHeight: '260px',
+  overflowY: 'auto',
+  overflowX: 'auto',
+  wordBreak: 'break-word',
+};
+
+const safeWindowPreStyle = {
+  whiteSpace: 'pre-wrap',
+  color: '#d9f99d',
+  margin: 0,
+  fontSize: '12px',
+  lineHeight: 1.5,
+  maxHeight: '360px',
+  overflowY: 'auto',
+  overflowX: 'auto',
+  wordBreak: 'break-word',
+};
+
 const linkStyle = {
   color: '#67e8f9',
   textDecoration: 'none',
@@ -387,7 +411,7 @@ function DevCameraLab() {
   return (
     <div style={shellStyle}>
       <section style={panelStyle}>
-        <header style={{ display: 'flex', justifyContent: 'space-between', gap: '16px', alignItems: 'flex-start', marginBottom: '22px' }}>
+        <header style={{ display: 'flex', justifyContent: 'space-between', gap: '16px', alignItems: 'flex-start', marginBottom: '22px', flexWrap: 'wrap' }}>
           <div>
             <p style={{ color: '#67e8f9', fontWeight: 800, letterSpacing: '0.08em', textTransform: 'uppercase', margin: 0 }}>
               dev.krumm.cl privado
@@ -407,7 +431,7 @@ function DevCameraLab() {
           </div>
         )}
 
-        <div style={{ display: 'grid', gridTemplateColumns: 'minmax(320px, 1.1fr) minmax(280px, 0.9fr)', gap: '18px' }}>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 320px), 1fr))', gap: '18px' }}>
           <div style={cardStyle}>
             <h2 style={{ marginTop: 0 }}>Prueba de cámara local</h2>
             <p style={{ color: '#cbd5e1', lineHeight: 1.6 }}>
@@ -498,7 +522,7 @@ function DevCameraLab() {
 
             <div style={cardStyle}>
               <h2 style={{ marginTop: 0 }}>Diagnóstico local</h2>
-              <pre style={{ whiteSpace: 'pre-wrap', color: '#bae6fd', margin: 0, fontSize: '12px' }}>
+              <pre data-testid="dev-camera-local-diagnostic" style={diagnosticPreStyle}>
                 {telemetryReport ? JSON.stringify(telemetryReport, null, 2) : 'Sin diagnóstico todavía.'}
               </pre>
             </div>
@@ -507,7 +531,7 @@ function DevCameraLab() {
 
         <div style={{ ...cardStyle, marginTop: '18px' }}>
           <h2 style={{ marginTop: 0 }}>Última ventana agregada segura</h2>
-          <pre style={{ whiteSpace: 'pre-wrap', color: '#d9f99d', margin: 0, fontSize: '12px', maxHeight: '360px', overflowY: 'auto' }}>
+          <pre data-testid="dev-camera-latest-safe-window" style={safeWindowPreStyle}>
             {latestWindow ? JSON.stringify(latestWindow, null, 2) : 'Aún no hay ventanas. Inicia la cámara o usa la simulación segura.'}
           </pre>
         </div>
