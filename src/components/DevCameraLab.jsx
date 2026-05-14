@@ -12,6 +12,7 @@ import {
   isDevAccessAllowedHost,
   isDevAccessConfigured,
   isDevLabEnabled,
+  looksLikeSha256Hex,
   setDevAccessSession,
   verifyDevAccessPassword,
 } from '../utils/devAccess';
@@ -73,6 +74,36 @@ const linkStyle = {
   fontWeight: 700,
 };
 
+const CAMERA_PROFILES = {
+  light: {
+    label: 'Liviano — 3 FPS, 320×240',
+    description: 'Recomendado para laptops o sesiones con lag. Suficiente para validar presencia, parpadeos y pose gruesa.',
+    sampleFps: 3,
+    windowMs: 5000,
+    videoWidth: 320,
+    videoHeight: 240,
+    videoFrameRateMax: 3,
+  },
+  balanced: {
+    label: 'Balanceado — 6 FPS, 640×480',
+    description: 'Más muestras por ventana, pero puede sentirse más pesado en máquinas lentas.',
+    sampleFps: 6,
+    windowMs: 5000,
+    videoWidth: 640,
+    videoHeight: 480,
+    videoFrameRateMax: 6,
+  },
+  high: {
+    label: 'Alta carga — 8 FPS, 640×480',
+    description: 'Sólo para validar estrés de rendimiento; no es necesario para QA normal.',
+    sampleFps: 8,
+    windowMs: 5000,
+    videoWidth: 640,
+    videoHeight: 480,
+    videoFrameRateMax: 8,
+  },
+};
+
 const getBrowserFacts = () => {
   if (typeof window === 'undefined') {
     return { host: 'server', secureContext: false, mediaDevices: false };
@@ -98,7 +129,12 @@ function LoginPanel({ onAuthenticated }) {
     try {
       const valid = await verifyDevAccessPassword(password);
       if (!valid) {
-        setError('Clave privada incorrecta. Revisa el valor configurado en VITE_DEV_LAB_PASSWORD_SHA256.');
+        if (looksLikeSha256Hex(password)) {
+          setError('Parece que pegaste el SHA-256. Aquí debes ingresar la clave original que usaste en printf, no el hash. El hash sólo va en VITE_DEV_LAB_PASSWORD_SHA256.');
+          return;
+        }
+
+        setError('Clave privada incorrecta. Ingresa la clave original usada para generar VITE_DEV_LAB_PASSWORD_SHA256. Si acabas de cambiar .env.local, reinicia npm run dev.');
         return;
       }
 
@@ -124,6 +160,11 @@ function LoginPanel({ onAuthenticated }) {
           Este acceso desbloquea herramientas privadas para probar características de development en navegador,
           incluyendo cámara y telemetría facial local. La clave no se guarda; sólo se conserva una sesión local temporal.
         </p>
+        <p style={{ color: '#bae6fd', lineHeight: 1.6, marginTop: '12px' }}>
+          En este campo escribe la clave original. Ejemplo: si configuraste el hash con
+          {' '}<code>printf 'mi-clave' | sha256sum</code>, aquí debes escribir <code>mi-clave</code>,
+          no el SHA-256 resultante.
+        </p>
 
         <form onSubmit={handleSubmit} style={{ display: 'grid', gap: '14px', marginTop: '24px' }}>
           <label htmlFor="dev-private-password" style={{ fontWeight: 700 }}>Clave privada</label>
@@ -134,7 +175,7 @@ function LoginPanel({ onAuthenticated }) {
             value={password}
             onChange={(event) => setPassword(event.target.value)}
             style={inputStyle}
-            placeholder="Ingresa tu clave privada"
+            placeholder="Ingresa la clave original, no el hash SHA-256"
           />
           {error && <div role="alert" style={{ color: '#fecaca' }}>{error}</div>}
           <button type="submit" style={buttonStyle} disabled={isSubmitting || !password}>
@@ -165,11 +206,13 @@ function DevCameraLab() {
   const [session, setSession] = useState(() => getDevAccessSession(window.localStorage));
   const [status, setStatus] = useState('idle');
   const [statusMessage, setStatusMessage] = useState('Listo para pedir permiso de cámara.');
+  const [captureProfile, setCaptureProfile] = useState('light');
   const [facialWindows, setFacialWindows] = useState([]);
   const [telemetryReport, setTelemetryReport] = useState(null);
   const videoRef = useRef(null);
   const captureRef = useRef(null);
   const browserFacts = useMemo(() => getBrowserFacts(), []);
+  const selectedCaptureProfile = CAMERA_PROFILES[captureProfile] || CAMERA_PROFILES.light;
 
   const enabled = isDevLabEnabled();
   const allowedHost = isDevAccessAllowedHost(browserFacts.host);
@@ -208,8 +251,11 @@ function DevCameraLab() {
     const capture = new WebcamCapture(handleFacialWindow, {
       gameId: 'dev_camera_lab',
       sessionId: `dev-camera-${Date.now()}`,
-      sampleFps: 6,
-      windowMs: 5000,
+      sampleFps: selectedCaptureProfile.sampleFps,
+      windowMs: selectedCaptureProfile.windowMs,
+      videoWidth: selectedCaptureProfile.videoWidth,
+      videoHeight: selectedCaptureProfile.videoHeight,
+      videoFrameRateMax: selectedCaptureProfile.videoFrameRateMax,
       logger: console,
     });
 
@@ -318,6 +364,24 @@ function DevCameraLab() {
               blobs, base64 ni landmarks. El callback sólo recibe ventanas agregadas `facial_window_v1`.
             </p>
 
+            <label htmlFor="camera-profile" style={{ display: 'grid', gap: '8px', color: '#e2e8f0', fontWeight: 700, marginBottom: '14px' }}>
+              Perfil de rendimiento
+              <select
+                id="camera-profile"
+                value={captureProfile}
+                onChange={(event) => setCaptureProfile(event.target.value)}
+                disabled={status === 'capturing' || status === 'starting'}
+                style={inputStyle}
+              >
+                {Object.entries(CAMERA_PROFILES).map(([key, profile]) => (
+                  <option key={key} value={key}>{profile.label}</option>
+                ))}
+              </select>
+              <span style={{ color: '#93c5fd', fontWeight: 500, lineHeight: 1.5 }}>
+                {selectedCaptureProfile.description}
+              </span>
+            </label>
+
             <video
               ref={videoRef}
               data-testid="dev-camera-preview"
@@ -356,6 +420,17 @@ function DevCameraLab() {
                 <li>Contexto seguro: <strong>{browserFacts.secureContext ? 'sí' : 'no'}</strong></li>
                 <li>getUserMedia: <strong>{browserFacts.mediaDevices ? 'disponible' : 'no disponible'}</strong></li>
                 <li>Ventanas recibidas: <strong>{facialWindows.length}</strong></li>
+              </ul>
+            </div>
+
+            <div style={cardStyle}>
+              <h2 style={{ marginTop: 0 }}>Qué se está midiendo</h2>
+              <ul style={{ color: '#cbd5e1', lineHeight: 1.7, paddingLeft: '20px', marginBottom: 0 }}>
+                <li><strong>Presencia de rostro:</strong> porcentaje de muestras donde se detecta una cara.</li>
+                <li><strong>Parpadeos:</strong> estimación agregada por minuto desde blendshapes de ojos.</li>
+                <li><strong>Pose de cabeza:</strong> yaw/pitch/roll son giro horizontal, inclinación vertical y rotación; <strong>yaw no significa bostezo</strong>.</li>
+                <li><strong>Estabilidad visual:</strong> variación de la pose y ratio fuera de pantalla/cara desviada.</li>
+                <li><strong>Calidad/confianza:</strong> baja con poca luz, baja cobertura, muchas caras o pocas muestras.</li>
               </ul>
             </div>
 

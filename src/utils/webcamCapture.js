@@ -15,6 +15,8 @@ import { assertFacialWindowPrivacySafe, createFacialWindow } from '../telemetry/
 
 const DEFAULT_SAMPLE_FPS = 6;
 const DEFAULT_WINDOW_MS = 5000;
+const DEFAULT_VIDEO_WIDTH = 640;
+const DEFAULT_VIDEO_HEIGHT = 480;
 const MAX_SAMPLE_FPS = 10;
 const MIN_SAMPLE_FPS = 1;
 
@@ -81,6 +83,9 @@ export class WebcamCapture {
     this.sampleFps = clamp(options.sampleFps ?? DEFAULT_SAMPLE_FPS, MIN_SAMPLE_FPS, MAX_SAMPLE_FPS);
     this.sampleIntervalMs = Math.max(50, Math.round(1000 / this.sampleFps));
     this.windowMs = Math.max(1000, Number(options.windowMs) || DEFAULT_WINDOW_MS);
+    this.videoWidth = Math.round(clamp(options.videoWidth ?? DEFAULT_VIDEO_WIDTH, 160, 1280));
+    this.videoHeight = Math.round(clamp(options.videoHeight ?? DEFAULT_VIDEO_HEIGHT, 120, 720));
+    this.videoFrameRateMax = clamp(options.videoFrameRateMax ?? this.sampleFps, MIN_SAMPLE_FPS, MAX_SAMPLE_FPS);
     this.source = options.source || FACE_LANDMARKER_SOURCE;
     this.logger = options.logger || console;
 
@@ -124,6 +129,9 @@ export class WebcamCapture {
       emittedWindows: 0,
       sampleFps: this.sampleFps,
       windowMs: this.windowMs,
+      videoWidth: this.videoWidth,
+      videoHeight: this.videoHeight,
+      videoFrameRateMax: this.videoFrameRateMax,
     };
   }
 
@@ -143,9 +151,9 @@ export class WebcamCapture {
 
       this.stream = await navigator.mediaDevices.getUserMedia({
         video: {
-          width: { ideal: 640 },
-          height: { ideal: 480 },
-          frameRate: { ideal: this.sampleFps, max: MAX_SAMPLE_FPS },
+          width: { ideal: this.videoWidth },
+          height: { ideal: this.videoHeight },
+          frameRate: { ideal: this.sampleFps, max: this.videoFrameRateMax },
           facingMode: 'user',
         },
         audio: false,
@@ -375,6 +383,9 @@ export class WebcamCapture {
       source: this.source,
       sampleFps: this.sampleFps,
       windowMs: this.windowMs,
+      videoWidth: this.videoWidth,
+      videoHeight: this.videoHeight,
+      videoFrameRateMax: this.videoFrameRateMax,
       qualityFlags: [...this.runtimeQualityFlags],
     };
   }

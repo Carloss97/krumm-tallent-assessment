@@ -207,7 +207,10 @@ describe('WebcamCapture facial telemetry integration', () => {
 
     const capture = new WebcamCapture(onWindowCapture, {
       gameId: 'sst_game_2',
-      sampleFps: 6,
+      sampleFps: 3,
+      videoWidth: 320,
+      videoHeight: 240,
+      videoFrameRateMax: 3,
       scheduleNextFrame: false,
       now: () => 1500,
       faceLandmarkerClient,
@@ -216,7 +219,15 @@ describe('WebcamCapture facial telemetry integration', () => {
     });
 
     await expect(capture.initialize(videoElement)).resolves.toBe(true);
-    expect(getUserMedia).toHaveBeenCalledWith(expect.objectContaining({ audio: false }));
+    expect(getUserMedia).toHaveBeenCalledWith(expect.objectContaining({
+      audio: false,
+      video: expect.objectContaining({
+        width: { ideal: 320 },
+        height: { ideal: 240 },
+        frameRate: { ideal: 3, max: 3 },
+        facingMode: 'user',
+      }),
+    }));
     expect(videoElement.srcObject).toBe(stream);
     expect(faceLandmarkerClient.initialize).toHaveBeenCalledTimes(1);
 

@@ -6,7 +6,13 @@ const DEFAULT_ALLOWED_HOSTS = 'localhost,127.0.0.1,::1,dev.krumm.cl';
 const getEnv = () => (typeof import.meta !== 'undefined' ? import.meta.env || {} : {});
 
 export function normalizeSha256(value = '') {
-  return String(value || '').trim().toLowerCase();
+  const normalized = String(value || '').trim().toLowerCase();
+  const sha256sumOutput = normalized.match(/^([a-f0-9]{64})(?:\s+[-*]?.*)?$/);
+  return sha256sumOutput ? sha256sumOutput[1] : normalized;
+}
+
+export function looksLikeSha256Hex(value = '') {
+  return /^[a-f0-9]{64}$/i.test(String(value || '').trim());
 }
 
 export function getConfiguredDevAccessHash() {

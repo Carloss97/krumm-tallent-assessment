@@ -13,6 +13,7 @@ const mocks = vi.hoisted(() => ({
   setDevAccessSession: vi.fn(),
   clearDevAccessSession: vi.fn(),
   createDevAccessSession: vi.fn(() => ({ authenticatedAt: 1000, expiresAt: 2000 })),
+  looksLikeSha256Hex: vi.fn(() => false),
   initialize: vi.fn(() => Promise.resolve(true)),
   startCapture: vi.fn(),
   cleanup: vi.fn(),
@@ -27,6 +28,7 @@ vi.mock('../utils/devAccess', () => ({
   setDevAccessSession: mocks.setDevAccessSession,
   clearDevAccessSession: mocks.clearDevAccessSession,
   createDevAccessSession: mocks.createDevAccessSession,
+  looksLikeSha256Hex: mocks.looksLikeSha256Hex,
 }));
 
 vi.mock('../utils/webcamCapture', () => ({
@@ -93,6 +95,7 @@ const renderLab = () => render(
 describe('DevCameraLab', () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    mocks.looksLikeSha256Hex.mockReturnValue(false);
     Object.defineProperty(window, 'isSecureContext', { configurable: true, value: true });
   });
 
@@ -129,6 +132,21 @@ describe('DevCameraLab', () => {
     expect((await screen.findAllByText(/facial_window_v1/i)).length).toBeGreaterThan(0);
     expect(screen.getAllByText(/rawVideoStored/i).length).toBeGreaterThan(0);
     expect(screen.queryByText(/faceLandmarks/i)).not.toBeInTheDocument();
+  });
+
+  it('explains that a pasted SHA-256 hash is not the browser login password', async () => {
+    mocks.verifyDevAccessPassword.mockResolvedValue(false);
+    mocks.looksLikeSha256Hex.mockReturnValue(true);
+
+    renderLab();
+
+    fireEvent.change(screen.getByLabelText(/clave privada/i), {
+      target: { value: '6311eb28fd635243bd89c8c58c7a408636c0bc32c759cbc146d480c63f538fbc' },
+    });
+    fireEvent.click(screen.getByRole('button', { name: /entrar/i }));
+
+    expect(await screen.findByText(/pegaste el sha-256/i)).toBeTruthy();
+    expect(screen.queryByRole('heading', { name: /development browser lab/i })).not.toBeInTheDocument();
   });
 
   it('blocks the lab when the route is opened outside the allowed dev hosts', () => {

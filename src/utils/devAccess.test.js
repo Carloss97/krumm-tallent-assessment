@@ -4,6 +4,8 @@ import {
   DEV_ACCESS_SESSION_TTL_MS,
   getDevAccessSession,
   isDevAccessAllowedHost,
+  looksLikeSha256Hex,
+  normalizeSha256,
   setDevAccessSession,
   verifyDevAccessPassword,
 } from './devAccess';
@@ -23,6 +25,12 @@ describe('dev access utilities', () => {
   it('validates a password against a configured SHA-256 hash without storing the plain password', async () => {
     await expect(verifyDevAccessPassword('camera-secret', CAMERA_SECRET_SHA256)).resolves.toBe(true);
     await expect(verifyDevAccessPassword('wrong-secret', CAMERA_SECRET_SHA256)).resolves.toBe(false);
+  });
+
+  it('normalizes common sha256sum output but still detects raw SHA-256 text pasted as login input', () => {
+    expect(normalizeSha256(`${CAMERA_SECRET_SHA256}  -`)).toBe(CAMERA_SECRET_SHA256);
+    expect(looksLikeSha256Hex(CAMERA_SECRET_SHA256)).toBe(true);
+    expect(looksLikeSha256Hex('camera-secret')).toBe(false);
   });
 
   it('only allows the development lab on explicit development hosts', () => {
