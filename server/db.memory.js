@@ -1,4 +1,5 @@
 // In-memory DB adapter for local development and CI where native bindings may fail
+import { extractGamesFromSessionPayload } from './sessionGameExtraction.js';
 const memory = {
   participants: new Map(),
   sessions: [],
@@ -37,7 +38,7 @@ export const saveSession = (payload) => {
   };
   memory.sessions.push(rec);
 
-  const games = Object.entries(payload || {}).filter(([k]) => /^game\d+$/i.test(k));
+  const games = extractGamesFromSessionPayload(payload);
   games.forEach(([gameId, gameData]) => {
     memory.metrics.push({ session_id: id, game_id: gameId, score: gameData?.score || 0, errors: gameData?.errors || 0, metrics: JSON.stringify(gameData) });
   });

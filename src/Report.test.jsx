@@ -186,6 +186,10 @@ describe('Report Component', () => {
                 completedGameCount: 7,
               }),
             }),
+            edgeLocalModelOutput: expect.objectContaining({
+              type: 'edge_local_model_output_v1',
+              decisionPolicy: 'human_review_only',
+            }),
           }),
         }));
       },

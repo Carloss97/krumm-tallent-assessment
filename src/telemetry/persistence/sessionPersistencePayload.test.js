@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { createFacialWindow, assertTelemetryPayloadPrivacySafe } from '../facial/facialTelemetrySchema';
+import { createEdgeLocalModelOutputV1, EDGE_LOCAL_MODEL_OUTPUT_TYPE } from '../model/edgeLocalModelContract';
 import { buildSessionPersistencePayload } from './sessionPersistencePayload';
 
 const makeMetadata = () => ({
@@ -74,6 +75,42 @@ describe('buildSessionPersistencePayload', () => {
     expect(JSON.stringify(payload)).not.toContain('data:image');
     expect(JSON.stringify(payload)).not.toContain('faceLandmarks');
     expect(JSON.stringify(payload)).not.toContain('srcObject');
+  });
+
+  it('persists the edge-local model output alongside the feature vector as metadata only', () => {
+    const edgeLocalModelOutput = createEdgeLocalModelOutputV1({
+      scorePercent: 74,
+      confidenceScore: 68,
+      latencyMs: 22,
+      modelLoaded: true,
+      qualityFlags: ['low_light'],
+      caveats: ['Low lighting reduced facial signal quality.'],
+    }, { generatedAtMs: 1770000000100 });
+
+    const payload = buildSessionPersistencePayload({
+      participant: { participantId: 'candidate-edge-output' },
+      telemetry: { game1: { score: 74, duration: 60000 } },
+      reportData: {},
+      metadata: makeMetadata(),
+      edgeLocalModelOutput,
+      generatedAtMs: 1770000000000,
+    });
+
+    expect(payload.sessionData.edgeLocalModelOutput).toMatchObject({
+      type: EDGE_LOCAL_MODEL_OUTPUT_TYPE,
+      scorePercent: 74,
+      confidenceScore: 68,
+      decisionPolicy: 'human_review_only',
+      privacy: expect.objectContaining({
+        source: 'aggregate_metadata_only',
+        rawVideoStored: false,
+        rawFramesStored: false,
+        landmarksStored: false,
+      }),
+    });
+    expect(payload.sessionData.edgeLocalModelOutput).not.toHaveProperty('hireDecision');
+    expect(() => assertTelemetryPayloadPrivacySafe(payload)).not.toThrow();
+    expect(JSON.stringify(payload)).not.toMatch(/"rawFrame"|"faceLandmarks"|"normalizedLandmarks"|data:image|base64/i);
   });
 
   it('fails closed when telemetry would make the backend payload privacy-unsafe', () => {

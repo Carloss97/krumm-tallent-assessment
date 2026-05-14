@@ -1,21 +1,102 @@
 {
   "name": "edge-local-report",
+  "runtimeModelVersion": "2026-05-14.contract-v1",
+  "modelSizeMb": 0.018,
+  "runtimeFeatureOrder": [
+    "completedGameCount",
+    "meanScore",
+    "totalTrialEvents",
+    "meanReactionTimeMs",
+    "meanAccuracyProxy",
+    "meanDurationSec",
+    "meanCursorVelocity",
+    "totalHesitationCount",
+    "meanFacialCoverage",
+    "meanWebcamSignalQuality",
+    "meanFacialConfidence",
+    "meanBlinkRatePerMin",
+    "meanVisualStability",
+    "meanOffScreenOrFaceAwayPercent",
+    "meanHeadPoseVariability",
+    "meanMicroGestureActivity",
+    "meanAttentionStabilityProxy",
+    "meanCognitiveLoadProxy",
+    "meanFatigueProxy"
+  ],
   "featureOrder": [
-    "avgScore",
-    "meanDuration",
-    "meanConfidence",
-    "readinessMean",
-    "telemetryCoverage",
-    "stabilityScore",
-    "numGames"
+    "completedGameCount",
+    "meanScore",
+    "totalTrialEvents",
+    "meanReactionTimeMs",
+    "meanAccuracyProxy",
+    "meanDurationSec",
+    "meanCursorVelocity",
+    "totalHesitationCount",
+    "meanFacialCoverage",
+    "meanWebcamSignalQuality",
+    "meanFacialConfidence",
+    "meanBlinkRatePerMin",
+    "meanVisualStability",
+    "meanOffScreenOrFaceAwayPercent",
+    "meanHeadPoseVariability",
+    "meanMicroGestureActivity",
+    "meanAttentionStabilityProxy",
+    "meanCognitiveLoadProxy",
+    "meanFatigueProxy"
   ],
   "inputShape": [
     1,
-    7
+    19
   ],
   "outputShape": [
     1,
     1
   ],
-  "description": "Tiny linear ONNX model used by the browser worker for demo report inference."
+  "description": "Tiny baseline ONNX model used by the browser worker for metadata-only local report inference. It consumes aggregate features only and is not a validated hiring predictor.",
+  "contractVersion": "1.0.0",
+  "contractFeatureOrder": [
+    "completedGameCount",
+    "meanScore",
+    "totalTrialEvents",
+    "meanReactionTimeMs",
+    "meanAccuracyProxy",
+    "meanDurationSec",
+    "meanCursorVelocity",
+    "totalHesitationCount",
+    "meanFacialCoverage",
+    "meanWebcamSignalQuality",
+    "meanFacialConfidence",
+    "meanBlinkRatePerMin",
+    "meanVisualStability",
+    "meanOffScreenOrFaceAwayPercent",
+    "meanHeadPoseVariability",
+    "meanMicroGestureActivity",
+    "meanAttentionStabilityProxy",
+    "meanCognitiveLoadProxy",
+    "meanFatigueProxy"
+  ],
+  "calibrationStatus": "baseline_not_validated",
+  "privacy": {
+    "source": "aggregate_metadata_only",
+    "rawVideoStored": false,
+    "rawFramesStored": false,
+    "landmarksStored": false,
+    "audioCaptured": false
+  },
+  "allowedSignalGroups": [
+    "game_results",
+    "trial_timing_accuracy",
+    "cursor_interaction_aggregates",
+    "facial_signal_quality_aggregates",
+    "microgesture_aggregate_blendshape_groups",
+    "model_quality_flags"
+  ],
+  "prohibitedClaims": [
+    "lie_detection",
+    "true_emotion_detection",
+    "personality_inference",
+    "mental_health_diagnosis",
+    "innate_intelligence_claim",
+    "automatic_hiring_decision"
+  ]
 }

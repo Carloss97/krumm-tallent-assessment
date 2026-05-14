@@ -1,7 +1,15 @@
 import { buildAssessmentFeatureVectorV1 } from '../telemetry/features/assessmentFeatureVector';
+import {
+  EDGE_LOCAL_CALIBRATION_STATUS,
+  EDGE_LOCAL_MODEL_FEATURE_ORDER,
+  EDGE_LOCAL_MODEL_SIZE_MB,
+  EDGE_LOCAL_MODEL_VERSION,
+  buildEdgeLocalModelInputV1,
+  createEdgeLocalModelOutputV1,
+} from '../telemetry/model/edgeLocalModelContract';
 
-const EDGE_MODEL_NAME = 'edge-linear-v1';
-const EDGE_MODEL_SIZE_MB = 0.018;
+const EDGE_MODEL_NAME = EDGE_LOCAL_MODEL_VERSION;
+const EDGE_MODEL_SIZE_MB = EDGE_LOCAL_MODEL_SIZE_MB;
 const EDGE_LOCAL_MODEL_URL = typeof import.meta !== 'undefined' && import.meta.env?.VITE_EDGE_LOCAL_MODEL_URL
   ? import.meta.env.VITE_EDGE_LOCAL_MODEL_URL
   : '/models/edge-local-report.onnx';
@@ -236,6 +244,16 @@ export function generateEdgeLocalReport(sessionData, language = 'en') {
   const assessmentFeatureVector = buildAssessmentFeatureVectorV1(sessionData, {
     generatedAtMs: Date.now(),
   });
+  const edgeLocalModelOutput = createEdgeLocalModelOutputV1({
+    scorePercent: avgScore,
+    confidenceScore,
+    latencyMs,
+    modelLoaded: false,
+    runtime: 'heuristic-edge-local',
+    qualityFlags: signalAudit.qualityFlags,
+    caveats: signalAudit.caveats,
+    calibrationStatus: EDGE_LOCAL_CALIBRATION_STATUS,
+  });
 
   return {
     summary,
@@ -262,6 +280,7 @@ export function generateEdgeLocalReport(sessionData, language = 'en') {
       biometricSignalQualityScore,
     },
     assessmentFeatureVector,
+    edgeLocalModelOutput,
   };
 }
 
@@ -381,6 +400,34 @@ export function buildEdgeLocalLiveInsight(rawTelemetry) {
 }
 
 /**
+ * Build the metadata-only worker payload for contract-v1 local inference.
+ * This is a pure bridge: session telemetry -> assessment_feature_vector_v1 -> edge_local_model_input_v1.
+ */
+export function buildEdgeLocalWorkerInferencePayload(sessionData, language = 'en', options = {}) {
+  const generatedAtMs = Number.isFinite(options.generatedAtMs) ? options.generatedAtMs : Date.now();
+  const assessmentFeatureVector = buildAssessmentFeatureVectorV1(sessionData, {
+    participantId: options.participantId ?? null,
+    sessionId: options.sessionId ?? null,
+    generatedAtMs,
+  });
+  const modelInput = buildEdgeLocalModelInputV1(assessmentFeatureVector, {
+    generatedAtMs,
+    calibrationStatus: options.calibrationStatus || EDGE_LOCAL_CALIBRATION_STATUS,
+  });
+  const gameIds = Object.keys(sessionData || {}).filter((key) => key !== 'futureModules');
+  const signalAudit = buildFacialSignalAudit(sessionData, gameIds, language);
+
+  return {
+    assessmentFeatureVector,
+    modelInput,
+    features: modelInput.features,
+    featureArray: modelInput.featureArray,
+    featureOrder: modelInput.featureOrder,
+    signalAudit,
+  };
+}
+
+/**
  * Attempt to run a lightweight edge-inference using a WebWorker (PoC).
  * Falls back to `generateEdgeLocalReport` on timeout or failure.
  * @param {Object} sessionData
@@ -388,29 +435,17 @@ export function buildEdgeLocalLiveInsight(rawTelemetry) {
  * @param {Object} options
  */
 export async function generateEdgeLocalReportModel(sessionData, language = 'en', options = {}) {
-  // Derive simple features to send to the worker
+  // Derive contract-v1 aggregate metadata features to send to the worker.
   try {
-    const gameIds = Object.keys(sessionData || {}).filter((k) => k !== 'futureModules');
-    const games = gameIds.map((id) => sessionData[id]).filter(Boolean);
-    const numGames = games.length;
-    const avgScore = games.length > 0 ? Math.round(games.reduce((s, g) => s + (Number.isFinite(g.score) ? g.score : (Number.isFinite(g.confidence) ? g.confidence : 0)), 0) / games.length) : 0;
-    const meanDuration = games.length > 0 ? Math.round(games.reduce((s, g) => s + (Number.isFinite(g.duration) ? g.duration : 0), 0) / games.length) : 0;
-    const meanConfidence = games.length > 0 ? Math.round(games.reduce((s, g) => s + (Number.isFinite(g.confidence) ? g.confidence : 0), 0) / games.length) : 0;
-    const readinessMean = games.length > 0 ? Math.round(games.reduce((s, g) => s + (Number.isFinite(g.readinessScore) ? g.readinessScore : 0), 0) / games.length) : 0;
-    const telemetryCoverage = Math.min(100, Math.round((numGames / 7) * 100));
-    const signalAudit = buildFacialSignalAudit(sessionData, gameIds, language);
-    const stabilityScore = signalAudit.biometricSignalQualityScore;
-
-    const features = {
-      avgScore,
-      meanDuration,
-      meanConfidence,
-      readinessMean,
-      telemetryCoverage,
-      stabilityScore,
-      numGames,
-    };
-    const featureOrder = ['avgScore', 'meanDuration', 'meanConfidence', 'readinessMean', 'telemetryCoverage', 'stabilityScore', 'numGames'];
+    const {
+      assessmentFeatureVector,
+      features,
+      featureArray,
+      featureOrder,
+      signalAudit,
+    } = buildEdgeLocalWorkerInferencePayload(sessionData, language, options);
+    const numGames = features.completedGameCount;
+    const telemetryCoverageScore = Math.min(100, Math.round((numGames / 7) * 100));
 
     // Try to spin up worker
     if (typeof Worker === 'undefined') {
@@ -448,7 +483,7 @@ export async function generateEdgeLocalReportModel(sessionData, language = 'en',
 
       // Send infer request
       try {
-        worker.postMessage({ type: 'infer', id, features, featureOrder, initResult });
+        worker.postMessage({ type: 'infer', id, features, featureArray, featureOrder, initResult });
       } catch (err) {
         clearTimeout(to);
         worker.removeEventListener('message', onMessage);
@@ -475,6 +510,17 @@ export async function generateEdgeLocalReportModel(sessionData, language = 'en',
         recommendation = getLocalizedLabels(language).recommendations.conditional;
       }
 
+      const edgeLocalModelOutput = createEdgeLocalModelOutputV1({
+        scorePercent: result.scorePercent,
+        confidenceScore,
+        latencyMs,
+        modelLoaded: result.modelLoaded,
+        runtime: result.source || 'onnxruntime-web-worker',
+        qualityFlags: signalAudit.qualityFlags,
+        caveats: signalAudit.caveats,
+        calibrationStatus: EDGE_LOCAL_CALIBRATION_STATUS,
+      });
+
       return {
         summary: `${getLocalizedLabels(language).summaryPrefix} ${recommendation.toLowerCase()}. ${getLocalizedLabels(language).confidencePrefix} (${confidenceScore}%).`,
         strengths: [],
@@ -484,16 +530,18 @@ export async function generateEdgeLocalReportModel(sessionData, language = 'en',
         recommendation,
         source: 'edge-local',
         runtime: {
-          model: 'onnx-worker-poc',
-          sizeMb: 0,
+          model: EDGE_MODEL_NAME,
+          sizeMb: EDGE_MODEL_SIZE_MB,
           latencyMs,
           processedAt: new Date().toISOString(),
         },
         signalAudit: {
-          telemetryCoverageScore: features.telemetryCoverage,
+          telemetryCoverageScore,
           ...signalAudit,
-          biometricSignalQualityScore: features.stabilityScore,
-        }
+          biometricSignalQualityScore: signalAudit.biometricSignalQualityScore,
+        },
+        assessmentFeatureVector,
+        edgeLocalModelOutput,
       };
     } catch {
       // Worker failed or timed out — fallback to heuristic
@@ -510,7 +558,7 @@ export async function preloadEdgeLocalModel(options = {}) {
   const modelUrl = options.modelUrl || EDGE_LOCAL_MODEL_URL;
   const featureOrder = Array.isArray(options.featureOrder) && options.featureOrder.length > 0
     ? [...options.featureOrder]
-    : ['avgScore', 'meanDuration', 'meanConfidence', 'readinessMean', 'telemetryCoverage', 'stabilityScore', 'numGames'];
+    : [...EDGE_LOCAL_MODEL_FEATURE_ORDER];
 
   if (typeof Worker === 'undefined') {
     return { worker: null, initResult: { type: 'worker-unavailable' } };

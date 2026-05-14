@@ -1,6 +1,15 @@
 import { describe, it, expect, vi, afterEach } from 'vitest';
-import { buildEdgeLocalLiveInsight, generateEdgeLocalReport } from './edgeLocalInferenceService';
+import {
+  buildEdgeLocalLiveInsight,
+  buildEdgeLocalWorkerInferencePayload,
+  generateEdgeLocalReport,
+} from './edgeLocalInferenceService';
 import { createFacialWindow } from '../telemetry/facial/facialTelemetrySchema';
+import {
+  EDGE_LOCAL_MODEL_FEATURE_ORDER,
+  EDGE_LOCAL_MODEL_INPUT_TYPE,
+  EDGE_LOCAL_MODEL_OUTPUT_TYPE,
+} from '../telemetry/model/edgeLocalModelContract';
 
 afterEach(() => {
   vi.restoreAllMocks();
@@ -84,6 +93,65 @@ describe('buildEdgeLocalLiveInsight', () => {
   });
 });
 
+describe('buildEdgeLocalWorkerInferencePayload', () => {
+  it('bridges session telemetry to the contract feature array for worker inference', () => {
+    const facialWindow = createFacialWindow({
+      gameId: 'ospan_game_1',
+      durationMs: 5000,
+      sampleCount: 10,
+      quality: {
+        facePresenceRatio: 0.9,
+        meanDetectionConfidence: 0.84,
+        signalQualityScore: 82,
+        flags: [],
+      },
+      facialSignals: {
+        blinkRatePerMin: 18,
+        visualStabilityScore: 80,
+        offScreenOrFaceAwayRatio: 0.08,
+        headPose: { yawStdDeg: 4, pitchStdDeg: 3, rollStdDeg: 2 },
+        microGestureActivityScore: 31,
+      },
+      derivedProxies: {
+        attentionStabilityProxy: 77,
+        cognitiveLoadProxy: 44,
+        fatigueProxy: 20,
+      },
+      confidence: {
+        windowConfidence: 0.8,
+        interpretationAllowed: true,
+      },
+    });
+
+    const payload = buildEdgeLocalWorkerInferencePayload({
+      game1: {
+        score: 88,
+        duration: 60000,
+        cursorMetrics: { avgVelocity: 140, hesitationCount: 2 },
+        trialEvents: [
+          { reactionTimeMs: 410, isCorrect: true },
+          { reactionTimeMs: 520, isCorrect: false },
+        ],
+        facialWindows: [facialWindow],
+      },
+    }, 'en', { generatedAtMs: 999 });
+
+    expect(payload.modelInput.type).toBe(EDGE_LOCAL_MODEL_INPUT_TYPE);
+    expect(payload.featureOrder).toEqual(EDGE_LOCAL_MODEL_FEATURE_ORDER);
+    expect(payload.featureArray).toEqual(payload.modelInput.featureArray);
+    expect(payload.features).toEqual(payload.modelInput.features);
+    expect(payload.features).toMatchObject({
+      completedGameCount: 1,
+      meanScore: 88,
+      totalTrialEvents: 2,
+      meanFacialCoverage: 90,
+      meanWebcamSignalQuality: 82,
+      meanMicroGestureActivity: 31,
+    });
+    expect(JSON.stringify(payload)).not.toMatch(/"rawFrame"|"faceLandmarks"|"normalizedLandmarks"|data:image|base64/i);
+  });
+});
+
 describe('generateEdgeLocalReport facial signal audit', () => {
   it('derives biometric signal quality from aggregate facial windows', () => {
     const sessionData = {
@@ -125,6 +193,13 @@ describe('generateEdgeLocalReport facial signal audit', () => {
         meanFacialCoverage: 80,
       },
     });
+    expect(report.edgeLocalModelOutput).toMatchObject({
+      type: EDGE_LOCAL_MODEL_OUTPUT_TYPE,
+      decisionPolicy: 'human_review_only',
+      model: expect.objectContaining({ calibrationStatus: 'baseline_not_validated' }),
+      privacy: expect.objectContaining({ rawVideoStored: false, rawFramesStored: false }),
+    });
+    expect(report.edgeLocalModelOutput).not.toHaveProperty('hireDecision');
   });
 
   it('surfaces camera and local model failures as explicit interpretation caveats', () => {

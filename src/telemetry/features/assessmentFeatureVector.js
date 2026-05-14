@@ -79,6 +79,26 @@ const summarizeTrialEvents = (trialEvents = []) => {
   };
 };
 
+const getHeadPoseVariability = (window = {}) => {
+  const pose = window?.facialSignals?.headPose || {};
+  return average([
+    pose.yawStdDeg,
+    pose.pitchStdDeg,
+    pose.rollStdDeg,
+  ].filter(Number.isFinite), 1);
+};
+
+const getMicroGestureActivity = (window = {}) => {
+  const explicitScore = window?.facialSignals?.microGestureActivityScore;
+  if (Number.isFinite(explicitScore)) return clampPercent(explicitScore);
+
+  const blinkAsymmetry = Number.isFinite(window?.facialSignals?.blinkAsymmetryMean)
+    ? window.facialSignals.blinkAsymmetryMean * 100
+    : null;
+  const headPoseVariability = getHeadPoseVariability(window);
+  return average([blinkAsymmetry, headPoseVariability].filter(Number.isFinite), 1);
+};
+
 const summarizeFacialWindows = (facialWindows = []) => {
   const qualityFlags = unique(facialWindows.flatMap((window) => window?.quality?.flags || []));
   const coverageMean = average(
@@ -93,6 +113,32 @@ const summarizeFacialWindows = (facialWindows = []) => {
     facialWindows.map((window) => normalizeRatioToPercent(window?.confidence?.windowConfidence)),
     1,
   );
+  const blinkRatePerMinMean = average(
+    facialWindows.map((window) => window?.facialSignals?.blinkRatePerMin).filter(Number.isFinite),
+    1,
+  );
+  const visualStabilityMean = average(
+    facialWindows.map((window) => window?.facialSignals?.visualStabilityScore).filter(Number.isFinite),
+    1,
+  );
+  const offScreenOrFaceAwayPercentMean = average(
+    facialWindows.map((window) => normalizeRatioToPercent(window?.facialSignals?.offScreenOrFaceAwayRatio)),
+    1,
+  );
+  const headPoseVariabilityMean = average(facialWindows.map(getHeadPoseVariability), 1);
+  const microGestureActivityMean = average(facialWindows.map(getMicroGestureActivity), 1);
+  const attentionStabilityProxyMean = average(
+    facialWindows.map((window) => window?.derivedProxies?.attentionStabilityProxy).filter(Number.isFinite),
+    1,
+  );
+  const cognitiveLoadProxyMean = average(
+    facialWindows.map((window) => window?.derivedProxies?.cognitiveLoadProxy).filter(Number.isFinite),
+    1,
+  );
+  const fatigueProxyMean = average(
+    facialWindows.map((window) => window?.derivedProxies?.fatigueProxy).filter(Number.isFinite),
+    1,
+  );
   const interpretationAllowed = facialWindows.length > 0
     && facialWindows.every((window) => window?.confidence?.interpretationAllowed !== false)
     && coverageMean >= 60
@@ -105,6 +151,14 @@ const summarizeFacialWindows = (facialWindows = []) => {
     coverageMean,
     signalQualityMean,
     confidenceMean,
+    blinkRatePerMinMean,
+    visualStabilityMean,
+    offScreenOrFaceAwayPercentMean,
+    headPoseVariabilityMean,
+    microGestureActivityMean,
+    attentionStabilityProxyMean,
+    cognitiveLoadProxyMean,
+    fatigueProxyMean,
     qualityFlags,
     interpretationAllowed,
   };
@@ -148,6 +202,14 @@ const buildGameFeatureVector = ([sourceKey, snapshot]) => {
       coverageMean: facial.coverageMean,
       signalQualityMean: facial.signalQualityMean,
       confidenceMean: facial.confidenceMean,
+      blinkRatePerMinMean: facial.blinkRatePerMinMean,
+      visualStabilityMean: facial.visualStabilityMean,
+      offScreenOrFaceAwayPercentMean: facial.offScreenOrFaceAwayPercentMean,
+      headPoseVariabilityMean: facial.headPoseVariabilityMean,
+      microGestureActivityMean: facial.microGestureActivityMean,
+      attentionStabilityProxyMean: facial.attentionStabilityProxyMean,
+      cognitiveLoadProxyMean: facial.cognitiveLoadProxyMean,
+      fatigueProxyMean: facial.fatigueProxyMean,
     },
     quality: {
       interpretationAllowed: facial.interpretationAllowed && !qualityFlags.includes('insufficient_facial_coverage'),

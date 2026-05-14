@@ -62,6 +62,7 @@ export function buildSessionPersistencePayload({
   metadata,
   completedAt,
   generatedAtMs,
+  edgeLocalModelOutput = null,
 } = {}) {
   const safeMetadata = metadata && typeof metadata === 'object'
     ? metadata
@@ -71,6 +72,9 @@ export function buildSessionPersistencePayload({
   const completedAtValue = completedAt || nowIso();
   const sanitizedTelemetry = sanitizeTelemetryForPersistence(telemetry || {});
   const sanitizedReportData = sanitizeTelemetryForPersistence(reportData || {});
+  const sanitizedEdgeLocalModelOutput = edgeLocalModelOutput
+    ? sanitizeTelemetryForPersistence(edgeLocalModelOutput)
+    : null;
   const assessmentFeatureVector = buildAssessmentFeatureVectorV1(sanitizedTelemetry, {
     participantId: participantId ?? null,
     sessionId: toScalarId(safeMetadata.sessionId),
@@ -87,6 +91,7 @@ export function buildSessionPersistencePayload({
       report: sanitizedReportData,
       demoSummary,
       assessmentFeatureVector,
+      edgeLocalModelOutput: sanitizedEdgeLocalModelOutput,
     },
     metadata: safeMetadata,
   };

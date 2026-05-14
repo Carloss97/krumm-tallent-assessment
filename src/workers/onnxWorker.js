@@ -50,6 +50,54 @@ async function loadModel(url, options = {}) {
 }
 
 function deterministicScore(features) {
+  const clamp = (value, min = 0, max = 100) => {
+    const numeric = Number(value);
+    if (!Number.isFinite(numeric)) return min;
+    return Math.max(min, Math.min(max, numeric));
+  };
+  const average = (values) => {
+    const finite = values.map(Number).filter(Number.isFinite);
+    if (finite.length === 0) return 0;
+    return finite.reduce((sum, value) => sum + value, 0) / finite.length;
+  };
+
+  if ('completedGameCount' in features || 'meanScore' in features) {
+    const completedCoverage = clamp((Number(features.completedGameCount || 0) / 7) * 100);
+    const signalQuality = average([
+      features.meanFacialCoverage,
+      features.meanWebcamSignalQuality,
+      features.meanFacialConfidence,
+      features.meanVisualStability,
+      features.meanAttentionStabilityProxy,
+    ]);
+    const interactionQuality = clamp(100 - (Number(features.totalHesitationCount || 0) * 3));
+    const loadPenalty = average([
+      Number(features.meanOffScreenOrFaceAwayPercent || 0),
+      Number(features.meanHeadPoseVariability || 0) * 4,
+      Number(features.meanFatigueProxy || 0) * 0.25,
+    ]);
+
+    const rawScore = (
+      clamp(features.meanScore) * 0.42
+      + clamp(features.meanAccuracyProxy) * 0.16
+      + signalQuality * 0.18
+      + completedCoverage * 0.12
+      + interactionQuality * 0.08
+      + clamp(features.meanCognitiveLoadProxy) * 0.04
+      - loadPenalty * 0.12
+    );
+    const scorePercent = Math.round(clamp(rawScore));
+    const confidence = Math.round(clamp(
+      30
+      + (completedCoverage * 0.25)
+      + (signalQuality * 0.25)
+      + (clamp(features.meanFacialConfidence) * 0.2),
+      30,
+      98,
+    ));
+    return { scorePercent, confidence };
+  }
+
   const weights = {
     avgScore: 1.4,
     meanDuration: -0.03,
@@ -100,7 +148,10 @@ self.addEventListener('message', async (ev) => {
         try {
           // Build input tensor from features (ordered by keys)
           const keys = featureOrder.length > 0 ? featureOrder : Object.keys(features).sort();
-          const vals = new Float32Array(keys.map((k) => Number(features[k] || 0)));
+          const values = Array.isArray(msg.featureArray) && msg.featureArray.length === keys.length
+            ? msg.featureArray
+            : keys.map((k) => Number(features[k] || 0));
+          const vals = new Float32Array(values.map((value) => Number(value) || 0));
           const tensor = new ort.Tensor('float32', vals, [1, vals.length]);
 
           const feed = {};

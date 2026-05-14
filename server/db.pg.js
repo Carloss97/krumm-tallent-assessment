@@ -1,4 +1,5 @@
 import pg from 'pg';
+import { extractGamesFromSessionPayload } from './sessionGameExtraction.js';
 
 const { Pool } = pg;
 
@@ -116,24 +117,6 @@ const ensureSchema = async () => {
   }
 };
 
-// Helper to extract game data from payload (same logic as SQLite)
-const extractGamesFromPayload = (payload) => {
-  const source = payload && payload.sessionData ? payload.sessionData : payload;
-  if (!source || typeof source !== 'object') {
-    return [];
-  }
-
-  return Object.entries(source).filter(([key, value]) => {
-    const looksLikeGameId = /^game\d+$/i.test(key);
-    const hasNumericMetrics = value && typeof value === 'object' && (
-      typeof value.score === 'number' ||
-      typeof value.errors === 'number' ||
-      typeof value.duration === 'number'
-    );
-    return looksLikeGameId || hasNumericMetrics;
-  });
-};
-
 /**
  * Upsert participant record
  */
@@ -209,7 +192,7 @@ export const saveSession = async (payload) => {
     const sessionId = sessionResult.rows[0].id;
 
     // Insert game metrics
-    const games = extractGamesFromPayload(payload);
+    const games = extractGamesFromSessionPayload(payload);
     if (games.length > 0) {
       const metricsQuery = `
         INSERT INTO session_metrics (session_id, game_id, score, errors, metrics)

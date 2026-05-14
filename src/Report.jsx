@@ -234,8 +234,8 @@ const Report = ({ isDummy = false, useDummyData = false, demoSummary = null }) =
     if ((hasRealData || shouldShowDummyData) && !reportGeneratedRef.current) {
       reportGeneratedRef.current = true;
       const generateReport = async () => {
+        let resolvedReport = null;
         try {
-          let resolvedReport = null;
 
           if (useAI) {
             if (preferEdgeLocalInference) {
@@ -343,6 +343,7 @@ const Report = ({ isDummy = false, useDummyData = false, demoSummary = null }) =
                 reportData,
                 demoSummary,
                 metadata: safeMetadata,
+                edgeLocalModelOutput: resolvedReport?.edgeLocalModelOutput || null,
               });
             } catch (privacyError) {
               console.warn('[Report] blocked unsafe telemetry payload before persistence', privacyError?.message);

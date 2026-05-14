@@ -1,6 +1,7 @@
 import Database from 'better-sqlite3';
 import path from 'path';
 import { fileURLToPath } from 'url';
+import { extractGamesFromSessionPayload } from './sessionGameExtraction.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -11,23 +12,6 @@ const db = new Database(dbPath);
 const hasColumn = (tableName, columnName) => {
   const columns = db.prepare(`PRAGMA table_info(${tableName})`).all();
   return columns.some((column) => column.name === columnName);
-};
-
-const extractGamesFromPayload = (payload) => {
-  const source = payload && payload.sessionData ? payload.sessionData : payload;
-  if (!source || typeof source !== 'object') {
-    return [];
-  }
-
-  return Object.entries(source).filter(([key, value]) => {
-    const looksLikeGameId = /^game\d+$/i.test(key);
-    const hasNumericMetrics = value && typeof value === 'object' && (
-      typeof value.score === 'number' ||
-      typeof value.errors === 'number' ||
-      typeof value.duration === 'number'
-    );
-    return looksLikeGameId || hasNumericMetrics;
-  });
 };
 
 const createTables = () => {
@@ -106,7 +90,7 @@ export const saveSession = (payload) => {
     VALUES (?, ?, ?, ?, ?)
   `);
 
-  extractGamesFromPayload(payload).forEach(([gameId, gameData]) => {
+  extractGamesFromSessionPayload(payload).forEach(([gameId, gameData]) => {
     if (!gameData) return;
     insertMetrics.run(
       sessionId,
