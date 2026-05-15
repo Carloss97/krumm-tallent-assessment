@@ -188,12 +188,27 @@ const computeAbEngagementStats = (sessions) => {
 };
 
 const exportSessionsToCSV = (sessionRows) => {
-  const header = ['Participant ID', 'Email', 'Games Completed', 'Avg Score', 'Date', 'Status'];
+  const header = [
+    'Participant ID',
+    'Email',
+    'Games Completed',
+    'Avg Score',
+    'Model Score',
+    'Model Confidence',
+    'Calibration',
+    'Review Policy',
+    'Date',
+    'Status',
+  ];
   const rows = sessionRows.map((s) => [
     s.participantId ?? '',
     s.email ?? '',
     s.gameCount ?? '',
     s.avgScore ?? '',
+    s.edgeModelScore ?? '',
+    s.edgeModelConfidence ?? '',
+    s.edgeCalibrationStatus ?? '',
+    s.edgeReviewPolicy ?? '',
     s.createdAt ?? '',
     s.rawDataProtected ? 'Encrypted' : 'Invalid',
   ]);
@@ -311,6 +326,15 @@ const RecruiterDashboard = () => {
       if (filter === 'recent') {
         const createdAt = new Date(session.created_at).getTime();
         return Number.isFinite(createdAt) && createdAt > (Date.now() - 24 * 60 * 60 * 1000);
+      }
+      if (filter === 'edge-output') {
+        return Boolean(getEdgeLocalModelOutput(session));
+      }
+      if (filter === 'baseline-not-validated') {
+        return getEdgeLocalModelOutput(session)?.model?.calibrationStatus === 'baseline_not_validated';
+      }
+      if (filter === 'human-review') {
+        return getEdgeLocalModelOutput(session)?.decisionPolicy === 'human_review_only';
       }
       return true;
     })
@@ -536,6 +560,24 @@ const RecruiterDashboard = () => {
             onClick={() => setFilter('recent')}
           >
             Recent (24h)
+          </button>
+          <button
+            className={`filter-btn ${filter === 'edge-output' ? 'active' : ''}`}
+            onClick={() => setFilter('edge-output')}
+          >
+            Edge Outputs Only
+          </button>
+          <button
+            className={`filter-btn ${filter === 'baseline-not-validated' ? 'active' : ''}`}
+            onClick={() => setFilter('baseline-not-validated')}
+          >
+            Baseline Not Validated
+          </button>
+          <button
+            className={`filter-btn ${filter === 'human-review' ? 'active' : ''}`}
+            onClick={() => setFilter('human-review')}
+          >
+            Human Review Only
           </button>
         </div>
 

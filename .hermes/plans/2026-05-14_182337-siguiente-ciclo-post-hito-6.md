@@ -240,27 +240,28 @@ El modelo puede analizar señales observables y agregadas: resultados del juego,
 
 ---
 
-## Siguiente tarea inmediata recomendada
+## Estado actualizado y separación de tareas
 
-Empezar por **Hito 7/12 — Persistencia backend real y contrato de privacidad**.
+Hitos 7-11 quedan separados en slices verificables:
 
-Razón: aunque el modelo edge-local es el siguiente gran objetivo de producto, antes de ampliarlo hay que asegurar que el backend guarda/indexa correctamente el payload metadata-only y falla cerrado ante raw media. Eso crea la base para que Hitos 8-12 sean seguros y verificables.
+- **Hito 7 — cerrado:** persistencia backend indexa `payload.sessionData.telemetry` con helper compartido.
+- **Hito 8 — cerrado:** contrato metadata-only del modelo edge-local y feature order de 19 señales.
+- **Hito 9 — cerrado:** runtime/modelo ONNX reconstruido contra el contrato y worker con `featureArray`.
+- **Hito 10 — cerrado:** `edge_local_model_output_v1` aparece en reporte/payload metadata-only.
+- **Hito 11 — cerrado en 2 slices:**
+  1. panel recruiter de gobernanza edge-local y columnas por sesión;
+  2. filtros `Edge Outputs Only`, `Baseline Not Validated`, `Human Review Only` y export CSV con columnas de modelo.
 
-Después de Hito 7, avanzar directo a **Hito 8/12 — Especificación del modelo edge-local y contrato de features** antes de tocar dashboard.
+**Hito 12 se divide para no mezclar riesgos:**
 
-## Comando inicial sugerido para Hito 7
+- **Hito 12A — smoke estático local:** validar build artifacts, modelo ONNX/meta, deck externo como asset, rutas y assets críticos sin levantar servidores ni reintentar health-check HTTP bloqueado previamente.
+- **Hito 12B — smoke live local manual/asistido:** levantar frontend/backend sólo si el usuario confirma alcance; validar candidato → reporte → backend → recruiter. No reintentar automáticamente el health-check HTTP que la herramienta bloqueó antes.
+- **Hito 12C — release checklist:** tests completos, lint, audit, build, diff check, privacidad, warnings restantes documentados.
 
-1. Inspección mínima:
-   - `read_file server/db.sqlite.js`
-   - `read_file server/db.pg.js`
-   - `read_file server/db.memory.js`
-   - `read_file server/validators.test.js`
-
-2. Primer test focalizado:
-   - crear/agregar test que demuestre extracción desde `payload.sessionData.telemetry`.
-
-3. Validación inicial:
-   - `npm test -- server/validators.test.js server/middleware.test.js`
+**Backlog post-12 opcional, no abrir como Hito 13 todavía:**
+- Optimización avanzada del WASM de `onnxruntime-web` si el deploy lo exige.
+- Optimización/supresión deliberada del warning de plugin timings de Vite/Rolldown si se vuelve ruido operativo.
+- Dashboard recruiter avanzado: detalle expandible por sesión y filtros por caveats/quality flags específicos.
 
 ## Riesgos y tradeoffs
 
