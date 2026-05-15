@@ -1,40 +1,110 @@
+@font-face {
+  font-family: 'Inter';
+  src: url('../assets/pitchdeck/fonts/Inter-Regular.ttf') format('truetype');
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Inter';
+  src: url('../assets/pitchdeck/fonts/Inter-SemiBold.ttf') format('truetype');
+  font-weight: 600;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Inter';
+  src: url('../assets/pitchdeck/fonts/Inter-Bold.ttf') format('truetype');
+  font-weight: 700;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Urbanist';
+  src: url('../assets/pitchdeck/fonts/Urbanist-Regular.ttf') format('truetype');
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Urbanist';
+  src: url('../assets/pitchdeck/fonts/Urbanist-Bold.ttf') format('truetype');
+  font-weight: 700;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Urbanist';
+  src: url('../assets/pitchdeck/fonts/Urbanist-ExtraBold.ttf') format('truetype');
+  font-weight: 800;
+  font-style: normal;
+  font-display: swap;
+}
+
 .pitch-deck-page {
+  --deck-control-bg: rgba(15, 23, 42, 0.58);
+  --deck-control-border: rgba(226, 232, 240, 0.24);
+  --deck-control-fg: #f8fafc;
   min-height: 100vh;
+  min-height: 100dvh;
+  height: 100%;
   width: 100%;
   box-sizing: border-box;
+  position: relative;
+  isolation: isolate;
   display: grid;
-  grid-template-rows: auto minmax(0, 1fr) auto;
-  gap: 14px;
-  padding: clamp(10px, 2vw, 20px);
-  background: #1d222a;
-  color: #f8fafc;
+  place-items: center;
+  overflow: hidden;
+  background: #111318;
+  color: var(--deck-control-fg);
 }
 
 .pitch-deck-page__toolbar,
 .pitch-deck-page__footer {
+  position: absolute;
+  z-index: 2;
+  left: clamp(10px, 1.4vw, 22px);
+  right: clamp(10px, 1.4vw, 22px);
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 12px;
-  flex-wrap: wrap;
+  gap: 10px;
+  pointer-events: none;
+}
+
+.pitch-deck-page__toolbar {
+  top: clamp(10px, 1.4vw, 22px);
+}
+
+.pitch-deck-page__footer {
+  bottom: clamp(10px, 1.4vw, 22px);
 }
 
 .pitch-deck-page__brand,
 .pitch-deck-page__caption {
   margin: 0;
+  width: fit-content;
+  padding: 5px 9px;
+  border: 1px solid var(--deck-control-border);
+  background: var(--deck-control-bg);
+  backdrop-filter: blur(12px);
 }
 
 .pitch-deck-page__brand {
   color: #f8fafc;
-  font-size: 0.86rem;
+  border-radius: 999px 999px 0 0;
+  font-size: 0.7rem;
   font-weight: 900;
   letter-spacing: 0.18em;
 }
 
 .pitch-deck-page__caption {
-  margin-top: 3px;
-  color: #cbd5e1;
-  font-size: 0.78rem;
+  display: none;
 }
 
 .pitch-deck-page__actions,
@@ -42,59 +112,76 @@
 .pitch-deck-page__dots {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 7px;
+  pointer-events: auto;
 }
 
 .pitch-deck-page button {
-  border: 1px solid rgba(226, 232, 240, 0.3);
+  border: 1px solid var(--deck-control-border);
   border-radius: 999px;
-  padding: 8px 12px;
-  color: #e2e8f0;
-  background: rgba(15, 23, 42, 0.88);
+  padding: 7px 11px;
+  color: var(--deck-control-fg);
+  background: var(--deck-control-bg);
+  backdrop-filter: blur(12px);
+  font-size: 0.78rem;
   font-weight: 800;
+  line-height: 1;
   cursor: pointer;
 }
 
 .pitch-deck-page button:hover:not(:disabled),
 .pitch-deck-page button.is-active {
   color: #0f172a;
-  border-color: #e2e8f0;
-  background: #e2e8f0;
+  border-color: #f8fafc;
+  background: rgba(248, 250, 252, 0.9);
 }
 
 .pitch-deck-page button:disabled {
-  opacity: 0.42;
+  opacity: 0.35;
   cursor: not-allowed;
 }
 
 .pitch-deck-page__progress {
-  min-width: 54px;
-  text-align: right;
-  color: #e2e8f0;
+  min-width: 46px;
+  padding: 7px 10px;
+  border: 1px solid var(--deck-control-border);
+  border-radius: 999px;
+  color: var(--deck-control-fg);
+  background: var(--deck-control-bg);
+  backdrop-filter: blur(12px);
+  text-align: center;
+  font-size: 0.78rem;
   font-weight: 900;
+  pointer-events: auto;
 }
 
 .pitch-deck-page__stage {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
   min-height: 0;
   display: grid;
   place-items: center;
-  overflow: auto;
+  overflow: hidden;
 }
 
 .pitch-deck-page__slide {
-  width: min(100%, calc((100vh - 132px) * 16 / 9));
-  max-width: 1280px;
+  display: block;
+  width: min(100vw, calc(100vh * 16 / 9));
+  width: min(100dvw, calc(100dvh * 16 / 9));
+  height: min(100vh, calc(100vw * 9 / 16));
+  height: min(100dvh, calc(100dvw * 9 / 16));
+  max-width: none;
+  max-height: none;
   aspect-ratio: 16 / 9;
-  height: auto;
   background: #ffffff;
-  border-radius: 4px;
-  box-shadow: 0 22px 80px rgba(0, 0, 0, 0.45);
 }
 
 .pitch-deck-page__slide text {
   paint-order: stroke;
-  stroke: rgba(255, 255, 255, 0.04);
-  stroke-width: 0.15px;
+  stroke: rgba(255, 255, 255, 0.01);
+  stroke-width: 0.05px;
+  text-rendering: geometricPrecision;
 }
 
 .pitch-deck-page__dots {
@@ -103,43 +190,38 @@
 }
 
 .pitch-deck-page__dots button {
-  width: 12px;
-  height: 12px;
+  width: 10px;
+  height: 10px;
   padding: 0;
-  background: rgba(226, 232, 240, 0.42);
+  background: rgba(226, 232, 240, 0.46);
 }
 
 .pitch-deck-page__dots button.is-active {
-  width: 32px;
+  width: 28px;
 }
 
 @media (max-width: 720px) {
-  .pitch-deck-page {
-    padding: 10px;
-  }
-
   .pitch-deck-page__toolbar,
-  .pitch-deck-page__footer,
-  .pitch-deck-page__actions {
-    align-items: stretch;
-    flex-direction: column;
+  .pitch-deck-page__footer {
+    left: 8px;
+    right: 8px;
   }
 
-  .pitch-deck-page__language,
-  .pitch-deck-page__footer > button {
-    width: 100%;
-  }
-
-  .pitch-deck-page__language button,
-  .pitch-deck-page__footer > button {
-    flex: 1;
-  }
-
+  .pitch-deck-page__caption,
   .pitch-deck-page__progress {
-    text-align: left;
+    display: none;
   }
 
-  .pitch-deck-page__slide {
-    width: 100%;
+  .pitch-deck-page__language {
+    gap: 4px;
+  }
+
+  .pitch-deck-page button {
+    padding: 7px 9px;
+    font-size: 0.72rem;
+  }
+
+  .pitch-deck-page__dots {
+    max-width: 48vw;
   }
 }

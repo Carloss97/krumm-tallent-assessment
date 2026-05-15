@@ -69,20 +69,27 @@ function PitchDeckPage() {
             height={SVG_HEIGHT}
             preserveAspectRatio="xMidYMid slice"
           />
-          {activeSlide.elements.map((element, index) => (
-            <text
-              key={`${activeSlide.id}-${index}-${element.text.en}`}
-              x={element.x}
-              y={element.y}
-              fill={element.color}
-              fontSize={element.fontSize}
-              fontWeight={element.fontWeight}
-              fontFamily="Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif"
-              dominantBaseline="alphabetic"
-            >
-              {element.text[language] || element.text.en}
-            </text>
-          ))}
+          {activeSlide.elements.map((element, index) => {
+            const renderedText = element.text[language] || element.text.en;
+            const fitTranslatedText = language !== 'en' && element.width;
+
+            return (
+              <text
+                key={`${activeSlide.id}-${index}-${element.text.en}`}
+                x={element.x}
+                y={element.y}
+                fill={element.color}
+                fontSize={element.fontSize}
+                fontWeight={element.fontWeight}
+                fontFamily={`${element.fontFamily || 'Inter'}, Inter, Urbanist, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif`}
+                dominantBaseline="alphabetic"
+                textLength={fitTranslatedText ? element.width : undefined}
+                lengthAdjust={fitTranslatedText ? 'spacingAndGlyphs' : undefined}
+              >
+                {renderedText}
+              </text>
+            );
+          })}
         </svg>
       </section>
 
