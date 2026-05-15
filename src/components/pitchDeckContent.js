@@ -27,1810 +27,441 @@ const PAGE_IMAGES = Object.freeze({
   page10,
 });
 
+const t = (en, es) => Object.freeze({ en, es });
+
 const RAW_SLIDES = [
   {
-    "id": "cover",
-    "label": "The Behavioral Truth in B2B Hiring",
-    "image": "page01",
-    "elements": [
+    id: 'cover',
+    label: t('The Behavioral Truth in B2B Hiring', 'La verdad conductual en la contratación B2B'),
+    image: 'page01',
+    blocks: [
       {
-        "x": 321.76,
-        "y": 359.0,
-        "width": 316.27,
-        "fontSize": 19.5,
-        "color": "rgb(100,116,139)",
-        "fontWeight": 400,
-        "fontFamily": "Inter",
-        "text": {
-          "en": "The Behavioral Truth in B2B Hiring",
-          "es": "La verdad conductual en contratación B2B"
-        }
+        variant: 'kicker',
+        x: 314,
+        y: 336,
+        width: 352,
+        height: 58,
+        content: t('The Behavioral Truth in B2B Hiring', 'La verdad conductual en la contratación B2B'),
       },
       {
-        "x": 242.5,
-        "y": 427.87,
-        "width": 474.45,
-        "fontSize": 15.0,
-        "color": "rgb(71,85,105)",
-        "fontWeight": 700,
-        "fontFamily": "Inter",
-        "text": {
-          "en": "Empirical Talent Validation based on Biometrics and Gamification.",
-          "es": "Validación empírica de talento basada en biometría y gamificación."
-        }
-      }
-    ]
+        variant: 'subtitle',
+        x: 228,
+        y: 410,
+        width: 504,
+        height: 48,
+        content: t(
+          'Empirical Talent Validation based on Biometrics and Gamification.',
+          'Validación empírica de talento basada en biometría y gamificación.',
+        ),
+      },
+    ],
   },
   {
-    "id": "problem",
-    "label": "Subjective Bias",
-    "image": "page02",
-    "elements": [
+    id: 'problem',
+    label: t('Hiring is Broken', 'Contratar está roto'),
+    image: 'page02',
+    blocks: [
       {
-        "x": 94.5,
-        "y": 266.43,
-        "width": 157.21,
-        "fontSize": 23.0,
-        "color": "rgb(155,144,127)",
-        "fontWeight": 700,
-        "fontFamily": "Urbanist",
-        "text": {
-          "en": "Subjective Bias",
-          "es": "Sesgo subjetivo"
-        }
+        variant: 'title',
+        x: 74,
+        y: 42,
+        width: 360,
+        height: 72,
+        content: t('Hiring is Broken', 'Contratar está roto'),
       },
       {
-        "x": 94.5,
-        "y": 301.65,
-        "width": 315.24,
-        "fontSize": 15.0,
-        "color": "rgb(71,85,105)",
-        "fontWeight": 400,
-        "fontFamily": "Inter",
-        "text": {
-          "en": "99% of companies hire based on subjective",
-          "es": "El 99% de las empresas contrata según opiniones"
-        }
+        variant: 'card',
+        x: 92,
+        y: 235,
+        width: 328,
+        height: 152,
+        title: t('Subjective Bias', 'Sesgo subjetivo'),
+        body: t(
+          '99% of companies hire based on subjective opinions that fail to predict actual performance.',
+          'El 99% de las empresas contrata basándose en opiniones subjetivas que no predicen el desempeño real.',
+        ),
       },
       {
-        "x": 94.5,
-        "y": 330.45,
-        "width": 239.55,
-        "fontSize": 15.0,
-        "color": "rgb(71,85,105)",
-        "fontWeight": 400,
-        "fontFamily": "Inter",
-        "text": {
-          "en": "opinions that fail to predict actual",
-          "es": "subjetivas que no predicen el"
-        }
+        variant: 'card',
+        x: 535,
+        y: 235,
+        width: 338,
+        height: 190,
+        title: t('The Human-to-Human Gap', 'La brecha humano-a-humano'),
+        body: t(
+          'Modern hiring is a mechanical “proxy war”: AI-generated resumes are rejected by AI filters, wasting real human talent because soft skills remain invisible until the final, costly interview stages.',
+          'La contratación moderna es una “guerra de proxies”: CVs generados por IA son rechazados por filtros de IA, desperdiciando talento humano real porque las habilidades blandas siguen invisibles hasta las etapas finales y costosas de entrevista.',
+        ),
       },
-      {
-        "x": 94.5,
-        "y": 359.25,
-        "width": 95.78,
-        "fontSize": 15.0,
-        "color": "rgb(71,85,105)",
-        "fontWeight": 400,
-        "fontFamily": "Inter",
-        "text": {
-          "en": "performance.",
-          "es": "desempeño real."
-        }
-      },
-      {
-        "x": 537.0,
-        "y": 266.79,
-        "width": 286.52,
-        "fontSize": 24.0,
-        "color": "rgb(155,144,127)",
-        "fontWeight": 700,
-        "fontFamily": "Urbanist",
-        "text": {
-          "en": "The Human-to-Human Gap",
-          "es": "La brecha humano-a-humano"
-        }
-      },
-      {
-        "x": 541.59,
-        "y": 287.23,
-        "width": 305.62,
-        "fontSize": 15.0,
-        "color": "rgb(71,85,105)",
-        "fontWeight": 400,
-        "fontFamily": "Inter",
-        "text": {
-          "en": "Modern hiring is a mechanical \"proxy war\"",
-          "es": "La contratación moderna es una “guerra proxy”"
-        }
-      },
-      {
-        "x": 541.59,
-        "y": 316.03,
-        "width": 299.66,
-        "fontSize": 15.0,
-        "color": "rgb(71,85,105)",
-        "fontWeight": 400,
-        "fontFamily": "Inter",
-        "text": {
-          "en": "where AI-generated resumes are rejected",
-          "es": "mecánica donde CVs generados por IA son"
-        }
-      },
-      {
-        "x": 541.59,
-        "y": 344.83,
-        "width": 274.71,
-        "fontSize": 15.0,
-        "color": "rgb(71,85,105)",
-        "fontWeight": 400,
-        "fontFamily": "Inter",
-        "text": {
-          "en": "by AI filters, wasting real human talent",
-          "es": "rechazados por filtros de IA, desperdiciando"
-        }
-      },
-      {
-        "x": 541.59,
-        "y": 373.63,
-        "width": 309.79,
-        "fontSize": 15.0,
-        "color": "rgb(71,85,105)",
-        "fontWeight": 400,
-        "fontFamily": "Inter",
-        "text": {
-          "en": "because soft skills remain invisible until the",
-          "es": "talento humano real porque las habilidades blandas"
-        }
-      },
-      {
-        "x": 541.59,
-        "y": 402.43,
-        "width": 209.85,
-        "fontSize": 15.0,
-        "color": "rgb(71,85,105)",
-        "fontWeight": 400,
-        "fontFamily": "Inter",
-        "text": {
-          "en": "final, costly interview stages.",
-          "es": "siguen invisibles hasta entrevistas finales y costosas."
-        }
-      },
-      {
-        "x": 75.0,
-        "y": 76.68,
-        "width": 125.8,
-        "fontSize": 33.0,
-        "color": "rgb(30,41,59)",
-        "fontWeight": 700,
-        "fontFamily": "Urbanist",
-        "text": {
-          "en": "Hiring is",
-          "es": "Hiring is"
-        }
-      },
-      {
-        "x": 200.71,
-        "y": 76.68,
-        "width": 98.18,
-        "fontSize": 33.0,
-        "color": "rgb(155,144,127)",
-        "fontWeight": 400,
-        "fontFamily": "Urbanist",
-        "text": {
-          "en": "Broken",
-          "es": "Broken"
-        }
-      }
-    ]
+    ],
   },
   {
-    "id": "solution",
-    "label": "1. Immersive",
-    "image": "page03",
-    "elements": [
+    id: 'solution',
+    label: t('Delivering the Truth', 'Entregando la verdad'),
+    image: 'page03',
+    blocks: [
       {
-        "x": 87.0,
-        "y": 300.57,
-        "width": 99.11,
-        "fontSize": 18.0,
-        "color": "rgb(30,41,59)",
-        "fontWeight": 700,
-        "fontFamily": "Urbanist",
-        "text": {
-          "en": "1. Immersive",
-          "es": "1. Inmersiva"
-        }
+        variant: 'title',
+        x: 74,
+        y: 42,
+        width: 420,
+        height: 72,
+        content: t('Delivering the Truth', 'Entregando la verdad'),
       },
       {
-        "x": 87.0,
-        "y": 330.03,
-        "width": 192.92,
-        "fontSize": 12.75,
-        "color": "rgb(71,85,105)",
-        "fontWeight": 400,
-        "fontFamily": "Inter",
-        "text": {
-          "en": "Candidates navigate interactive",
-          "es": "Los candidatos navegan experiencias"
-        }
+        variant: 'card',
+        x: 72,
+        y: 234,
+        width: 235,
+        height: 148,
+        title: t('1. Immersive', '1. Inmersivo'),
+        body: t(
+          'Candidates navigate interactive experiences designed to evaluate real behavior under pressure.',
+          'Los candidatos navegan experiencias interactivas diseñadas para evaluar conducta real bajo presión.',
+        ),
       },
       {
-        "x": 87.0,
-        "y": 354.5,
-        "width": 206.08,
-        "fontSize": 12.75,
-        "color": "rgb(71,85,105)",
-        "fontWeight": 400,
-        "fontFamily": "Inter",
-        "text": {
-          "en": "experiences designed to evaluate",
-          "es": "interactivas diseñadas para evaluar"
-        }
+        variant: 'card',
+        x: 362,
+        y: 234,
+        width: 235,
+        height: 148,
+        title: t('2. Biometric', '2. Biométrico'),
+        body: t(
+          'We capture micro-gestures and telemetry in real time as users make critical decisions.',
+          'Capturamos microgestos y telemetría en tiempo real mientras los usuarios toman decisiones críticas.',
+        ),
       },
       {
-        "x": 87.0,
-        "y": 378.97,
-        "width": 177.14,
-        "fontSize": 12.75,
-        "color": "rgb(71,85,105)",
-        "fontWeight": 400,
-        "fontFamily": "Inter",
-        "text": {
-          "en": "real behavior under pressure.",
-          "es": "conducta real bajo presión."
-        }
+        variant: 'card',
+        x: 652,
+        y: 234,
+        width: 235,
+        height: 148,
+        title: t('3. Unbiased', '3. Imparcial'),
+        body: t(
+          'Empirical analytics on soft skills, stress tolerance, and leadership delivered instantly to HR.',
+          'Analítica empírica sobre habilidades blandas, tolerancia al estrés y liderazgo, entregada al instante a RR.HH.',
+        ),
       },
-      {
-        "x": 374.5,
-        "y": 300.57,
-        "width": 95.36,
-        "fontSize": 18.0,
-        "color": "rgb(30,41,59)",
-        "fontWeight": 700,
-        "fontFamily": "Urbanist",
-        "text": {
-          "en": "2. Biometric",
-          "es": "2. Biométrica"
-        }
-      },
-      {
-        "x": 374.5,
-        "y": 330.03,
-        "width": 194.26,
-        "fontSize": 12.75,
-        "color": "rgb(71,85,105)",
-        "fontWeight": 400,
-        "fontFamily": "Inter",
-        "text": {
-          "en": "We capture micro-gestures and",
-          "es": "Capturamos microgestos y telemetría"
-        }
-      },
-      {
-        "x": 374.5,
-        "y": 354.5,
-        "width": 186.58,
-        "fontSize": 12.75,
-        "color": "rgb(71,85,105)",
-        "fontWeight": 400,
-        "fontFamily": "Inter",
-        "text": {
-          "en": "telemetry in real-time as users",
-          "es": "en tiempo real mientras los usuarios"
-        }
-      },
-      {
-        "x": 374.5,
-        "y": 378.97,
-        "width": 140.73,
-        "fontSize": 12.75,
-        "color": "rgb(71,85,105)",
-        "fontWeight": 400,
-        "fontFamily": "Inter",
-        "text": {
-          "en": "make critical decisions.",
-          "es": "toman decisiones críticas."
-        }
-      },
-      {
-        "x": 661.99,
-        "y": 300.57,
-        "width": 94.03,
-        "fontSize": 18.0,
-        "color": "rgb(30,41,59)",
-        "fontWeight": 700,
-        "fontFamily": "Urbanist",
-        "text": {
-          "en": "3. Unbiased",
-          "es": "3. Imparcial"
-        }
-      },
-      {
-        "x": 661.99,
-        "y": 330.03,
-        "width": 198.14,
-        "fontSize": 12.75,
-        "color": "rgb(71,85,105)",
-        "fontWeight": 400,
-        "fontFamily": "Inter",
-        "text": {
-          "en": "Empirical analytics on soft skills,",
-          "es": "Analítica empírica de habilidades blandas,"
-        }
-      },
-      {
-        "x": 661.99,
-        "y": 354.5,
-        "width": 196.18,
-        "fontSize": 12.75,
-        "color": "rgb(71,85,105)",
-        "fontWeight": 400,
-        "fontFamily": "Inter",
-        "text": {
-          "en": "stress tolerance, and leadership",
-          "es": "tolerancia al estrés y liderazgo"
-        }
-      },
-      {
-        "x": 661.99,
-        "y": 378.97,
-        "width": 150.07,
-        "fontSize": 12.75,
-        "color": "rgb(71,85,105)",
-        "fontWeight": 400,
-        "fontFamily": "Inter",
-        "text": {
-          "en": "delivered instantly to HR.",
-          "es": "entregada instantáneamente a RR.HH."
-        }
-      },
-      {
-        "x": 75.0,
-        "y": 76.68,
-        "width": 213.71,
-        "fontSize": 33.0,
-        "color": "rgb(30,41,59)",
-        "fontWeight": 700,
-        "fontFamily": "Urbanist",
-        "text": {
-          "en": "Delivering the",
-          "es": "Delivering the"
-        }
-      },
-      {
-        "x": 288.63,
-        "y": 76.68,
-        "width": 75.5,
-        "fontSize": 33.0,
-        "color": "rgb(155,144,127)",
-        "fontWeight": 400,
-        "fontFamily": "Urbanist",
-        "text": {
-          "en": "Truth",
-          "es": "Truth"
-        }
-      }
-    ]
+    ],
   },
   {
-    "id": "differentiator",
-    "label": "Edge AI",
-    "image": "page04",
-    "elements": [
+    id: 'differentiator',
+    label: t('Edge AI Advantage', 'Ventaja Edge AI'),
+    image: 'page04',
+    blocks: [
       {
-        "x": 75.0,
-        "y": 91.68,
-        "width": 124.44,
-        "fontSize": 33.0,
-        "color": "rgb(30,41,59)",
-        "fontWeight": 700,
-        "fontFamily": "Urbanist",
-        "text": {
-          "en": "Edge AI",
-          "es": "Edge AI"
-        }
+        variant: 'title',
+        x: 74,
+        y: 42,
+        width: 390,
+        height: 72,
+        content: t('Edge AI Advantage', 'Ventaja Edge AI'),
       },
       {
-        "x": 199.39,
-        "y": 91.68,
-        "width": 160.74,
-        "fontSize": 33.0,
-        "color": "rgb(155,144,127)",
-        "fontWeight": 400,
-        "fontFamily": "Urbanist",
-        "text": {
-          "en": "Advantage",
-          "es": "Advantage"
-        }
+        variant: 'body',
+        x: 520,
+        y: 150,
+        width: 350,
+        height: 265,
+        items: [
+          {
+            title: t('Zero Latency', 'Latencia cero'),
+            body: t(
+              '60fps inference directly in the browser. No lag, no downloads.',
+              'Inferencia a 60 fps directamente en el navegador. Sin lag y sin descargas.',
+            ),
+          },
+          {
+            title: t('Privacy by Design', 'Privacidad por diseño'),
+            body: t(
+              'EU AI Act aligned. Video stays on device; only aggregate tensors are sent.',
+              'Alineado con el EU AI Act. El video permanece en el dispositivo; sólo se envían tensores agregados.',
+            ),
+          },
+          {
+            title: t('Scalable', 'Escalable'),
+            body: t(
+              'Leverages the candidate’s hardware, reducing server costs to near zero.',
+              'Aprovecha el hardware del candidato, reduciendo los costos de servidor casi a cero.',
+            ),
+          },
+        ],
       },
-      {
-        "x": 93.75,
-        "y": 152.4,
-        "width": 100.73,
-        "fontSize": 15.0,
-        "color": "rgb(71,85,105)",
-        "fontWeight": 700,
-        "fontFamily": "Inter",
-        "text": {
-          "en": "Zero Latency:",
-          "es": "Zero Latency:"
-        }
-      },
-      {
-        "x": 194.55,
-        "y": 152.4,
-        "width": 220.86,
-        "fontSize": 15.0,
-        "color": "rgb(71,85,105)",
-        "fontWeight": 400,
-        "fontFamily": "Inter",
-        "text": {
-          "en": "60fps inference directly in the",
-          "es": "60fps inference directly in the"
-        }
-      },
-      {
-        "x": 93.75,
-        "y": 181.2,
-        "width": 223.36,
-        "fontSize": 15.0,
-        "color": "rgb(71,85,105)",
-        "fontWeight": 400,
-        "fontFamily": "Inter",
-        "text": {
-          "en": "browser. No lag, no downloads.",
-          "es": "navegador. Sin lag, sin descargas."
-        }
-      },
-      {
-        "x": 93.75,
-        "y": 219.15,
-        "width": 136.33,
-        "fontSize": 15.0,
-        "color": "rgb(71,85,105)",
-        "fontWeight": 700,
-        "fontFamily": "Inter",
-        "text": {
-          "en": "Privacy by Design:",
-          "es": "Privacy by Design:"
-        }
-      },
-      {
-        "x": 230.23,
-        "y": 219.15,
-        "width": 198.11,
-        "fontSize": 15.0,
-        "color": "rgb(71,85,105)",
-        "fontWeight": 400,
-        "fontFamily": "Inter",
-        "text": {
-          "en": "EU AI Act compliant. Video",
-          "es": "EU AI Act compliant. Video"
-        }
-      },
-      {
-        "x": 93.75,
-        "y": 247.95,
-        "width": 272.1,
-        "fontSize": 15.0,
-        "color": "rgb(71,85,105)",
-        "fontWeight": 400,
-        "fontFamily": "Inter",
-        "text": {
-          "en": "stays on device; only tensors are sent.",
-          "es": "permanece en el dispositivo; sólo se envían tensores."
-        }
-      },
-      {
-        "x": 93.75,
-        "y": 285.9,
-        "width": 67.63,
-        "fontSize": 15.0,
-        "color": "rgb(71,85,105)",
-        "fontWeight": 700,
-        "fontFamily": "Inter",
-        "text": {
-          "en": "Scalable:",
-          "es": "Scalable:"
-        }
-      },
-      {
-        "x": 161.49,
-        "y": 285.9,
-        "width": 270.39,
-        "fontSize": 15.0,
-        "color": "rgb(71,85,105)",
-        "fontWeight": 400,
-        "fontFamily": "Inter",
-        "text": {
-          "en": "Leverages the candidate's hardware,",
-          "es": "Leverages the candidate's hardware,"
-        }
-      },
-      {
-        "x": 93.75,
-        "y": 314.7,
-        "width": 247.74,
-        "fontSize": 15.0,
-        "color": "rgb(71,85,105)",
-        "fontWeight": 400,
-        "fontFamily": "Inter",
-        "text": {
-          "en": "reducing server costs to near zero.",
-          "es": "reduciendo costos de servidor casi a cero."
-        }
-      }
-    ]
+    ],
   },
   {
-    "id": "technology",
-    "label": "Proprietary",
-    "image": "page05",
-    "elements": [
+    id: 'technology',
+    label: t('The Defensive Moat', 'La ventaja defensiva'),
+    image: 'page05',
+    blocks: [
       {
-        "x": 60.0,
-        "y": 344.25,
-        "width": 514.4,
-        "fontSize": 100.0,
-        "color": "rgb(30,41,59)",
-        "fontWeight": 800,
-        "fontFamily": "Urbanist",
-        "text": {
-          "en": "Proprietary",
-          "es": "Proprietary"
-        }
+        variant: 'metric',
+        x: 74,
+        y: 86,
+        width: 435,
+        height: 122,
+        content: t('Proprietary.', 'Propietario.'),
       },
       {
-        "x": 608.27,
-        "y": 344.25,
-        "width": 23.9,
-        "fontSize": 100.0,
-        "color": "rgb(155,144,127)",
-        "fontWeight": 800,
-        "fontFamily": "Urbanist",
-        "text": {
-          "en": ".",
-          "es": "."
-        }
+        variant: 'card',
+        x: 584,
+        y: 168,
+        width: 272,
+        height: 248,
+        title: t('Behavioral Intelligence', 'Inteligencia conductual'),
+        body: t(
+          'Our strongest advantage is a continuously self-feeding dataset. We capture real behavioral data that traditional ATS and competitors cannot replicate. Every interaction improves our global prediction standard.',
+          'Nuestra ventaja más fuerte es un dataset que se retroalimenta continuamente. Capturamos datos conductuales reales que los ATS tradicionales y competidores no pueden replicar. Cada interacción mejora nuestro estándar global de predicción.',
+        ),
       },
       {
-        "x": 753.75,
-        "y": 136.51,
-        "width": 143.07,
-        "fontSize": 14.04,
-        "color": "rgb(30,41,59)",
-        "fontWeight": 700,
-        "fontFamily": "Urbanist",
-        "text": {
-          "en": "Behavioral Intelligence",
-          "es": "Inteligencia conductual"
-        }
+        variant: 'title',
+        x: 74,
+        y: 404,
+        width: 360,
+        height: 72,
+        content: t('The Defensive Moat', 'La ventaja defensiva'),
       },
-      {
-        "x": 753.75,
-        "y": 165.52,
-        "width": 101.19,
-        "fontSize": 15.0,
-        "color": "rgb(71,85,105)",
-        "fontWeight": 400,
-        "fontFamily": "Inter",
-        "text": {
-          "en": "Our strongest",
-          "es": "Nuestra ventaja más"
-        }
-      },
-      {
-        "x": 753.75,
-        "y": 194.32,
-        "width": 107.21,
-        "fontSize": 15.0,
-        "color": "rgb(71,85,105)",
-        "fontWeight": 400,
-        "fontFamily": "Inter",
-        "text": {
-          "en": "advantage is a",
-          "es": "fuerte es un dataset"
-        }
-      },
-      {
-        "x": 753.75,
-        "y": 223.12,
-        "width": 94.74,
-        "fontSize": 15.0,
-        "color": "rgb(71,85,105)",
-        "fontWeight": 400,
-        "fontFamily": "Inter",
-        "text": {
-          "en": "continuously",
-          "es": "autoalimentado de"
-        }
-      },
-      {
-        "x": 753.75,
-        "y": 251.92,
-        "width": 89.97,
-        "fontSize": 15.0,
-        "color": "rgb(71,85,105)",
-        "fontWeight": 400,
-        "fontFamily": "Inter",
-        "text": {
-          "en": "self-feeding",
-          "es": "forma continua. Capturamos"
-        }
-      },
-      {
-        "x": 753.75,
-        "y": 280.72,
-        "width": 146.48,
-        "fontSize": 15.0,
-        "color": "rgb(71,85,105)",
-        "fontWeight": 400,
-        "fontFamily": "Inter",
-        "text": {
-          "en": "dataset. We capture",
-          "es": "datos conductuales reales"
-        }
-      },
-      {
-        "x": 753.75,
-        "y": 309.52,
-        "width": 143.67,
-        "fontSize": 15.0,
-        "color": "rgb(71,85,105)",
-        "fontWeight": 400,
-        "fontFamily": "Inter",
-        "text": {
-          "en": "real behavioral data",
-          "es": "que los ATS tradicionales"
-        }
-      },
-      {
-        "x": 753.75,
-        "y": 338.32,
-        "width": 138.29,
-        "fontSize": 15.0,
-        "color": "rgb(71,85,105)",
-        "fontWeight": 400,
-        "fontFamily": "Inter",
-        "text": {
-          "en": "that traditional ATS",
-          "es": "y competidores"
-        }
-      },
-      {
-        "x": 753.75,
-        "y": 367.12,
-        "width": 119.31,
-        "fontSize": 15.0,
-        "color": "rgb(71,85,105)",
-        "fontWeight": 400,
-        "fontFamily": "Inter",
-        "text": {
-          "en": "and competitors",
-          "es": "no pueden"
-        }
-      },
-      {
-        "x": 753.75,
-        "y": 395.92,
-        "width": 118.46,
-        "fontSize": 15.0,
-        "color": "rgb(71,85,105)",
-        "fontWeight": 400,
-        "fontFamily": "Inter",
-        "text": {
-          "en": "cannot replicate.",
-          "es": "replicar."
-        }
-      },
-      {
-        "x": 753.75,
-        "y": 420.56,
-        "width": 128.34,
-        "fontSize": 15.0,
-        "color": "rgb(30,41,59)",
-        "fontWeight": 700,
-        "fontFamily": "Inter",
-        "text": {
-          "en": "Every interaction",
-          "es": "Cada interacción"
-        }
-      },
-      {
-        "x": 753.75,
-        "y": 449.36,
-        "width": 148.18,
-        "fontSize": 15.0,
-        "color": "rgb(30,41,59)",
-        "fontWeight": 700,
-        "fontFamily": "Inter",
-        "text": {
-          "en": "improves our global",
-          "es": "mejora nuestro estándar"
-        }
-      },
-      {
-        "x": 753.75,
-        "y": 478.16,
-        "width": 78.04,
-        "fontSize": 15.0,
-        "color": "rgb(30,41,59)",
-        "fontWeight": 700,
-        "fontFamily": "Inter",
-        "text": {
-          "en": "prediction",
-          "es": "global de"
-        }
-      },
-      {
-        "x": 753.75,
-        "y": 506.96,
-        "width": 70.32,
-        "fontSize": 15.0,
-        "color": "rgb(30,41,59)",
-        "fontWeight": 700,
-        "fontFamily": "Inter",
-        "text": {
-          "en": "standard.",
-          "es": "predicción."
-        }
-      },
-      {
-        "x": 75.0,
-        "y": 76.68,
-        "width": 219.29,
-        "fontSize": 33.0,
-        "color": "rgb(30,41,59)",
-        "fontWeight": 700,
-        "fontFamily": "Urbanist",
-        "text": {
-          "en": "The Defensive",
-          "es": "The Defensive"
-        }
-      },
-      {
-        "x": 294.29,
-        "y": 76.68,
-        "width": 76.59,
-        "fontSize": 33.0,
-        "color": "rgb(155,144,127)",
-        "fontWeight": 400,
-        "fontFamily": "Urbanist",
-        "text": {
-          "en": "Moat",
-          "es": "Moat"
-        }
-      }
-    ]
+    ],
   },
   {
-    "id": "market",
-    "label": "Nicolas Cowley",
-    "image": "page06",
-    "elements": [
+    id: 'team',
+    label: t('The Core Founders', 'Fundadores clave'),
+    image: 'page06',
+    blocks: [
       {
-        "x": 87.0,
-        "y": 255.5,
-        "width": 122.65,
-        "fontSize": 18.0,
-        "color": "rgb(30,41,59)",
-        "fontWeight": 700,
-        "fontFamily": "Urbanist",
-        "text": {
-          "en": "Nicolas Cowley",
-          "es": "Nicolás Cowley"
-        }
+        variant: 'title',
+        x: 74,
+        y: 42,
+        width: 390,
+        height: 72,
+        content: t('The Core Founders', 'Fundadores clave'),
       },
       {
-        "x": 87.0,
-        "y": 284.96,
-        "width": 169.47,
-        "fontSize": 12.75,
-        "color": "rgb(155,144,127)",
-        "fontWeight": 700,
-        "fontFamily": "Inter",
-        "text": {
-          "en": "CEO & Commercial Director",
-          "es": "CEO y Director Comercial"
-        }
+        variant: 'card',
+        x: 76,
+        y: 232,
+        width: 240,
+        height: 165,
+        title: t('Nicolas Cowley', 'Nicolás Cowley'),
+        eyebrow: t('CEO & Commercial Director', 'CEO y Director Comercial'),
+        body: t(
+          'AI ethics expert. Leading commercial strategy and B2B partnerships.',
+          'Experto en ética de IA. Lidera la estrategia comercial y las alianzas B2B.',
+        ),
       },
       {
-        "x": 87.0,
-        "y": 318.1,
-        "width": 153.05,
-        "fontSize": 12.75,
-        "color": "rgb(71,85,105)",
-        "fontWeight": 400,
-        "fontFamily": "Inter",
-        "text": {
-          "en": "AI ethics expert. Leading",
-          "es": "Experto en ética de IA. Lidera"
-        }
+        variant: 'card',
+        x: 362,
+        y: 232,
+        width: 240,
+        height: 165,
+        title: t('Carlos Saldivia', 'Carlos Saldivia'),
+        eyebrow: t('CTO', 'CTO'),
+        body: t(
+          'MSc in Electronics. Specialist in biometrics and signal processing.',
+          'MSc en Electrónica. Especialista en biometría y procesamiento de señales.',
+        ),
       },
       {
-        "x": 87.0,
-        "y": 342.57,
-        "width": 180.41,
-        "fontSize": 12.75,
-        "color": "rgb(71,85,105)",
-        "fontWeight": 400,
-        "fontFamily": "Inter",
-        "text": {
-          "en": "commercial strategy and B2B",
-          "es": "estrategia comercial y alianzas"
-        }
+        variant: 'card',
+        x: 648,
+        y: 232,
+        width: 240,
+        height: 165,
+        title: t('Gabriel Caro', 'Gabriel Caro'),
+        eyebrow: t('CPO', 'CPO'),
+        body: t(
+          'R&D specialist. Expert in active methodologies and gamification.',
+          'Especialista en I+D. Experto en metodologías activas y gamificación.',
+        ),
       },
-      {
-        "x": 87.0,
-        "y": 367.04,
-        "width": 79.51,
-        "fontSize": 12.75,
-        "color": "rgb(71,85,105)",
-        "fontWeight": 400,
-        "fontFamily": "Inter",
-        "text": {
-          "en": "partnerships.",
-          "es": "B2B."
-        }
-      },
-      {
-        "x": 374.5,
-        "y": 255.5,
-        "width": 122.2,
-        "fontSize": 18.0,
-        "color": "rgb(30,41,59)",
-        "fontWeight": 700,
-        "fontFamily": "Urbanist",
-        "text": {
-          "en": "Carlos Saldivia",
-          "es": "Carlos Saldivia"
-        }
-      },
-      {
-        "x": 374.5,
-        "y": 284.96,
-        "width": 27.35,
-        "fontSize": 12.75,
-        "color": "rgb(155,144,127)",
-        "fontWeight": 700,
-        "fontFamily": "Inter",
-        "text": {
-          "en": "CTO",
-          "es": "CTO"
-        }
-      },
-      {
-        "x": 374.5,
-        "y": 318.1,
-        "width": 194.22,
-        "fontSize": 12.75,
-        "color": "rgb(71,85,105)",
-        "fontWeight": 400,
-        "fontFamily": "Inter",
-        "text": {
-          "en": "MSc in Electronics. Specialist in",
-          "es": "MSc en Electrónica. Especialista en"
-        }
-      },
-      {
-        "x": 374.5,
-        "y": 342.57,
-        "width": 202.16,
-        "fontSize": 12.75,
-        "color": "rgb(71,85,105)",
-        "fontWeight": 400,
-        "fontFamily": "Inter",
-        "text": {
-          "en": "biometrics and signal processing.",
-          "es": "biometría y procesamiento de señales."
-        }
-      },
-      {
-        "x": 661.99,
-        "y": 255.5,
-        "width": 103.72,
-        "fontSize": 18.0,
-        "color": "rgb(30,41,59)",
-        "fontWeight": 700,
-        "fontFamily": "Urbanist",
-        "text": {
-          "en": "Gabriel Caro",
-          "es": "Gabriel Caro"
-        }
-      },
-      {
-        "x": 661.99,
-        "y": 284.96,
-        "width": 27.49,
-        "fontSize": 12.75,
-        "color": "rgb(155,144,127)",
-        "fontWeight": 700,
-        "fontFamily": "Inter",
-        "text": {
-          "en": "CPO",
-          "es": "CPO"
-        }
-      },
-      {
-        "x": 661.99,
-        "y": 318.1,
-        "width": 189.38,
-        "fontSize": 12.75,
-        "color": "rgb(71,85,105)",
-        "fontWeight": 400,
-        "fontFamily": "Inter",
-        "text": {
-          "en": "R&D specialist. Expert in active",
-          "es": "Especialista en I+D. Experto en"
-        }
-      },
-      {
-        "x": 661.99,
-        "y": 342.57,
-        "width": 196.44,
-        "fontSize": 12.75,
-        "color": "rgb(71,85,105)",
-        "fontWeight": 400,
-        "fontFamily": "Inter",
-        "text": {
-          "en": "methodologies and gamification.",
-          "es": "metodologías activas y gamificación."
-        }
-      },
-      {
-        "x": 75.0,
-        "y": 76.68,
-        "width": 143.25,
-        "fontSize": 33.0,
-        "color": "rgb(30,41,59)",
-        "fontWeight": 700,
-        "fontFamily": "Urbanist",
-        "text": {
-          "en": "The Core",
-          "es": "The Core"
-        }
-      },
-      {
-        "x": 218.24,
-        "y": 76.68,
-        "width": 130.45,
-        "fontSize": 33.0,
-        "color": "rgb(155,144,127)",
-        "fontWeight": 400,
-        "fontFamily": "Urbanist",
-        "text": {
-          "en": "Founders",
-          "es": "Founders"
-        }
-      }
-    ]
+    ],
   },
   {
-    "id": "business-model",
-    "label": "Segment",
-    "image": "page07",
-    "elements": [
+    id: 'market',
+    label: t('Target Market', 'Mercado objetivo'),
+    image: 'page07',
+    blocks: [
       {
-        "x": 64.5,
-        "y": 244.98,
-        "width": 52.5,
-        "fontSize": 12.0,
-        "color": "rgb(30,41,59)",
-        "fontWeight": 700,
-        "fontFamily": "Inter",
-        "text": {
-          "en": "Segment",
-          "es": "Segment"
-        }
+        variant: 'title',
+        x: 74,
+        y: 42,
+        width: 360,
+        height: 72,
+        content: t('Target Market', 'Mercado objetivo'),
       },
       {
-        "x": 196.61,
-        "y": 244.98,
-        "width": 94.4,
-        "fontSize": 12.0,
-        "color": "rgb(30,41,59)",
-        "fontWeight": 700,
-        "fontFamily": "Inter",
-        "text": {
-          "en": "Estimated Value",
-          "es": "Estimated Value"
-        }
+        variant: 'table',
+        x: 76,
+        y: 156,
+        width: 808,
+        height: 248,
+        columns: [t('Segment', 'Segmento'), t('Estimated Value', 'Valor estimado'), t('Definition', 'Definición')],
+        rows: [
+          [t('TAM', 'TAM'), t('$32B', '$32B'), t('Global HR Tech and Recruitment Market.', 'Mercado global de HR Tech y reclutamiento.')],
+          [t('SAM', 'SAM'), t('$2.5B', '$2.5B'), t('Global critical recruitment sectors (Logistics, Finance).', 'Sectores globales críticos de reclutamiento (logística, finanzas).')],
+          [t('SOM', 'SOM'), t('$100M', '$100M'), t('Initial target LatAm market (Aquaculture and Fishing).', 'Mercado inicial objetivo en LatAm (acuicultura y pesca).')],
+        ],
       },
-      {
-        "x": 407.98,
-        "y": 244.98,
-        "width": 57.06,
-        "fontSize": 12.0,
-        "color": "rgb(30,41,59)",
-        "fontWeight": 700,
-        "fontFamily": "Inter",
-        "text": {
-          "en": "Definition",
-          "es": "Definition"
-        }
-      },
-      {
-        "x": 64.5,
-        "y": 290.54,
-        "width": 25.84,
-        "fontSize": 12.0,
-        "color": "rgb(71,85,105)",
-        "fontWeight": 400,
-        "fontFamily": "Inter",
-        "text": {
-          "en": "TAM",
-          "es": "TAM"
-        }
-      },
-      {
-        "x": 196.61,
-        "y": 290.54,
-        "width": 31.07,
-        "fontSize": 12.0,
-        "color": "rgb(30,41,59)",
-        "fontWeight": 700,
-        "fontFamily": "Inter",
-        "text": {
-          "en": "$32B",
-          "es": "$32B"
-        }
-      },
-      {
-        "x": 407.98,
-        "y": 290.54,
-        "width": 229.8,
-        "fontSize": 12.0,
-        "color": "rgb(71,85,105)",
-        "fontWeight": 400,
-        "fontFamily": "Inter",
-        "text": {
-          "en": "Global HR Tech and Recruitment Market.",
-          "es": "Global HR Tech and Recruitment Market."
-        }
-      },
-      {
-        "x": 64.5,
-        "y": 336.1,
-        "width": 26.8,
-        "fontSize": 12.0,
-        "color": "rgb(71,85,105)",
-        "fontWeight": 400,
-        "fontFamily": "Inter",
-        "text": {
-          "en": "SAM",
-          "es": "SAM"
-        }
-      },
-      {
-        "x": 196.61,
-        "y": 336.1,
-        "width": 34.72,
-        "fontSize": 12.0,
-        "color": "rgb(30,41,59)",
-        "fontWeight": 700,
-        "fontFamily": "Inter",
-        "text": {
-          "en": "$2.5B",
-          "es": "$2.5B"
-        }
-      },
-      {
-        "x": 407.98,
-        "y": 336.1,
-        "width": 308.7,
-        "fontSize": 12.0,
-        "color": "rgb(71,85,105)",
-        "fontWeight": 400,
-        "fontFamily": "Inter",
-        "text": {
-          "en": "Global critical recruitment sectors Logistics, Finance).",
-          "es": "Global critical recruitment sectors Logistics, Finance)."
-        }
-      },
-      {
-        "x": 64.5,
-        "y": 381.67,
-        "width": 27.7,
-        "fontSize": 12.0,
-        "color": "rgb(71,85,105)",
-        "fontWeight": 400,
-        "fontFamily": "Inter",
-        "text": {
-          "en": "SOM",
-          "es": "SOM"
-        }
-      },
-      {
-        "x": 196.61,
-        "y": 381.67,
-        "width": 40.37,
-        "fontSize": 12.0,
-        "color": "rgb(155,144,127)",
-        "fontWeight": 700,
-        "fontFamily": "Inter",
-        "text": {
-          "en": "$100M",
-          "es": "$100M"
-        }
-      },
-      {
-        "x": 407.98,
-        "y": 381.67,
-        "width": 301.43,
-        "fontSize": 12.0,
-        "color": "rgb(71,85,105)",
-        "fontWeight": 400,
-        "fontFamily": "Inter",
-        "text": {
-          "en": "Initial target LatAm market Aquaculture and Fishing).",
-          "es": "Initial target LatAm market Aquaculture and Fishing)."
-        }
-      },
-      {
-        "x": 75.0,
-        "y": 76.68,
-        "width": 107.28,
-        "fontSize": 33.0,
-        "color": "rgb(30,41,59)",
-        "fontWeight": 700,
-        "fontFamily": "Urbanist",
-        "text": {
-          "en": "Target",
-          "es": "Target"
-        }
-      },
-      {
-        "x": 182.2,
-        "y": 76.68,
-        "width": 102.8,
-        "fontSize": 33.0,
-        "color": "rgb(155,144,127)",
-        "fontWeight": 400,
-        "fontFamily": "Urbanist",
-        "text": {
-          "en": "Market",
-          "es": "Market"
-        }
-      }
-    ]
+    ],
   },
   {
-    "id": "roadmap",
-    "label": "10",
-    "image": "page08",
-    "elements": [
+    id: 'business-model',
+    label: t('Value Capture Strategy', 'Estrategia de captura de valor'),
+    image: 'page08',
+    blocks: [
       {
-        "x": 60.0,
-        "y": 344.25,
-        "width": 95.7,
-        "fontSize": 100.0,
-        "color": "rgb(30,41,59)",
-        "fontWeight": 800,
-        "fontFamily": "Urbanist",
-        "text": {
-          "en": "10",
-          "es": "10"
-        }
+        variant: 'title',
+        x: 74,
+        y: 42,
+        width: 450,
+        height: 72,
+        content: t('Value Capture Strategy', 'Estrategia de captura de valor'),
       },
       {
-        "x": 161.93,
-        "y": 344.25,
-        "width": 23.9,
-        "fontSize": 100.0,
-        "color": "rgb(155,144,127)",
-        "fontWeight": 800,
-        "fontFamily": "Urbanist",
-        "text": {
-          "en": ":",
-          "es": ":"
-        }
+        variant: 'metric',
+        x: 78,
+        y: 130,
+        width: 300,
+        height: 112,
+        content: t('10:1', '10:1'),
       },
       {
-        "x": 189.0,
-        "y": 344.25,
-        "width": 35.0,
-        "fontSize": 100.0,
-        "color": "rgb(30,41,59)",
-        "fontWeight": 800,
-        "fontFamily": "Urbanist",
-        "text": {
-          "en": "1",
-          "es": "1"
-        }
+        variant: 'card',
+        x: 500,
+        y: 152,
+        width: 350,
+        height: 265,
+        title: t('Client ROI', 'ROI del cliente'),
+        items: [
+          {
+            title: t('Pricing', 'Precio'),
+            body: t(
+              'Annual B2B SaaS subscription tiered by assessment volume, priced per candidate.',
+              'Suscripción SaaS B2B anual escalonada por volumen de evaluaciones, con precio por candidato.',
+            ),
+          },
+          {
+            title: t('Value', 'Valor'),
+            body: t(
+              'Designed to deliver 10x ROI by reducing bad hires and interview hours.',
+              'Diseñado para entregar 10x ROI al reducir malas contrataciones y horas de entrevista.',
+            ),
+          },
+          {
+            title: t('Go-To-Market', 'Salida al mercado'),
+            body: t(
+              'Land & Expand: validate via pilot, roll out to facility, then expand to corporate.',
+              'Land & Expand: validar con un piloto, desplegar en planta y luego expandir a nivel corporativo.',
+            ),
+          },
+        ],
       },
-      {
-        "x": 295.5,
-        "y": 262.85,
-        "width": 62.91,
-        "fontSize": 14.04,
-        "color": "rgb(30,41,59)",
-        "fontWeight": 700,
-        "fontFamily": "Urbanist",
-        "text": {
-          "en": "Client ROI",
-          "es": "ROI del cliente"
-        }
-      },
-      {
-        "x": 295.5,
-        "y": 296.02,
-        "width": 56.58,
-        "fontSize": 15.0,
-        "color": "rgb(0,0,0)",
-        "fontWeight": 700,
-        "fontFamily": "Inter",
-        "text": {
-          "en": "Pricing:",
-          "es": "Pricing:"
-        }
-      },
-      {
-        "x": 352.17,
-        "y": 296.02,
-        "width": 545.64,
-        "fontSize": 15.0,
-        "color": "rgb(0,0,0)",
-        "fontWeight": 400,
-        "fontFamily": "Inter",
-        "text": {
-          "en": "Annual B2B SaaS subscription tiered by assessment volume (per candidate).",
-          "es": "Annual B2B SaaS subscription tiered by assessment volume (per candidate)."
-        }
-      },
-      {
-        "x": 295.5,
-        "y": 324.82,
-        "width": 46.3,
-        "fontSize": 15.0,
-        "color": "rgb(0,0,0)",
-        "fontWeight": 700,
-        "fontFamily": "Inter",
-        "text": {
-          "en": "Value:",
-          "es": "Value:"
-        }
-      },
-      {
-        "x": 341.87,
-        "y": 324.82,
-        "width": 517.48,
-        "fontSize": 15.0,
-        "color": "rgb(0,0,0)",
-        "fontWeight": 400,
-        "fontFamily": "Inter",
-        "text": {
-          "en": "Designed to deliver a 10x ROI by reducing bad hires and interview hours.",
-          "es": "Designed to deliver a 10x ROI by reducing bad hires and interview hours."
-        }
-      },
-      {
-        "x": 295.5,
-        "y": 353.62,
-        "width": 108.12,
-        "fontSize": 15.0,
-        "color": "rgb(0,0,0)",
-        "fontWeight": 700,
-        "fontFamily": "Inter",
-        "text": {
-          "en": "Go-To-Market:",
-          "es": "Go-To-Market:"
-        }
-      },
-      {
-        "x": 403.71,
-        "y": 353.62,
-        "width": 477.72,
-        "fontSize": 15.0,
-        "color": "rgb(0,0,0)",
-        "fontWeight": 400,
-        "fontFamily": "Inter",
-        "text": {
-          "en": "Land & Expand Validate via pilot → Roll out to facility → Expand to",
-          "es": "Land & Expand Validate via pilot → Roll out to facility → Expand to"
-        }
-      },
-      {
-        "x": 295.5,
-        "y": 382.42,
-        "width": 74.45,
-        "fontSize": 15.0,
-        "color": "rgb(0,0,0)",
-        "fontWeight": 400,
-        "fontFamily": "Inter",
-        "text": {
-          "en": "corporate)",
-          "es": "corporativo)"
-        }
-      },
-      {
-        "x": 75.0,
-        "y": 76.68,
-        "width": 222.82,
-        "fontSize": 33.0,
-        "color": "rgb(30,41,59)",
-        "fontWeight": 700,
-        "fontFamily": "Urbanist",
-        "text": {
-          "en": "Value Capture",
-          "es": "Value Capture"
-        }
-      },
-      {
-        "x": 297.8,
-        "y": 76.68,
-        "width": 125.57,
-        "fontSize": 33.0,
-        "color": "rgb(155,144,127)",
-        "fontWeight": 400,
-        "fontFamily": "Urbanist",
-        "text": {
-          "en": "Strategy",
-          "es": "Strategy"
-        }
-      }
-    ]
+    ],
   },
   {
-    "id": "team",
-    "label": "Criteria",
-    "image": "page09",
-    "elements": [
+    id: 'competition',
+    label: t('Why KRUMM Dominates', 'Por qué KRUMM domina'),
+    image: 'page09',
+    blocks: [
       {
-        "x": 64.5,
-        "y": 222.12,
-        "width": 43.6,
-        "fontSize": 12.0,
-        "color": "rgb(30,41,59)",
-        "fontWeight": 700,
-        "fontFamily": "Inter",
-        "text": {
-          "en": "Criteria",
-          "es": "Criteria"
-        }
+        variant: 'title',
+        x: 74,
+        y: 42,
+        width: 430,
+        height: 72,
+        content: t('Why KRUMM Dominates', 'Por qué KRUMM domina'),
       },
       {
-        "x": 281.6,
-        "y": 222.12,
-        "width": 88.99,
-        "fontSize": 12.0,
-        "color": "rgb(30,41,59)",
-        "fontWeight": 700,
-        "fontFamily": "Inter",
-        "text": {
-          "en": "Traditional ATS",
-          "es": "Traditional ATS"
-        }
+        variant: 'table',
+        x: 68,
+        y: 138,
+        width: 824,
+        height: 292,
+        columns: [t('Criteria', 'Criterio'), t('Traditional ATS', 'ATS tradicional'), t('AI Avatars', 'Avatares IA'), t('KRUMM', 'KRUMM')],
+        rows: [
+          [t('Nature of Data', 'Naturaleza de datos'), t('Subjective', 'Subjetiva'), t('Declarative', 'Declarativa'), t('Empirical (Biometrics)', 'Empírica (biometría)')],
+          [t('Privacy Compliance', 'Cumplimiento de privacidad'), t('Secure', 'Seguro'), t('Cloud Risk', 'Riesgo en la nube'), t('Native (Edge AI)', 'Nativo (Edge AI)')],
+          [t('Experience', 'Experiencia'), t('High Friction', 'Alta fricción'), t('Uncomfortable', 'Incómoda'), t('Gamified / Immersive', 'Gamificada / inmersiva')],
+          [t('Soft Skills Accuracy', 'Precisión en habilidades blandas'), t('None', 'Nula'), t('Limited', 'Limitada'), t('High Precision', 'Alta precisión')],
+        ],
       },
-      {
-        "x": 491.88,
-        "y": 222.12,
-        "width": 60.34,
-        "fontSize": 12.0,
-        "color": "rgb(30,41,59)",
-        "fontWeight": 700,
-        "fontFamily": "Inter",
-        "text": {
-          "en": "AI Avatars",
-          "es": "AI Avatars"
-        }
-      },
-      {
-        "x": 666.93,
-        "y": 222.12,
-        "width": 47.21,
-        "fontSize": 12.0,
-        "color": "rgb(30,41,59)",
-        "fontWeight": 700,
-        "fontFamily": "Inter",
-        "text": {
-          "en": "KRUMM",
-          "es": "KRUMM"
-        }
-      },
-      {
-        "x": 64.5,
-        "y": 267.72,
-        "width": 82.56,
-        "fontSize": 12.0,
-        "color": "rgb(71,85,105)",
-        "fontWeight": 400,
-        "fontFamily": "Inter",
-        "text": {
-          "en": "Nature of Data",
-          "es": "Nature of Data"
-        }
-      },
-      {
-        "x": 281.6,
-        "y": 267.72,
-        "width": 59.22,
-        "fontSize": 12.0,
-        "color": "rgb(71,85,105)",
-        "fontWeight": 400,
-        "fontFamily": "Inter",
-        "text": {
-          "en": "Subjective",
-          "es": "Subjective"
-        }
-      },
-      {
-        "x": 491.88,
-        "y": 267.72,
-        "width": 63.72,
-        "fontSize": 12.0,
-        "color": "rgb(71,85,105)",
-        "fontWeight": 400,
-        "fontFamily": "Inter",
-        "text": {
-          "en": "Declarative",
-          "es": "Declarative"
-        }
-      },
-      {
-        "x": 666.93,
-        "y": 267.72,
-        "width": 127.7,
-        "fontSize": 12.0,
-        "color": "rgb(71,85,105)",
-        "fontWeight": 700,
-        "fontFamily": "Inter",
-        "text": {
-          "en": "Empirical Biometrics)",
-          "es": "Empirical Biometrics)"
-        }
-      },
-      {
-        "x": 64.5,
-        "y": 313.32,
-        "width": 112.61,
-        "fontSize": 12.0,
-        "color": "rgb(71,85,105)",
-        "fontWeight": 400,
-        "fontFamily": "Inter",
-        "text": {
-          "en": "Privacy Compliance",
-          "es": "Privacy Compliance"
-        }
-      },
-      {
-        "x": 281.6,
-        "y": 313.32,
-        "width": 39.95,
-        "fontSize": 12.0,
-        "color": "rgb(71,85,105)",
-        "fontWeight": 400,
-        "fontFamily": "Inter",
-        "text": {
-          "en": "Secure",
-          "es": "Secure"
-        }
-      },
-      {
-        "x": 491.88,
-        "y": 313.32,
-        "width": 60.18,
-        "fontSize": 12.0,
-        "color": "rgb(71,85,105)",
-        "fontWeight": 400,
-        "fontFamily": "Inter",
-        "text": {
-          "en": "Cloud Risk",
-          "es": "Cloud Risk"
-        }
-      },
-      {
-        "x": 666.93,
-        "y": 313.32,
-        "width": 93.62,
-        "fontSize": 12.0,
-        "color": "rgb(71,85,105)",
-        "fontWeight": 700,
-        "fontFamily": "Inter",
-        "text": {
-          "en": "Native Edge AI",
-          "es": "Native Edge AI"
-        }
-      },
-      {
-        "x": 64.5,
-        "y": 358.92,
-        "width": 63.54,
-        "fontSize": 12.0,
-        "color": "rgb(71,85,105)",
-        "fontWeight": 400,
-        "fontFamily": "Inter",
-        "text": {
-          "en": "Experience",
-          "es": "Experience"
-        }
-      },
-      {
-        "x": 281.6,
-        "y": 358.92,
-        "width": 71.84,
-        "fontSize": 12.0,
-        "color": "rgb(71,85,105)",
-        "fontWeight": 400,
-        "fontFamily": "Inter",
-        "text": {
-          "en": "High Friction",
-          "es": "High Friction"
-        }
-      },
-      {
-        "x": 491.88,
-        "y": 358.92,
-        "width": 84.47,
-        "fontSize": 12.0,
-        "color": "rgb(71,85,105)",
-        "fontWeight": 400,
-        "fontFamily": "Inter",
-        "text": {
-          "en": "Uncomfortable",
-          "es": "Uncomfortable"
-        }
-      },
-      {
-        "x": 666.93,
-        "y": 358.92,
-        "width": 123.18,
-        "fontSize": 12.0,
-        "color": "rgb(71,85,105)",
-        "fontWeight": 700,
-        "fontFamily": "Inter",
-        "text": {
-          "en": "Gamified / Immersive",
-          "es": "Gamified / Immersive"
-        }
-      },
-      {
-        "x": 64.5,
-        "y": 404.52,
-        "width": 112.56,
-        "fontSize": 12.0,
-        "color": "rgb(71,85,105)",
-        "fontWeight": 400,
-        "fontFamily": "Inter",
-        "text": {
-          "en": "Soft Skills Accuracy",
-          "es": "Soft Skills Accuracy"
-        }
-      },
-      {
-        "x": 281.6,
-        "y": 404.52,
-        "width": 30.3,
-        "fontSize": 12.0,
-        "color": "rgb(71,85,105)",
-        "fontWeight": 400,
-        "fontFamily": "Inter",
-        "text": {
-          "en": "None",
-          "es": "None"
-        }
-      },
-      {
-        "x": 491.88,
-        "y": 404.52,
-        "width": 41.24,
-        "fontSize": 12.0,
-        "color": "rgb(71,85,105)",
-        "fontWeight": 400,
-        "fontFamily": "Inter",
-        "text": {
-          "en": "Limited",
-          "es": "Limited"
-        }
-      },
-      {
-        "x": 666.93,
-        "y": 404.52,
-        "width": 83.72,
-        "fontSize": 12.0,
-        "color": "rgb(71,85,105)",
-        "fontWeight": 700,
-        "fontFamily": "Inter",
-        "text": {
-          "en": "High Precision",
-          "es": "High Precision"
-        }
-      },
-      {
-        "x": 75.0,
-        "y": 76.68,
-        "width": 205.85,
-        "fontSize": 33.0,
-        "color": "rgb(30,41,59)",
-        "fontWeight": 700,
-        "fontFamily": "Urbanist",
-        "text": {
-          "en": "Why KRUMM",
-          "es": "Why KRUMM"
-        }
-      },
-      {
-        "x": 280.9,
-        "y": 76.68,
-        "width": 155.76,
-        "fontSize": 33.0,
-        "color": "rgb(155,144,127)",
-        "fontWeight": 400,
-        "fontFamily": "Urbanist",
-        "text": {
-          "en": "Dominates",
-          "es": "Dominates"
-        }
-      }
-    ]
+    ],
   },
   {
-    "id": "ask",
-    "label": "Pilot Execution",
-    "image": "page10",
-    "elements": [
+    id: 'ask',
+    label: t('Our Next Milestones', 'Nuestros próximos hitos'),
+    image: 'page10',
+    blocks: [
       {
-        "x": 95.56,
-        "y": 152.6,
-        "width": 123.17,
-        "fontSize": 17.0,
-        "color": "rgb(0,0,0)",
-        "fontWeight": 700,
-        "fontFamily": "Inter",
-        "text": {
-          "en": "Pilot Execution",
-          "es": "Pilot Execution"
-        }
+        variant: 'title',
+        x: 74,
+        y: 42,
+        width: 450,
+        height: 72,
+        content: t('Our Next Milestones', 'Nuestros próximos hitos'),
       },
       {
-        "x": 218.81,
-        "y": 152.6,
-        "width": 659.23,
-        "fontSize": 17.0,
-        "color": "rgb(0,0,0)",
-        "fontWeight": 400,
-        "fontFamily": "Inter",
-        "text": {
-          "en": ": Successfully launch our first industrial pilot with Cermaq to validate our soft-skill",
-          "es": ": Successfully launch our first industrial pilot with Cermaq to validate our soft-skill"
-        }
+        variant: 'body',
+        x: 96,
+        y: 150,
+        width: 760,
+        height: 210,
+        items: [
+          {
+            title: t('Pilot Execution', 'Ejecución del piloto'),
+            body: t(
+              'Successfully launch our first industrial pilot with Cermaq to validate soft-skill biometric models in a high-stakes environment.',
+              'Lanzar con éxito nuestro primer piloto industrial con Cermaq para validar modelos biométricos de habilidades blandas en un entorno de alta exigencia.',
+            ),
+          },
+          {
+            title: t('Sector Dominance', 'Dominio sectorial'),
+            body: t(
+              'Leverage the Cermaq success to secure five additional Tier-1 contracts in the LatAm aquaculture and fishing industry.',
+              'Aprovechar el éxito con Cermaq para asegurar cinco contratos Tier-1 adicionales en la industria acuícola y pesquera de LatAm.',
+            ),
+          },
+          {
+            title: t('Product Calibration', 'Calibración del producto'),
+            body: t(
+              'Finalize Edge AI integration to ensure maximum privacy and zero-latency performance for B2B clients.',
+              'Finalizar la integración Edge AI para asegurar máxima privacidad y rendimiento de latencia cero para clientes B2B.',
+            ),
+          },
+        ],
       },
       {
-        "x": 294.06,
-        "y": 173.0,
-        "width": 380.77,
-        "fontSize": 17.0,
-        "color": "rgb(0,0,0)",
-        "fontWeight": 400,
-        "fontFamily": "Inter",
-        "text": {
-          "en": "biometric models in a high-stakes environment.",
-          "es": "biométricos de habilidades blandas en un entorno de alta exigencia."
-        }
+        variant: 'subtitle',
+        x: 206,
+        y: 384,
+        width: 548,
+        height: 44,
+        content: t(
+          'Accelerating our Go-To-Market with Smart Capital.',
+          'Acelerando nuestra salida al mercado con capital inteligente.',
+        ),
       },
       {
-        "x": 74.08,
-        "y": 213.8,
-        "width": 158.22,
-        "fontSize": 17.0,
-        "color": "rgb(0,0,0)",
-        "fontWeight": 700,
-        "fontFamily": "Inter",
-        "text": {
-          "en": "Sector Dominance:",
-          "es": "Sector Dominance:"
-        }
+        variant: 'small',
+        x: 270,
+        y: 438,
+        width: 420,
+        height: 32,
+        content: t(
+          'Join us in uncovering the Behavioral Truth.',
+          'Únete a descubrir la verdad conductual.',
+        ),
       },
-      {
-        "x": 232.37,
-        "y": 213.8,
-        "width": 667.2,
-        "fontSize": 17.0,
-        "color": "rgb(0,0,0)",
-        "fontWeight": 400,
-        "fontFamily": "Inter",
-        "text": {
-          "en": "Leverage the Cermaq success to secure 5 additional Tier-1 contracts in the LatAm",
-          "es": "Leverage the Cermaq success to secure 5 additional Tier-1 contracts in the LatAm"
-        }
-      },
-      {
-        "x": 352.96,
-        "y": 234.2,
-        "width": 263.02,
-        "fontSize": 17.0,
-        "color": "rgb(0,0,0)",
-        "fontWeight": 400,
-        "fontFamily": "Inter",
-        "text": {
-          "en": "aquaculture and fishing industry.",
-          "es": "la industria acuícola y pesquera LatAm."
-        }
-      },
-      {
-        "x": 106.95,
-        "y": 275.0,
-        "width": 160.12,
-        "fontSize": 17.0,
-        "color": "rgb(0,0,0)",
-        "fontWeight": 700,
-        "fontFamily": "Inter",
-        "text": {
-          "en": "Product Calibration",
-          "es": "Product Calibration"
-        }
-      },
-      {
-        "x": 267.16,
-        "y": 275.0,
-        "width": 599.61,
-        "fontSize": 17.0,
-        "color": "rgb(0,0,0)",
-        "fontWeight": 400,
-        "fontFamily": "Inter",
-        "text": {
-          "en": ": Finalize Edge AI integration to ensure maximum privacy and zero-latency",
-          "es": ": Finalize Edge AI integration to ensure maximum privacy and zero-latency"
-        }
-      },
-      {
-        "x": 369.44,
-        "y": 295.4,
-        "width": 230.08,
-        "fontSize": 17.0,
-        "color": "rgb(0,0,0)",
-        "fontWeight": 400,
-        "fontFamily": "Inter",
-        "text": {
-          "en": "performance for B2B clients.",
-          "es": "de latencia cero para clientes B2B."
-        }
-      },
-      {
-        "x": 246.72,
-        "y": 375.67,
-        "width": 466.17,
-        "fontSize": 19.5,
-        "color": "rgb(100,116,139)",
-        "fontWeight": 400,
-        "fontFamily": "Inter",
-        "text": {
-          "en": "Accelerating our Go-To-Market with Smart Capital.",
-          "es": "Acelerando nuestro Go-To-Market con capital inteligente."
-        }
-      },
-      {
-        "x": 323.58,
-        "y": 435.38,
-        "width": 312.47,
-        "fontSize": 15.0,
-        "color": "rgb(71,85,105)",
-        "fontWeight": 700,
-        "fontFamily": "Inter",
-        "text": {
-          "en": "Join us in uncovering the Behavioral Truth.",
-          "es": "Únete a descubrir la verdad conductual."
-        }
-      },
-      {
-        "x": 79.04,
-        "y": 76.41,
-        "width": 300.0,
-        "fontSize": 33.0,
-        "color": "rgb(30,41,59)",
-        "fontWeight": 700,
-        "fontFamily": "Urbanist",
-        "text": {
-          "en": "Our Next Milestones",
-          "es": "Nuestros próximos hitos"
-        }
-      }
-    ]
-  }
+    ],
+  },
 ];
 
 export const PITCH_DECK_SLIDES = Object.freeze(RAW_SLIDES.map((slide) => Object.freeze({
   ...slide,
   background: PAGE_IMAGES[slide.image],
-  elements: Object.freeze(slide.elements.map((element) => Object.freeze(element))),
+  blocks: Object.freeze(slide.blocks.map((block) => Object.freeze(block))),
 })));

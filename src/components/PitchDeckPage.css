@@ -50,6 +50,17 @@
   --deck-control-bg: rgba(15, 23, 42, 0.58);
   --deck-control-border: rgba(226, 232, 240, 0.24);
   --deck-control-fg: #f8fafc;
+  --deck-ink: #1e293b;
+  --deck-muted: #475569;
+  --deck-accent: #9b907f;
+  --deck-font-title: 33px;
+  --deck-font-kicker: 20px;
+  --deck-font-subtitle: 15px;
+  --deck-font-card-title: 22px;
+  --deck-font-body: 15px;
+  --deck-font-table: 12px;
+  --deck-font-small: 13px;
+  --deck-font-metric: 88px;
   min-height: 100vh;
   min-height: 100dvh;
   height: 100%;
@@ -98,6 +109,7 @@
 .pitch-deck-page__brand {
   color: #f8fafc;
   border-radius: 999px 999px 0 0;
+  font-family: Inter, ui-sans-serif, system-ui, sans-serif;
   font-size: 0.7rem;
   font-weight: 900;
   letter-spacing: 0.18em;
@@ -123,6 +135,7 @@
   color: var(--deck-control-fg);
   background: var(--deck-control-bg);
   backdrop-filter: blur(12px);
+  font-family: Inter, ui-sans-serif, system-ui, sans-serif;
   font-size: 0.78rem;
   font-weight: 800;
   line-height: 1;
@@ -150,6 +163,7 @@
   background: var(--deck-control-bg);
   backdrop-filter: blur(12px);
   text-align: center;
+  font-family: Inter, ui-sans-serif, system-ui, sans-serif;
   font-size: 0.78rem;
   font-weight: 900;
   pointer-events: auto;
@@ -177,11 +191,169 @@
   background: #ffffff;
 }
 
-.pitch-deck-page__slide text {
-  paint-order: stroke;
-  stroke: rgba(255, 255, 255, 0.01);
-  stroke-width: 0.05px;
-  text-rendering: geometricPrecision;
+.pitch-deck-block {
+  box-sizing: border-box;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  color: var(--deck-muted);
+  font-family: Inter, ui-sans-serif, system-ui, sans-serif;
+  font-size: var(--deck-font-body);
+  font-weight: 400;
+  line-height: 1.32;
+  text-align: left;
+}
+
+.pitch-deck-block h2,
+.pitch-deck-block p,
+.pitch-deck-list {
+  margin: 0;
+}
+
+.pitch-deck-block--title {
+  display: flex;
+  align-items: flex-start;
+  color: var(--deck-ink);
+  font-family: Urbanist, Inter, ui-sans-serif, system-ui, sans-serif;
+  font-size: var(--deck-font-title);
+  font-weight: 700;
+  line-height: 1.02;
+  letter-spacing: -0.03em;
+}
+
+.pitch-deck-block--title .pitch-deck-block__content {
+  font: inherit;
+  color: inherit;
+}
+
+.pitch-deck-block--kicker {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #64748b;
+  font-family: Inter, ui-sans-serif, system-ui, sans-serif;
+  font-size: var(--deck-font-kicker);
+  font-weight: 500;
+  line-height: 1.18;
+  text-align: center;
+}
+
+.pitch-deck-block--kicker .pitch-deck-block__content {
+  max-width: 100%;
+}
+
+.pitch-deck-block--subtitle,
+.pitch-deck-block--small {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--deck-muted);
+  font-family: Inter, ui-sans-serif, system-ui, sans-serif;
+  font-size: var(--deck-font-subtitle);
+  font-weight: 600;
+  line-height: 1.24;
+  text-align: center;
+}
+
+.pitch-deck-block--small {
+  font-size: var(--deck-font-small);
+  font-weight: 700;
+}
+
+.pitch-deck-block--card {
+  color: var(--deck-muted);
+  font-size: var(--deck-font-body);
+}
+
+.pitch-deck-block--card h2 {
+  color: var(--deck-accent);
+  font-family: Urbanist, Inter, ui-sans-serif, system-ui, sans-serif;
+  font-size: var(--deck-font-card-title);
+  font-weight: 700;
+  line-height: 1.06;
+  letter-spacing: -0.02em;
+  margin-bottom: 10px;
+}
+
+.pitch-deck-block__eyebrow {
+  color: var(--deck-muted);
+  font-size: 12.5px;
+  font-weight: 700;
+  margin-bottom: 8px;
+}
+
+.pitch-deck-block__body,
+.pitch-deck-list {
+  color: var(--deck-muted);
+  font-size: var(--deck-font-body);
+  line-height: 1.34;
+}
+
+.pitch-deck-block--body {
+  color: var(--deck-muted);
+  font-size: var(--deck-font-body);
+}
+
+.pitch-deck-list {
+  display: grid;
+  gap: 12px;
+  padding: 0;
+  list-style: none;
+}
+
+.pitch-deck-list strong {
+  color: var(--deck-ink);
+  font-weight: 700;
+}
+
+.pitch-deck-block--metric {
+  display: flex;
+  align-items: center;
+  color: var(--deck-accent);
+  font-family: Urbanist, Inter, ui-sans-serif, system-ui, sans-serif;
+  font-size: var(--deck-font-metric);
+  font-weight: 800;
+  line-height: 0.92;
+  letter-spacing: -0.06em;
+}
+
+.pitch-deck-block--metric .pitch-deck-block__content {
+  font: inherit;
+  color: inherit;
+}
+
+.pitch-deck-block--table {
+  font-size: var(--deck-font-table);
+}
+
+.pitch-deck-table {
+  width: 100%;
+  height: 100%;
+  border-collapse: collapse;
+  table-layout: fixed;
+  color: var(--deck-muted);
+  font-family: Inter, ui-sans-serif, system-ui, sans-serif;
+  font-size: var(--deck-font-table);
+  line-height: 1.26;
+}
+
+.pitch-deck-table th,
+.pitch-deck-table td {
+  padding: 8px 10px;
+  border-bottom: 1px solid rgba(100, 116, 139, 0.22);
+  vertical-align: top;
+}
+
+.pitch-deck-table th {
+  color: var(--deck-ink);
+  font-weight: 700;
+  text-align: left;
+}
+
+.pitch-deck-table td:first-child,
+.pitch-deck-table td:nth-child(2),
+.pitch-deck-table td:last-child {
+  font-weight: 600;
 }
 
 .pitch-deck-page__dots {
