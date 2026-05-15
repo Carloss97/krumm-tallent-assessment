@@ -1,28 +1,31 @@
 import React from 'react';
-import { render, screen, waitFor } from '@testing-library/react';
-import { afterEach, describe, it, expect, vi } from 'vitest';
+import { fireEvent, render, screen } from '@testing-library/react';
+import { describe, expect, it } from 'vitest';
 import PitchDeckPage from './PitchDeckPage';
 
 describe('PitchDeckPage', () => {
-  afterEach(() => {
-    vi.restoreAllMocks();
-  });
-
-  it('loads deck HTML into srcdoc without bundling the raw deck into the JS chunk', async () => {
-    vi.spyOn(globalThis, 'fetch').mockResolvedValue({
-      ok: true,
-      text: vi.fn().mockResolvedValue('<!doctype html><html><body>pdf2htmlEX</body></html>'),
-    });
-
+  it('renders a native editable React deck instead of an imported iframe/html document', () => {
     render(<PitchDeckPage />);
 
-    const frame = screen.getByTitle('KRUMM Pitch Deck');
+    expect(screen.queryByTitle('KRUMM Pitch Deck')).toBeNull();
+    expect(screen.getByRole('main', { name: /krumm pitch deck/i })).toBeDefined();
+    expect(screen.getByRole('heading', { name: /inteligencia de talento browser-local/i })).toBeDefined();
+    expect(screen.getByText(/Modelo local, privacidad por diseño y evidencia auditable/i)).toBeDefined();
+  });
 
-    expect(frame).toHaveAttribute('srcdoc');
-    expect(frame).not.toHaveAttribute('src');
+  it('switches the whole pitch deck between Spanish and English copy', () => {
+    render(<PitchDeckPage />);
 
-    await waitFor(() => {
-      expect(frame.getAttribute('srcdoc')).toContain('pdf2htmlEX');
-    });
+    expect(screen.getByRole('heading', { name: /inteligencia de talento browser-local/i })).toBeDefined();
+
+    fireEvent.click(screen.getByRole('button', { name: /english/i }));
+
+    expect(screen.getByRole('heading', { name: /browser-local talent intelligence/i })).toBeDefined();
+    expect(screen.getByText(/Local model, privacy by design and auditable evidence/i)).toBeDefined();
+    expect(screen.queryByText(/Inteligencia de talento browser-local/i)).toBeNull();
+
+    fireEvent.click(screen.getByRole('button', { name: /español/i }));
+
+    expect(screen.getByRole('heading', { name: /inteligencia de talento browser-local/i })).toBeDefined();
   });
 });

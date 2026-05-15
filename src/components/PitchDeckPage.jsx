@@ -1,60 +1,103 @@
-import { useEffect, useState } from 'react';
-import pitchDeckUrl from '../assets/pitchdeck.html?url';
-
-const loadingDeckHtml = `<!doctype html>
-<html lang="en">
-  <head><title>KRUMM Pitch Deck</title></head>
-  <body style="font-family: system-ui, sans-serif; display: grid; place-items: center; min-height: 100vh; margin: 0; color: #0f172a; background: #f8fafc;">
-    <p>Loading pitch deck…</p>
-  </body>
-</html>`;
-
-const failedDeckHtml = `<!doctype html>
-<html lang="en">
-  <head><title>KRUMM Pitch Deck unavailable</title></head>
-  <body style="font-family: system-ui, sans-serif; display: grid; place-items: center; min-height: 100vh; margin: 0; color: #991b1b; background: #fff7ed;">
-    <p>Pitch deck could not be loaded.</p>
-  </body>
-</html>`;
+import { useEffect, useMemo, useState } from 'react';
+import { PITCH_DECK_LANGUAGES, PITCH_DECK_SLIDES } from './pitchDeckContent';
+import './PitchDeckPage.css';
 
 function PitchDeckPage() {
-  const [deckHtml, setDeckHtml] = useState(loadingDeckHtml);
+  const [language, setLanguage] = useState('es');
+  const [activeSlideIndex, setActiveSlideIndex] = useState(0);
+  const activeSlide = PITCH_DECK_SLIDES[activeSlideIndex];
+  const copy = activeSlide[language];
+  const progressLabel = useMemo(
+    () => `${activeSlideIndex + 1}/${PITCH_DECK_SLIDES.length}`,
+    [activeSlideIndex],
+  );
 
   useEffect(() => {
-    let cancelled = false;
-    document.title = 'KRUMM | Pitch Deck';
+    document.title = language === 'es' ? 'KRUMM | Pitch Deck ES' : 'KRUMM | Pitch Deck EN';
+  }, [language]);
 
-    fetch(pitchDeckUrl)
-      .then((response) => {
-        if (!response.ok) {
-          throw new Error(`Pitch deck request failed: ${response.status}`);
-        }
-        return response.text();
-      })
-      .then((html) => {
-        if (!cancelled) {
-          setDeckHtml(html);
-        }
-      })
-      .catch(() => {
-        if (!cancelled) {
-          setDeckHtml(failedDeckHtml);
-        }
-      });
+  const goToPrevious = () => {
+    setActiveSlideIndex((current) => Math.max(0, current - 1));
+  };
 
-    return () => {
-      cancelled = true;
-    };
-  }, []);
+  const goToNext = () => {
+    setActiveSlideIndex((current) => Math.min(PITCH_DECK_SLIDES.length - 1, current + 1));
+  };
 
   return (
-    <div style={{ width: '100vw', height: '100vh', overflow: 'hidden' }}>
-      <iframe
-        srcDoc={deckHtml}
-        title="KRUMM Pitch Deck"
-        style={{ border: 0, width: '100%', height: '100%' }}
-      />
-    </div>
+    <main className="native-pitch-deck" aria-label="KRUMM Pitch Deck">
+      <header className="native-pitch-deck__topbar">
+        <div>
+          <p className="native-pitch-deck__kicker">KRUMM</p>
+          <p className="native-pitch-deck__mode">
+            {language === 'es' ? 'Deck nativo editable' : 'Editable native deck'}
+          </p>
+        </div>
+
+        <div className="native-pitch-deck__controls" aria-label={language === 'es' ? 'Controles del deck' : 'Deck controls'}>
+          <div className="native-pitch-deck__language" aria-label="Language selector">
+            {Object.entries(PITCH_DECK_LANGUAGES).map(([code, label]) => (
+              <button
+                key={code}
+                type="button"
+                className={language === code ? 'is-active' : ''}
+                onClick={() => setLanguage(code)}
+                aria-pressed={language === code}
+              >
+                {label}
+              </button>
+            ))}
+          </div>
+          <span className="native-pitch-deck__progress">{progressLabel}</span>
+        </div>
+      </header>
+
+      <section className={`native-pitch-deck__slide native-pitch-deck__slide--${activeSlide.accent}`}>
+        <div className="native-pitch-deck__copy">
+          <p className="native-pitch-deck__eyebrow">{copy.eyebrow}</p>
+          <h1>{copy.title}</h1>
+          <p className="native-pitch-deck__subtitle">{copy.subtitle}</p>
+          <ul className="native-pitch-deck__bullets">
+            {copy.bullets.map((bullet) => (
+              <li key={bullet}>{bullet}</li>
+            ))}
+          </ul>
+        </div>
+
+        <aside className="native-pitch-deck__visual" aria-label={language === 'es' ? 'Métricas clave' : 'Key metrics'}>
+          <div className="native-pitch-deck__orb" />
+          <div className="native-pitch-deck__metric-grid">
+            {copy.metrics.map((metric) => (
+              <div className="native-pitch-deck__metric" key={`${metric.label}-${metric.value}`}>
+                <span>{metric.label}</span>
+                <strong>{metric.value}</strong>
+              </div>
+            ))}
+          </div>
+        </aside>
+      </section>
+
+      <footer className="native-pitch-deck__footer">
+        <button type="button" onClick={goToPrevious} disabled={activeSlideIndex === 0}>
+          {language === 'es' ? 'Anterior' : 'Previous'}
+        </button>
+        <nav className="native-pitch-deck__dots" aria-label={language === 'es' ? 'Diapositivas' : 'Slides'}>
+          {PITCH_DECK_SLIDES.map((slide, index) => (
+            <button
+              key={slide.id}
+              type="button"
+              className={index === activeSlideIndex ? 'is-active' : ''}
+              onClick={() => setActiveSlideIndex(index)}
+              aria-label={`${language === 'es' ? 'Ir a diapositiva' : 'Go to slide'} ${index + 1}: ${slide[language].title}`}
+              aria-current={index === activeSlideIndex ? 'step' : undefined}
+            />
+          ))}
+        </nav>
+        <button type="button" onClick={goToNext} disabled={activeSlideIndex === PITCH_DECK_SLIDES.length - 1}>
+          {language === 'es' ? 'Siguiente' : 'Next'}
+        </button>
+      </footer>
+    </main>
   );
 }
 

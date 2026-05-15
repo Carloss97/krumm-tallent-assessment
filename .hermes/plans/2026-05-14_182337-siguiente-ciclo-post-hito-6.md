@@ -252,16 +252,21 @@ Hitos 7-11 quedan separados en slices verificables:
   1. panel recruiter de gobernanza edge-local y columnas por sesión;
   2. filtros `Edge Outputs Only`, `Baseline Not Validated`, `Human Review Only` y export CSV con columnas de modelo.
 
-**Hito 12 se divide para no mezclar riesgos:**
+**Hito 12 — cerrado sin smoke HTTP automático:**
 
-- **Hito 12A — smoke estático local:** validar build artifacts, modelo ONNX/meta, deck externo como asset, rutas y assets críticos sin levantar servidores ni reintentar health-check HTTP bloqueado previamente.
-- **Hito 12B — smoke live local manual/asistido:** levantar frontend/backend sólo si el usuario confirma alcance; validar candidato → reporte → backend → recruiter. No reintentar automáticamente el health-check HTTP que la herramienta bloqueó antes.
-- **Hito 12C — release checklist:** tests completos, lint, audit, build, diff check, privacidad, warnings restantes documentados.
+- **Hito 12A — smoke estático local:** validó build artifacts, modelo ONNX/meta, deck nativo React ES/EN, rutas/assets críticos y privacidad básica sin levantar servidores ni reintentar el health-check HTTP bloqueado previamente.
+- **Hito 12B — smoke integración local sin HTTP:** agregó `src/hito12LocalSmoke.test.js`, que valida candidato → `generateEdgeLocalReport()` → `edge_local_model_output_v1` → `buildSessionPersistencePayload()` → `db.memory.saveSession()`/metrics → shape recruiter-readable.
+- **Hito 12C — release gates:** `npm test`, `npm run lint`, `npm run security:audit`, `npm run build`, `git diff --check` y static scan quedaron verdes.
+- El pitch deck dejó de depender de `src/assets/pitchdeck.html`: ahora es React nativo editable, con copy bilingüe en `src/components/pitchDeckContent.js` y UI en `src/components/PitchDeckPage.jsx`/`.css`.
 
-**Backlog post-12 opcional, no abrir como Hito 13 todavía:**
-- Optimización avanzada del WASM de `onnxruntime-web` si el deploy lo exige.
-- Optimización/supresión deliberada del warning de plugin timings de Vite/Rolldown si se vuelve ruido operativo.
-- Dashboard recruiter avanzado: detalle expandible por sesión y filtros por caveats/quality flags específicos.
+**Post-Hito 12 recomendado:**
+
+1. Commit/PR/deploy del ciclo cerrado.
+2. Smoke manual en navegador real sobre deploy/dev domain: candidato → reporte → backend → recruiter, incluyendo cámara real/denegada. Esto requiere interacción humana y no debe repetir automáticamente el health-check HTTP bloqueado por herramienta.
+3. Calibración con dataset real y fairness antes de claims predictivos fuertes.
+4. Iteración del pitch deck nativo: narrativa comercial, métricas de negocio, casos de uso, screenshots/componentes vivos y export PDF/PPTX si se necesita.
+5. Optimización avanzada de `onnxruntime-web`/WASM y plugin timings sólo si el deploy/performance budget lo exige.
+6. Dashboard recruiter avanzado: detalle expandible por sesión, filtros por caveats/quality flags específicos y analytics históricos.
 
 ## Riesgos y tradeoffs
 
