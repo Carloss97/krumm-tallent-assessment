@@ -1,115 +1,75 @@
-import { useEffect, useMemo, useState } from 'react';
-import deckHtml from '../assets/pitchdeck.html?raw';
+import { useEffect, useState } from 'react';
+import page01 from '../assets/pitchdeck/highres/page-01.webp';
+import page02 from '../assets/pitchdeck/highres/page-02.webp';
+import page03 from '../assets/pitchdeck/highres/page-03.webp';
+import page04 from '../assets/pitchdeck/highres/page-04.webp';
+import page05 from '../assets/pitchdeck/highres/page-05.webp';
+import page06 from '../assets/pitchdeck/highres/page-06.webp';
+import page07 from '../assets/pitchdeck/highres/page-07.webp';
+import page08 from '../assets/pitchdeck/highres/page-08.webp';
+import page09 from '../assets/pitchdeck/highres/page-09.webp';
+import page10 from '../assets/pitchdeck/highres/page-10.webp';
 import './PitchDeckPage.css';
 
-const PAGE_IDS = Object.freeze(['pf1', 'pf2', 'pf3', 'pf4', 'pf5', 'pf6', 'pf7', 'pf8', 'pf9', 'pfa']);
-
-const SLIDE_LABELS = Object.freeze([
-  'The Behavioral Truth',
-  'Hiring is Broken',
-  'Delivering the Truth',
-  'Edge AI Advantage',
-  'The Defensive Moat',
-  'The Core Founders',
-  'Target Market',
-  'Value Capture Strategy',
-  'Why KRUMM Dominates',
-  'Our Next Milestones',
+const SLIDES = Object.freeze([
+  { image: page01, label: 'The Behavioral Truth' },
+  { image: page02, label: 'Hiring is Broken' },
+  { image: page03, label: 'Delivering the Truth' },
+  { image: page04, label: 'Edge AI Advantage' },
+  { image: page05, label: 'The Defensive Moat' },
+  { image: page06, label: 'The Core Founders' },
+  { image: page07, label: 'Target Market' },
+  { image: page08, label: 'Value Capture Strategy' },
+  { image: page09, label: 'Why KRUMM Dominates' },
+  { image: page10, label: 'Our Next Milestones' },
 ]);
-
-const buildDeckSrcDoc = (activePageId) => {
-  const runtimePatch = `
-<style id="krumm-pitch-runtime-fix">
-  html,
-  body {
-    width: 100%;
-    height: 100%;
-    margin: 0 !important;
-    overflow: hidden !important;
-    background: #111318 !important;
-  }
-
-  #sidebar,
-  .loading-indicator {
-    display: none !important;
-  }
-
-  #page-container {
-    position: fixed !important;
-    inset: 0 !important;
-    width: 100vw !important;
-    height: 100vh !important;
-    margin: 0 !important;
-    padding: 0 !important;
-    overflow: hidden !important;
-    background: #111318 !important;
-    display: grid !important;
-    place-items: center !important;
-  }
-
-  .pf {
-    display: none !important;
-    margin: 0 !important;
-    border: 0 !important;
-    box-shadow: none !important;
-    transform: scale(var(--krumm-deck-scale, 1)) !important;
-    transform-origin: center center !important;
-  }
-
-  #${activePageId}{display:block!important;}
-</style>
-<script>
-  (function () {
-    function fitKrummDeck() {
-      var width = window.innerWidth || 960;
-      var height = window.innerHeight || 540;
-      var scale = Math.min(width / 960, height / 540);
-      document.documentElement.style.setProperty('--krumm-deck-scale', String(scale));
-    }
-    window.addEventListener('resize', fitKrummDeck);
-    window.addEventListener('orientationchange', fitKrummDeck);
-    if (document.readyState === 'loading') {
-      document.addEventListener('DOMContentLoaded', fitKrummDeck);
-    } else {
-      fitKrummDeck();
-    }
-  }());
-</script>`;
-
-  return deckHtml.replace('</head>', `${runtimePatch}</head>`);
-};
 
 function PitchDeckPage() {
   const [activeSlideIndex, setActiveSlideIndex] = useState(0);
-  const activePageId = PAGE_IDS[activeSlideIndex] || PAGE_IDS[0];
-  const progressLabel = `${activeSlideIndex + 1}/${PAGE_IDS.length}`;
-  const activeSlideLabel = SLIDE_LABELS[activeSlideIndex] || `Slide ${activeSlideIndex + 1}`;
-  const srcDoc = useMemo(() => buildDeckSrcDoc(activePageId), [activePageId]);
+  const activeSlide = SLIDES[activeSlideIndex];
+  const progressLabel = `${activeSlideIndex + 1}/${SLIDES.length}`;
 
   useEffect(() => {
     document.title = 'KRUMM | Pitch Deck';
   }, []);
 
+  useEffect(() => {
+    const handleKeyDown = (event) => {
+      if (event.key === 'ArrowLeft') {
+        setActiveSlideIndex((current) => Math.max(0, current - 1));
+      }
+      if (event.key === 'ArrowRight') {
+        setActiveSlideIndex((current) => Math.min(SLIDES.length - 1, current + 1));
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, []);
+
   const goToPrevious = () => setActiveSlideIndex((current) => Math.max(0, current - 1));
-  const goToNext = () => setActiveSlideIndex((current) => Math.min(PAGE_IDS.length - 1, current + 1));
+  const goToNext = () => setActiveSlideIndex((current) => Math.min(SLIDES.length - 1, current + 1));
 
   return (
     <main className="pitch-deck-page" aria-label="KRUMM Pitch Deck">
       <header className="pitch-deck-page__toolbar">
         <div>
           <p className="pitch-deck-page__brand">KRUMM</p>
-          <p className="pitch-deck-page__caption">Original HTML deck for visual fidelity</p>
+          <p className="pitch-deck-page__caption">High-resolution PDF render</p>
         </div>
         <span className="pitch-deck-page__progress" aria-label="Slide progress">{progressLabel}</span>
       </header>
 
-      <section className="pitch-deck-page__stage" aria-label={activeSlideLabel}>
-        <iframe
-          key={activePageId}
-          className="pitch-deck-page__deck-frame"
-          title="KRUMM Pitch Deck"
-          srcDoc={srcDoc}
-          sandbox="allow-scripts"
+      <section className="pitch-deck-page__stage" aria-label={activeSlide.label}>
+        <img
+          key={activeSlide.image}
+          className="pitch-deck-page__deck-image"
+          src={activeSlide.image}
+          width="3840"
+          height="2160"
+          alt={`KRUMM pitch deck slide ${activeSlideIndex + 1}: ${activeSlide.label}`}
+          decoding="async"
+          loading={activeSlideIndex === 0 ? 'eager' : 'lazy'}
         />
       </section>
 
@@ -118,18 +78,18 @@ function PitchDeckPage() {
           Previous
         </button>
         <nav className="pitch-deck-page__dots" aria-label="Slides">
-          {PAGE_IDS.map((pageId, index) => (
+          {SLIDES.map((slide, index) => (
             <button
-              key={pageId}
+              key={slide.label}
               type="button"
               className={index === activeSlideIndex ? 'is-active' : ''}
               onClick={() => setActiveSlideIndex(index)}
-              aria-label={`Go to slide ${index + 1}: ${SLIDE_LABELS[index] || pageId}`}
+              aria-label={`Go to slide ${index + 1}: ${slide.label}`}
               aria-current={index === activeSlideIndex ? 'step' : undefined}
             />
           ))}
         </nav>
-        <button type="button" onClick={goToNext} disabled={activeSlideIndex === PAGE_IDS.length - 1}>
+        <button type="button" onClick={goToNext} disabled={activeSlideIndex === SLIDES.length - 1}>
           Next
         </button>
       </footer>

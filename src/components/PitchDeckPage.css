@@ -70,7 +70,7 @@
   overflow: hidden;
 }
 
-.pitch-deck-page__deck-frame {
+.pitch-deck-page__deck-image {
   display: block;
   width: min(100vw, calc(100vh * 16 / 9));
   width: min(100dvw, calc(100dvh * 16 / 9));
@@ -79,8 +79,10 @@
   max-width: none;
   max-height: none;
   aspect-ratio: 16 / 9;
-  border: 0;
+  object-fit: contain;
+  image-rendering: auto;
   background: #111318;
+  user-select: none;
 }
 
 .pitch-deck-page__progress {
