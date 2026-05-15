@@ -86,9 +86,9 @@ vi.mock('../utils/webcamCapture', () => ({
   }),
 }));
 
-const renderLab = () => render(
+const renderLab = (props = {}) => render(
   <MemoryRouter>
-    <DevCameraLab />
+    <DevCameraLab {...props} />
   </MemoryRouter>,
 );
 
@@ -167,6 +167,18 @@ describe('DevCameraLab', () => {
     expect(latestSafeWindow).toHaveStyle({ maxHeight: '360px', overflowY: 'auto', overflowX: 'auto' });
     expect(latestSafeWindow).toHaveTextContent(/facial_window_v1/i);
     expect(latestSafeWindow).toHaveTextContent(/rawVideoStored/i);
+  });
+
+  it('opens as a production-safe camera diagnostics route without private dev login', () => {
+    mocks.getDevAccessSession.mockReturnValue(null);
+
+    renderLab({ production: true, basePath: '/camera' });
+
+    expect(screen.getByRole('heading', { name: /browser-local camera check/i })).toBeTruthy();
+    expect(screen.getByRole('button', { name: /iniciar prueba de cámara/i })).toBeTruthy();
+    expect(screen.queryByRole('heading', { name: /login de development/i })).not.toBeInTheDocument();
+    expect(screen.queryByText(/dev\.krumm\.cl privado/i)).not.toBeInTheDocument();
+    expect(screen.getByRole('link', { name: /reporte diagnóstico de cámara/i })).toHaveAttribute('href', '/camera/report');
   });
 
   it('blocks the lab when the route is opened outside the allowed dev hosts', () => {

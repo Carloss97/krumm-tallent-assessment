@@ -23,9 +23,9 @@ vi.mock('../utils/devAccess', () => ({
   getDevAccessSession: mocks.getDevAccessSession,
 }));
 
-const renderReport = () => render(
+const renderReport = (props = {}) => render(
   <MemoryRouter>
-    <DevCameraReport />
+    <DevCameraReport {...props} />
   </MemoryRouter>,
 );
 
@@ -115,6 +115,17 @@ describe('DevCameraReport', () => {
 
     expect(screen.getByRole('heading', { name: /sesión dev requerida/i })).toBeTruthy();
     expect(screen.queryByRole('heading', { name: /validación browser-local/i })).not.toBeInTheDocument();
+  });
+
+  it('renders production camera diagnostics without a private dev session', () => {
+    saveSampleSnapshot();
+    mocks.getDevAccessSession.mockReturnValue(null);
+
+    renderReport({ production: true, basePath: '/camera' });
+
+    expect(screen.getByRole('heading', { name: /validación browser-local/i })).toBeTruthy();
+    expect(screen.queryByRole('heading', { name: /sesión dev requerida/i })).not.toBeInTheDocument();
+    expect(screen.getByRole('link', { name: /volver al diagnóstico de cámara/i })).toHaveAttribute('href', '/camera');
   });
 
   it('clears the saved diagnostic snapshot from localStorage', () => {

@@ -1,245 +1,1097 @@
+import page01 from '../assets/pitchdeck/page-01.png';
+import page02 from '../assets/pitchdeck/page-02.png';
+import page03 from '../assets/pitchdeck/page-03.png';
+import page04 from '../assets/pitchdeck/page-04.png';
+import page05 from '../assets/pitchdeck/page-05.png';
+import page06 from '../assets/pitchdeck/page-06.png';
+import page07 from '../assets/pitchdeck/page-07.png';
+import page08 from '../assets/pitchdeck/page-08.png';
+import page09 from '../assets/pitchdeck/page-09.png';
+import page10 from '../assets/pitchdeck/page-10.png';
+
 export const PITCH_DECK_LANGUAGES = Object.freeze({
-  es: 'Español',
   en: 'English',
+  es: 'Español',
 });
 
-export const PITCH_DECK_SLIDES = Object.freeze([
+const PAGE_IMAGES = Object.freeze({
+  page01,
+  page02,
+  page03,
+  page04,
+  page05,
+  page06,
+  page07,
+  page08,
+  page09,
+  page10,
+});
+
+const RAW_SLIDES = [
   {
-    id: 'cover',
-    accent: 'blue',
-    es: {
-      eyebrow: 'KRUMM Talent Assessment',
-      title: 'Inteligencia de talento browser-local',
-      subtitle: 'Modelo local, privacidad por diseño y evidencia auditable para decisiones humanas mejor informadas.',
-      bullets: [
-        'Evaluaciones gamificadas con telemetría agregada y no reconstructiva.',
-        'Inferencia edge-local: el navegador procesa señales sensibles; el backend recibe sólo metadatos.',
-        'Dashboard recruiter con confianza, caveats y trazabilidad, sin decisión automática.',
-      ],
-      metrics: [
-        { label: 'Privacidad', value: 'metadata-only' },
-        { label: 'Runtime', value: 'browser / edge' },
-        { label: 'Política', value: 'human review' },
-      ],
-    },
-    en: {
-      eyebrow: 'KRUMM Talent Assessment',
-      title: 'Browser-local talent intelligence',
-      subtitle: 'Local model, privacy by design and auditable evidence for better human review.',
-      bullets: [
-        'Gamified assessments with aggregate, non-reconstructive telemetry.',
-        'Edge-local inference: the browser processes sensitive signals; the backend receives metadata only.',
-        'Recruiter dashboard with confidence, caveats and traceability, never automated selection.',
-      ],
-      metrics: [
-        { label: 'Privacy', value: 'metadata-only' },
-        { label: 'Runtime', value: 'browser / edge' },
-        { label: 'Policy', value: 'human review' },
-      ],
-    },
+    "id": "cover",
+    "label": "The Behavioral Truth",
+    "image": "page01",
+    "elements": [
+      {
+        "x": 321.76,
+        "y": 359.0,
+        "fontSize": 78.0,
+        "color": "rgb(100,116,139)",
+        "fontWeight": 700,
+        "text": {
+          "en": "The Behavioral Truth in B2B Hiring",
+          "es": "La verdad conductual en contratación B2B"
+        }
+      },
+      {
+        "x": 242.5,
+        "y": 427.87,
+        "fontSize": 60.0,
+        "color": "rgb(71,85,105)",
+        "fontWeight": 500,
+        "text": {
+          "en": "Empirical Talent Validation based on Biometrics and Gamification.",
+          "es": "Validación empírica de talento basada en biometría y gamificación."
+        }
+      }
+    ]
   },
   {
-    id: 'problem',
-    accent: 'violet',
-    es: {
-      eyebrow: 'Problema',
-      title: 'La selección tradicional pierde señales y aumenta sesgos operativos',
-      subtitle: 'CVs, entrevistas no estructuradas y tests aislados entregan una mirada incompleta del comportamiento en tarea.',
-      bullets: [
-        'Poca observabilidad de consistencia, adaptación y ejecución bajo carga.',
-        'Procesos difíciles de auditar: la evidencia queda dispersa o subjetiva.',
-        'Sistemas centralizados elevan riesgo de privacidad si capturan datos sensibles crudos.',
-      ],
-      metrics: [
-        { label: 'Dolor', value: 'baja trazabilidad' },
-        { label: 'Riesgo', value: 'datos sensibles' },
-        { label: 'Necesidad', value: 'evidencia usable' },
-      ],
-    },
-    en: {
-      eyebrow: 'Problem',
-      title: 'Traditional hiring misses signals and increases operational bias',
-      subtitle: 'CVs, unstructured interviews and isolated tests provide an incomplete view of task behavior.',
-      bullets: [
-        'Limited observability of consistency, adaptation and execution under load.',
-        'Hard-to-audit processes: evidence remains scattered or subjective.',
-        'Centralized systems increase privacy risk when they capture raw sensitive data.',
-      ],
-      metrics: [
-        { label: 'Pain', value: 'low traceability' },
-        { label: 'Risk', value: 'sensitive data' },
-        { label: 'Need', value: 'usable evidence' },
-      ],
-    },
+    "id": "problem",
+    "label": "Hiring is Broken",
+    "image": "page02",
+    "elements": [
+      {
+        "x": 94.5,
+        "y": 266.43,
+        "fontSize": 92.0,
+        "color": "rgb(155,144,127)",
+        "fontWeight": 700,
+        "text": {
+          "en": "Subjective Bias",
+          "es": "Sesgo subjetivo"
+        }
+      },
+      {
+        "x": 94.5,
+        "y": 301.65,
+        "fontSize": 60.0,
+        "color": "rgb(71,85,105)",
+        "fontWeight": 500,
+        "text": {
+          "en": "99% of companies hire based on subjective",
+          "es": "El 99% de las empresas contrata según opiniones"
+        }
+      },
+      {
+        "x": 94.5,
+        "y": 330.45,
+        "fontSize": 60.0,
+        "color": "rgb(71,85,105)",
+        "fontWeight": 500,
+        "text": {
+          "en": "opinions that fail to predict actual",
+          "es": "subjetivas que no predicen el"
+        }
+      },
+      {
+        "x": 94.5,
+        "y": 359.25,
+        "fontSize": 60.0,
+        "color": "rgb(71,85,105)",
+        "fontWeight": 500,
+        "text": {
+          "en": "performance.",
+          "es": "desempeño real."
+        }
+      },
+      {
+        "x": 537.0,
+        "y": 266.79,
+        "fontSize": 96.0,
+        "color": "rgb(155,144,127)",
+        "fontWeight": 700,
+        "text": {
+          "en": "The Human-to-Human Gap",
+          "es": "La brecha humano-a-humano"
+        }
+      },
+      {
+        "x": 541.6,
+        "y": 287.23,
+        "fontSize": 60.0,
+        "color": "rgb(71,85,105)",
+        "fontWeight": 500,
+        "text": {
+          "en": "Modern hiring is a mechanical \"proxy war\"",
+          "es": "La contratación moderna es una “guerra proxy”"
+        }
+      },
+      {
+        "x": 541.6,
+        "y": 316.03,
+        "fontSize": 60.0,
+        "color": "rgb(71,85,105)",
+        "fontWeight": 500,
+        "text": {
+          "en": "where AI-generated resumes are rejected",
+          "es": "mecánica donde CVs generados por IA son"
+        }
+      },
+      {
+        "x": 541.6,
+        "y": 344.83,
+        "fontSize": 60.0,
+        "color": "rgb(71,85,105)",
+        "fontWeight": 500,
+        "text": {
+          "en": "by AI filters, wasting real human talent",
+          "es": "rechazados por filtros de IA, desperdiciando"
+        }
+      },
+      {
+        "x": 541.6,
+        "y": 373.63,
+        "fontSize": 60.0,
+        "color": "rgb(71,85,105)",
+        "fontWeight": 500,
+        "text": {
+          "en": "because soft skills remain invisible until the",
+          "es": "talento humano real porque las habilidades blandas"
+        }
+      },
+      {
+        "x": 541.6,
+        "y": 402.43,
+        "fontSize": 60.0,
+        "color": "rgb(71,85,105)",
+        "fontWeight": 500,
+        "text": {
+          "en": "final, costly interview stages.",
+          "es": "siguen invisibles hasta entrevistas finales y costosas."
+        }
+      },
+      {
+        "x": 75.0,
+        "y": 76.68,
+        "fontSize": 132.0,
+        "color": "rgb(30,41,59)",
+        "fontWeight": 700,
+        "text": {
+          "en": "Hiring is Broken",
+          "es": "La contratación está rota"
+        }
+      }
+    ]
   },
   {
-    id: 'solution',
-    accent: 'emerald',
-    es: {
-      eyebrow: 'Solución',
-      title: 'Evaluación gamificada con señales locales y reporte auditable',
-      subtitle: 'El candidato juega módulos breves; el navegador fusiona resultados, latencias, errores, cursor y señal visual agregada.',
-      bullets: [
-        'Feature vector versionado: juegos, timing, interacción y calidad de señal.',
-        'Modelo ONNX liviano corre en Web Worker con fallback determinístico.',
-        'Reporte final separa observaciones, confianza, caveats y recomendación para revisión humana.',
-      ],
-      metrics: [
-        { label: 'Contrato', value: '19 features' },
-        { label: 'Modelo', value: 'ONNX local' },
-        { label: 'Salida', value: 'edge_local_model_output_v1' },
-      ],
-    },
-    en: {
-      eyebrow: 'Solution',
-      title: 'Gamified assessment with local signals and auditable reporting',
-      subtitle: 'The candidate completes short modules; the browser fuses results, latency, errors, cursor and aggregate visual signal.',
-      bullets: [
-        'Versioned feature vector: games, timing, interaction and signal quality.',
-        'Lightweight ONNX model runs in a Web Worker with deterministic fallback.',
-        'Final report separates observations, confidence, caveats and human-review recommendation.',
-      ],
-      metrics: [
-        { label: 'Contract', value: '19 features' },
-        { label: 'Model', value: 'local ONNX' },
-        { label: 'Output', value: 'edge_local_model_output_v1' },
-      ],
-    },
+    "id": "truth",
+    "label": "Delivering the Truth",
+    "image": "page03",
+    "elements": [
+      {
+        "x": 87.0,
+        "y": 300.57,
+        "fontSize": 72.0,
+        "color": "rgb(30,41,59)",
+        "fontWeight": 700,
+        "text": {
+          "en": "1. Immersive",
+          "es": "1. Inmersiva"
+        }
+      },
+      {
+        "x": 87.0,
+        "y": 330.03,
+        "fontSize": 51.0,
+        "color": "rgb(71,85,105)",
+        "fontWeight": 500,
+        "text": {
+          "en": "Candidates navigate interactive",
+          "es": "Los candidatos navegan experiencias"
+        }
+      },
+      {
+        "x": 87.0,
+        "y": 354.5,
+        "fontSize": 51.0,
+        "color": "rgb(71,85,105)",
+        "fontWeight": 500,
+        "text": {
+          "en": "experiences designed to evaluate",
+          "es": "interactivas diseñadas para evaluar"
+        }
+      },
+      {
+        "x": 87.0,
+        "y": 378.97,
+        "fontSize": 51.0,
+        "color": "rgb(71,85,105)",
+        "fontWeight": 500,
+        "text": {
+          "en": "real behavior under pressure.",
+          "es": "conducta real bajo presión."
+        }
+      },
+      {
+        "x": 374.5,
+        "y": 300.57,
+        "fontSize": 72.0,
+        "color": "rgb(30,41,59)",
+        "fontWeight": 700,
+        "text": {
+          "en": "2. Biometric",
+          "es": "2. Biométrica"
+        }
+      },
+      {
+        "x": 374.5,
+        "y": 330.03,
+        "fontSize": 51.0,
+        "color": "rgb(71,85,105)",
+        "fontWeight": 500,
+        "text": {
+          "en": "We capture micro-gestures and",
+          "es": "Capturamos microgestos y telemetría"
+        }
+      },
+      {
+        "x": 374.5,
+        "y": 354.5,
+        "fontSize": 51.0,
+        "color": "rgb(71,85,105)",
+        "fontWeight": 500,
+        "text": {
+          "en": "telemetry in real-time as users",
+          "es": "en tiempo real mientras los usuarios"
+        }
+      },
+      {
+        "x": 374.5,
+        "y": 378.97,
+        "fontSize": 51.0,
+        "color": "rgb(71,85,105)",
+        "fontWeight": 500,
+        "text": {
+          "en": "make critical decisions.",
+          "es": "toman decisiones críticas."
+        }
+      },
+      {
+        "x": 661.99,
+        "y": 300.57,
+        "fontSize": 72.0,
+        "color": "rgb(30,41,59)",
+        "fontWeight": 700,
+        "text": {
+          "en": "3. Unbiased",
+          "es": "3. Imparcial"
+        }
+      },
+      {
+        "x": 661.99,
+        "y": 330.03,
+        "fontSize": 51.0,
+        "color": "rgb(71,85,105)",
+        "fontWeight": 500,
+        "text": {
+          "en": "Empirical analytics on soft skills,",
+          "es": "Analítica empírica de habilidades blandas,"
+        }
+      },
+      {
+        "x": 661.99,
+        "y": 354.5,
+        "fontSize": 51.0,
+        "color": "rgb(71,85,105)",
+        "fontWeight": 500,
+        "text": {
+          "en": "stress tolerance, and leadership",
+          "es": "tolerancia al estrés y liderazgo"
+        }
+      },
+      {
+        "x": 661.99,
+        "y": 378.97,
+        "fontSize": 51.0,
+        "color": "rgb(71,85,105)",
+        "fontWeight": 500,
+        "text": {
+          "en": "delivered instantly to HR.",
+          "es": "entregada instantáneamente a RR.HH."
+        }
+      },
+      {
+        "x": 75.0,
+        "y": 76.68,
+        "fontSize": 132.0,
+        "color": "rgb(30,41,59)",
+        "fontWeight": 700,
+        "text": {
+          "en": "Delivering the Truth",
+          "es": "Entregando la verdad"
+        }
+      }
+    ]
   },
   {
-    id: 'privacy',
-    accent: 'cyan',
-    es: {
-      eyebrow: 'Privacidad',
-      title: 'La cámara y las señales sensibles nunca salen como media cruda',
-      subtitle: 'El sistema persiste sólo ventanas agregadas, flags de calidad y metadatos no reconstructivos.',
-      bullets: [
-        'No video, frames, screenshots, blobs, base64 ni landmarks faciales crudos.',
-        'Si cámara/modelo falla, baja la confianza y se agregan caveats; no se castiga al candidato.',
-        'Validadores frontend y backend rechazan payloads reconstructivos aunque falle una capa.',
-      ],
-      metrics: [
-        { label: 'Raw media', value: '0' },
-        { label: 'Guard', value: 'frontend + backend' },
-        { label: 'Caveats', value: 'explícitos' },
-      ],
-    },
-    en: {
-      eyebrow: 'Privacy',
-      title: 'Camera and sensitive signals never leave as raw media',
-      subtitle: 'The system persists only aggregate windows, quality flags and non-reconstructive metadata.',
-      bullets: [
-        'No video, frames, screenshots, blobs, base64 or raw facial landmarks.',
-        'If camera/model fails, confidence decreases and caveats are added; candidates are not penalized.',
-        'Frontend and backend validators reject reconstructive payloads even if one layer fails.',
-      ],
-      metrics: [
-        { label: 'Raw media', value: '0' },
-        { label: 'Guard', value: 'frontend + backend' },
-        { label: 'Caveats', value: 'explicit' },
-      ],
-    },
+    "id": "edge-ai",
+    "label": "Edge AI Advantage",
+    "image": "page04",
+    "elements": [
+      {
+        "x": 75.0,
+        "y": 91.68,
+        "fontSize": 132.0,
+        "color": "rgb(30,41,59)",
+        "fontWeight": 700,
+        "text": {
+          "en": "Edge AI Advantage",
+          "es": "Ventaja Edge AI"
+        }
+      },
+      {
+        "x": 94.5,
+        "y": 152.4,
+        "fontSize": 60.0,
+        "color": "rgb(71,85,105)",
+        "fontWeight": 500,
+        "text": {
+          "en": "Zero Latency: 60fps inference directly in the",
+          "es": "Latencia cero: inferencia a 60fps directamente en el"
+        }
+      },
+      {
+        "x": 94.5,
+        "y": 181.2,
+        "fontSize": 60.0,
+        "color": "rgb(71,85,105)",
+        "fontWeight": 500,
+        "text": {
+          "en": "browser. No lag, no downloads.",
+          "es": "navegador. Sin lag, sin descargas."
+        }
+      },
+      {
+        "x": 94.5,
+        "y": 219.15,
+        "fontSize": 60.0,
+        "color": "rgb(71,85,105)",
+        "fontWeight": 500,
+        "text": {
+          "en": "Privacy by Design: EU AI Act compliant. Video",
+          "es": "Privacidad por diseño: cumplimiento EU AI Act. El video"
+        }
+      },
+      {
+        "x": 94.5,
+        "y": 247.95,
+        "fontSize": 60.0,
+        "color": "rgb(71,85,105)",
+        "fontWeight": 500,
+        "text": {
+          "en": "stays on device; only tensors are sent.",
+          "es": "permanece en el dispositivo; sólo se envían tensores."
+        }
+      },
+      {
+        "x": 94.5,
+        "y": 285.9,
+        "fontSize": 60.0,
+        "color": "rgb(71,85,105)",
+        "fontWeight": 500,
+        "text": {
+          "en": "Scalable: Leverages the candidate's hardware,",
+          "es": "Escalable: aprovecha el hardware del candidato,"
+        }
+      },
+      {
+        "x": 94.5,
+        "y": 314.7,
+        "fontSize": 60.0,
+        "color": "rgb(71,85,105)",
+        "fontWeight": 500,
+        "text": {
+          "en": "reducing server costs to near zero.",
+          "es": "reduciendo costos de servidor casi a cero."
+        }
+      }
+    ]
   },
   {
-    id: 'product',
-    accent: 'amber',
-    es: {
-      eyebrow: 'Producto',
-      title: 'Flujo completo: candidato, reporte y recruiter dashboard',
-      subtitle: 'Un pipeline local-first que transforma juego y señal agregada en evidencia comprensible.',
-      bullets: [
-        'Candidato: experiencia breve, clara y compatible con consentimiento granular.',
-        'Reporte: salida local del modelo, estado de calibración y política human-review-only.',
-        'Recruiter: filtros por señal edge-local, calibración y revisión humana; export CSV seguro.',
-      ],
-      metrics: [
-        { label: 'Candidato', value: 'gamificado' },
-        { label: 'Reporte', value: 'auditable' },
-        { label: 'Recruiter', value: 'metadata-only' },
-      ],
-    },
-    en: {
-      eyebrow: 'Product',
-      title: 'Full flow: candidate, report and recruiter dashboard',
-      subtitle: 'A local-first pipeline that turns game behavior and aggregate signal into understandable evidence.',
-      bullets: [
-        'Candidate: short, clear experience compatible with granular consent.',
-        'Report: local model output, calibration status and human-review-only policy.',
-        'Recruiter: filters by edge-local signal, calibration and human review; safe CSV export.',
-      ],
-      metrics: [
-        { label: 'Candidate', value: 'gamified' },
-        { label: 'Report', value: 'auditable' },
-        { label: 'Recruiter', value: 'metadata-only' },
-      ],
-    },
+    "id": "moat",
+    "label": "The Defensive Moat",
+    "image": "page05",
+    "elements": [
+      {
+        "x": 60.0,
+        "y": 344.25,
+        "fontSize": 400.0,
+        "color": "rgb(30,41,59)",
+        "fontWeight": 700,
+        "text": {
+          "en": "Proprietary .",
+          "es": "Propietaria."
+        }
+      },
+      {
+        "x": 753.75,
+        "y": 136.51,
+        "fontSize": 56.16,
+        "color": "rgb(30,41,59)",
+        "fontWeight": 700,
+        "text": {
+          "en": "Behavioral Intelligence",
+          "es": "Inteligencia conductual"
+        }
+      },
+      {
+        "x": 753.75,
+        "y": 165.52,
+        "fontSize": 60.0,
+        "color": "rgb(71,85,105)",
+        "fontWeight": 500,
+        "text": {
+          "en": "Our strongest",
+          "es": "Nuestra ventaja más"
+        }
+      },
+      {
+        "x": 753.75,
+        "y": 194.32,
+        "fontSize": 60.0,
+        "color": "rgb(71,85,105)",
+        "fontWeight": 500,
+        "text": {
+          "en": "advantage is a",
+          "es": "fuerte es un dataset"
+        }
+      },
+      {
+        "x": 753.75,
+        "y": 223.12,
+        "fontSize": 60.0,
+        "color": "rgb(71,85,105)",
+        "fontWeight": 500,
+        "text": {
+          "en": "continuously",
+          "es": "autoalimentado de"
+        }
+      },
+      {
+        "x": 753.75,
+        "y": 251.93,
+        "fontSize": 60.0,
+        "color": "rgb(71,85,105)",
+        "fontWeight": 500,
+        "text": {
+          "en": "self-feeding",
+          "es": "forma continua. Capturamos"
+        }
+      },
+      {
+        "x": 753.75,
+        "y": 280.73,
+        "fontSize": 60.0,
+        "color": "rgb(71,85,105)",
+        "fontWeight": 500,
+        "text": {
+          "en": "dataset. We capture",
+          "es": "datos conductuales reales"
+        }
+      },
+      {
+        "x": 753.75,
+        "y": 309.52,
+        "fontSize": 60.0,
+        "color": "rgb(71,85,105)",
+        "fontWeight": 500,
+        "text": {
+          "en": "real behavioral data",
+          "es": "que los ATS tradicionales"
+        }
+      },
+      {
+        "x": 753.75,
+        "y": 338.32,
+        "fontSize": 60.0,
+        "color": "rgb(71,85,105)",
+        "fontWeight": 500,
+        "text": {
+          "en": "that traditional ATS",
+          "es": "y competidores"
+        }
+      },
+      {
+        "x": 753.75,
+        "y": 367.12,
+        "fontSize": 60.0,
+        "color": "rgb(71,85,105)",
+        "fontWeight": 500,
+        "text": {
+          "en": "and competitors",
+          "es": "no pueden"
+        }
+      },
+      {
+        "x": 753.75,
+        "y": 395.93,
+        "fontSize": 60.0,
+        "color": "rgb(71,85,105)",
+        "fontWeight": 500,
+        "text": {
+          "en": "cannot replicate.",
+          "es": "replicar."
+        }
+      },
+      {
+        "x": 753.75,
+        "y": 420.56,
+        "fontSize": 60.0,
+        "color": "rgb(30,41,59)",
+        "fontWeight": 700,
+        "text": {
+          "en": "Every interaction",
+          "es": "Cada interacción"
+        }
+      },
+      {
+        "x": 753.75,
+        "y": 449.36,
+        "fontSize": 60.0,
+        "color": "rgb(30,41,59)",
+        "fontWeight": 700,
+        "text": {
+          "en": "improves our global",
+          "es": "mejora nuestro estándar"
+        }
+      },
+      {
+        "x": 753.75,
+        "y": 478.16,
+        "fontSize": 60.0,
+        "color": "rgb(30,41,59)",
+        "fontWeight": 700,
+        "text": {
+          "en": "prediction",
+          "es": "global de"
+        }
+      },
+      {
+        "x": 753.75,
+        "y": 506.96,
+        "fontSize": 60.0,
+        "color": "rgb(30,41,59)",
+        "fontWeight": 700,
+        "text": {
+          "en": "standard.",
+          "es": "predicción."
+        }
+      },
+      {
+        "x": 75.0,
+        "y": 76.68,
+        "fontSize": 132.0,
+        "color": "rgb(30,41,59)",
+        "fontWeight": 700,
+        "text": {
+          "en": "The Defensive Moat",
+          "es": "El moat defensivo"
+        }
+      }
+    ]
   },
   {
-    id: 'differentiation',
-    accent: 'rose',
-    es: {
-      eyebrow: 'Diferenciación',
-      title: 'Más señal útil, menos exposición de datos sensibles',
-      subtitle: 'KRUMM combina UX gamificada, edge AI y gobierno de privacidad en una arquitectura trazable.',
-      bullets: [
-        'La señal se interpreta como calidad/observación, no como diagnóstico psicológico.',
-        'Contratos versionados permiten auditar qué features entran y qué outputs salen.',
-        'El equipo puede iterar el modelo sin cambiar el principio: metadata-only y revisión humana.',
-      ],
-      metrics: [
-        { label: 'Gobierno', value: 'versionado' },
-        { label: 'Iteración', value: 'modular' },
-        { label: 'Confianza', value: 'caveats' },
-      ],
-    },
-    en: {
-      eyebrow: 'Differentiation',
-      title: 'More useful signal, less sensitive-data exposure',
-      subtitle: 'KRUMM combines gamified UX, edge AI and privacy governance in a traceable architecture.',
-      bullets: [
-        'Signals are interpreted as quality/observations, not psychological diagnosis.',
-        'Versioned contracts make inputs and outputs auditable.',
-        'The team can iterate the model without changing the principle: metadata-only and human review.',
-      ],
-      metrics: [
-        { label: 'Governance', value: 'versioned' },
-        { label: 'Iteration', value: 'modular' },
-        { label: 'Confidence', value: 'caveats' },
-      ],
-    },
+    "id": "founders",
+    "label": "The Core Founders",
+    "image": "page06",
+    "elements": [
+      {
+        "x": 87.0,
+        "y": 255.5,
+        "fontSize": 72.0,
+        "color": "rgb(30,41,59)",
+        "fontWeight": 700,
+        "text": {
+          "en": "Nicolas Cowley",
+          "es": "Nicolás Cowley"
+        }
+      },
+      {
+        "x": 87.0,
+        "y": 284.96,
+        "fontSize": 51.0,
+        "color": "rgb(155,144,127)",
+        "fontWeight": 700,
+        "text": {
+          "en": "CEO & Commercial Director",
+          "es": "CEO y Director Comercial"
+        }
+      },
+      {
+        "x": 87.0,
+        "y": 318.1,
+        "fontSize": 51.0,
+        "color": "rgb(71,85,105)",
+        "fontWeight": 500,
+        "text": {
+          "en": "AI ethics expert. Leading",
+          "es": "Experto en ética de IA. Lidera"
+        }
+      },
+      {
+        "x": 87.0,
+        "y": 342.57,
+        "fontSize": 51.0,
+        "color": "rgb(71,85,105)",
+        "fontWeight": 500,
+        "text": {
+          "en": "commercial strategy and B2B",
+          "es": "estrategia comercial y alianzas"
+        }
+      },
+      {
+        "x": 87.0,
+        "y": 367.03,
+        "fontSize": 51.0,
+        "color": "rgb(71,85,105)",
+        "fontWeight": 500,
+        "text": {
+          "en": "partnerships.",
+          "es": "B2B."
+        }
+      },
+      {
+        "x": 374.5,
+        "y": 255.5,
+        "fontSize": 72.0,
+        "color": "rgb(30,41,59)",
+        "fontWeight": 700,
+        "text": {
+          "en": "Carlos Saldivia",
+          "es": "Carlos Saldivia"
+        }
+      },
+      {
+        "x": 374.5,
+        "y": 284.96,
+        "fontSize": 51.0,
+        "color": "rgb(155,144,127)",
+        "fontWeight": 700,
+        "text": {
+          "en": "CTO",
+          "es": "CTO"
+        }
+      },
+      {
+        "x": 374.5,
+        "y": 318.1,
+        "fontSize": 51.0,
+        "color": "rgb(71,85,105)",
+        "fontWeight": 500,
+        "text": {
+          "en": "MSc in Electronics. Specialist in",
+          "es": "MSc en Electrónica. Especialista en"
+        }
+      },
+      {
+        "x": 374.5,
+        "y": 342.57,
+        "fontSize": 51.0,
+        "color": "rgb(71,85,105)",
+        "fontWeight": 500,
+        "text": {
+          "en": "biometrics and signal processing.",
+          "es": "biometría y procesamiento de señales."
+        }
+      },
+      {
+        "x": 661.99,
+        "y": 255.5,
+        "fontSize": 72.0,
+        "color": "rgb(30,41,59)",
+        "fontWeight": 700,
+        "text": {
+          "en": "Gabriel Caro",
+          "es": "Gabriel Caro"
+        }
+      },
+      {
+        "x": 661.99,
+        "y": 284.96,
+        "fontSize": 51.0,
+        "color": "rgb(155,144,127)",
+        "fontWeight": 700,
+        "text": {
+          "en": "CPO",
+          "es": "CPO"
+        }
+      },
+      {
+        "x": 661.99,
+        "y": 318.1,
+        "fontSize": 51.0,
+        "color": "rgb(71,85,105)",
+        "fontWeight": 500,
+        "text": {
+          "en": "R&D specialist. Expert in active",
+          "es": "Especialista en I+D. Experto en"
+        }
+      },
+      {
+        "x": 661.99,
+        "y": 342.57,
+        "fontSize": 51.0,
+        "color": "rgb(71,85,105)",
+        "fontWeight": 500,
+        "text": {
+          "en": "methodologies and gamification.",
+          "es": "metodologías activas y gamificación."
+        }
+      },
+      {
+        "x": 75.0,
+        "y": 76.68,
+        "fontSize": 132.0,
+        "color": "rgb(30,41,59)",
+        "fontWeight": 700,
+        "text": {
+          "en": "The Core Founders",
+          "es": "Fundadores core"
+        }
+      }
+    ]
   },
   {
-    id: 'roadmap',
-    accent: 'slate',
-    es: {
-      eyebrow: 'Roadmap',
-      title: 'Siguientes pasos hacia producto validado',
-      subtitle: 'El baseline técnico ya permite validar flujo, privacidad y utilidad antes de escalar datasets o claims.',
-      bullets: [
-        'Smoke local/deploy: candidato → modelo local → reporte → backend → recruiter.',
-        'Calibración con dataset real y métricas de fairness antes de claims predictivos fuertes.',
-        'Deck nativo bilingüe editable para ventas, fundraising y demos ejecutivas.',
-      ],
-      metrics: [
-        { label: 'Ahora', value: 'Hito 12' },
-        { label: 'Después', value: 'calibración' },
-        { label: 'Go-to-market', value: 'deck ES/EN' },
-      ],
-    },
-    en: {
-      eyebrow: 'Roadmap',
-      title: 'Next steps toward validated product',
-      subtitle: 'The technical baseline now supports validating flow, privacy and usefulness before scaling datasets or claims.',
-      bullets: [
-        'Local/deploy smoke: candidate → local model → report → backend → recruiter.',
-        'Calibration with real datasets and fairness metrics before strong predictive claims.',
-        'Editable bilingual native deck for sales, fundraising and executive demos.',
-      ],
-      metrics: [
-        { label: 'Now', value: 'Milestone 12' },
-        { label: 'Next', value: 'calibration' },
-        { label: 'Go-to-market', value: 'ES/EN deck' },
-      ],
-    },
+    "id": "market",
+    "label": "Target Market",
+    "image": "page07",
+    "elements": [
+      {
+        "x": 64.5,
+        "y": 244.98,
+        "fontSize": 48.0,
+        "color": "rgb(30,41,59)",
+        "fontWeight": 700,
+        "text": {
+          "en": "Segment Estimated Value Definition",
+          "es": "Segmento Valor estimado Definición"
+        }
+      },
+      {
+        "x": 64.5,
+        "y": 290.54,
+        "fontSize": 48.0,
+        "color": "rgb(71,85,105)",
+        "fontWeight": 500,
+        "text": {
+          "en": "TAM $32B Global HR Tech and Recruitment Market.",
+          "es": "TAM $32B Mercado global de HR Tech y reclutamiento."
+        }
+      },
+      {
+        "x": 64.5,
+        "y": 336.1,
+        "fontSize": 48.0,
+        "color": "rgb(71,85,105)",
+        "fontWeight": 500,
+        "text": {
+          "en": "SAM $2.5B Global critical recruitment sectors (Logistics, Finance).",
+          "es": "SAM $2.5B Sectores globales de reclutamiento crítico (Logística, Finanzas)."
+        }
+      },
+      {
+        "x": 64.5,
+        "y": 381.67,
+        "fontSize": 48.0,
+        "color": "rgb(71,85,105)",
+        "fontWeight": 500,
+        "text": {
+          "en": "SOM $100M Initial target LatAm market (Aquaculture and Fishing).",
+          "es": "SOM $100M Mercado LatAm inicial (Acuicultura y Pesca)."
+        }
+      },
+      {
+        "x": 75.0,
+        "y": 76.68,
+        "fontSize": 132.0,
+        "color": "rgb(30,41,59)",
+        "fontWeight": 700,
+        "text": {
+          "en": "Target Market",
+          "es": "Mercado objetivo"
+        }
+      }
+    ]
   },
-]);
+  {
+    "id": "value-capture",
+    "label": "Value Capture Strategy",
+    "image": "page08",
+    "elements": [
+      {
+        "x": 60.0,
+        "y": 344.25,
+        "fontSize": 400.0,
+        "color": "rgb(30,41,59)",
+        "fontWeight": 700,
+        "text": {
+          "en": "10:1",
+          "es": "10:1"
+        }
+      },
+      {
+        "x": 295.5,
+        "y": 262.85,
+        "fontSize": 56.16,
+        "color": "rgb(30,41,59)",
+        "fontWeight": 700,
+        "text": {
+          "en": "Client ROI",
+          "es": "ROI del cliente"
+        }
+      },
+      {
+        "x": 295.5,
+        "y": 296.02,
+        "fontSize": 60.0,
+        "color": "rgb(0,0,0)",
+        "fontWeight": 500,
+        "text": {
+          "en": "Pricing: Annual B2B SaaS subscription tiered by assessment volume (per candidate).",
+          "es": "Precio: suscripción SaaS B2B anual por volumen de evaluaciones (por candidato)."
+        }
+      },
+      {
+        "x": 295.5,
+        "y": 324.82,
+        "fontSize": 60.0,
+        "color": "rgb(0,0,0)",
+        "fontWeight": 500,
+        "text": {
+          "en": "Value: Designed to deliver a 10x ROI by reducing bad hires and interview hours.",
+          "es": "Valor: diseñado para entregar ROI 10x reduciendo malas contrataciones y horas de entrevista."
+        }
+      },
+      {
+        "x": 295.5,
+        "y": 353.62,
+        "fontSize": 60.0,
+        "color": "rgb(0,0,0)",
+        "fontWeight": 500,
+        "text": {
+          "en": "Go-To-Market: Land & Expand (Validate via pilot → Roll out to facility → Expand to",
+          "es": "Go-To-Market: Land & Expand (validar piloto → desplegar en planta → expandir a"
+        }
+      },
+      {
+        "x": 295.5,
+        "y": 382.43,
+        "fontSize": 60.0,
+        "color": "rgb(0,0,0)",
+        "fontWeight": 500,
+        "text": {
+          "en": "corporate)",
+          "es": "corporativo)"
+        }
+      },
+      {
+        "x": 75.0,
+        "y": 76.68,
+        "fontSize": 132.0,
+        "color": "rgb(30,41,59)",
+        "fontWeight": 700,
+        "text": {
+          "en": "Value Capture Strategy",
+          "es": "Estrategia de captura de valor"
+        }
+      }
+    ]
+  },
+  {
+    "id": "dominates",
+    "label": "Why KRUMM Dominates",
+    "image": "page09",
+    "elements": [
+      {
+        "x": 64.5,
+        "y": 222.12,
+        "fontSize": 48.0,
+        "color": "rgb(30,41,59)",
+        "fontWeight": 700,
+        "text": {
+          "en": "Criteria Traditional ATS AI Avatars KRUMM",
+          "es": "Criterio ATS tradicional Avatares IA KRUMM"
+        }
+      },
+      {
+        "x": 64.5,
+        "y": 267.72,
+        "fontSize": 48.0,
+        "color": "rgb(71,85,105)",
+        "fontWeight": 500,
+        "text": {
+          "en": "Nature of Data Subjective Declarative Empirical (Biometrics)",
+          "es": "Naturaleza del dato Subjetiva Declarativa Empírica (biometría)"
+        }
+      },
+      {
+        "x": 64.5,
+        "y": 313.32,
+        "fontSize": 48.0,
+        "color": "rgb(71,85,105)",
+        "fontWeight": 500,
+        "text": {
+          "en": "Privacy Compliance Secure Cloud Risk Native (Edge AI)",
+          "es": "Privacidad Seguro Riesgo cloud Nativa (Edge AI)"
+        }
+      },
+      {
+        "x": 64.5,
+        "y": 358.92,
+        "fontSize": 48.0,
+        "color": "rgb(71,85,105)",
+        "fontWeight": 500,
+        "text": {
+          "en": "Experience High Friction Uncomfortable Gamified / Immersive",
+          "es": "Experiencia Alta fricción Incómoda Gamificada / inmersiva"
+        }
+      },
+      {
+        "x": 64.5,
+        "y": 404.52,
+        "fontSize": 48.0,
+        "color": "rgb(71,85,105)",
+        "fontWeight": 500,
+        "text": {
+          "en": "Soft Skills Accuracy None Limited High Precision",
+          "es": "Precisión habilidades blandas Nula Limitada Alta precisión"
+        }
+      },
+      {
+        "x": 75.0,
+        "y": 76.68,
+        "fontSize": 132.0,
+        "color": "rgb(30,41,59)",
+        "fontWeight": 700,
+        "text": {
+          "en": "Why KRUMM Dominates",
+          "es": "Por qué KRUMM domina"
+        }
+      }
+    ]
+  },
+  {
+    "id": "milestones",
+    "label": "Our Next Milestones",
+    "image": "page10",
+    "elements": [
+      {
+        "x": 95.56,
+        "y": 152.6,
+        "fontSize": 68.0,
+        "color": "rgb(0,0,0)",
+        "fontWeight": 700,
+        "text": {
+          "en": "Pilot Execution: Successfully launch our first industrial pilot with Cermaq to validate our soft-skill",
+          "es": "Ejecución piloto: lanzar con éxito nuestro primer piloto industrial con Cermaq para validar modelos"
+        }
+      },
+      {
+        "x": 294.05,
+        "y": 173.0,
+        "fontSize": 68.0,
+        "color": "rgb(0,0,0)",
+        "fontWeight": 700,
+        "text": {
+          "en": "biometric models in a high-stakes environment.",
+          "es": "biométricos de habilidades blandas en un entorno de alta exigencia."
+        }
+      },
+      {
+        "x": 75.0,
+        "y": 213.8,
+        "fontSize": 68.0,
+        "color": "rgb(0,0,0)",
+        "fontWeight": 700,
+        "text": {
+          "en": "Sector Dominance: Leverage the Cermaq success to secure 5 additional Tier-1 contracts in the LatAm",
+          "es": "Dominio sectorial: aprovechar el éxito con Cermaq para asegurar 5 contratos Tier-1 adicionales en"
+        }
+      },
+      {
+        "x": 352.96,
+        "y": 234.2,
+        "fontSize": 68.0,
+        "color": "rgb(0,0,0)",
+        "fontWeight": 700,
+        "text": {
+          "en": "aquaculture and fishing industry.",
+          "es": "la industria acuícola y pesquera LatAm."
+        }
+      },
+      {
+        "x": 106.95,
+        "y": 275.0,
+        "fontSize": 68.0,
+        "color": "rgb(0,0,0)",
+        "fontWeight": 700,
+        "text": {
+          "en": "Product Calibration: Finalize Edge AI integration to ensure maximum privacy and zero-latency",
+          "es": "Calibración de producto: finalizar la integración Edge AI para máxima privacidad y desempeño"
+        }
+      },
+      {
+        "x": 369.44,
+        "y": 295.4,
+        "fontSize": 68.0,
+        "color": "rgb(0,0,0)",
+        "fontWeight": 700,
+        "text": {
+          "en": "performance for B2B clients.",
+          "es": "de latencia cero para clientes B2B."
+        }
+      },
+      {
+        "x": 246.72,
+        "y": 375.67,
+        "fontSize": 78.0,
+        "color": "rgb(100,116,139)",
+        "fontWeight": 700,
+        "text": {
+          "en": "Accelerating our Go-To-Market with Smart Capital.",
+          "es": "Acelerando nuestro Go-To-Market con capital inteligente."
+        }
+      },
+      {
+        "x": 323.58,
+        "y": 435.38,
+        "fontSize": 60.0,
+        "color": "rgb(71,85,105)",
+        "fontWeight": 500,
+        "text": {
+          "en": "Join us in uncovering the Behavioral Truth.",
+          "es": "Únete a descubrir la verdad conductual."
+        }
+      },
+      {
+        "x": 79.04,
+        "y": 76.41,
+        "fontSize": 132.0,
+        "color": "rgb(30,41,59)",
+        "fontWeight": 700,
+        "text": {
+          "en": "Our Next Milestones",
+          "es": "Nuestros próximos hitos"
+        }
+      }
+    ]
+  }
+];
+
+export const PITCH_DECK_SLIDES = Object.freeze(RAW_SLIDES.map((slide) => Object.freeze({
+  ...slide,
+  background: PAGE_IMAGES[slide.image],
+  elements: Object.freeze(slide.elements.map((element) => Object.freeze(element))),
+})));

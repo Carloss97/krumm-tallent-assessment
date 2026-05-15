@@ -229,7 +229,9 @@ function DisabledPanel({ reason }) {
   );
 }
 
-function DevCameraLab() {
+function DevCameraLab({ production = false, basePath = '/dev' }) {
+  const normalizedBasePath = basePath.replace(/\/$/, '') || '';
+  const reportPath = `${normalizedBasePath}/report`;
   const [session, setSession] = useState(() => getDevAccessSession(window.localStorage));
   const [status, setStatus] = useState('idle');
   const [statusMessage, setStatusMessage] = useState('Listo para pedir permiso de cámara.');
@@ -247,9 +249,9 @@ function DevCameraLab() {
     ...selectedCaptureProfile,
   }), [captureProfile, selectedCaptureProfile]);
 
-  const enabled = isDevLabEnabled();
-  const allowedHost = isDevAccessAllowedHost(browserFacts.host);
-  const configured = isDevAccessConfigured();
+  const enabled = production || isDevLabEnabled();
+  const allowedHost = production || isDevAccessAllowedHost(browserFacts.host);
+  const configured = production || isDevAccessConfigured();
 
   const stopCamera = useCallback(() => {
     const capture = captureRef.current;
@@ -265,8 +267,8 @@ function DevCameraLab() {
     }
     captureRef.current = null;
     setStatus((previous) => (previous === 'capturing' ? 'stopped' : previous));
-    setStatusMessage('Captura detenida. Tracks de cámara liberados. Diagnóstico guardado en /dev/report.');
-  }, [buildCaptureProfileSnapshot, telemetryReport]);
+    setStatusMessage(`Captura detenida. Tracks de cámara liberados. Diagnóstico guardado en ${reportPath}.`);
+  }, [buildCaptureProfileSnapshot, reportPath, telemetryReport]);
 
   useEffect(() => () => {
     captureRef.current?.cleanup?.();
@@ -286,12 +288,12 @@ function DevCameraLab() {
       });
       setFacialWindows(nextWindows);
       setTelemetryReport(snapshot.telemetryReport || report || null);
-      setStatusMessage(`Ventana agregada recibida y guardada para /dev/report: calidad ${windowPayload.quality?.signalQualityScore ?? 0}/100, cobertura ${Math.round((windowPayload.quality?.facePresenceRatio ?? 0) * 100)}%.`);
+      setStatusMessage(`Ventana agregada recibida y guardada para ${reportPath}: calidad ${windowPayload.quality?.signalQualityScore ?? 0}/100, cobertura ${Math.round((windowPayload.quality?.facePresenceRatio ?? 0) * 100)}%.`);
     } catch (error) {
       setStatus('privacy_error');
       setStatusMessage(`Ventana descartada por privacidad: ${error?.message || error}`);
     }
-  }, [buildCaptureProfileSnapshot, telemetryReport]);
+  }, [buildCaptureProfileSnapshot, reportPath, telemetryReport]);
 
   const startCamera = async () => {
     if (!videoRef.current) return;
@@ -325,7 +327,7 @@ function DevCameraLab() {
           captureProfile: buildCaptureProfileSnapshot(),
         });
       }
-      setStatusMessage('No se pudo abrir la cámara o el navegador no entregó permisos. Revisa HTTPS, permisos del sitio y disponibilidad del dispositivo. Diagnóstico guardado en /dev/report.');
+      setStatusMessage(`No se pudo abrir la cámara o el navegador no entregó permisos. Revisa HTTPS, permisos del sitio y disponibilidad del dispositivo. Diagnóstico guardado en ${reportPath}.`);
       return;
     }
 
@@ -351,7 +353,7 @@ function DevCameraLab() {
       captureProfile: buildCaptureProfileSnapshot(),
     });
     setTelemetryReport(snapshot.telemetryReport || report || null);
-    setStatusMessage('Diagnóstico actualizado y guardado. Abre /dev/report para ver el reporte de cámara.');
+    setStatusMessage(`Diagnóstico actualizado y guardado. Abre ${reportPath} para ver el reporte de cámara.`);
   };
 
   const injectSyntheticWindow = () => {
@@ -402,7 +404,7 @@ function DevCameraLab() {
     return <DisabledPanel reason="Falta configurar VITE_DEV_LAB_PASSWORD_SHA256 con el hash SHA-256 de tu clave privada." />;
   }
 
-  if (!session) {
+  if (!production && !session) {
     return <LoginPanel onAuthenticated={setSession} />;
   }
 
@@ -414,20 +416,21 @@ function DevCameraLab() {
         <header style={{ display: 'flex', justifyContent: 'space-between', gap: '16px', alignItems: 'flex-start', marginBottom: '22px', flexWrap: 'wrap' }}>
           <div>
             <p style={{ color: '#67e8f9', fontWeight: 800, letterSpacing: '0.08em', textTransform: 'uppercase', margin: 0 }}>
-              dev.krumm.cl privado
+              {production ? 'producción · browser-local' : 'dev.krumm.cl privado'}
             </p>
-            <h1 style={{ margin: '8px 0 6px' }}>Development Browser Lab</h1>
+            <h1 style={{ margin: '8px 0 6px' }}>{production ? 'Browser-local Camera Check' : 'Development Browser Lab'}</h1>
             <p style={{ color: '#cbd5e1', margin: 0, lineHeight: 1.6 }}>
-              Panel para probar en navegador las características de development: cámara, permisos,
-              MediaPipe local, ventanas agregadas de telemetría y accesos rápidos a módulos experimentales.
+              {production
+                ? 'Diagnóstico de producción para validar cámara, permisos, MediaPipe local y ventanas agregadas metadata-only antes o después de una evaluación real.'
+                : 'Panel para probar en navegador las características de development: cámara, permisos, MediaPipe local, ventanas agregadas de telemetría y accesos rápidos a módulos experimentales.'}
             </p>
           </div>
-          <button type="button" style={secondaryButtonStyle} onClick={logout}>Cerrar sesión</button>
+          {!production && <button type="button" style={secondaryButtonStyle} onClick={logout}>Cerrar sesión</button>}
         </header>
 
         {!browserFacts.secureContext && (
           <div role="alert" style={{ ...cardStyle, borderColor: '#f59e0b', color: '#fde68a', marginBottom: '18px' }}>
-            La cámara sólo funciona en HTTPS o localhost. Abre este panel desde https://dev.krumm.cl/dev/camera.
+            La cámara sólo funciona en HTTPS o localhost. Abre este panel desde {production ? '/camera' : 'https://dev.krumm.cl/dev/camera'}.
           </div>
         )}
 
@@ -510,12 +513,12 @@ function DevCameraLab() {
             </div>
 
             <div style={cardStyle}>
-              <h2 style={{ marginTop: 0 }}>Accesos development</h2>
+              <h2 style={{ marginTop: 0 }}>{production ? 'Accesos de producción' : 'Accesos development'}</h2>
               <div style={{ display: 'grid', gap: '10px' }}>
                 <Link style={linkStyle} to="/demo">Abrir demo pública</Link>
-                <Link style={linkStyle} to="/future/lab">Future Assessment Lab</Link>
-                <Link style={linkStyle} to="/pitch">Pitch deck embebido</Link>
-                <Link style={linkStyle} to="/dev/report">Reporte diagnóstico de cámara</Link>
+                {!production && <Link style={linkStyle} to="/future/lab">Future Assessment Lab</Link>}
+                <Link style={linkStyle} to="/pitch">Pitch deck</Link>
+                <Link style={linkStyle} to={reportPath}>Reporte diagnóstico de cámara</Link>
                 <Link style={linkStyle} to="/report">Reporte final de evaluación completa</Link>
               </div>
             </div>

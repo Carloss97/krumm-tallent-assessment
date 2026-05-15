@@ -1,272 +1,145 @@
-.native-pitch-deck {
+.pitch-deck-page {
   min-height: 100vh;
   width: 100%;
-  color: #e5eefc;
-  background:
-    radial-gradient(circle at top left, rgba(56, 189, 248, 0.28), transparent 34%),
-    radial-gradient(circle at bottom right, rgba(124, 58, 237, 0.32), transparent 34%),
-    linear-gradient(135deg, #020617 0%, #0f172a 48%, #111827 100%);
-  display: grid;
-  grid-template-rows: auto 1fr auto;
-  gap: 24px;
-  padding: clamp(20px, 4vw, 48px);
   box-sizing: border-box;
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr) auto;
+  gap: 14px;
+  padding: clamp(10px, 2vw, 20px);
+  background: #1d222a;
+  color: #f8fafc;
 }
 
-.native-pitch-deck__topbar,
-.native-pitch-deck__footer {
+.pitch-deck-page__toolbar,
+.pitch-deck-page__footer {
   display: flex;
-  justify-content: space-between;
   align-items: center;
-  gap: 16px;
+  justify-content: space-between;
+  gap: 12px;
   flex-wrap: wrap;
 }
 
-.native-pitch-deck__kicker,
-.native-pitch-deck__mode,
-.native-pitch-deck__eyebrow {
+.pitch-deck-page__brand,
+.pitch-deck-page__caption {
   margin: 0;
-  letter-spacing: 0.12em;
-  text-transform: uppercase;
 }
 
-.native-pitch-deck__kicker {
-  color: #67e8f9;
-  font-size: 0.82rem;
-  font-weight: 800;
+.pitch-deck-page__brand {
+  color: #f8fafc;
+  font-size: 0.86rem;
+  font-weight: 900;
+  letter-spacing: 0.18em;
 }
 
-.native-pitch-deck__mode {
-  color: #94a3b8;
-  font-size: 0.72rem;
-  margin-top: 4px;
+.pitch-deck-page__caption {
+  margin-top: 3px;
+  color: #cbd5e1;
+  font-size: 0.78rem;
 }
 
-.native-pitch-deck__controls,
-.native-pitch-deck__language,
-.native-pitch-deck__dots {
+.pitch-deck-page__actions,
+.pitch-deck-page__language,
+.pitch-deck-page__dots {
   display: flex;
   align-items: center;
   gap: 8px;
 }
 
-.native-pitch-deck button {
-  border: 1px solid rgba(148, 163, 184, 0.32);
-  color: #e2e8f0;
-  background: rgba(15, 23, 42, 0.72);
+.pitch-deck-page button {
+  border: 1px solid rgba(226, 232, 240, 0.3);
   border-radius: 999px;
-  padding: 10px 14px;
-  font-weight: 700;
+  padding: 8px 12px;
+  color: #e2e8f0;
+  background: rgba(15, 23, 42, 0.88);
+  font-weight: 800;
   cursor: pointer;
-  transition: transform 0.18s ease, border-color 0.18s ease, background 0.18s ease;
 }
 
-.native-pitch-deck button:hover:not(:disabled),
-.native-pitch-deck button.is-active {
-  transform: translateY(-1px);
-  border-color: rgba(103, 232, 249, 0.88);
-  background: rgba(14, 165, 233, 0.22);
+.pitch-deck-page button:hover:not(:disabled),
+.pitch-deck-page button.is-active {
+  color: #0f172a;
+  border-color: #e2e8f0;
+  background: #e2e8f0;
 }
 
-.native-pitch-deck button:disabled {
+.pitch-deck-page button:disabled {
   opacity: 0.42;
   cursor: not-allowed;
 }
 
-.native-pitch-deck__progress {
-  color: #cbd5e1;
-  font-weight: 800;
-  min-width: 52px;
+.pitch-deck-page__progress {
+  min-width: 54px;
   text-align: right;
-}
-
-.native-pitch-deck__slide {
-  position: relative;
-  overflow: hidden;
-  border: 1px solid rgba(148, 163, 184, 0.24);
-  border-radius: 32px;
-  background: rgba(15, 23, 42, 0.72);
-  box-shadow: 0 32px 110px rgba(2, 6, 23, 0.55);
-  backdrop-filter: blur(18px);
-  display: grid;
-  grid-template-columns: minmax(0, 1.25fr) minmax(280px, 0.75fr);
-  gap: clamp(24px, 4vw, 56px);
-  padding: clamp(28px, 5vw, 72px);
-  min-height: min(680px, calc(100vh - 190px));
-}
-
-.native-pitch-deck__slide::before {
-  content: '';
-  position: absolute;
-  inset: 0;
-  opacity: 0.18;
-  pointer-events: none;
-  background-image: linear-gradient(rgba(255,255,255,0.14) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.14) 1px, transparent 1px);
-  background-size: 42px 42px;
-}
-
-.native-pitch-deck__slide--blue { --accent: #38bdf8; }
-.native-pitch-deck__slide--violet { --accent: #a78bfa; }
-.native-pitch-deck__slide--emerald { --accent: #34d399; }
-.native-pitch-deck__slide--cyan { --accent: #22d3ee; }
-.native-pitch-deck__slide--amber { --accent: #f59e0b; }
-.native-pitch-deck__slide--rose { --accent: #fb7185; }
-.native-pitch-deck__slide--slate { --accent: #cbd5e1; }
-
-.native-pitch-deck__copy,
-.native-pitch-deck__visual {
-  position: relative;
-  z-index: 1;
-}
-
-.native-pitch-deck__copy {
-  align-self: center;
-}
-
-.native-pitch-deck__eyebrow {
-  color: var(--accent);
-  font-size: 0.86rem;
+  color: #e2e8f0;
   font-weight: 900;
-  margin-bottom: 18px;
 }
 
-.native-pitch-deck h1 {
-  margin: 0;
-  max-width: 920px;
-  font-size: clamp(2.5rem, 7vw, 5.8rem);
-  line-height: 0.94;
-  letter-spacing: -0.07em;
-}
-
-.native-pitch-deck__subtitle {
-  max-width: 820px;
-  margin: 24px 0 0;
-  color: #cbd5e1;
-  font-size: clamp(1.05rem, 2vw, 1.45rem);
-  line-height: 1.55;
-}
-
-.native-pitch-deck__bullets {
+.pitch-deck-page__stage {
+  min-height: 0;
   display: grid;
-  gap: 14px;
-  margin: 32px 0 0;
-  padding: 0;
-  list-style: none;
-  max-width: 860px;
+  place-items: center;
+  overflow: auto;
 }
 
-.native-pitch-deck__bullets li {
-  border-left: 3px solid var(--accent);
-  background: rgba(15, 23, 42, 0.54);
-  border-radius: 0 14px 14px 0;
-  padding: 12px 14px;
-  color: #dbeafe;
-  line-height: 1.45;
+.pitch-deck-page__slide {
+  width: min(100%, calc((100vh - 132px) * 16 / 9));
+  max-width: 1280px;
+  aspect-ratio: 16 / 9;
+  height: auto;
+  background: #ffffff;
+  border-radius: 4px;
+  box-shadow: 0 22px 80px rgba(0, 0, 0, 0.45);
 }
 
-.native-pitch-deck__visual {
-  align-self: stretch;
-  display: grid;
-  align-content: center;
-  gap: 20px;
+.pitch-deck-page__slide text {
+  paint-order: stroke;
+  stroke: rgba(255, 255, 255, 0.04);
+  stroke-width: 0.15px;
 }
 
-.native-pitch-deck__orb {
-  width: min(280px, 52vw);
-  aspect-ratio: 1;
-  border-radius: 999px;
-  margin-inline: auto;
-  background:
-    radial-gradient(circle at 35% 25%, rgba(255,255,255,0.92), transparent 16%),
-    radial-gradient(circle at 45% 42%, var(--accent), transparent 34%),
-    radial-gradient(circle at 60% 68%, rgba(59, 130, 246, 0.72), transparent 38%),
-    rgba(15, 23, 42, 0.8);
-  box-shadow: 0 0 80px color-mix(in srgb, var(--accent) 42%, transparent), inset 0 0 48px rgba(255,255,255,0.16);
-}
-
-.native-pitch-deck__metric-grid {
-  display: grid;
-  gap: 12px;
-}
-
-.native-pitch-deck__metric {
-  border: 1px solid rgba(148, 163, 184, 0.24);
-  border-radius: 18px;
-  padding: 16px;
-  background: rgba(2, 6, 23, 0.46);
-}
-
-.native-pitch-deck__metric span {
-  display: block;
-  color: #94a3b8;
-  font-size: 0.78rem;
-  text-transform: uppercase;
-  letter-spacing: 0.08em;
-  margin-bottom: 6px;
-}
-
-.native-pitch-deck__metric strong {
-  color: #f8fafc;
-  font-size: 1.25rem;
-}
-
-.native-pitch-deck__dots {
-  flex-wrap: wrap;
+.pitch-deck-page__dots {
   justify-content: center;
+  flex-wrap: wrap;
 }
 
-.native-pitch-deck__dots button {
-  width: 13px;
-  height: 13px;
+.pitch-deck-page__dots button {
+  width: 12px;
+  height: 12px;
   padding: 0;
-  border-radius: 999px;
-  background: rgba(148, 163, 184, 0.38);
+  background: rgba(226, 232, 240, 0.42);
 }
 
-.native-pitch-deck__dots button.is-active {
-  width: 34px;
-  background: var(--accent, #38bdf8);
+.pitch-deck-page__dots button.is-active {
+  width: 32px;
 }
 
-@media (max-width: 900px) {
-  .native-pitch-deck {
-    padding: 18px;
+@media (max-width: 720px) {
+  .pitch-deck-page {
+    padding: 10px;
   }
 
-  .native-pitch-deck__slide {
-    grid-template-columns: 1fr;
-    min-height: auto;
-  }
-
-  .native-pitch-deck__visual {
-    grid-template-columns: minmax(120px, 180px) 1fr;
-    align-items: center;
-  }
-
-  .native-pitch-deck__orb {
-    width: min(180px, 38vw);
-  }
-}
-
-@media (max-width: 560px) {
-  .native-pitch-deck__topbar,
-  .native-pitch-deck__footer,
-  .native-pitch-deck__controls {
+  .pitch-deck-page__toolbar,
+  .pitch-deck-page__footer,
+  .pitch-deck-page__actions {
     align-items: stretch;
     flex-direction: column;
   }
 
-  .native-pitch-deck__language,
-  .native-pitch-deck__footer {
+  .pitch-deck-page__language,
+  .pitch-deck-page__footer > button {
     width: 100%;
   }
 
-  .native-pitch-deck__language button,
-  .native-pitch-deck__footer > button {
+  .pitch-deck-page__language button,
+  .pitch-deck-page__footer > button {
     flex: 1;
   }
 
-  .native-pitch-deck__visual {
-    grid-template-columns: 1fr;
+  .pitch-deck-page__progress {
+    text-align: left;
+  }
+
+  .pitch-deck-page__slide {
+    width: 100%;
   }
 }

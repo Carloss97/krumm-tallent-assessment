@@ -81,40 +81,43 @@ function MetricCard({ label, value, helper }) {
   );
 }
 
-function DisabledPanel({ title = 'Reporte dev no disponible', reason }) {
+function DisabledPanel({ title = 'Reporte dev no disponible', reason, labPath = '/dev/camera', labLabel = 'Volver al laboratorio de cámara' }) {
   return (
     <div style={shellStyle}>
       <section style={{ ...panelStyle, maxWidth: '760px' }}>
         <h1 style={{ marginTop: 0 }}>{title}</h1>
         <p style={mutedText}>{reason}</p>
-        <Link style={buttonStyle} to="/dev/camera">Volver al laboratorio de cámara</Link>
+        <Link style={buttonStyle} to={labPath}>{labLabel}</Link>
       </section>
     </div>
   );
 }
 
-function DevCameraReport() {
+function DevCameraReport({ production = false, basePath = '/dev' }) {
+  const normalizedBasePath = basePath.replace(/\/$/, '') || '';
+  const labPath = production ? normalizedBasePath : `${normalizedBasePath}/camera`;
+  const labLabel = production ? 'Volver al diagnóstico de cámara' : 'Volver al laboratorio de cámara';
   const host = useMemo(() => getBrowserHost(), []);
   const [snapshot, setSnapshot] = useState(() => readDevCameraReportSnapshot(window.localStorage));
-  const enabled = isDevLabEnabled();
-  const allowedHost = isDevAccessAllowedHost(host);
-  const configured = isDevAccessConfigured();
+  const enabled = production || isDevLabEnabled();
+  const allowedHost = production || isDevAccessAllowedHost(host);
+  const configured = production || isDevAccessConfigured();
   const session = getDevAccessSession(window.localStorage);
 
   if (!enabled) {
-    return <DisabledPanel reason="La build actual no tiene habilitado VITE_ENABLE_DEV_LAB=true." />;
+    return <DisabledPanel reason="La build actual no tiene habilitado VITE_ENABLE_DEV_LAB=true." labPath={labPath} labLabel={labLabel} />;
   }
 
   if (!allowedHost) {
-    return <DisabledPanel reason={`Host actual: ${host || 'desconocido'}.`} />;
+    return <DisabledPanel reason={`Host actual: ${host || 'desconocido'}.`} labPath={labPath} labLabel={labLabel} />;
   }
 
   if (!configured) {
-    return <DisabledPanel reason="Falta configurar VITE_DEV_LAB_PASSWORD_SHA256 para proteger las rutas dev." />;
+    return <DisabledPanel reason="Falta configurar VITE_DEV_LAB_PASSWORD_SHA256 para proteger las rutas dev." labPath={labPath} labLabel={labLabel} />;
   }
 
-  if (!session) {
-    return <DisabledPanel title="Sesión dev requerida" reason="Entra primero al laboratorio privado de cámara para crear una sesión local temporal." />;
+  if (!production && !session) {
+    return <DisabledPanel title="Sesión dev requerida" reason="Entra primero al laboratorio privado de cámara para crear una sesión local temporal." labPath={labPath} labLabel={labLabel} />;
   }
 
   if (!snapshot) {
@@ -126,10 +129,10 @@ function DevCameraReport() {
           </p>
           <h1 style={{ marginTop: '8px' }}>No hay diagnóstico de cámara guardado</h1>
           <p style={mutedText}>
-            Este reporte no usa los datos del reporte final `/report`. Primero abre `/dev/camera`, inicia la cámara o simula una ventana segura, y luego vuelve aquí.
+            Este reporte no usa los datos del reporte final `/report`. Primero abre {labPath}, inicia la cámara o simula una ventana segura, y luego vuelve aquí.
           </p>
           <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap' }}>
-            <Link style={buttonStyle} to="/dev/camera">Abrir laboratorio de cámara</Link>
+            <Link style={buttonStyle} to={labPath}>{production ? 'Abrir diagnóstico de cámara' : 'Abrir laboratorio de cámara'}</Link>
             <Link style={secondaryButtonStyle} to="/report">Ver reporte final de evaluación</Link>
           </div>
         </section>
@@ -161,7 +164,7 @@ function DevCameraReport() {
             </p>
           </div>
           <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap' }}>
-            <Link style={secondaryButtonStyle} to="/dev/camera">Volver a /dev/camera</Link>
+            <Link style={secondaryButtonStyle} to={labPath}>{labLabel}</Link>
             <button type="button" style={secondaryButtonStyle} onClick={clearSnapshot}>Borrar diagnóstico</button>
           </div>
         </header>

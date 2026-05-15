@@ -80,6 +80,8 @@ function AppContent() {
             <Route path="/report" element={<Report />} />
             <Route path="/demo" element={<DemoShell />} />
             <Route path="/pitch" element={<PitchDeckPage />} />
+            <Route path="/camera" element={<DevCameraLab production basePath="/camera" />} />
+            <Route path="/camera/report" element={<DevCameraReport production basePath="/camera" />} />
             <Route path="/dev" element={<Navigate to="/dev/camera" replace />} />
             <Route path="/dev/camera" element={<DevCameraLab />} />
             <Route path="/dev/report" element={<DevCameraReport />} />

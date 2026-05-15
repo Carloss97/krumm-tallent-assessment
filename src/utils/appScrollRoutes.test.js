@@ -9,6 +9,8 @@ describe('shouldEnableAppScroll', () => {
     expect(shouldEnableAppScroll('/report')).toBe(true);
     expect(shouldEnableAppScroll('/dev/camera')).toBe(true);
     expect(shouldEnableAppScroll('/dev/report')).toBe(true);
+    expect(shouldEnableAppScroll('/camera')).toBe(true);
+    expect(shouldEnableAppScroll('/camera/report')).toBe(true);
   });
 
   it('keeps game/demo routes clipped to the shell when they manage their own viewport', () => {
