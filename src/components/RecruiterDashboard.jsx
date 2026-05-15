@@ -75,6 +75,54 @@ const QA_ANALYTICS = {
 const AB_EXPERIMENT_KEY = 'engagement-pulse-v1';
 const FULL_BATTERY_GAMES = 13;
 
+const isObject = (value) => value && typeof value === 'object' && !Array.isArray(value);
+
+const getSessionDataRoot = (sessionOrPayload) => {
+  const payload = sessionOrPayload?.payload || sessionOrPayload || {};
+  return isObject(payload.sessionData) ? payload.sessionData : payload;
+};
+
+const getTelemetryGameSnapshots = (sessionOrPayload) => {
+  const root = getSessionDataRoot(sessionOrPayload);
+  const telemetry = isObject(root.telemetry) ? root.telemetry : root;
+  return Object.entries(telemetry || {})
+    .filter(([key, value]) => (
+      key !== 'futureModules'
+      && isObject(value)
+      && typeof value.score === 'number'
+    ))
+    .map(([, value]) => value);
+};
+
+const getEdgeLocalModelOutput = (sessionOrPayload) => {
+  const root = getSessionDataRoot(sessionOrPayload);
+  const output = root.edgeLocalModelOutput || root.report?.edgeLocalModelOutput || null;
+  return isObject(output) && output.type === 'edge_local_model_output_v1' ? output : null;
+};
+
+const percentValue = (value) => {
+  const numeric = Number(value);
+  return Number.isFinite(numeric) ? `${Math.round(numeric)}%` : 'N/A';
+};
+
+const summarizeEdgeModelOutputs = (sessions) => {
+  const outputs = (sessions || []).map(getEdgeLocalModelOutput).filter(Boolean);
+  const average = (values) => {
+    const finite = values.map(Number).filter(Number.isFinite);
+    if (finite.length === 0) return null;
+    return finite.reduce((sum, value) => sum + value, 0) / finite.length;
+  };
+
+  return {
+    total: outputs.length,
+    humanReviewOnly: outputs.filter((output) => output.decisionPolicy === 'human_review_only').length,
+    baselineNotValidated: outputs.filter((output) => output.model?.calibrationStatus === 'baseline_not_validated').length,
+    avgScore: average(outputs.map((output) => output.scorePercent)),
+    avgConfidence: average(outputs.map((output) => output.confidenceScore)),
+    qualityFlagCount: outputs.reduce((sum, output) => sum + ((output.qualityFlags || []).length), 0),
+  };
+};
+
 const computeAbEngagementStats = (sessions) => {
   const buckets = {
     control: [],
@@ -86,11 +134,7 @@ const computeAbEngagementStats = (sessions) => {
     const payload = session?.payload || {};
     const metadata = payload?.metadata || {};
     const variant = metadata?.sessionMeta?.experiments?.[AB_EXPERIMENT_KEY] || 'unknown';
-    const sessionData = payload?.sessionData || payload;
-
-    const gameSnapshots = Object.values(sessionData || {}).filter((value) => (
-      value && typeof value === 'object' && typeof value.score === 'number'
-    ));
+    const gameSnapshots = getTelemetryGameSnapshots(session);
 
     const completedGames = gameSnapshots.length;
     const completedSession = completedGames >= FULL_BATTERY_GAMES;
@@ -259,6 +303,7 @@ const RecruiterDashboard = () => {
   const qualityStatus = analytics.quality?.status || 'UNKNOWN';
   const qualityClass = qualityStatus === 'OK' ? 'ok' : qualityStatus === 'ALERT' ? 'alert' : 'watch';
   const abEngagementStats = useMemo(() => computeAbEngagementStats(sessions), [sessions]);
+  const edgeModelStats = useMemo(() => summarizeEdgeModelOutputs(sessions), [sessions]);
 
   // Anonymized session display (no raw video/audio/biometric data)
   const displaySessions = sessions
@@ -273,11 +318,8 @@ const RecruiterDashboard = () => {
     .slice(0, 50) // Limit to recent 50
     .map(session => {
       try {
-        const sessionData = session.payload || {};
-        const source = Array.isArray(sessionData)
-          ? sessionData
-          : Object.values(sessionData.sessionData || sessionData);
-        const games = source.filter((value) => value && typeof value === 'object' && typeof value.score === 'number');
+        const games = getTelemetryGameSnapshots(session);
+        const edgeLocalModelOutput = getEdgeLocalModelOutput(session);
         const avgScore = games.length > 0
           ? (games.reduce((sum, g) => sum + (g.score || 0), 0) / games.length).toFixed(0)
           : 'N/A';
@@ -289,6 +331,11 @@ const RecruiterDashboard = () => {
           gameCount: games.length,
           avgScore,
           createdAt: new Date(session.created_at).toLocaleDateString(),
+          edgeModelScore: edgeLocalModelOutput ? percentValue(edgeLocalModelOutput.scorePercent) : 'N/A',
+          edgeModelConfidence: edgeLocalModelOutput ? percentValue(edgeLocalModelOutput.confidenceScore) : 'N/A',
+          edgeCalibrationStatus: edgeLocalModelOutput?.model?.calibrationStatus || 'N/A',
+          edgeReviewPolicy: edgeLocalModelOutput?.decisionPolicy === 'human_review_only' ? 'Human review only' : 'N/A',
+          edgeMetadataOnly: edgeLocalModelOutput?.privacy?.source === 'aggregate_metadata_only',
           rawDataProtected: true // Indicates encryption/anonymization
         };
       } catch {
@@ -407,6 +454,22 @@ const RecruiterDashboard = () => {
             <p>Gamified avg quality flags: <strong>{abEngagementStats.gamified.avgQualityFlags.toFixed(2)}</strong></p>
           </section>
 
+          <section className="analytics-card">
+            <h3>Edge Model Governance</h3>
+            {edgeModelStats.total === 0 ? (
+              <p>No edge-local model outputs archived yet.</p>
+            ) : (
+              <>
+                <p><strong>{edgeModelStats.humanReviewOnly}/{edgeModelStats.total} human review only</strong></p>
+                <p>Average model score: <strong>{percentValue(edgeModelStats.avgScore)}</strong></p>
+                <p>Average confidence: <strong>{percentValue(edgeModelStats.avgConfidence)}</strong></p>
+                <p>Calibration: <strong>{edgeModelStats.baselineNotValidated > 0 ? 'baseline_not_validated' : 'n/a'}</strong></p>
+                <p>Quality flags: <strong>{edgeModelStats.qualityFlagCount}</strong></p>
+                <p><strong>metadata-only</strong> aggregate output; no automated selection outcome.</p>
+              </>
+            )}
+          </section>
+
           {isQaMode && (
             <section className="analytics-card">
               <h3>GameShell Health (QA)</h3>
@@ -512,6 +575,10 @@ const RecruiterDashboard = () => {
                   <th>Email</th>
                   <th>Games</th>
                   <th>Avg Score</th>
+                  <th>Model Score</th>
+                  <th>Model Confidence</th>
+                  <th>Calibration</th>
+                  <th>Review Policy</th>
                   <th>Date</th>
                   <th>Status</th>
                 </tr>
@@ -525,6 +592,10 @@ const RecruiterDashboard = () => {
                     <td>{session.email}</td>
                     <td className="center">{session.gameCount}</td>
                     <td className="center score">{session.avgScore}</td>
+                    <td className="center score">{session.edgeModelScore}</td>
+                    <td className="center">{session.edgeModelConfidence}</td>
+                    <td><span className="badge encrypt">{session.edgeCalibrationStatus}</span></td>
+                    <td>{session.edgeReviewPolicy}</td>
                     <td>{session.createdAt}</td>
                     <td className="center">
                       {session.rawDataProtected ? (

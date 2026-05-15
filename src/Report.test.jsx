@@ -238,6 +238,29 @@ describe('Report Component', () => {
     expect(saveSessionToBackend).not.toHaveBeenCalled();
   });
 
+  it('shows local edge model output governance without automated hiring claims', async () => {
+    const mockSessionData = {
+      game1: { score: 82, errors: 1, duration: 60000 },
+      game2: { score: 78, errors: 2, duration: 65000 },
+      game3: { score: 74, errors: 1, duration: 55000 },
+    };
+
+    mockUseTelemetry.mockReturnValue({ sessionData: mockSessionData });
+
+    renderReport({ useDummyData: false });
+
+    await waitFor(
+      () => {
+        expect(screen.getByText(/local model output|salida del modelo local/i)).toBeDefined();
+        expect(screen.getByText(/human review only|revisión humana obligatoria/i)).toBeDefined();
+        expect(screen.getByText(/baseline_not_validated/i)).toBeDefined();
+      },
+      { timeout: 10000 },
+    );
+    expect(screen.queryByText(/hire decision|decisión automática de contratación/i)).toBeNull();
+    expect(screen.queryByText(/lie detection|detección de mentiras/i)).toBeNull();
+  });
+
   it('shows local signal audit caveats when facial coverage is low', async () => {
     const lowQualityWindow = createFacialWindow({
       durationMs: 5000,

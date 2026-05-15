@@ -218,6 +218,9 @@ const Report = ({ isDummy = false, useDummyData = false, demoSummary = null }) =
   useEffect(() => {
     reportGeneratedRef.current = false;
     const timer = setTimeout(() => {
+      if (reportGeneratedRef.current) {
+        return;
+      }
       setIsAnalyzing(true);
       setAiReport(null);
       setInsightMeta({ mode: 'pending', reason: '' });
@@ -447,6 +450,7 @@ const Report = ({ isDummy = false, useDummyData = false, demoSummary = null }) =
   // Use AI report if available, otherwise fallback to heuristic
   const report = aiReport || generateHeuristicReport(reportData, language);
   const signalAudit = report?.signalAudit || null;
+  const edgeLocalModelOutput = report?.edgeLocalModelOutput || null;
   const signalAuditCaveats = Array.isArray(signalAudit?.caveats) ? signalAudit.caveats : [];
   const recommendationLabel = getRecommendationLabel(report.recommendation, isEn);
   const extendedGameRows = buildEnhancedRows(reportData, isEn);
@@ -672,6 +676,57 @@ const Report = ({ isDummy = false, useDummyData = false, demoSummary = null }) =
                 </ul>
               </div>
             )}
+          </div>
+        )}
+
+        {edgeLocalModelOutput && (
+          <div className="report-section" style={{ borderTop: '4px solid #7c3aed' }}>
+            <h3 className="report-section-title">
+              {isEn ? 'Local Model Output' : 'Salida del modelo local'}
+            </h3>
+            <p style={{ color: '#475569', lineHeight: 1.7, marginTop: 0 }}>
+              {isEn
+                ? 'Browser-local model output is metadata-only and is provided as decision support for trained human review, not as an automated selection outcome.'
+                : 'La salida del modelo browser-local contiene sólo metadatos y se entrega como apoyo para revisión humana entrenada, no como resultado automático de selección.'}
+            </p>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: '16px', marginTop: '20px' }}>
+              <TelemetryStatCard
+                label={isEn ? 'Model score' : 'Score modelo'}
+                value={`${edgeLocalModelOutput.scorePercent ?? 0}%`}
+              />
+              <TelemetryStatCard
+                label={isEn ? 'Model confidence' : 'Confianza modelo'}
+                value={`${edgeLocalModelOutput.confidenceScore ?? 0}%`}
+              />
+              <TelemetryStatCard
+                label={isEn ? 'Review policy' : 'Política de revisión'}
+                value={edgeLocalModelOutput.decisionPolicy === 'human_review_only'
+                  ? (isEn ? 'Human review only' : 'Revisión humana obligatoria')
+                  : (edgeLocalModelOutput.decisionPolicy || 'N/A')}
+              />
+              <TelemetryStatCard
+                label={isEn ? 'Calibration' : 'Calibración'}
+                value={edgeLocalModelOutput.model?.calibrationStatus || 'N/A'}
+              />
+              <TelemetryStatCard
+                label={isEn ? 'Runtime' : 'Runtime'}
+                value={edgeLocalModelOutput.runtime?.modelLoaded ? 'ONNX' : 'Fallback'}
+              />
+              <TelemetryStatCard
+                label={isEn ? 'Latency' : 'Latencia'}
+                value={`${edgeLocalModelOutput.runtime?.latencyMs ?? 0}ms`}
+              />
+            </div>
+            <div style={{ marginTop: '20px', padding: '16px', background: '#f5f3ff', border: '1px solid #c4b5fd', borderRadius: '16px', color: '#4c1d95' }}>
+              <strong>{isEn ? 'Governance guardrails' : 'Controles de gobernanza'}</strong>
+              <ul style={{ margin: '10px 0 0', paddingLeft: '20px', lineHeight: 1.6 }}>
+                <li>{isEn ? 'Metadata-only input/output; raw media and landmarks are not persisted.' : 'Entrada/salida sólo con metadatos; no se persisten media cruda ni landmarks.'}</li>
+                <li>{isEn ? 'Calibration status is shown explicitly because this baseline is not validated as a standalone predictor.' : 'El estado de calibración se muestra explícitamente porque este baseline no está validado como predictor independiente.'}</li>
+                {((edgeLocalModelOutput.qualityFlags || []).length > 0) && (
+                  <li>{isEn ? `Quality flags available in local signal audit: ${edgeLocalModelOutput.qualityFlags.slice(0, 3).join(', ')}` : `Flags de calidad disponibles en la auditoría local: ${edgeLocalModelOutput.qualityFlags.slice(0, 3).join(', ')}`}</li>
+                )}
+              </ul>
+            </div>
           </div>
         )}
 
