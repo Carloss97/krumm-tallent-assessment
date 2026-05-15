@@ -1,6 +1,6 @@
 import React from 'react';
 import fs from 'node:fs';
-import { fireEvent, render, screen, within } from '@testing-library/react';
+import { fireEvent, render, screen } from '@testing-library/react';
 import { describe, expect, it } from 'vitest';
 import PitchDeckPage from './PitchDeckPage';
 import { PITCH_DECK_SLIDES } from './pitchDeckContent';
