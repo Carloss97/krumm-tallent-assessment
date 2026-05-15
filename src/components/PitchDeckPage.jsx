@@ -1,179 +1,136 @@
 import { useEffect, useMemo, useState } from 'react';
-import { PITCH_DECK_LANGUAGES, PITCH_DECK_SLIDES } from './pitchDeckContent';
+import deckHtml from '../assets/pitchdeck.html?raw';
 import './PitchDeckPage.css';
 
-const SVG_WIDTH = 960;
-const SVG_HEIGHT = 540;
+const PAGE_IDS = Object.freeze(['pf1', 'pf2', 'pf3', 'pf4', 'pf5', 'pf6', 'pf7', 'pf8', 'pf9', 'pfa']);
 
-const localize = (value, language) => {
-  if (!value) return '';
-  if (typeof value === 'string') return value;
-  return value[language] || value.en || '';
+const SLIDE_LABELS = Object.freeze([
+  'The Behavioral Truth',
+  'Hiring is Broken',
+  'Delivering the Truth',
+  'Edge AI Advantage',
+  'The Defensive Moat',
+  'The Core Founders',
+  'Target Market',
+  'Value Capture Strategy',
+  'Why KRUMM Dominates',
+  'Our Next Milestones',
+]);
+
+const buildDeckSrcDoc = (activePageId) => {
+  const runtimePatch = `
+<style id="krumm-pitch-runtime-fix">
+  html,
+  body {
+    width: 100%;
+    height: 100%;
+    margin: 0 !important;
+    overflow: hidden !important;
+    background: #111318 !important;
+  }
+
+  #sidebar,
+  .loading-indicator {
+    display: none !important;
+  }
+
+  #page-container {
+    position: fixed !important;
+    inset: 0 !important;
+    width: 100vw !important;
+    height: 100vh !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    overflow: hidden !important;
+    background: #111318 !important;
+    display: grid !important;
+    place-items: center !important;
+  }
+
+  .pf {
+    display: none !important;
+    margin: 0 !important;
+    border: 0 !important;
+    box-shadow: none !important;
+    transform: scale(var(--krumm-deck-scale, 1)) !important;
+    transform-origin: center center !important;
+  }
+
+  #${activePageId}{display:block!important;}
+</style>
+<script>
+  (function () {
+    function fitKrummDeck() {
+      var width = window.innerWidth || 960;
+      var height = window.innerHeight || 540;
+      var scale = Math.min(width / 960, height / 540);
+      document.documentElement.style.setProperty('--krumm-deck-scale', String(scale));
+    }
+    window.addEventListener('resize', fitKrummDeck);
+    window.addEventListener('orientationchange', fitKrummDeck);
+    if (document.readyState === 'loading') {
+      document.addEventListener('DOMContentLoaded', fitKrummDeck);
+    } else {
+      fitKrummDeck();
+    }
+  }());
+</script>`;
+
+  return deckHtml.replace('</head>', `${runtimePatch}</head>`);
 };
 
-function LocalizedText({ value, language }) {
-  return localize(value, language);
-}
-
-function BlockItems({ items = [], language }) {
-  if (!items.length) return null;
-
-  return (
-    <ul className="pitch-deck-list">
-      {items.map((item) => (
-        <li key={`${localize(item.title, 'en')}-${localize(item.body, 'en')}`}>
-          <strong>{localize(item.title, language)}:</strong>{' '}
-          <span>{localize(item.body, language)}</span>
-        </li>
-      ))}
-    </ul>
-  );
-}
-
-function PitchTable({ block, language }) {
-  return (
-    <table className="pitch-deck-table">
-      <thead>
-        <tr>
-          {block.columns.map((column) => (
-            <th key={localize(column, 'en')}>{localize(column, language)}</th>
-          ))}
-        </tr>
-      </thead>
-      <tbody>
-        {block.rows.map((row) => (
-          <tr key={row.map((cell) => localize(cell, 'en')).join('|')}>
-            {row.map((cell) => (
-              <td key={localize(cell, 'en')}>{localize(cell, language)}</td>
-            ))}
-          </tr>
-        ))}
-      </tbody>
-    </table>
-  );
-}
-
-function PitchBlock({ block, language }) {
-  const blockLabel = localize(block.title || block.content || block.body, language);
-
-  return (
-    <foreignObject
-      x={block.x}
-      y={block.y}
-      width={block.width}
-      height={block.height}
-      aria-label={blockLabel || undefined}
-    >
-      <div
-        xmlns="http://www.w3.org/1999/xhtml"
-        className={`pitch-deck-block pitch-deck-block--${block.variant}`}
-        lang={language}
-      >
-        {block.variant === 'table' ? (
-          <PitchTable block={block} language={language} />
-        ) : (
-          <>
-            {block.eyebrow && <p className="pitch-deck-block__eyebrow"><LocalizedText value={block.eyebrow} language={language} /></p>}
-            {block.title && <h2><LocalizedText value={block.title} language={language} /></h2>}
-            {block.content && <p className="pitch-deck-block__content"><LocalizedText value={block.content} language={language} /></p>}
-            {block.body && <p className="pitch-deck-block__body"><LocalizedText value={block.body} language={language} /></p>}
-            <BlockItems items={block.items} language={language} />
-          </>
-        )}
-      </div>
-    </foreignObject>
-  );
-}
-
 function PitchDeckPage() {
-  const [language, setLanguage] = useState('en');
   const [activeSlideIndex, setActiveSlideIndex] = useState(0);
-  const activeSlide = PITCH_DECK_SLIDES[activeSlideIndex];
-  const activeSlideTitle = localize(activeSlide.label, language);
-  const progressLabel = useMemo(
-    () => `${activeSlideIndex + 1}/${PITCH_DECK_SLIDES.length}`,
-    [activeSlideIndex],
-  );
+  const activePageId = PAGE_IDS[activeSlideIndex] || PAGE_IDS[0];
+  const progressLabel = `${activeSlideIndex + 1}/${PAGE_IDS.length}`;
+  const activeSlideLabel = SLIDE_LABELS[activeSlideIndex] || `Slide ${activeSlideIndex + 1}`;
+  const srcDoc = useMemo(() => buildDeckSrcDoc(activePageId), [activePageId]);
 
   useEffect(() => {
-    document.title = language === 'es' ? 'KRUMM | Pitch Deck ES' : 'KRUMM | Pitch Deck EN';
-  }, [language]);
+    document.title = 'KRUMM | Pitch Deck';
+  }, []);
 
   const goToPrevious = () => setActiveSlideIndex((current) => Math.max(0, current - 1));
-  const goToNext = () => setActiveSlideIndex((current) => Math.min(PITCH_DECK_SLIDES.length - 1, current + 1));
+  const goToNext = () => setActiveSlideIndex((current) => Math.min(PAGE_IDS.length - 1, current + 1));
 
   return (
     <main className="pitch-deck-page" aria-label="KRUMM Pitch Deck">
       <header className="pitch-deck-page__toolbar">
         <div>
           <p className="pitch-deck-page__brand">KRUMM</p>
-          <p className="pitch-deck-page__caption">
-            {language === 'es'
-              ? 'Deck nativo React con traducciones revisadas'
-              : 'Native React deck with reviewed translations'}
-          </p>
+          <p className="pitch-deck-page__caption">Original HTML deck for visual fidelity</p>
         </div>
-
-        <div className="pitch-deck-page__actions" aria-label="Pitch deck controls">
-          <div className="pitch-deck-page__language" aria-label="Language selector">
-            {Object.entries(PITCH_DECK_LANGUAGES).map(([code, label]) => (
-              <button
-                key={code}
-                type="button"
-                className={language === code ? 'is-active' : ''}
-                onClick={() => setLanguage(code)}
-                aria-pressed={language === code}
-              >
-                {label}
-              </button>
-            ))}
-          </div>
-          <span className="pitch-deck-page__progress" aria-label="Slide progress">{progressLabel}</span>
-        </div>
+        <span className="pitch-deck-page__progress" aria-label="Slide progress">{progressLabel}</span>
       </header>
 
-      <section className="pitch-deck-page__stage" aria-label={activeSlideTitle}>
-        <svg
-          className="pitch-deck-page__slide"
-          data-testid="native-pitch-deck-slide"
-          viewBox={`0 0 ${SVG_WIDTH} ${SVG_HEIGHT}`}
-          role="img"
-          aria-labelledby={`pitch-slide-title-${activeSlide.id}`}
-          preserveAspectRatio="xMidYMid meet"
-        >
-          <title id={`pitch-slide-title-${activeSlide.id}`}>{activeSlideTitle}</title>
-          <image
-            href={activeSlide.background}
-            x="0"
-            y="0"
-            width={SVG_WIDTH}
-            height={SVG_HEIGHT}
-            preserveAspectRatio="xMidYMid slice"
-          />
-          {activeSlide.blocks.map((block) => (
-            <PitchBlock key={`${activeSlide.id}-${block.variant}-${block.x}-${block.y}`} block={block} language={language} />
-          ))}
-        </svg>
+      <section className="pitch-deck-page__stage" aria-label={activeSlideLabel}>
+        <iframe
+          key={activePageId}
+          className="pitch-deck-page__deck-frame"
+          title="KRUMM Pitch Deck"
+          srcDoc={srcDoc}
+          sandbox="allow-scripts"
+        />
       </section>
 
       <footer className="pitch-deck-page__footer">
         <button type="button" onClick={goToPrevious} disabled={activeSlideIndex === 0}>
-          {language === 'es' ? 'Anterior' : 'Previous'}
+          Previous
         </button>
-        <nav className="pitch-deck-page__dots" aria-label={language === 'es' ? 'Diapositivas' : 'Slides'}>
-          {PITCH_DECK_SLIDES.map((slide, index) => (
+        <nav className="pitch-deck-page__dots" aria-label="Slides">
+          {PAGE_IDS.map((pageId, index) => (
             <button
-              key={slide.id}
+              key={pageId}
               type="button"
               className={index === activeSlideIndex ? 'is-active' : ''}
               onClick={() => setActiveSlideIndex(index)}
-              aria-label={`${language === 'es' ? 'Ir a diapositiva' : 'Go to slide'} ${index + 1}: ${localize(slide.label, language)}`}
+              aria-label={`Go to slide ${index + 1}: ${SLIDE_LABELS[index] || pageId}`}
               aria-current={index === activeSlideIndex ? 'step' : undefined}
             />
           ))}
         </nav>
-        <button type="button" onClick={goToNext} disabled={activeSlideIndex === PITCH_DECK_SLIDES.length - 1}>
-          {language === 'es' ? 'Siguiente' : 'Next'}
+        <button type="button" onClick={goToNext} disabled={activeSlideIndex === PAGE_IDS.length - 1}>
+          Next
         </button>
       </footer>
     </main>
