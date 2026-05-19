@@ -27,7 +27,7 @@ const BalloonProtoWrapper = ({ onComplete, est }) => {
     <ProtoBalloon
       isActive={true}
       isDemo={true}
-      showBriefing={false}
+      showBriefing={true}
       timeLimit={est}
       onEndGame={() => { setTimeout(() => onComplete && onComplete('balloon'), 50); }}
     />
@@ -160,8 +160,36 @@ const DEMO_FIXED_IDS = ['balloon', 'grid', 'laser'];
 // Default selection (short demo)
 const DEFAULT_ACTIVITIES = DEMO_FIXED_IDS;
 
+// Record mode: optimized for video recording / screencasts
+const isRecordMode = () => {
+  if (typeof window === 'undefined') return false;
+  const params = new URLSearchParams(window.location.search);
+  return params.get('record') === 'true';
+};
+
+const RECORD_TIMERS = {
+  balloon: 30,
+  grid: 40,
+  laser: 35,
+};
+
+const RECORD_INSTRUCTIONS = {
+  balloon: {
+    es: 'Infla el globo para acumular puntos. Cada bombeo aumenta el riesgo de explosion.',
+    en: 'Pump the balloon to earn points. Each pump increases the risk of popping.',
+  },
+  grid: {
+    es: 'Recoge paquetes y entregalos en su destino. Gestiona tu energia.',
+    en: 'Collect packages and deliver them. Manage your energy.',
+  },
+  laser: {
+    es: 'Coloca espejos y bifurcadores para guiar el haz de luz a las antenas.',
+    en: 'Place mirrors and splitters to guide the laser beam to the antennas.',
+  },
+};
+
 const DemoShell = () => {
-  const [gameSelectionMode, setGameSelectionMode] = useState(true);
+  const [gameSelectionMode, setGameSelectionMode] = useState(() => !isRecordMode());
   const [selectedGameIds, setSelectedGameIds] = useState(DEFAULT_ACTIVITIES);
   const [step, setStep] = useState(0);
   const [timeLeft, setTimeLeft] = useState(null);
@@ -177,14 +205,24 @@ const DemoShell = () => {
   const { language } = useLanguage();
   const isEn = language === 'en';
   const isMobile = useIsMobile();
+  const recordMode = isRecordMode();
   
   // Use a ref as a lock to prevent double-incrementing step
   const completingRef = useRef(null);
 
-  // Build ACTIVITIES from selected games
+  // Build ACTIVITIES from selected games, applying record-mode overrides
   const ACTIVITIES = useMemo(() => {
-    return selectedGameIds.map(id => ALL_GAMES[id]).filter(Boolean);
-  }, [selectedGameIds]);
+    return selectedGameIds.map(id => {
+      const game = ALL_GAMES[id];
+      if (!game) return null;
+      if (!recordMode) return game;
+      return {
+        ...game,
+        est: RECORD_TIMERS[id] || game.est,
+        instructions: RECORD_INSTRUCTIONS[id] || game.instructions,
+      };
+    }).filter(Boolean);
+  }, [selectedGameIds, recordMode]);
 
   // Calculate total time from selected games
   const TOTAL_TIME = useMemo(() => {
@@ -354,6 +392,28 @@ const DemoShell = () => {
       // noop
     }
 
+    // In record mode, auto-start the demo (skip game selection screen)
+    if (recordMode) {
+      const timer = setTimeout(() => {
+        handleStartDemo();
+      }, 600);
+      return () => {
+        clearTimeout(timer);
+        setIsDemo(false);
+        if (!finishedRef.current) {
+          const completedCount = Object.keys(completedRef.current || {}).length;
+          const timeUsedSec = Math.round((Date.now() - startedAtRef.current) / 1000);
+          try {
+            stopTracking('demo', 0, null, { reason: 'unmount', completedCount, timeUsedSec });
+            recordTrialEvent({ event: 'demo_abandon', payload: { completedCount, timeUsedSec } });
+          } catch {
+            // silent
+          }
+          finishedRef.current = true;
+        }
+      };
+    }
+
     return () => {
       setIsDemo(false);
       if (!finishedRef.current) {
@@ -505,6 +565,12 @@ const DemoShell = () => {
                 <div className="demo-timer-compact" style={{ color: timeLeft < 30 ? '#ef4444' : '#64748b' }}>
                   {Math.floor((timeLeft || TOTAL_TIME) / 60)}:{String((timeLeft || TOTAL_TIME) % 60).padStart(2, '0')}
                 </div>
+                {recordMode && (
+                  <div style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', background: 'rgba(239,68,68,0.15)', borderRadius: '6px', padding: '3px 10px', fontSize: '0.7rem', fontWeight: 700, color: '#ef4444', letterSpacing: '1px', animation: 'pulse 2s infinite' }}>
+                    <span style={{ width: '8px', height: '8px', borderRadius: '50%', background: '#ef4444', display: 'inline-block' }} />
+                    REC
+                  </div>
+                )}
               </div>
               <ProgressTracker
                 completed={Object.keys(completed)}
