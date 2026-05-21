@@ -10,6 +10,7 @@ import {
   Globe,
   LineChart,
   Lock,
+  Mail,
   Radar,
   ShieldCheck,
   Sparkles,
@@ -849,6 +850,35 @@ const LandingPageV3 = () => {
                   <p>{signal.text[language]}</p>
                 </article>
               ))}
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section className="lv3-section lv3-team section--white">
+        <div className="lv3-container">
+          <div className="lv3-panel">
+            <div className="lv3-section-head">
+              <h2 className="lv3-section-title"><Users size={20} aria-hidden="true" /> <span>{language === 'es' ? 'Sobre KRUMM' : 'About KRUMM'}</span></h2>
+              <p>
+                {language === 'es'
+                  ? 'Transformando la evaluacion de talento con ciencia cognitiva, datos y diseno centrado en las personas.'
+                  : 'Transforming talent assessment with cognitive science, data, and human-centered design.'}
+              </p>
+            </div>
+            <div className="lv3-team-grid">
+              <div className="lv3-team-content">
+                <p style={{ fontSize: '1.05rem', lineHeight: '1.7', color: '#334155', maxWidth: '720px' }}>
+                  {language === 'es'
+                    ? 'KRUMM nace de la interseccion entre psicologia cognitiva, ciencia de datos y diseno de producto. Reemplazamos pruebas psicometricas genericas con experiencias gamificadas que miden capacidades reales — desde memoria de trabajo y control inhibitorio hasta toma de decisiones bajo incertidumbre — generando senales claras y accionables para equipos de talento.'
+                    : 'KRUMM sits at the intersection of cognitive psychology, data science, and product design. We replace generic psychometric tests with gamified experiences that measure real capabilities — from working memory and inhibitory control to decision-making under uncertainty — generating clear, actionable signals for talent teams.'}
+                </p>
+                <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap', marginTop: '18px' }}>
+                  <a href="mailto:contacto@krumm.cl" className="lv3-team-cta">
+                    <Mail size={16} /> {language === 'es' ? 'Contactar' : 'Contact us'}
+                  </a>
+                </div>
+              </div>
             </div>
           </div>
         </div>

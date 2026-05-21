@@ -501,3 +501,35 @@
   .lv3-action-buttons { flex-direction: column; }
   .lv3-action-btn { width: 100%; justify-content: center; }
 }
+
+/* Team / About section */
+.lv3-team-grid {
+  display: flex;
+  justify-content: center;
+}
+
+.lv3-team-content {
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.lv3-team-cta {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 28px;
+  border-radius: 14px;
+  background: linear-gradient(135deg, #6366f1, #4f46e5);
+  color: #ffffff;
+  font-weight: 800;
+  text-decoration: none;
+  box-shadow: 0 10px 20px -8px rgba(79, 70, 229, 0.4);
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.lv3-team-cta:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 16px 28px -10px rgba(79, 70, 229, 0.5);
+}
