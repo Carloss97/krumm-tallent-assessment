@@ -18,6 +18,7 @@ import PostDemoScreen from './PostDemoScreen';
 import GameGallery from './GameGallery';
 import ProgressTracker from './ProgressTracker';
 import { useIsMobile } from '../hooks/useMediaQuery';
+import { playDemoTransition } from '../utils/audio';
 import './DemoShell.css';
 
 // Adapter wrappers so DemoShell can call games with the expected onComplete() callback
@@ -475,6 +476,8 @@ const DemoShell = () => {
       if (doneCount >= ACTIVITIES.length) {
         handleDemoComplete(nextCompleted, 'completed');
       } else {
+        // Play transition sound between games
+        try { playDemoTransition(); } catch { /* silent */ }
         setToast(isEn ? 'Preparing next assessment module...' : 'Preparando siguiente módulo...');
         setStep((prevStep) => prevStep + 1);
       }

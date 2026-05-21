@@ -1,7 +1,22 @@
 import React from 'react';
 import fs from 'node:fs';
 import { fireEvent, render, screen } from '@testing-library/react';
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
+
+// Mock framer-motion before importing PitchDeckPage to avoid jsdom hangs
+vi.mock('framer-motion', () => {
+  const React = require('react');
+  return {
+    motion: {
+      img: React.forwardRef((props, ref) => React.createElement('img', { ref, ...props })),
+      div: React.forwardRef((props, ref) => React.createElement('div', { ref, ...props })),
+      button: React.forwardRef((props, ref) => React.createElement('button', { ref, ...props })),
+      section: React.forwardRef((props, ref) => React.createElement('section', { ref, ...props })),
+    },
+    AnimatePresence: ({ children }) => children,
+  };
+});
+
 import PitchDeckPage from './PitchDeckPage';
 
 describe('PitchDeckPage', () => {
@@ -22,8 +37,8 @@ describe('PitchDeckPage', () => {
   it('uses working previous/next controls to select the displayed high-resolution page', () => {
     render(<PitchDeckPage />);
 
-    const nextButton = screen.getByRole('button', { name: /^next$/i });
-    const previousButton = screen.getByRole('button', { name: /^previous$/i });
+    const nextButton = screen.getByRole('button', { name: /^Next →$/ });
+    const previousButton = screen.getByRole('button', { name: /^← Prev$/ });
 
     expect(screen.getByLabelText(/slide progress/i)).toHaveTextContent('1/10');
     expect(previousButton).toBeDisabled();

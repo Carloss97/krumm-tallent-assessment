@@ -94,3 +94,41 @@ export const playBalloonPop = () => {
     }
   }
 };
+
+// Demo transition sound — subtle whoosh between games
+export const playDemoTransition = () => {
+  if (!audioCtx) return;
+  try {
+    if (audioCtx.state === 'suspended') audioCtx.resume();
+    const bufferSize = audioCtx.sampleRate * 0.25;
+    const buffer = audioCtx.createBuffer(1, bufferSize, audioCtx.sampleRate);
+    const data = buffer.getChannelData(0);
+    for (let i = 0; i < bufferSize; i++) {
+      const t = i / audioCtx.sampleRate;
+      // Pink-ish noise with quick decay
+      data[i] = (Math.random() * 2 - 1) * Math.exp(-t * 12);
+    }
+
+    const noise = audioCtx.createBufferSource();
+    noise.buffer = buffer;
+
+    const filter = audioCtx.createBiquadFilter();
+    filter.type = 'bandpass';
+    filter.frequency.setValueAtTime(800, audioCtx.currentTime);
+    filter.frequency.exponentialRampToValueAtTime(200, audioCtx.currentTime + 0.25);
+    filter.Q.value = 2;
+
+    const gain = audioCtx.createGain();
+    gain.gain.setValueAtTime(0.08, audioCtx.currentTime);
+    gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.25);
+
+    noise.connect(filter);
+    filter.connect(gain);
+    gain.connect(audioCtx.destination);
+    noise.start();
+  } catch (err) {
+    if (typeof console !== 'undefined' && DEBUG_AUDIO) {
+      console.debug('Demo transition audio unavailable:', err.message);
+    }
+  }
+};
