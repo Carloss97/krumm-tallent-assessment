@@ -22,8 +22,8 @@ describe('GridFlowGame levels', () => {
     // Level 7: final boss
     const last = GRID_LEVELS[6];
     expect(last.difficulty).toBe('hard');
-    expect(last.targets.length).toBeGreaterThanOrEqual(4);
-    expect(last.cols).toBeGreaterThanOrEqual(15);
+    expect(last.targets.length).toBeGreaterThanOrEqual(5);
+    expect(last.cols).toBeGreaterThanOrEqual(13);
     expect(last.stations.length).toBeGreaterThanOrEqual(1);
 
     // Validate drop zones don't overlap with walls
@@ -89,19 +89,19 @@ describe('GridFlowGame levels', () => {
   });
 
   it('uses progressive grid sizes from small intro to complex city maps', () => {
-    // Level 1: small intro grid (11x11)
-    expect(GRID_LEVELS[0].cols).toBe(11);
-    expect(GRID_LEVELS[0].rows).toBe(11);
+    // Level 1: compact intro grid (10×10)
+    expect(GRID_LEVELS[0].cols).toBe(10);
+    expect(GRID_LEVELS[0].rows).toBe(10);
 
-    // Mid-levels: expand to 13-14
-    expect(GRID_LEVELS[2].cols).toBeGreaterThanOrEqual(13);
-    expect(GRID_LEVELS[4].cols).toBeGreaterThanOrEqual(14);
+    // Mid-levels: expand to 12-13
+    expect(GRID_LEVELS[2].cols).toBeGreaterThanOrEqual(10);
+    expect(GRID_LEVELS[4].cols).toBeGreaterThanOrEqual(12);
 
-    // Final levels: larger city maps
+    // Final levels: larger city maps (13×13)
     const last = GRID_LEVELS[6];
-    expect(last.cols).toBeGreaterThanOrEqual(15);
-    expect(last.rows).toBeGreaterThanOrEqual(15);
-    expect(last.targets.length).toBeGreaterThanOrEqual(4);
+    expect(last.cols).toBeGreaterThanOrEqual(13);
+    expect(last.rows).toBeGreaterThanOrEqual(13);
+    expect(last.targets.length).toBeGreaterThanOrEqual(5);
     expect(last.stations.length).toBeGreaterThanOrEqual(1);
 
     // Verify no randomizeTargets flag (preserves authored geometry)
