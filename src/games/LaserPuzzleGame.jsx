@@ -1978,9 +1978,9 @@ const LaserPuzzleGame = ({ isActive, onEndGame, isDemo, showBriefing = true, tim
     <div style={{ width:'100%', height:'100%', display:'flex', flexDirection:'column', alignItems:'center', justifyContent:'center', padding:stagePadding, gap:isMobile ? '10px' : isCompactViewport ? '8px' : '12px', position:'relative', overflow:'hidden', boxSizing:'border-box' }}>
       <AnimatePresence mode="wait">
         {gamePhase === 'done' && (
-          <motion.div key="game-complete" initial={{ scale: 0.8, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ opacity: 0 }} className="glass-panel" style={{ padding: '56px', maxWidth: '600px', textAlign: 'center' }}>
-            <div style={{ color: '#059669', fontSize: '0.9rem', textTransform: 'uppercase', letterSpacing: '4px', marginBottom: '20px', fontWeight: '900' }}>Game Complete</div>
-            <p style={{ color: '#1e1b4b', marginBottom: '48px', fontSize: '1.4rem', fontWeight: '800', lineHeight: 1.3 }}>
+          <motion.div key="game-complete" initial={{ scale: 0.8, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ opacity: 0 }} className="glass-panel" style={{ padding: isMobile ? '28px 20px' : isCompactViewport ? '36px' : '56px', maxWidth: isMobile ? '100%' : '600px', width: isMobile ? 'calc(100% - 24px)' : 'auto', textAlign:'center', margin: isMobile ? '12px' : '0', boxSizing: 'border-box' }}>
+            <div style={{ color: '#059669', fontSize: isMobile ? '0.8rem' : '0.9rem', textTransform: 'uppercase', letterSpacing: isMobile ? '3px' : '4px', marginBottom: isMobile ? '14px' : '20px', fontWeight: '900' }}>Game Complete</div>
+            <p style={{ color: '#1e1b4b', marginBottom: isMobile ? '28px' : '48px', fontSize: isMobile ? '1.1rem' : '1.4rem', fontWeight: '800', lineHeight: 1.3 }}>
               {language === 'es' ? 'Has completado todos los niveles. ¡Excelente trabajo!' : 'You completed all levels. Excellent work!'}
             </p>
             <Confetti />
@@ -1988,7 +1988,7 @@ const LaserPuzzleGame = ({ isActive, onEndGame, isDemo, showBriefing = true, tim
         )}
         {(gamePhase === 'playing' || gamePhase === 'levelComplete') && level && (
           <motion.div key={`level-${levelIdx}`} initial={{ opacity:0, y:20 }} animate={{ opacity:1, y:0 }} exit={{ opacity:0 }} className="glass-panel" style={{ padding:panelPadding, display:'flex', flexDirection:'column', alignItems:'center', gap:panelGap, background: 'rgba(255,255,255,0.95)', backdropFilter: 'blur(12px)', maxWidth: '100%', maxHeight:'100%', overflow:'hidden', boxSizing:'border-box' }}>
-            <div style={{ display:'grid', gridTemplateColumns:isMobile ? 'repeat(2, minmax(0, 1fr))' : 'repeat(5, minmax(0, auto))', justifyContent:'space-between', width:'100%', fontSize:isMobile ? '0.78rem' : isCompactViewport ? '0.78rem' : '0.9rem', fontWeight:'900', color:'#1e1b4b', textTransform:'uppercase', letterSpacing:isMobile ? '1px' : isCompactViewport ? '1px' : '2px', gap:headerGap }}>
+            <div style={{ display:'grid', gridTemplateColumns:isMobile ? 'repeat(2, minmax(0, 1fr))' : isTablet ? 'repeat(3, minmax(0, 1fr))' : 'repeat(5, minmax(0, auto))', justifyContent:'space-between', width:'100%', fontSize:isMobile ? '0.78rem' : isTablet ? '0.82rem' : isCompactViewport ? '0.78rem' : '0.9rem', fontWeight:'900', color:'#1e1b4b', textTransform:'uppercase', letterSpacing:isMobile ? '1px' : isCompactViewport ? '1px' : '2px', gap:headerGap, whiteSpace: isMobile || isTablet ? 'normal' : 'nowrap' }}>
               <span>{level.name}</span>
               <span style={{ color:satColor }}>⏱ {timeLeft}s</span>
               <span>Moves: <span style={{ color:'#4f46e5' }}>{moves}</span></span>
@@ -2009,17 +2009,17 @@ const LaserPuzzleGame = ({ isActive, onEndGame, isDemo, showBriefing = true, tim
           </motion.div>
         )}
         {gamePhase === 'quiz' && currentQuiz && (
-          <motion.div key="quiz" initial={{ scale:0.95, opacity:0 }} animate={{ scale:1, opacity:1 }} className="glass-panel" style={{ padding:'56px', maxWidth:'600px', textAlign:'center' }}>
-            <div style={{ color:'#7c3aed', fontSize:'0.9rem', textTransform:'uppercase', letterSpacing:'4px', marginBottom:'20px', fontWeight:'900' }}>Spatial Insight</div>
-            <p style={{ color:'#1e1b4b', marginBottom:'48px', fontSize:'1.4rem', fontWeight: '800', lineHeight: 1.3 }}>{currentQuiz.q}</p>
-            <div style={{ display:'flex', flexDirection:'column', gap:'16px' }}>
+          <motion.div key="quiz" initial={{ scale:0.95, opacity:0 }} animate={{ scale:1, opacity:1 }} className="glass-panel" style={{ padding:isMobile ? '28px 20px' : isCompactViewport ? '36px' : '56px', maxWidth:isMobile ? '100%' : '600px', width: isMobile ? 'calc(100% - 24px)' : 'auto', textAlign:'center', margin: isMobile ? '12px' : '0', boxSizing: 'border-box', maxHeight: isMobile ? 'calc(100dvh - 40px)' : 'none', overflowY: 'auto' }}>
+            <div style={{ color:'#7c3aed', fontSize:isMobile ? '0.8rem' : '0.9rem', textTransform:'uppercase', letterSpacing:isMobile ? '3px' : '4px', marginBottom:isMobile ? '14px' : '20px', fontWeight:'900' }}>Spatial Insight</div>
+            <p style={{ color:'#1e1b4b', marginBottom:isMobile ? '28px' : '48px', fontSize:isMobile ? '1.1rem' : '1.4rem', fontWeight: '800', lineHeight: 1.3 }}>{currentQuiz.q}</p>
+            <div style={{ display:'flex', flexDirection:'column', gap:isMobile ? '10px' : '16px' }}>
               {currentQuiz.opts.map((opt, i) => (
                 <motion.button 
                   key={i} 
                   whileHover={{ x: 8, backgroundColor: 'rgba(124,58,237,0.12)' }}
                   className="btn" 
                   onClick={() => handleQuizAnswer(i)} 
-                  style={{ padding:'20px 28px', textAlign:'left', display:'flex', gap:'16px', borderRadius: '18px', fontSize: '1.1rem' }}
+                  style={{ padding:isMobile ? '16px 20px' : '20px 28px', textAlign:'left', display:'flex', gap:isMobile ? '12px' : '16px', borderRadius: isMobile ? '14px' : '18px', fontSize: isMobile ? '0.95rem' : '1.1rem', minHeight: isMobile ? '44px' : 'auto' }}
                 >
                   <span style={{ opacity:0.5, fontWeight: 900 }}>{i+1}.</span><span style={{ fontWeight: 700 }}>{opt}</span>
                 </motion.button>
@@ -2030,14 +2030,14 @@ const LaserPuzzleGame = ({ isActive, onEndGame, isDemo, showBriefing = true, tim
       </AnimatePresence>
 
       {gamePhase === 'briefing' && briefing && (
-        <motion.div initial={{ opacity:0 }} animate={{ opacity:1 }} style={{ position:'absolute', inset:0, background:'rgba(15,23,42,0.7)', backdropFilter: 'blur(8px)', display:'flex', alignItems:'center', justifyContent:'center', zIndex: 100, borderRadius: '24px' }}>
-          <motion.div initial={{ y:30, scale:0.95 }} animate={{ y:0, scale:1 }} style={{ background:'#ffffff', padding:'48px', borderRadius:'32px', maxWidth:'520px', textAlign:'center', border:'1px solid rgba(15,23,42,0.1)', boxShadow:'0 35px 70px -15px rgba(0,0,0,0.4)' }}>
-            <div style={{ color: '#6366f1', fontSize: '0.85rem', fontWeight: 900, textTransform: 'uppercase', letterSpacing: '3px', marginBottom: '16px' }}>
+        <motion.div initial={{ opacity:0 }} animate={{ opacity:1 }} style={{ position:'absolute', inset:0, background:'rgba(15,23,42,0.7)', backdropFilter: 'blur(8px)', display:'flex', alignItems:'center', justifyContent:'center', zIndex: 100, borderRadius: isMobile ? '16px' : '24px', padding: isMobile ? '12px' : '20px' }}>
+          <motion.div initial={{ y:30, scale:0.95 }} animate={{ y:0, scale:1 }} style={{ background:'#ffffff', padding:isMobile ? '28px 22px' : isCompactViewport ? '36px 28px' : '48px', borderRadius:isMobile ? '20px' : '32px', maxWidth:isMobile ? '100%' : '520px', width: '100%', textAlign:'center', border:'1px solid rgba(15,23,42,0.1)', boxShadow:'0 35px 70px -15px rgba(0,0,0,0.4)', maxHeight: isMobile ? 'calc(100dvh - 40px)' : 'none', overflowY: 'auto', boxSizing: 'border-box' }}>
+            <div style={{ color: '#6366f1', fontSize: isMobile ? '0.75rem' : '0.85rem', fontWeight: 900, textTransform: 'uppercase', letterSpacing: isMobile ? '2px' : '3px', marginBottom: isMobile ? '10px' : '16px' }}>
               {language === 'es' ? 'Briefing del Sistema' : 'System Briefing'}
             </div>
-            <h4 style={{ margin: 0, fontSize:'2rem', color:'#1e1b4b', fontWeight: 900, letterSpacing: '-0.03em' }}>{briefing.title}</h4>
-            <p style={{ margin:'24px 0 36px', color:'#475569', lineHeight:1.7, fontSize: '1.1rem', fontWeight: 500 }}>{briefing.body}</p>
-            <button className="btn btn-primary" onClick={() => setGamePhase('playing')} style={{ width: '100%', padding: '20px', fontSize: '1.2rem' }}>
+            <h4 style={{ margin: 0, fontSize:isMobile ? '1.4rem' : isCompactViewport ? '1.6rem' : '2rem', color:'#1e1b4b', fontWeight: 900, letterSpacing: '-0.03em' }}>{briefing.title}</h4>
+            <p style={{ margin:isMobile ? '16px 0 24px' : '24px 0 36px', color:'#475569', lineHeight:1.7, fontSize: isMobile ? '0.9rem' : isCompactViewport ? '0.95rem' : '1.1rem', fontWeight: 500 }}>{briefing.body}</p>
+            <button className="btn btn-primary" onClick={() => setGamePhase('playing')} style={{ width: '100%', padding: isMobile ? '16px' : '20px', fontSize: isMobile ? '1rem' : '1.2rem', minHeight: isMobile ? '48px' : 'auto' }}>
               {language === 'es' ? 'Activar Sistema' : 'Activate System'}
             </button>
           </motion.div>
@@ -2046,7 +2046,7 @@ const LaserPuzzleGame = ({ isActive, onEndGame, isDemo, showBriefing = true, tim
 
       {gamePhase === 'levelComplete' && (
         <div style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', pointerEvents: 'none', zIndex: 110 }}>
-          <motion.div initial={{ scale: 0.5, opacity: 0 }} animate={{ scale: 1.1, opacity: 1 }} exit={{ scale: 1.5, opacity: 0 }} style={{ padding: '32px 64px', background: 'rgba(16,185,129,0.98)', border: '3px solid #fff', borderRadius: 24, color: '#fff', fontWeight: 900, fontSize: '2rem', textTransform: 'uppercase', letterSpacing: '6px', boxShadow: '0 30px 60px -10px rgba(0,0,0,0.3)' }}>
+          <motion.div initial={{ scale: 0.5, opacity: 0 }} animate={{ scale: 1.1, opacity: 1 }} exit={{ scale: 1.5, opacity: 0 }} style={{ padding: isMobile ? '20px 32px' : '32px 64px', background: 'rgba(16,185,129,0.98)', border: '3px solid #fff', borderRadius: 24, color: '#fff', fontWeight: 900, fontSize: isMobile ? '1.4rem' : '2rem', textTransform: 'uppercase', letterSpacing: isMobile ? '3px' : '6px', boxShadow: '0 30px 60px -10px rgba(0,0,0,0.3)', maxWidth: isMobile ? 'calc(100vw - 32px)' : 'none', textAlign: 'center' }}>
             {language === 'es' ? '¡ÓPTIMO!' : 'OPTIMIZED!'}
           </motion.div>
           <Confetti count={30} spread={120} duration={1.8} />

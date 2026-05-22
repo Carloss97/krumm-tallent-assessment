@@ -954,7 +954,7 @@ const GridFlowGame = ({ isActive, onEndGame, isDemo, showBriefing = true }) => {
       <AnimatePresence>
         {gameState === 'playing' && (
           <motion.div initial={{ opacity:0, y:20 }} animate={{ opacity:1, y:0 }} exit={{ opacity:0 }} className="glass-panel" style={{ padding:panelPadding, display:'flex', flexDirection:'column', alignItems:'center', gap:panelGap, background: 'rgba(255,255,255,0.95)', backdropFilter: 'blur(12px)', width: 'fit-content', minWidth: `${Math.min(boardSize, boardPixelWidth)}px`, maxWidth: '100%', maxHeight:'100%', overflow:'hidden', boxSizing:'border-box' }}>
-            <div style={{ display:'grid', gridTemplateColumns:isMobile ? 'repeat(3, minmax(0, 1fr))' : 'repeat(6, minmax(0, 1fr))', width:'100%', color:'#1e1b4b', textTransform:'uppercase', letterSpacing:isMobile ? '1px' : isCompactViewport ? '1.5px' : '3px', fontSize:isMobile ? '0.78rem' : isCompactViewport ? '0.78rem' : '1rem', fontWeight:'900', gap:isMobile ? '10px' : isCompactViewport ? '12px' : '24px', whiteSpace:'nowrap' }}>
+            <div style={{ display:'grid', gridTemplateColumns:isMobile ? 'repeat(3, minmax(0, 1fr))' : isTablet ? 'repeat(3, minmax(0, 1fr))' : 'repeat(6, minmax(0, 1fr))', width:'100%', color:'#1e1b4b', textTransform:'uppercase', letterSpacing:isMobile ? '1px' : isCompactViewport ? '1.5px' : '3px', fontSize:isMobile ? '0.78rem' : isTablet ? '0.82rem' : isCompactViewport ? '0.78rem' : '1rem', fontWeight:'900', gap:isMobile ? '10px' : isTablet ? '10px' : isCompactViewport ? '12px' : '24px', whiteSpace: isMobile || isTablet ? 'normal' : 'nowrap' }}>
               <span>Round {round+1}/{effectiveMaxRounds}</span>
               <span style={{ color: levelTimeLeft<10?'#dc2626':'#059669' }}>⏱ {levelTimeLeft}s</span>
               {lvlData.energyDrain>0 && <span style={{ color: energy<8?'#dc2626':'#1e1b4b' }}>⚡ {energy} km</span>}
@@ -1003,15 +1003,15 @@ const GridFlowGame = ({ isActive, onEndGame, isDemo, showBriefing = true }) => {
                 </div>
               </div>
               
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', minWidth: '220px' }}>
-                <div style={{ fontSize: '1rem', color: '#64748b', fontWeight: 900, textTransform: 'uppercase', letterSpacing: '2px' }}>{language === 'es' ? 'Inventario' : 'Inventory'}</div>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', minWidth: isMobile ? '0' : '220px', flex: isMobile ? '1' : 'none', width: isMobile ? '100%' : 'auto' }}>
+                <div style={{ fontSize: isMobile ? '0.85rem' : '1rem', color: '#64748b', fontWeight: 900, textTransform: 'uppercase', letterSpacing: '2px', textAlign: isMobile ? 'center' : 'left' }}>{language === 'es' ? 'Inventario' : 'Inventory'}</div>
                 {inventory ? (
-                  <motion.div initial={{ x:-20, opacity:0 }} animate={{ x:0, opacity:1 }} style={{ display: 'flex', alignItems: 'center', gap: '16px', padding: '20px', background: 'rgba(99,102,241,0.1)', borderRadius: '16px', border: `2px solid ${inventory.color}60` }}>
-                    <div style={{ width:'20px', height:'20px', background:inventory.color, borderRadius:'6px' }}/>
-                    <span style={{ fontSize: '1.2rem', fontWeight: 900 }}>{language === 'es' ? 'Listo' : 'Ready'}</span>
+                  <motion.div initial={{ x:-20, opacity:0 }} animate={{ x:0, opacity:1 }} style={{ display: 'flex', alignItems: 'center', gap: isMobile ? '12px' : '16px', padding: isMobile ? '14px' : '20px', background: 'rgba(99,102,241,0.1)', borderRadius: isMobile ? '12px' : '16px', border: `2px solid ${inventory.color}60`, justifyContent: isMobile ? 'center' : 'flex-start' }}>
+                    <div style={{ width:isMobile ? '16px' : '20px', height:isMobile ? '16px' : '20px', background:inventory.color, borderRadius:'6px', flexShrink: 0 }}/>
+                    <span style={{ fontSize: isMobile ? '1rem' : '1.2rem', fontWeight: 900 }}>{language === 'es' ? 'Listo' : 'Ready'}</span>
                   </motion.div>
                 ) : (
-                  <div style={{ fontSize: '1.2rem', color: '#94a3b8', fontStyle: 'italic', fontWeight: 600 }}>{language === 'es' ? 'Vacío' : 'Empty'}</div>
+                  <div style={{ fontSize: isMobile ? '1rem' : '1.2rem', color: '#94a3b8', fontStyle: 'italic', fontWeight: 600, textAlign: isMobile ? 'center' : 'left' }}>{language === 'es' ? 'Vacío' : 'Empty'}</div>
                 )}
               </div>
             </div>
@@ -1021,14 +1021,14 @@ const GridFlowGame = ({ isActive, onEndGame, isDemo, showBriefing = true }) => {
         )}
 
         {gameState === 'briefing' && briefing && (
-          <motion.div initial={{ opacity:0 }} animate={{ opacity:1 }} exit={{ opacity:0 }} style={{ position:'absolute', inset:0, background:'rgba(15,23,42,0.7)', backdropFilter: 'blur(10px)', display:'flex', alignItems:'center', justifyContent:'center', zIndex: 100, borderRadius: '32px' }}>
-            <motion.div initial={{ y:40, scale:0.95 }} animate={{ y:0, scale:1 }} style={{ background:'#ffffff', padding:'60px', borderRadius:'40px', maxWidth:'600px', textAlign:'center', border:'1px solid rgba(15,23,42,0.1)', boxShadow:'0 40px 80px -20px rgba(0,0,0,0.5)' }}>
-              <div style={{ color: '#4f46e5', fontSize: '1rem', fontWeight: 900, textTransform: 'uppercase', letterSpacing: '4px', marginBottom: '20px' }}>
+          <motion.div initial={{ opacity:0 }} animate={{ opacity:1 }} exit={{ opacity:0 }} style={{ position:'absolute', inset:0, background:'rgba(15,23,42,0.7)', backdropFilter: 'blur(10px)', display:'flex', alignItems:'center', justifyContent:'center', zIndex: 100, borderRadius: isMobile ? '20px' : '32px', padding: isMobile ? '12px' : '20px' }}>
+            <motion.div initial={{ y:40, scale:0.95 }} animate={{ y:0, scale:1 }} style={{ background:'#ffffff', padding:isMobile ? '28px 22px' : isCompactViewport ? '36px 28px' : '60px', borderRadius:isMobile ? '24px' : '40px', maxWidth:isMobile ? '100%' : '600px', width: '100%', textAlign:'center', border:'1px solid rgba(15,23,42,0.1)', boxShadow:'0 40px 80px -20px rgba(0,0,0,0.5)', maxHeight: isMobile ? 'calc(100dvh - 40px)' : 'none', overflowY: 'auto', boxSizing: 'border-box' }}>
+              <div style={{ color: '#4f46e5', fontSize: isMobile ? '0.85rem' : '1rem', fontWeight: 900, textTransform: 'uppercase', letterSpacing: isMobile ? '3px' : '4px', marginBottom: isMobile ? '12px' : '20px' }}>
                 {language === 'es' ? 'Centro de Control' : 'Control Center'}
               </div>
-              <h4 style={{ margin: 0, fontSize:'2.5rem', color:'#1e1b4b', fontWeight: 950, letterSpacing: '-0.04em' }}>{briefing.title}</h4>
-              <p style={{ margin:'32px 0 48px', color:'#475569', lineHeight:1.8, fontSize: '1.25rem', fontWeight: 500 }}>{briefing.body}</p>
-              <button className="btn btn-primary" onClick={() => setGameState('playing')} style={{ width: '100%', padding: '24px', fontSize: '1.4rem', borderRadius: '24px' }}>
+              <h4 style={{ margin: 0, fontSize:isMobile ? '1.5rem' : isCompactViewport ? '1.8rem' : '2.5rem', color:'#1e1b4b', fontWeight: 950, letterSpacing: '-0.04em' }}>{briefing.title}</h4>
+              <p style={{ margin:isMobile ? '18px 0 28px' : '32px 0 48px', color:'#475569', lineHeight:1.8, fontSize: isMobile ? '0.95rem' : isCompactViewport ? '1.1rem' : '1.25rem', fontWeight: 500 }}>{briefing.body}</p>
+              <button className="btn btn-primary" onClick={() => setGameState('playing')} style={{ width: '100%', padding: isMobile ? '18px' : '24px', fontSize: isMobile ? '1.1rem' : '1.4rem', borderRadius: isMobile ? '18px' : '24px', minHeight: isMobile ? '48px' : 'auto' }}>
                 {language === 'es' ? 'Iniciar Operación' : 'Start Operation'}
               </button>
             </motion.div>
@@ -1036,17 +1036,17 @@ const GridFlowGame = ({ isActive, onEndGame, isDemo, showBriefing = true }) => {
         )}
 
         {gameState === 'quiz' && currentQuestion && (
-          <motion.div initial={{ scale:0.95, opacity:0 }} animate={{ scale:1, opacity:1 }} className="glass-panel" style={{ padding:'64px', maxWidth:'700px', textAlign:'center' }}>
-            <div style={{ color:'#7c3aed', fontSize:'1rem', textTransform:'uppercase', letterSpacing:'5px', marginBottom:'24px', fontWeight:'950' }}>Network Check</div>
-            <p style={{ color:'#1e1b4b', marginBottom:'60px', fontSize:'1.8rem', fontWeight: '900', lineHeight: 1.25 }}>{currentQuestion.q}</p>
-            <div style={{ display:'flex', flexDirection:'column', gap:'20px' }}>
+          <motion.div initial={{ scale:0.95, opacity:0 }} animate={{ scale:1, opacity:1 }} className="glass-panel" style={{ padding:isMobile ? '28px 20px' : isCompactViewport ? '40px' : '64px', maxWidth:isMobile ? '100%' : '700px', width: isMobile ? 'calc(100% - 24px)' : 'auto', textAlign:'center', margin: isMobile ? '12px' : '0', boxSizing: 'border-box', maxHeight: isMobile ? 'calc(100dvh - 40px)' : 'none', overflowY: 'auto' }}>
+            <div style={{ color:'#7c3aed', fontSize:isMobile ? '0.85rem' : '1rem', textTransform:'uppercase', letterSpacing:isMobile ? '3px' : '5px', marginBottom:isMobile ? '16px' : '24px', fontWeight:'950' }}>Network Check</div>
+            <p style={{ color:'#1e1b4b', marginBottom:isMobile ? '32px' : '60px', fontSize:isMobile ? '1.25rem' : isCompactViewport ? '1.4rem' : '1.8rem', fontWeight: '900', lineHeight: 1.25 }}>{currentQuestion.q}</p>
+            <div style={{ display:'flex', flexDirection:'column', gap:isMobile ? '12px' : '20px' }}>
               {currentQuestion.opts.map((opt, i) => (
                 <motion.button 
                   key={i} 
                   whileHover={{ x: 12, backgroundColor: 'rgba(124,58,237,0.15)' }}
                   className="btn" 
                   onClick={() => handleQuizAnswer(i)} 
-                  style={{ padding:'24px 36px', textAlign:'left', display:'flex', gap:'20px', borderRadius: '24px', fontSize: '1.3rem' }}
+                  style={{ padding:isMobile ? '18px 20px' : '24px 36px', textAlign:'left', display:'flex', gap:isMobile ? '14px' : '20px', borderRadius: isMobile ? '18px' : '24px', fontSize: isMobile ? '1.05rem' : '1.3rem', minHeight: isMobile ? '48px' : 'auto' }}
                 >
                   <span style={{ opacity:0.5, fontWeight: 950 }}>{i+1}.</span><span style={{ fontWeight: 800 }}>{opt}</span>
                 </motion.button>
