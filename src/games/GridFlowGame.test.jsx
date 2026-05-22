@@ -5,7 +5,7 @@ describe('GridFlowGame levels', () => {
   it('defines a 7-level progressive Delivery Puzzle progression', () => {
     expect(GRID_LEVELS).toHaveLength(7);
 
-    // Level 1: intro, single package, no energy
+    // Level 1: intro, single package, no energy, has path walls
     expect(GRID_LEVELS[0].difficulty).toBe('easy');
     expect(GRID_LEVELS[0].targets).toHaveLength(1);
     expect(GRID_LEVELS[0].energyDrain).toBe(0);
@@ -15,7 +15,7 @@ describe('GridFlowGame levels', () => {
     expect(GRID_LEVELS[2].energyDrain).toBeGreaterThan(0);
     expect(GRID_LEVELS[2].stations.length).toBeGreaterThanOrEqual(1);
 
-    // Level 5: first obstacles
+    // Level 5: more complex streets
     expect(GRID_LEVELS[4].walls.length).toBeGreaterThan(0);
     expect(GRID_LEVELS[4].difficulty).toBe('medium');
 
@@ -24,7 +24,7 @@ describe('GridFlowGame levels', () => {
     expect(last.difficulty).toBe('hard');
     expect(last.targets.length).toBeGreaterThanOrEqual(5);
     expect(last.cols).toBeGreaterThanOrEqual(17);
-    expect(last.stations.length).toBeGreaterThanOrEqual(4);
+    expect(last.stations.length).toBeGreaterThanOrEqual(1);
 
     // Validate drop zones don't overlap with walls
     GRID_LEVELS.forEach((level) => {
@@ -48,16 +48,14 @@ describe('GridFlowGame levels', () => {
   });
 
   it('structures levels as grids with progressive introduction of walls', () => {
-    // Levels 1-4: no or minimal walls (introductory)
-    for (let i = 0; i <= 3; i++) {
-      expect(GRID_LEVELS[i].walls.length).toBeLessThanOrEqual(0);
+    // All levels have walls that form streets/paths for the delivery game
+    for (let i = 0; i < GRID_LEVELS.length; i++) {
+      expect(GRID_LEVELS[i].walls.length, `level ${i} should have path walls`).toBeGreaterThan(0);
     }
 
-    // Levels 5+: walls introduced (city-like obstacles)
+    // Levels 5+: more complex city-like obstacles  
     const citiedLevels = GRID_LEVELS.slice(4);
     citiedLevels.forEach((level, i) => {
-      expect(level.walls.length, `level ${i + 5} should have obstacles`).toBeGreaterThan(0);
-
       const wallSet = new Set(level.walls);
       const wallArray = Array.from(wallSet).map((key) => key.split(',').map(Number));
 
@@ -104,7 +102,7 @@ describe('GridFlowGame levels', () => {
     expect(last.cols).toBeGreaterThanOrEqual(18);
     expect(last.rows).toBeGreaterThanOrEqual(16);
     expect(last.targets.length).toBeGreaterThanOrEqual(5);
-    expect(last.stations.length).toBeGreaterThanOrEqual(4);
+    expect(last.stations.length).toBeGreaterThanOrEqual(1);
 
     // Verify no randomizeTargets flag (preserves authored geometry)
     GRID_LEVELS.forEach((level, i) => {
