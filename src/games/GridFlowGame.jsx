@@ -394,7 +394,7 @@ const buildQuizQuestions = (language) => {
   return [...QUIZ, buildAttentionQuestion(isEn)];
 };
 
-const LEVEL_BRIEFINGS = {
+export const LEVEL_BRIEFINGS = {
   es: [
     {
       title: 'Paso 1: Planifica, recoge y entrega',

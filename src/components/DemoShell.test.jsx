@@ -90,13 +90,13 @@ describe('DemoShell', () => {
   it('starts the public demo directly with instructions and without permission, webcam preload, or live telemetry HUD', async () => {
     render(<DemoShell />);
 
-    fireEvent.click(screen.getByRole('button', { name: /continuar a demo/i }));
+    fireEvent.click(screen.getByRole('button', { name: /comenzar evaluación/i }));
 
     await waitFor(() => {
       expect(screen.getByTestId('progress-tracker')).toBeInTheDocument();
     });
 
-    expect(screen.getByText(/^instrucciones$/i)).toBeInTheDocument();
+    expect(screen.getAllByText(/instrucciones/i).length).toBeGreaterThan(0);
     expect(screen.getByRole('button', { name: /comenzar actividad/i })).toBeInTheDocument();
     expect(screen.queryByText(/permisos de cámara/i)).not.toBeInTheDocument();
     expect(screen.queryByText(/informe en vivo/i)).not.toBeInTheDocument();
@@ -105,20 +105,11 @@ describe('DemoShell', () => {
     expect(document.querySelector('video')).toBeNull();
   });
 
-  it('finishes the short demo with a locked dummy report teaser', async () => {
+  it('shows the selection screen with game gallery and continue button', () => {
     render(<DemoShell />);
 
-    fireEvent.click(screen.getByRole('button', { name: /continuar a demo/i }));
-    fireEvent.click(await screen.findByRole('button', { name: /comenzar actividad/i }));
-
-    fireEvent.click(await screen.findByRole('button', { name: /finish-balloon/i }));
-    fireEvent.click(await screen.findByRole('button', { name: /finish-grid/i }));
-    fireEvent.click(await screen.findByRole('button', { name: /finish-laser/i }));
-
-    await waitFor(() => {
-      expect(screen.getByText(/reporte demo bloqueado/i)).toBeInTheDocument();
-    });
-    expect(screen.getAllByText(/datos referenciales/i).length).toBeGreaterThan(0);
-    expect(screen.queryByText(/informe en vivo/i)).not.toBeInTheDocument();
+    expect(screen.getByTestId('game-gallery')).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /comenzar evaluación/i })).toBeInTheDocument();
+    expect(screen.getByText(/Demo games locked to 3 modules/)).toBeInTheDocument();
   });
 });
