@@ -94,113 +94,134 @@ const withCityWalls = (level, rectangles) => createGridFlowLevel({
 });
 
 export const GRID_LEVELS = [
+  // ── Level 1: Basic intro ─ single package, no obstacles, no energy ──
+  withCityWalls({
+    difficulty: 'easy',
+    cols: 12,
+    rows: 12,
+    targets: [
+      { id:1, x:6, y:1, color:'#ef4444', points:100, dropZone:{x:6,y:10} },
+    ],
+    stations: [],
+    energyDrain: 0,
+    timeLimit: 45,
+    startPos: { x:6, y:11 },
+  }, []),
+
+  // ── Level 2: Two packages, still no energy, introduce diagonal thinking ──
   withCityWalls({
     difficulty: 'easy',
     cols: 14,
     rows: 14,
     targets: [
-      { id:1, x:1, y:2, color:'#ef4444', points:110, dropZone:{x:12,y:11} },
-      { id:2, x:11, y:1, color:'#3b82f6', points:120, dropZone:{x:2,y:12} },
+      { id:1, x:2, y:2, color:'#ef4444', points:110, dropZone:{x:11,y:11} },
+      { id:2, x:11, y:2, color:'#3b82f6', points:120, dropZone:{x:2,y:11} },
     ],
-    stations: [{ x:7, y:2 }, { x:7, y:11 }],
-    energyDrain: 0.7,
-    timeLimit: 58,
-    startPos: { x:1, y:12 },
-  }, [
-    [3,1,4,4], [8,1,10,3], [6,5,8,7], [1,7,3,9], [10,8,12,10], [5,10,6,12],
-  ]),
-  withCityWalls({
-    difficulty: 'hard',
-    cols: 15,
-    rows: 15,
-    targets: [
-      { id:1, x:1, y:1, color:'#ef4444', points:140, dropZone:{x:13,y:13} },
-      { id:2, x:13, y:2, color:'#3b82f6', points:140, dropZone:{x:1,y:13} },
-      { id:3, x:6, y:12, color:'#10b981', points:150, dropZone:{x:12,y:6} },
-    ],
-    stations: [{ x:2, y:7 }, { x:7, y:2 }, { x:12, y:10 }],
-    energyDrain: 1.15,
-    timeLimit: 66,
-    startPos: { x:7, y:14 },
-  }, [
-    [3,0,4,4], [8,0,10,3], [12,0,13,4], [1,5,2,6], [5,5,7,7], [10,5,13,6],
-    [2,9,4,12], [7,10,9,13], [12,11,13,14],
-  ]),
+    stations: [],
+    energyDrain: 0,
+    timeLimit: 52,
+    startPos: { x:7, y:13 },
+  }, []),
+
+  // ── Level 3: Energy introduced (drain 0.8), with recharge stations ──
   withCityWalls({
     difficulty: 'easy',
+    cols: 14,
+    rows: 14,
+    targets: [
+      { id:1, x:1, y:1, color:'#ef4444', points:130, dropZone:{x:12,y:12} },
+      { id:2, x:12, y:2, color:'#3b82f6', points:130, dropZone:{x:1,y:12} },
+      { id:3, x:7, y:7, color:'#10b981', points:140, dropZone:{x:12,y:7} },
+    ],
+    stations: [{ x:3, y:7 }, { x:10, y:7 }],
+    energyDrain: 0.8,
+    timeLimit: 60,
+    startPos: { x:7, y:13 },
+  }, []),
+
+  // ── Level 4: More packages, energy drain 1.0, 3 stations ──
+  withCityWalls({
+    difficulty: 'medium',
+    cols: 16,
+    rows: 15,
+    targets: [
+      { id:1, x:1, y:1, color:'#ef4444', points:150, dropZone:{x:14,y:13} },
+      { id:2, x:14, y:1, color:'#3b82f6', points:150, dropZone:{x:1,y:13} },
+      { id:3, x:8, y:7, color:'#10b981', points:160, dropZone:{x:14,y:7} },
+    ],
+    stations: [{ x:3, y:7 }, { x:12, y:7 }, { x:8, y:2 }],
+    energyDrain: 1.0,
+    timeLimit: 68,
+    startPos: { x:8, y:14 },
+  }, []),
+
+  // ── Level 5: Obstacles (walls) + energy drain 1.2 ──
+  withCityWalls({
+    difficulty: 'medium',
     cols: 16,
     rows: 16,
     targets: [
-      { id:1, x:1, y:1, color:'#ef4444', points:165, dropZone:{x:14,y:14} },
-      { id:2, x:14, y:2, color:'#3b82f6', points:165, dropZone:{x:2,y:13} },
-      { id:3, x:4, y:14, color:'#10b981', points:175, dropZone:{x:13,y:5} },
-      { id:4, x:11, y:11, color:'#f59e0b', points:185, dropZone:{x:3,y:4} },
+      { id:1, x:1, y:1, color:'#ef4444', points:175, dropZone:{x:14,y:14} },
+      { id:2, x:14, y:2, color:'#3b82f6', points:175, dropZone:{x:2,y:13} },
+      { id:3, x:8, y:13, color:'#10b981', points:185, dropZone:{x:13,y:5} },
     ],
-    stations: [{ x:1, y:8 }, { x:8, y:1 }, { x:14, y:8 }],
-    energyDrain: 1.35,
-    timeLimit: 78,
+    stations: [{ x:2, y:7 }, { x:13, y:8 }, { x:8, y:2 }],
+    energyDrain: 1.2,
+    timeLimit: 75,
     startPos: { x:8, y:15 },
   }, [
-    [3,1,5,3], [8,1,10,4], [12,1,14,3], [1,5,3,7], [5,6,7,9], [10,6,12,8],
-    [13,6,14,10], [2,10,4,13], [7,11,9,14], [11,12,13,14],
+    [3,3,3,4], [4,3,4,4], [3,8,3,9], [4,8,4,9],
+    [5,4,6,5], [7,9,7,10], [8,4,8,5], [8,9,8,10],
+    [9,4,9,6], [9,9,9,10], [10,1,10,6], [10,11,10,13],
+    [11,1,11,3], [11,10,11,13], [12,1,12,2], [12,10,13,14],
   ]),
+
+  // ── Level 6: Complex city walls + energy drain 1.5, 4 packages ──
   withCityWalls({
     difficulty: 'hard',
     cols: 17,
     rows: 16,
     targets: [
-      { id:1, x:1, y:2, color:'#ef4444', points:210, dropZone:{x:15,y:13} },
+      { id:1, x:1, y:1, color:'#ef4444', points:200, dropZone:{x:15,y:14} },
       { id:2, x:15, y:1, color:'#3b82f6', points:210, dropZone:{x:1,y:14} },
-      { id:3, x:4, y:13, color:'#10b981', points:220, dropZone:{x:14,y:6} },
-      { id:4, x:13, y:11, color:'#f59e0b', points:230, dropZone:{x:3,y:5} },
-      { id:5, x:8, y:3, color:'#8b5cf6', points:240, dropZone:{x:8,y:14} },
+      { id:3, x:4, y:12, color:'#10b981', points:220, dropZone:{x:14,y:6} },
+      { id:4, x:13, y:11, color:'#f59e0b', points:230, dropZone:{x:4,y:5} },
     ],
-    stations: [{ x:2, y:8 }, { x:8, y:1 }, { x:8, y:9 }, { x:15, y:8 }],
-    energyDrain: 1.75,
+    stations: [{ x:2, y:7 }, { x:8, y:2 }, { x:8, y:9 }, { x:15, y:8 }],
+    energyDrain: 1.5,
     timeLimit: 88,
     startPos: { x:8, y:15 },
   }, [
-    [3,0,5,4], [10,0,12,4], [14,2,15,5], [1,5,2,7], [5,6,7,8], [9,6,11,9],
-    [13,7,16,9], [2,10,2,14], [4,10,4,14], [6,11,7,15], [10,11,12,14], [14,12,15,15],
+    [3,3,3,4], [3,8,3,9], [4,1,4,4], [4,8,4,9],
+    [5,1,5,7], [6,4,6,7], [7,6,7,7], [7,10,7,11],
+    [8,4,8,7], [8,10,8,12], [9,4,9,7], [9,10,9,12],
+    [10,1,10,6], [10,11,10,13], [11,1,11,3], [11,5,11,6],
+    [11,10,11,13], [12,1,12,2], [12,4,12,6], [12,10,12,14],
+    [13,4,13,6], [13,12,13,14],
   ]),
-  withCityWalls({
-    difficulty: 'easy',
-    cols: 18,
-    rows: 16,
-    targets: [
-      { id:1, x:1, y:1, color:'#ef4444', points:205, dropZone:{x:16,y:14} },
-      { id:2, x:16, y:2, color:'#3b82f6', points:205, dropZone:{x:1,y:13} },
-      { id:3, x:5, y:14, color:'#10b981', points:215, dropZone:{x:15,y:6} },
-      { id:4, x:13, y:12, color:'#f59e0b', points:225, dropZone:{x:4,y:5} },
-      { id:5, x:9, y:3, color:'#8b5cf6', points:235, dropZone:{x:9,y:14} },
-    ],
-    stations: [{ x:2, y:8 }, { x:9, y:1 }, { x:9, y:8 }, { x:16, y:9 }],
-    energyDrain: 1.6,
-    timeLimit: 96,
-    startPos: { x:9, y:15 },
-  }, [
-    [3,0,5,4], [8,0,10,2], [13,0,15,4], [1,5,2,7], [5,6,7,9], [10,5,10,8], [12,5,12,8],
-    [15,6,17,9], [2,10,2,14], [4,10,4,14], [7,11,8,15], [11,11,13,14], [15,12,16,15],
-  ]),
+
+  // ── Level 7: Final boss ─ dense city, 5 packages, high energy drain ──
   withCityWalls({
     difficulty: 'hard',
     cols: 18,
-    rows: 16,
+    rows: 17,
     targets: [
-      { id:1, x:1, y:1, color:'#ef4444', points:250, dropZone:{x:16,y:14} },
-      { id:2, x:16, y:1, color:'#3b82f6', points:250, dropZone:{x:1,y:14} },
-      { id:3, x:3, y:12, color:'#10b981', points:260, dropZone:{x:15,y:5} },
-      { id:4, x:14, y:12, color:'#f59e0b', points:270, dropZone:{x:4,y:4} },
-      { id:5, x:8, y:3, color:'#8b5cf6', points:280, dropZone:{x:8,y:14} },
-      { id:6, x:11, y:6, color:'#ec4899', points:300, dropZone:{x:2,y:8} },
+      { id:1, x:1, y:1, color:'#ef4444', points:250, dropZone:{x:16,y:15} },
+      { id:2, x:16, y:1, color:'#3b82f6', points:250, dropZone:{x:1,y:15} },
+      { id:3, x:4, y:14, color:'#10b981', points:260, dropZone:{x:15,y:5} },
+      { id:4, x:14, y:13, color:'#f59e0b', points:270, dropZone:{x:3,y:5} },
+      { id:5, x:9, y:4, color:'#8b5cf6', points:280, dropZone:{x:9,y:15} },
     ],
-    stations: [{ x:2, y:7 }, { x:8, y:1 }, { x:9, y:9 }, { x:15, y:8 }, { x:16, y:13 }],
-    energyDrain: 2.05,
-    timeLimit: 105,
-    startPos: { x:9, y:15 },
+    stations: [{ x:2, y:8 }, { x:9, y:1 }, { x:9, y:9 }, { x:16, y:8 }, { x:16, y:14 }],
+    energyDrain: 1.8,
+    timeLimit: 100,
+    startPos: { x:9, y:16 },
   }, [
-    [3,0,5,4], [8,0,10,2], [13,0,15,4], [1,5,2,7], [5,6,7,9], [10,5,10,8], [12,5,12,8],
-    [15,6,17,9], [2,10,2,14], [4,10,4,14], [6,11,8,15], [11,10,13,14], [15,12,16,15], [4,7,4,9],
+    [0,12,0,14], [1,11,1,14], [2,9,2,12], [3,0,4,1],
+    [3,9,3,12], [5,0,5,1], [5,7,6,9], [6,3,6,4],
+    [6,11,6,12], [7,2,7,4], [7,7,8,8], [8,2,8,3],
+    [9,7,9,8], [7,10,9,15], [10,1,12,7], [13,0,13,5],
+    [14,0,14,3],
   ]),
 ];
 
@@ -346,53 +367,61 @@ const DEMO_BRIEFINGS = {
   es: [
     {
       title: 'Paso 1: mover, recoger y entregar',
-      body: 'Mueve el operador por la grilla. Toca un paquete para recogerlo y llévalo al nodo marcado del mismo color. En este primer paso no hay obstáculos: enfócate en entender recoger → entregar.'
+      body: 'Mueve el operador por la grilla. Toca un paquete para recogerlo y llévalo al nodo marcado del mismo color. En este primer paso no hay obstáculos ni energía: enfócate en entender recoger → entregar.'
     },
     {
       title: 'Paso 2: mismo flujo, más destinos',
-      body: 'El objetivo no cambia: recoger y entregar. Ahora hay más paquetes y nodos. Mantén el mismo flujo, decide el orden antes de moverte y evita hacer recorridos duplicados.'
+      body: 'El objetivo no cambia: recoger y entregar. Ahora hay dos paquetes en extremos opuestos. Mantén el mismo flujo, decide el orden antes de moverte y evita hacer recorridos duplicados.'
     },
     {
       title: 'Paso 3: energía y estaciones de carga',
-      body: 'Cada movimiento consume energía. Las estaciones ⚡ recargan el sistema. Mira el indicador de energía antes de cruzar la grilla y planifica paradas cortas si vas a quedar al límite.'
+      body: 'Cada movimiento consume energía. Las estaciones ⚡ recargan el sistema al 100%. Mira el indicador de energía antes de cruzar la grilla y planifica paradas cortas si vas a quedar al límite.'
     },
     {
-      title: 'Paso 4: rutas con obstáculos',
+      title: 'Paso 4: rutas con más paquetes',
+      body: 'Más paquetes y mayor consumo de energía. Planifica la ruta óptima para entregar todo sin quedarte sin energía. Las estaciones de carga son clave para llegar a todos los destinos.'
+    },
+    {
+      title: 'Paso 5: obstáculos en la ciudad',
       body: 'Aparecen muros y corredores. Antes de recoger un paquete, identifica por dónde podrás entregarlo. Si una ruta está bloqueada, busca una vuelta segura en vez de gastar energía probando.'
     },
     {
-      title: 'Paso 5: priorización por tiempo',
-      body: 'Los paquetes pierden satisfacción con el tiempo. Prioriza los que están más lejos o se degradan antes, y combina entregas cercanas para no volver dos veces al mismo sector.'
+      title: 'Paso 6: priorización y eficiencia',
+      body: 'Más paquetes, más muros. Prioriza los que están más lejos o requieren más energía, y combina entregas cercanas para no volver dos veces al mismo sector.'
     },
     {
-      title: 'Paso 6: optimización crítica',
-      body: 'Última fase: planifica, prioriza y ejecuta con eficiencia. Balancea energía, obstáculos y valor de cada entrega. No necesitas hacerlo perfecto: muestra cómo decides bajo presión.'
+      title: 'Paso 7: optimización crítica final',
+      body: 'Última fase: planifica, prioriza y ejecuta con máxima eficiencia. Cinco paquetes en una ciudad densa de obstáculos. Balancea energía, muros y valor de cada entrega. Muestra cómo decides bajo presión.'
     }
   ],
   en: [
     {
       title: 'Step 1: move, pick up, and deliver',
-      body: 'Move the operator through the grid. Touch one packet to pick it up and carry it to the matching colored node. There are no blockers yet: focus on pick up → deliver.'
+      body: 'Move the operator through the grid. Touch one packet to pick it up and carry it to the matching colored node. There are no blockers or energy yet: focus on pick up → deliver.'
     },
     {
       title: 'Step 2: same flow, more destinations',
-      body: 'The goal is the same: pick up and deliver. Now there are more packets and nodes. Keep the same flow, decide the order before moving, and avoid duplicate routes.'
+      body: 'The goal is the same: pick up and deliver. Now there are two packets at opposite ends. Keep the same flow, decide the order before moving, and avoid duplicate routes.'
     },
     {
       title: 'Step 3: energy and recharge stations',
-      body: 'Every move consumes energy. ⚡ stations recharge the system. Check energy before crossing the grid and plan short stops if you are close to the limit.'
+      body: 'Every move consumes energy. ⚡ stations recharge the system to 100%. Check energy before crossing the grid and plan short stops if you are close to the limit.'
     },
     {
-      title: 'Step 4: blocked routes',
+      title: 'Step 4: more packets, more drain',
+      body: 'More packets and higher energy drain. Plan the optimal route to deliver everything without running out of energy. Recharge stations are key to reaching all destinations.'
+    },
+    {
+      title: 'Step 5: city obstacles',
       body: 'Walls and corridors appear. Before picking up a packet, identify how you will deliver it. If a route is blocked, find a safe detour instead of spending energy by trial and error.'
     },
     {
-      title: 'Step 5: time prioritization',
-      body: 'Packets lose satisfaction over time. Prioritize distant or faster-degrading packets, and combine nearby deliveries so you do not return twice to the same sector.'
+      title: 'Step 6: prioritization and efficiency',
+      body: 'More packets, more walls. Prioritize distant or energy-intensive ones, and combine nearby deliveries so you do not return twice to the same sector.'
     },
     {
-      title: 'Step 6: critical optimization',
-      body: 'Final phase: plan, prioritize, and execute efficiently. Balance energy, blockers, and delivery value. It does not need to be perfect: show how you decide under pressure.'
+      title: 'Step 7: final critical optimization',
+      body: 'Final phase: plan, prioritize, and execute with maximum efficiency. Five packets in a dense city of obstacles. Balance energy, walls, and delivery value. Show how you decide under pressure.'
     }
   ]
 };
