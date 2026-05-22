@@ -397,62 +397,62 @@ const buildQuizQuestions = (language) => {
 const LEVEL_BRIEFINGS = {
   es: [
     {
-      title: 'Paso 1: Recoger y entregar',
-      body: 'Eres un gestor de logística de entregas. Mueve el operador hasta el paquete para recogerlo y llévalo a su destino. En este primer paso no hay obstáculos ni energía: enfócate en entender el flujo recoger → entregar.'
+      title: 'Paso 1: Planifica, recoge y entrega',
+      body: 'Eres un gestor de logística de entregas. Tu objetivo es recoger paquetes y llevarlos a su destino. Muévete por el mapa explorando las distintas rutas disponibles. Observa cuidadosamente los elementos del mapa antes de avanzar. Tramos horizontales = 1 km, verticales = 2 km.'
     },
     {
-      title: 'Paso 2: Múltiples destinos',
-      body: 'Ahora hay dos paquetes en extremos opuestos. Planifica el orden antes de moverte. Cada tramo horizontal equivale a 1 km, cada tramo vertical a 2 km, y cada diagonal a 2.5 km. Evita recorridos duplicados.'
+      title: 'Paso 2: Recoge y entrega más paquetes',
+      body: 'A medida que avances aparecerán nuevos desafíos. Planifica tus movimientos para completar el recorrido de forma eficiente. Cada tramo horizontal equivale a 1 km, cada tramo vertical a 2 km. Evita recorridos duplicados.'
     },
     {
-      title: 'Paso 3: Gestión de energía',
-      body: 'Cada movimiento consume energía. Las estaciones ⚡ recargan el sistema al 100%. Mira el indicador antes de cruzar la grilla y planifica paradas de recarga si vas a quedar al límite.'
+      title: 'Paso 3: La energía no es infinita',
+      body: 'Algunos caminos pueden ayudarte más que otros. Explora alternativas y administra cuidadosamente tus movimientos y energía. Puedes desviarte a recargar energía en las estaciones ⚡. Energía base: 30 km.'
     },
     {
-      title: 'Paso 4: Rutas extendidas',
-      body: 'Más paquetes y mayor consumo de energía. Planifica la ruta óptima para entregar todo sin quedarte sin energía. Las estaciones de carga son clave para llegar a todos los destinos.'
+      title: 'Paso 4: Rutas extendidas con obstáculos',
+      body: 'Más paquetes y mayor consumo de energía. Analiza el entorno antes de tomar decisiones y busca rutas eficientes. Aparecen obstáculos en el mapa que deberás rodear.'
     },
     {
-      title: 'Paso 5: Ciudad con obstáculos',
-      body: 'Aparecen muros, callejones y corredores. Antes de recoger un paquete, identifica por dónde podrás entregarlo. Si una ruta está bloqueada, busca una vuelta segura en vez de gastar energía probando.'
+      title: 'Paso 5: Priorización de entregas',
+      body: 'Algunas entregas dan más puntos. Prioriza tus entregas y obtén mayor cantidad de estrellas. Aparecen muros, callejones y corredores. Si una ruta está bloqueada, busca una vuelta segura.'
     },
     {
-      title: 'Paso 6: Priorización y eficiencia',
+      title: 'Paso 6: Decisiones sobre la marcha',
       body: 'Más paquetes, más muros, más restricciones. Prioriza los que están más lejos o requieren más energía y combina entregas cercanas para no volver dos veces al mismo sector.'
     },
     {
       title: 'Paso 7: Optimización crítica final',
-      body: 'Última fase: planifica, prioriza y ejecuta con máxima eficiencia. Cinco paquetes en una ciudad densa de obstáculos. Balancea energía, muros y valor de cada entrega. Muestra cómo decides bajo presión.'
+      body: 'Última fase: planifica, prioriza y ejecuta con máxima eficiencia. Cinco paquetes en una ciudad densa de obstáculos. Balancea energía (30 km base), muros y valor de cada entrega. Muestra cómo decides bajo presión.'
     }
   ],
   en: [
     {
-      title: 'Step 1: Pick up and deliver',
-      body: 'You are a delivery logistics manager. Move the operator to the package to pick it up and carry it to its destination. There are no blockers or energy yet: focus on the pick up → deliver flow.'
+      title: 'Step 1: Plan, pick up and deliver',
+      body: 'You are a delivery logistics manager. Your goal is to pick up packages and deliver them to their destination. Move through the map exploring the available routes. Observe the map carefully before advancing. Horizontal segments = 1 km, vertical = 2 km.'
     },
     {
-      title: 'Step 2: Multiple destinations',
-      body: 'Now there are two packages at opposite ends. Plan the order before moving. Each horizontal segment equals 1 km, vertical 2 km, diagonal 2.5 km. Avoid duplicate routes.'
+      title: 'Step 2: Pick up and deliver more packages',
+      body: 'As you progress, new challenges will appear. Plan your moves to complete the route efficiently. Each horizontal segment equals 1 km, vertical 2 km. Avoid duplicate routes.'
     },
     {
-      title: 'Step 3: Energy management',
-      body: 'Every move consumes energy. ⚡ stations recharge the system to 100%. Check the indicator before crossing the grid and plan recharge stops if you are close to the limit.'
+      title: 'Step 3: Energy is not infinite',
+      body: 'Some paths may help you more than others. Explore alternatives and manage your moves and energy carefully. You can detour to recharge energy at ⚡ stations. Base energy: 30 km.'
     },
     {
-      title: 'Step 4: Extended routes',
-      body: 'More packages and higher energy drain. Plan the optimal route to deliver everything without running out of energy. Recharge stations are key to reaching all destinations.'
+      title: 'Step 4: Extended routes with obstacles',
+      body: 'More packages and higher energy consumption. Analyze the environment before making decisions and look for efficient routes. Obstacles appear on the map that you must navigate around.'
     },
     {
-      title: 'Step 5: City obstacles',
-      body: 'Walls, alleys, and corridors appear. Before picking up a package, identify how you will deliver it. If a route is blocked, find a safe detour instead of wasting energy by trial and error.'
+      title: 'Step 5: Delivery prioritization',
+      body: 'Some deliveries give more points. Prioritize your deliveries and earn more stars. Walls, alleys, and corridors appear. If a route is blocked, find a safe detour.'
     },
     {
-      title: 'Step 6: Prioritization and efficiency',
+      title: 'Step 6: On-the-fly decisions',
       body: 'More packages, more walls, tighter constraints. Prioritize distant or energy-intensive ones and combine nearby deliveries so you do not return twice to the same sector.'
     },
     {
       title: 'Step 7: Final critical optimization',
-      body: 'Final phase: plan, prioritize, and execute with maximum efficiency. Five packages in a dense city of obstacles. Balance energy, walls, and delivery value. Show how you decide under pressure.'
+      body: 'Final phase: plan, prioritize, and execute with maximum efficiency. Five packages in a dense city of obstacles. Balance energy (30 km base), walls, and delivery value. Show how you decide under pressure.'
     }
   ]
 };
@@ -542,7 +542,7 @@ const GridFlowGame = ({ isActive, onEndGame, isDemo, showBriefing = true }) => {
   const [round, setRound] = useState(0);
   const [player, setPlayer] = useState({ x:0, y:0 });
   const [inventory, setInventory] = useState(null);
-  const [energy, setEnergy] = useState(100);
+  const [energy, setEnergy] = useState(30);
   const [targets, setTargets] = useState([]);
   const [sats, setSats] = useState({});
   const [score, setScore] = useState(0);
@@ -555,7 +555,7 @@ const GridFlowGame = ({ isActive, onEndGame, isDemo, showBriefing = true }) => {
   const quizQuestions = useMemo(() => buildQuizQuestions(language), [language]);
 
   const quizScoreRef = useRef(0);
-  const stateRef = useRef({ player:{x:0,y:0}, inventory:null, targets:[], energy:100, round:0, score:0, totalMoves:0 });
+  const stateRef = useRef({ player:{x:0,y:0}, inventory:null, targets:[], energy:30, round:0, score:0, totalMoves:0 });
   const satsRef = useRef({});
   const levelTimerRef = useRef(null);
   const satTimerRef = useRef(null);
@@ -611,7 +611,7 @@ const GridFlowGame = ({ isActive, onEndGame, isDemo, showBriefing = true }) => {
       round: idx,
       player: { ...lvl.startPos },
       inventory: null,
-      energy: 100,
+      energy: 30,
       targets: randomizedTargets.map(t => ({ ...t, active:true })),
     };
     stateRef.current = { ...stateRef.current, ...newState };
@@ -632,7 +632,7 @@ const GridFlowGame = ({ isActive, onEndGame, isDemo, showBriefing = true }) => {
       hasEndedRef.current = false;
       startTracking();
       quizScoreRef.current = 0;
-      stateRef.current = { player:{x:0,y:0}, inventory:null, targets:[], energy:100, round:0, score:0, totalMoves:0 };
+      stateRef.current = { player:{x:0,y:0}, inventory:null, targets:[], energy:30, round:0, score:0, totalMoves:0 };
       setGameState(isDemo && !showBriefing ? 'playing' : 'briefing');
       setQuizStep(0);
       setScore(0);
@@ -756,20 +756,21 @@ const GridFlowGame = ({ isActive, onEndGame, isDemo, showBriefing = true }) => {
     }
 
     let nx=p.x, ny=p.y;
-    if (dir==='up') ny=Math.max(0,p.y-1);
-    if (dir==='down') ny=Math.min(getLevelRows(lvl)-1,p.y+1);
-    if (dir==='left') nx=Math.max(0,p.x-1);
-    if (dir==='right') nx=Math.min(getLevelCols(lvl)-1,p.x+1);
+    let moveCost = 0;
+    if (dir==='up') { ny=Math.max(0,p.y-1); moveCost=2; }
+    if (dir==='down') { ny=Math.min(getLevelRows(lvl)-1,p.y+1); moveCost=2; }
+    if (dir==='left') { nx=Math.max(0,p.x-1); moveCost=1; }
+    if (dir==='right') { nx=Math.min(getLevelCols(lvl)-1,p.x+1); moveCost=1; }
     if (walls.has(`${nx},${ny}`) || (nx===p.x && ny===p.y)) return;
 
-    let newEnergy = Math.max(0, eng - lvl.energyDrain);
+    let newEnergy = Math.max(0, eng - moveCost);
     if (lvl.stations.some(s=>s.x===nx&&s.y===ny)) {
-      if (eng < 100) {
+      if (eng < 30) {
         setShowChargeAnim(true);
         setTimeout(() => setShowChargeAnim(false), 900);
         try { playLevelUpSound(); } catch (error) { void error; }
       }
-      newEnergy = 100;
+      newEnergy = 30;
     }
 
     let newInv=inv, newTargets=[...tgt], newScore=sc;
@@ -788,7 +789,10 @@ const GridFlowGame = ({ isActive, onEndGame, isDemo, showBriefing = true }) => {
     } else {
       if (nx===newInv.dropZone.x && ny===newInv.dropZone.y) {
         const sat = satsRef.current[newInv.id] ?? 0;
-        newScore += Math.round(newInv.points * Math.max(0.1, sat/100)); 
+        // PDF scoring: +1 satisfacción, +5 buenas referencias por entrega
+        const satisfactionBonus = Math.round(sat / 100); // +1 per full satisfaction preserved
+        const referralBonus = 5; // +5 buenas referencias
+        newScore += Math.round(newInv.points * Math.max(0.1, sat/100)) + satisfactionBonus + referralBonus;
         newInv = null;
         try { playSuccessSound(); } catch (error) { void error; }
         setShowDeliverAnim(true);
@@ -953,7 +957,7 @@ const GridFlowGame = ({ isActive, onEndGame, isDemo, showBriefing = true }) => {
             <div style={{ display:'grid', gridTemplateColumns:isMobile ? 'repeat(3, minmax(0, 1fr))' : 'repeat(6, minmax(0, 1fr))', width:'100%', color:'#1e1b4b', textTransform:'uppercase', letterSpacing:isMobile ? '1px' : isCompactViewport ? '1.5px' : '3px', fontSize:isMobile ? '0.78rem' : isCompactViewport ? '0.78rem' : '1rem', fontWeight:'900', gap:isMobile ? '10px' : isCompactViewport ? '12px' : '24px', whiteSpace:'nowrap' }}>
               <span>Round {round+1}/{effectiveMaxRounds}</span>
               <span style={{ color: levelTimeLeft<10?'#dc2626':'#059669' }}>⏱ {levelTimeLeft}s</span>
-              {lvlData.energyDrain>0 && <span style={{ color: energy<30?'#dc2626':'#1e1b4b' }}>⚡ {Math.round(energy)}%</span>}
+              {lvlData.energyDrain>0 && <span style={{ color: energy<8?'#dc2626':'#1e1b4b' }}>⚡ {energy} km</span>}
               <span style={{ color:satColor }}>★ {Math.round(avgSat)}%</span>
               <span style={{ color:'#0f766e' }}>Eff: {Math.round(liveEfficiency)}%</span>
               <span style={{ color:'#4f46e5' }}>Pts: {score}</span>
