@@ -94,21 +94,21 @@ const withCityWalls = (level, rectangles) => createGridFlowLevel({
 });
 
 export const GRID_LEVELS = [
-  // ── Level 1: Basic intro ─ single package, no obstacles, no energy ──
+  // ── Nivel 1: Intro ─ recoger y entregar, sin obstáculos ni energía ──
   withCityWalls({
     difficulty: 'easy',
     cols: 12,
     rows: 12,
     targets: [
-      { id:1, x:6, y:1, color:'#ef4444', points:100, dropZone:{x:6,y:10} },
+      { id:1, x:5, y:2, color:'#ef4444', points:100, dropZone:{x:5,y:9} },
     ],
     stations: [],
     energyDrain: 0,
-    timeLimit: 45,
-    startPos: { x:6, y:11 },
+    timeLimit: 40,
+    startPos: { x:5, y:10 },
   }, []),
 
-  // ── Level 2: Two packages, still no energy, introduce diagonal thinking ──
+  // ── Nivel 2: Múltiples destinos ─ dos paquetes en extremos opuestos ──
   withCityWalls({
     difficulty: 'easy',
     cols: 14,
@@ -119,109 +119,128 @@ export const GRID_LEVELS = [
     ],
     stations: [],
     energyDrain: 0,
-    timeLimit: 52,
-    startPos: { x:7, y:13 },
+    timeLimit: 50,
+    startPos: { x:6, y:12 },
   }, []),
 
-  // ── Level 3: Energy introduced (drain 0.8), with recharge stations ──
+  // ── Nivel 3: Gestión de energía ─ se introduce energía y estaciones de recarga ──
   withCityWalls({
     difficulty: 'easy',
     cols: 14,
     rows: 14,
     targets: [
-      { id:1, x:1, y:1, color:'#ef4444', points:130, dropZone:{x:12,y:12} },
-      { id:2, x:12, y:2, color:'#3b82f6', points:130, dropZone:{x:1,y:12} },
-      { id:3, x:7, y:7, color:'#10b981', points:140, dropZone:{x:12,y:7} },
+      { id:1, x:2, y:1, color:'#ef4444', points:130, dropZone:{x:11,y:12} },
+      { id:2, x:11, y:2, color:'#3b82f6', points:135, dropZone:{x:3,y:11} },
+      { id:3, x:6, y:6, color:'#10b981', points:140, dropZone:{x:12,y:7} },
     ],
-    stations: [{ x:3, y:7 }, { x:10, y:7 }],
-    energyDrain: 0.8,
-    timeLimit: 60,
+    stations: [{ x:2, y:7 }, { x:11, y:7 }],
+    energyDrain: 0.6,
+    timeLimit: 55,
     startPos: { x:7, y:13 },
   }, []),
 
-  // ── Level 4: More packages, energy drain 1.0, 3 stations ──
+  // ── Nivel 4: Rutas extendidas ─ más paquetes, mayor consumo ──
   withCityWalls({
     difficulty: 'medium',
     cols: 16,
     rows: 15,
     targets: [
       { id:1, x:1, y:1, color:'#ef4444', points:150, dropZone:{x:14,y:13} },
-      { id:2, x:14, y:1, color:'#3b82f6', points:150, dropZone:{x:1,y:13} },
-      { id:3, x:8, y:7, color:'#10b981', points:160, dropZone:{x:14,y:7} },
+      { id:2, x:14, y:1, color:'#3b82f6', points:155, dropZone:{x:2,y:13} },
+      { id:3, x:7, y:7, color:'#10b981', points:160, dropZone:{x:14,y:7} },
     ],
     stations: [{ x:3, y:7 }, { x:12, y:7 }, { x:8, y:2 }],
-    energyDrain: 1.0,
-    timeLimit: 68,
+    energyDrain: 0.9,
+    timeLimit: 65,
     startPos: { x:8, y:14 },
   }, []),
 
-  // ── Level 5: Obstacles (walls) + energy drain 1.2 ──
+  // ── Nivel 5: Ciudad con obstáculos ─ muros, callejones y corredores ──
   withCityWalls({
     difficulty: 'medium',
     cols: 16,
     rows: 16,
     targets: [
-      { id:1, x:1, y:1, color:'#ef4444', points:175, dropZone:{x:14,y:14} },
-      { id:2, x:14, y:2, color:'#3b82f6', points:175, dropZone:{x:2,y:13} },
-      { id:3, x:8, y:13, color:'#10b981', points:185, dropZone:{x:13,y:5} },
+      { id:1, x:1, y:1, color:'#ef4444', points:170, dropZone:{x:14,y:14} },
+      { id:2, x:13, y:2, color:'#3b82f6', points:170, dropZone:{x:2,y:14} },
+      { id:3, x:7, y:13, color:'#10b981', points:180, dropZone:{x:13,y:6} },
     ],
-    stations: [{ x:2, y:7 }, { x:13, y:8 }, { x:8, y:2 }],
-    energyDrain: 1.2,
-    timeLimit: 75,
+    stations: [{ x:3, y:8 }, { x:12, y:8 }, { x:8, y:4 }],
+    energyDrain: 1.1,
+    timeLimit: 72,
     startPos: { x:8, y:15 },
   }, [
-    [3,3,3,4], [4,3,4,4], [3,8,3,9], [4,8,4,9],
-    [5,4,6,5], [7,9,7,10], [8,4,8,5], [8,9,8,10],
-    [9,4,9,6], [9,9,9,10], [10,1,10,6], [10,11,10,13],
-    [11,1,11,3], [11,10,11,13], [12,1,12,2], [12,10,13,14],
+    [3,0,4,0],[6,0,6,0],[10,0,10,0],[13,0,14,0],
+    [3,1,3,1],[4,2,4,2],[10,2,11,2],
+    [3,3,3,3],[5,3,5,3],[15,3,15,3],
+    [10,4,11,4],[14,4,14,4],[7,5,7,5],[14,5,15,5],
+    [0,6,0,6],[9,6,9,6],[10,7,10,7],[6,8,6,8],
+    [5,9,6,9],[13,9,14,9],[2,10,3,10],
+    [9,11,9,11],[15,11,15,11],[2,12,2,12],[5,12,5,12],[14,12,15,12],
+    [1,13,1,13],[4,13,4,13],[10,14,10,14],[4,15,5,15],[15,15,15,15],
   ]),
 
-  // ── Level 6: Complex city walls + energy drain 1.5, 4 packages ──
+  // ── Nivel 6: Priorización y eficiencia ─ más paquetes, más muros ──
   withCityWalls({
     difficulty: 'hard',
     cols: 17,
     rows: 16,
     targets: [
-      { id:1, x:1, y:1, color:'#ef4444', points:200, dropZone:{x:15,y:14} },
-      { id:2, x:15, y:1, color:'#3b82f6', points:210, dropZone:{x:1,y:14} },
-      { id:3, x:4, y:12, color:'#10b981', points:220, dropZone:{x:14,y:6} },
-      { id:4, x:13, y:11, color:'#f59e0b', points:230, dropZone:{x:4,y:5} },
+      { id:1, x:1, y:1, color:'#ef4444', points:200, dropZone:{x:15,y:13} },
+      { id:2, x:14, y:2, color:'#3b82f6', points:205, dropZone:{x:2,y:14} },
+      { id:3, x:5, y:12, color:'#10b981', points:210, dropZone:{x:13,y:5} },
+      { id:4, x:11, y:11, color:'#f59e0b', points:220, dropZone:{x:4,y:4} },
     ],
-    stations: [{ x:2, y:7 }, { x:8, y:2 }, { x:8, y:9 }, { x:15, y:8 }],
-    energyDrain: 1.5,
-    timeLimit: 88,
+    stations: [{ x:2, y:8 }, { x:8, y:3 }, { x:9, y:9 }, { x:14, y:7 }],
+    energyDrain: 1.3,
+    timeLimit: 85,
     startPos: { x:8, y:15 },
   }, [
-    [3,3,3,4], [3,8,3,9], [4,1,4,4], [4,8,4,9],
-    [5,1,5,7], [6,4,6,7], [7,6,7,7], [7,10,7,11],
-    [8,4,8,7], [8,10,8,12], [9,4,9,7], [9,10,9,12],
-    [10,1,10,6], [10,11,10,13], [11,1,11,3], [11,5,11,6],
-    [11,10,11,13], [12,1,12,2], [12,4,12,6], [12,10,12,14],
-    [13,4,13,6], [13,12,13,14],
+    [7,0,7,0],[13,0,13,0],[15,0,16,0],
+    [3,1,3,1],[7,1,7,1],[12,1,12,1],[16,1,16,1],
+    [2,2,3,2],[7,2,7,2],[10,2,12,2],
+    [10,3,10,3],[12,3,13,3],[1,4,1,4],[7,4,7,4],
+    [1,5,1,5],[6,5,6,5],[8,5,9,5],[11,5,11,5],[15,5,16,5],
+    [4,6,5,6],[12,6,12,6],[1,7,1,7],
+    [0,8,0,8],[6,8,6,8],[10,8,11,8],[16,8,16,8],
+    [0,9,0,9],[11,9,11,9],[13,9,13,9],
+    [1,10,1,10],[4,10,4,10],[12,10,13,10],[16,10,16,10],
+    [3,11,4,11],[6,11,6,11],[14,11,14,11],[16,11,16,11],
+    [8,12,8,12],[12,12,12,12],[13,13,13,13],[10,15,10,15],
   ]),
 
-  // ── Level 7: Final boss ─ dense city, 5 packages, high energy drain ──
+  // ── Nivel 7: Optimización crítica final ─ ciudad densa, 5 paquetes ──
   withCityWalls({
     difficulty: 'hard',
     cols: 18,
     rows: 17,
     targets: [
-      { id:1, x:1, y:1, color:'#ef4444', points:250, dropZone:{x:16,y:15} },
-      { id:2, x:16, y:1, color:'#3b82f6', points:250, dropZone:{x:1,y:15} },
-      { id:3, x:4, y:14, color:'#10b981', points:260, dropZone:{x:15,y:5} },
-      { id:4, x:14, y:13, color:'#f59e0b', points:270, dropZone:{x:3,y:5} },
-      { id:5, x:9, y:4, color:'#8b5cf6', points:280, dropZone:{x:9,y:15} },
+      { id:1, x:2, y:1, color:'#ef4444', points:250, dropZone:{x:16,y:14} },
+      { id:2, x:15, y:2, color:'#3b82f6', points:250, dropZone:{x:2,y:15} },
+      { id:3, x:5, y:14, color:'#10b981', points:260, dropZone:{x:15,y:5} },
+      { id:4, x:12, y:12, color:'#f59e0b', points:270, dropZone:{x:5,y:5} },
+      { id:5, x:8, y:6, color:'#8b5cf6', points:280, dropZone:{x:10,y:13} },
     ],
-    stations: [{ x:2, y:8 }, { x:9, y:1 }, { x:9, y:9 }, { x:16, y:8 }, { x:16, y:14 }],
-    energyDrain: 1.8,
-    timeLimit: 100,
+    stations: [{ x:3, y:8 }, { x:9, y:2 }, { x:10, y:9 }, { x:16, y:8 }],
+    energyDrain: 1.6,
+    timeLimit: 98,
     startPos: { x:9, y:16 },
   }, [
-    [0,12,0,14], [1,11,1,14], [2,9,2,12], [3,0,4,1],
-    [3,9,3,12], [5,0,5,1], [5,7,6,9], [6,3,6,4],
-    [6,11,6,12], [7,2,7,4], [7,7,8,8], [8,2,8,3],
-    [9,7,9,8], [7,10,9,15], [10,1,12,7], [13,0,13,5],
-    [14,0,14,3],
+    [4,0,5,0],[8,0,8,0],[13,0,15,0],[17,0,17,0],
+    [0,1,0,1],[5,1,6,1],[11,1,11,1],[13,1,13,1],[16,1,16,1],
+    [0,2,0,2],[11,2,11,2],[17,2,17,2],
+    [0,3,0,3],[5,3,5,3],[10,3,10,3],[14,3,14,3],[17,3,17,3],
+    [2,4,3,4],[8,4,8,4],[16,4,17,4],[2,5,2,5],
+    [0,6,1,6],[3,6,4,6],[6,6,6,6],[11,6,11,6],
+    [1,7,1,7],[4,7,4,7],[9,7,11,7],[13,7,15,7],
+    [8,8,8,8],[13,8,13,8],
+    [1,9,1,9],[4,9,4,9],[7,9,7,9],
+    [4,10,4,10],[6,10,6,10],[12,10,12,10],
+    [0,11,0,11],[2,11,2,11],[11,11,11,11],[16,11,16,11],
+    [0,12,1,12],[14,12,14,12],[16,12,17,12],
+    [6,13,7,13],[14,13,14,13],[8,14,8,14],[14,14,14,14],
+    [4,15,4,15],[6,15,7,15],[17,15,17,15],
+    [3,16,3,16],[14,16,14,16],
   ]),
 ];
 
@@ -363,71 +382,71 @@ const buildQuizQuestions = (language) => {
   return [...QUIZ, buildAttentionQuestion(isEn)];
 };
 
-const DEMO_BRIEFINGS = {
+const LEVEL_BRIEFINGS = {
   es: [
     {
-      title: 'Paso 1: mover, recoger y entregar',
-      body: 'Mueve el operador por la grilla. Toca un paquete para recogerlo y llévalo al nodo marcado del mismo color. En este primer paso no hay obstáculos ni energía: enfócate en entender recoger → entregar.'
+      title: 'Paso 1: Recoger y entregar',
+      body: 'Eres un gestor de logística de entregas. Mueve el operador hasta el paquete para recogerlo y llévalo a su destino. En este primer paso no hay obstáculos ni energía: enfócate en entender el flujo recoger → entregar.'
     },
     {
-      title: 'Paso 2: mismo flujo, más destinos',
-      body: 'El objetivo no cambia: recoger y entregar. Ahora hay dos paquetes en extremos opuestos. Mantén el mismo flujo, decide el orden antes de moverte y evita hacer recorridos duplicados.'
+      title: 'Paso 2: Múltiples destinos',
+      body: 'Ahora hay dos paquetes en extremos opuestos. Planifica el orden antes de moverte. Cada tramo horizontal equivale a 1 km, cada tramo vertical a 2 km, y cada diagonal a 2.5 km. Evita recorridos duplicados.'
     },
     {
-      title: 'Paso 3: energía y estaciones de carga',
-      body: 'Cada movimiento consume energía. Las estaciones ⚡ recargan el sistema al 100%. Mira el indicador de energía antes de cruzar la grilla y planifica paradas cortas si vas a quedar al límite.'
+      title: 'Paso 3: Gestión de energía',
+      body: 'Cada movimiento consume energía. Las estaciones ⚡ recargan el sistema al 100%. Mira el indicador antes de cruzar la grilla y planifica paradas de recarga si vas a quedar al límite.'
     },
     {
-      title: 'Paso 4: rutas con más paquetes',
+      title: 'Paso 4: Rutas extendidas',
       body: 'Más paquetes y mayor consumo de energía. Planifica la ruta óptima para entregar todo sin quedarte sin energía. Las estaciones de carga son clave para llegar a todos los destinos.'
     },
     {
-      title: 'Paso 5: obstáculos en la ciudad',
-      body: 'Aparecen muros y corredores. Antes de recoger un paquete, identifica por dónde podrás entregarlo. Si una ruta está bloqueada, busca una vuelta segura en vez de gastar energía probando.'
+      title: 'Paso 5: Ciudad con obstáculos',
+      body: 'Aparecen muros, callejones y corredores. Antes de recoger un paquete, identifica por dónde podrás entregarlo. Si una ruta está bloqueada, busca una vuelta segura en vez de gastar energía probando.'
     },
     {
-      title: 'Paso 6: priorización y eficiencia',
-      body: 'Más paquetes, más muros. Prioriza los que están más lejos o requieren más energía, y combina entregas cercanas para no volver dos veces al mismo sector.'
+      title: 'Paso 6: Priorización y eficiencia',
+      body: 'Más paquetes, más muros, más restricciones. Prioriza los que están más lejos o requieren más energía y combina entregas cercanas para no volver dos veces al mismo sector.'
     },
     {
-      title: 'Paso 7: optimización crítica final',
+      title: 'Paso 7: Optimización crítica final',
       body: 'Última fase: planifica, prioriza y ejecuta con máxima eficiencia. Cinco paquetes en una ciudad densa de obstáculos. Balancea energía, muros y valor de cada entrega. Muestra cómo decides bajo presión.'
     }
   ],
   en: [
     {
-      title: 'Step 1: move, pick up, and deliver',
-      body: 'Move the operator through the grid. Touch one packet to pick it up and carry it to the matching colored node. There are no blockers or energy yet: focus on pick up → deliver.'
+      title: 'Step 1: Pick up and deliver',
+      body: 'You are a delivery logistics manager. Move the operator to the package to pick it up and carry it to its destination. There are no blockers or energy yet: focus on the pick up → deliver flow.'
     },
     {
-      title: 'Step 2: same flow, more destinations',
-      body: 'The goal is the same: pick up and deliver. Now there are two packets at opposite ends. Keep the same flow, decide the order before moving, and avoid duplicate routes.'
+      title: 'Step 2: Multiple destinations',
+      body: 'Now there are two packages at opposite ends. Plan the order before moving. Each horizontal segment equals 1 km, vertical 2 km, diagonal 2.5 km. Avoid duplicate routes.'
     },
     {
-      title: 'Step 3: energy and recharge stations',
-      body: 'Every move consumes energy. ⚡ stations recharge the system to 100%. Check energy before crossing the grid and plan short stops if you are close to the limit.'
+      title: 'Step 3: Energy management',
+      body: 'Every move consumes energy. ⚡ stations recharge the system to 100%. Check the indicator before crossing the grid and plan recharge stops if you are close to the limit.'
     },
     {
-      title: 'Step 4: more packets, more drain',
-      body: 'More packets and higher energy drain. Plan the optimal route to deliver everything without running out of energy. Recharge stations are key to reaching all destinations.'
+      title: 'Step 4: Extended routes',
+      body: 'More packages and higher energy drain. Plan the optimal route to deliver everything without running out of energy. Recharge stations are key to reaching all destinations.'
     },
     {
-      title: 'Step 5: city obstacles',
-      body: 'Walls and corridors appear. Before picking up a packet, identify how you will deliver it. If a route is blocked, find a safe detour instead of spending energy by trial and error.'
+      title: 'Step 5: City obstacles',
+      body: 'Walls, alleys, and corridors appear. Before picking up a package, identify how you will deliver it. If a route is blocked, find a safe detour instead of wasting energy by trial and error.'
     },
     {
-      title: 'Step 6: prioritization and efficiency',
-      body: 'More packets, more walls. Prioritize distant or energy-intensive ones, and combine nearby deliveries so you do not return twice to the same sector.'
+      title: 'Step 6: Prioritization and efficiency',
+      body: 'More packages, more walls, tighter constraints. Prioritize distant or energy-intensive ones and combine nearby deliveries so you do not return twice to the same sector.'
     },
     {
-      title: 'Step 7: final critical optimization',
-      body: 'Final phase: plan, prioritize, and execute with maximum efficiency. Five packets in a dense city of obstacles. Balance energy, walls, and delivery value. Show how you decide under pressure.'
+      title: 'Step 7: Final critical optimization',
+      body: 'Final phase: plan, prioritize, and execute with maximum efficiency. Five packages in a dense city of obstacles. Balance energy, walls, and delivery value. Show how you decide under pressure.'
     }
   ]
 };
 
-export const getGridDemoBriefing = (idx, language = 'es') => {
-  const pack = DEMO_BRIEFINGS[language] || DEMO_BRIEFINGS.es;
+export const getGridBriefing = (idx, language = 'es') => {
+  const pack = LEVEL_BRIEFINGS[language] || LEVEL_BRIEFINGS.es;
   return pack[Math.min(Math.max(idx, 0), pack.length - 1)];
 };
 
@@ -590,7 +609,7 @@ const GridFlowGame = ({ isActive, onEndGame, isDemo, showBriefing = true }) => {
     setEnergy(newState.energy);
     setTargets(newState.targets);
     
-    const nextBriefing = getGridDemoBriefing(idx, language);
+    const nextBriefing = getGridBriefing(idx, language);
     setBriefing(isDemo && showBriefing ? nextBriefing : null);
     setGameState(isDemo && showBriefing ? 'briefing' : 'playing');
 
@@ -896,8 +915,8 @@ const GridFlowGame = ({ isActive, onEndGame, isDemo, showBriefing = true }) => {
   if (!isActive) {
       return (
           <motion.div initial={{ opacity:0 }} animate={{ opacity:1 }} className="glass-panel" style={{ padding:'40px', textAlign:'center', border:'2px solid #059669' }}>
-            <div style={{ color:'#059669', fontSize:'2rem', marginBottom:'12px', fontWeight:'800' }}>[ FLOW SYNC ]</div>
-            <p style={{ color:'#6b7280', textTransform:'uppercase', letterSpacing:'2px', fontSize:'0.85rem' }}>Optimizing Resource Allocation...</p>
+            <div style={{ color:'#059669', fontSize:'2rem', marginBottom:'12px', fontWeight:'800' }}>[ DELIVERY HUB ]</div>
+            <p style={{ color:'#6b7280', textTransform:'uppercase', letterSpacing:'2px', fontSize:'0.85rem' }}>Optimización de Rutas Logísticas...</p>
           </motion.div>
       )
   }
@@ -989,7 +1008,7 @@ const GridFlowGame = ({ isActive, onEndGame, isDemo, showBriefing = true }) => {
           <motion.div initial={{ opacity:0 }} animate={{ opacity:1 }} exit={{ opacity:0 }} style={{ position:'absolute', inset:0, background:'rgba(15,23,42,0.7)', backdropFilter: 'blur(10px)', display:'flex', alignItems:'center', justifyContent:'center', zIndex: 100, borderRadius: '32px' }}>
             <motion.div initial={{ y:40, scale:0.95 }} animate={{ y:0, scale:1 }} style={{ background:'#ffffff', padding:'60px', borderRadius:'40px', maxWidth:'600px', textAlign:'center', border:'1px solid rgba(15,23,42,0.1)', boxShadow:'0 40px 80px -20px rgba(0,0,0,0.5)' }}>
               <div style={{ color: '#4f46e5', fontSize: '1rem', fontWeight: 900, textTransform: 'uppercase', letterSpacing: '4px', marginBottom: '20px' }}>
-                {language === 'es' ? 'Protocolo de Red' : 'Network Protocol'}
+                {language === 'es' ? 'Centro de Control' : 'Control Center'}
               </div>
               <h4 style={{ margin: 0, fontSize:'2.5rem', color:'#1e1b4b', fontWeight: 950, letterSpacing: '-0.04em' }}>{briefing.title}</h4>
               <p style={{ margin:'32px 0 48px', color:'#475569', lineHeight:1.8, fontSize: '1.25rem', fontWeight: 500 }}>{briefing.body}</p>
