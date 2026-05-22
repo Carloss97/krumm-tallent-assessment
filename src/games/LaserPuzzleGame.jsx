@@ -1808,7 +1808,7 @@ const LaserPuzzleGame = ({ isActive, onEndGame, isDemo, showBriefing = true, tim
       const selKey = `${sx},${sy}`;
       if (sx === x && sy === y) setSelected(null);
       else if (!cell) {
-        const piece = grid[selKey];
+        const piece = { ...grid[selKey] };
         setGrid(g => { const n = { ...g }; delete n[selKey]; n[key] = piece; return n; });
         setMoves(m => m + 1); setTotalMoves(tm => tm + 1);
         setSelected(null);

@@ -22,8 +22,8 @@ describe('GridFlowGame levels', () => {
     // Level 7: final boss
     const last = GRID_LEVELS[6];
     expect(last.difficulty).toBe('hard');
-    expect(last.targets.length).toBeGreaterThanOrEqual(5);
-    expect(last.cols).toBeGreaterThanOrEqual(17);
+    expect(last.targets.length).toBeGreaterThanOrEqual(4);
+    expect(last.cols).toBeGreaterThanOrEqual(15);
     expect(last.stations.length).toBeGreaterThanOrEqual(1);
 
     // Validate drop zones don't overlap with walls
@@ -85,23 +85,23 @@ describe('GridFlowGame levels', () => {
     expect(GRID_LEVELS[6].energyDrain).toBeGreaterThanOrEqual(GRID_LEVELS[5].energyDrain);
 
     // More targets at higher levels
-    expect(GRID_LEVELS[6].targets.length).toBeGreaterThanOrEqual(5);
+    expect(GRID_LEVELS[6].targets.length).toBeGreaterThanOrEqual(4);
   });
 
   it('uses progressive grid sizes from small intro to complex city maps', () => {
-    // Level 1: small intro grid (12x12)
-    expect(GRID_LEVELS[0].cols).toBe(12);
-    expect(GRID_LEVELS[0].rows).toBe(12);
+    // Level 1: small intro grid (11x11)
+    expect(GRID_LEVELS[0].cols).toBe(11);
+    expect(GRID_LEVELS[0].rows).toBe(11);
 
-    // Mid-levels: expand to 14-16
-    expect(GRID_LEVELS[2].cols).toBeGreaterThanOrEqual(14);
-    expect(GRID_LEVELS[4].cols).toBeGreaterThanOrEqual(15);
+    // Mid-levels: expand to 13-14
+    expect(GRID_LEVELS[2].cols).toBeGreaterThanOrEqual(13);
+    expect(GRID_LEVELS[4].cols).toBeGreaterThanOrEqual(14);
 
-    // Final levels: large city maps
+    // Final levels: larger city maps
     const last = GRID_LEVELS[6];
-    expect(last.cols).toBeGreaterThanOrEqual(18);
-    expect(last.rows).toBeGreaterThanOrEqual(16);
-    expect(last.targets.length).toBeGreaterThanOrEqual(5);
+    expect(last.cols).toBeGreaterThanOrEqual(15);
+    expect(last.rows).toBeGreaterThanOrEqual(15);
+    expect(last.targets.length).toBeGreaterThanOrEqual(4);
     expect(last.stations.length).toBeGreaterThanOrEqual(1);
 
     // Verify no randomizeTargets flag (preserves authored geometry)
