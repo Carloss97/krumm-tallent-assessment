@@ -63,7 +63,7 @@
     "globals": "^17.4.0",
     "jsdom": "^29.0.0",
     "onnx-proto": "^8.0.1",
-    "vite": "^8.0.0",
+    "vite": "^8.0.12",
     "vitest": "^4.1.0"
   },
   "overrides": {
