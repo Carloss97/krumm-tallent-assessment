@@ -1,0 +1,23 @@
+\babel@toc {spanish}{}\relax 
+\contentsline {section}{\numberline {1}Resumen ejecutivo}{2}{section.1}%
+\contentsline {section}{\numberline {2}Fuentes, tipo de cambio y metodología}{2}{section.2}%
+\contentsline {section}{\numberline {3}Rates y sueldos chilenos usados}{2}{section.3}%
+\contentsline {section}{\numberline {4}Totales revisados para Chile}{3}{section.4}%
+\contentsline {subsection}{\numberline {4.1}Lectura por alcance}{3}{subsection.4.1}%
+\contentsline {section}{\numberline {5}Resumen por hito}{4}{section.5}%
+\contentsline {section}{\numberline {6}Desglose detallado por hito}{5}{section.6}%
+\contentsline {subsection}{\numberline {6.1}H1 --- Release candidate + staging deploy}{5}{subsection.6.1}%
+\contentsline {subsection}{\numberline {6.2}H2 --- Candidate assessment MVP flow}{5}{subsection.6.2}%
+\contentsline {subsection}{\numberline {6.3}H3 --- Recruiter portal + reports/export v1}{6}{subsection.6.3}%
+\contentsline {subsection}{\numberline {6.4}H4 --- Privacy/compliance/security hardening}{7}{subsection.6.4}%
+\contentsline {subsection}{\numberline {6.5}H5 --- Pilot instrumentation + baseline calibration}{8}{subsection.6.5}%
+\contentsline {subsection}{\numberline {6.6}H6 --- Pilot launch + customer operations}{9}{subsection.6.6}%
+\contentsline {subsection}{\numberline {6.7}H7 --- MVP packaging / private beta comercial}{10}{subsection.6.7}%
+\contentsline {section}{\numberline {7}Operación mensual chilena revisada}{12}{section.7}%
+\contentsline {section}{\numberline {8}Recomendación para Chile}{12}{section.8}%
+\contentsline {subsection}{\numberline {8.1}Demo/staging serio}{12}{subsection.8.1}%
+\contentsline {subsection}{\numberline {8.2}Piloto real con candidatos chilenos}{12}{subsection.8.2}%
+\contentsline {subsection}{\numberline {8.3}Private beta comercial vendible}{12}{subsection.8.3}%
+\contentsline {section}{\numberline {9}Partidas que sí se pueden comprimir en Chile}{12}{section.9}%
+\contentsline {section}{\numberline {10}Partidas que no conviene recortar}{13}{section.10}%
+\contentsline {section}{\numberline {11}Conclusión}{13}{section.11}%

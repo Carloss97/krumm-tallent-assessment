@@ -587,17 +587,6 @@ const LandingPageV3 = () => {
               <span>{language === 'es' ? 'Comenzar demo' : 'Start demo'}</span>
               <ChevronRight size={16} aria-hidden="true" />
             </button>
-            <button
-              className="lv3-ghost lv3-action-btn lv3-action-pitch"
-              onClick={() => {
-                recordTrialEvent && recordTrialEvent({ event: 'cta_pitch_clicked' });
-                navigate('/pitch');
-              }}
-            >
-              <LineChart size={18} aria-hidden="true" />
-              <span>{t.actionPitch}</span>
-              <ChevronRight size={16} aria-hidden="true" />
-            </button>
             {showDevQuickAccess && (
               <button
                 className="lv3-recruiter-btn lv3-action-btn lv3-action-recruiter"
