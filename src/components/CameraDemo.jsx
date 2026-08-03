@@ -371,6 +371,38 @@ export default function CameraDemo() {
           </div>
         </section>
 
+        {/* Dashboard siempre renderizado para que videoRef exista antes de startCamera */}
+        <Dashboard
+          videoRef={videoRef}
+          isCameraActive={isCameraActive}
+          showMesh={showMesh}
+          setShowMesh={setShowMesh}
+          telemetry={telemetry}
+          faceWorker={faceWorker}
+          statusClassName={statusClassName}
+          lastQuality={lastQuality}
+          calibrationProfile={calibrationProfile}
+          calStatusLabel={calStatusLabel}
+          insightItems={insightItems}
+          auEntries={auEntries}
+          activeAUCount={activeAUCount}
+          edgeAIResult={edgeAIResult}
+          edgeChannels={edgeChannels}
+          edgeConfidence={edgeConfidence}
+          edgeComposite={edgeComposite}
+          latestLandmarks={latestLandmarks}
+          latestGaze={latestGaze}
+          auRegionSummary={auRegionSummary}
+          gameSummary={gameSummary}
+          gameCorrelation={gameCorrelation}
+          latestPose={latestPose}
+          moveNetPose={moveNetPose}
+          moveNet={moveNet}
+          onCalibrateGazeCenter={handleCalibrateGazeCenter}
+          onCalibratePostureUpright={handleCalibratePostureUpright}
+          manualCalStatus={manualCalStatus}
+        />
+
         {isCameraActive && (
           <>
             <section className="camera-demo-calibration" aria-label={t('Calibración', 'Calibration')}>
@@ -417,37 +449,6 @@ export default function CameraDemo() {
                 {manualCalStatus && <div className="cal-status">{manualCalStatus}</div>}
               </div>
             </section>
-
-            <Dashboard
-              videoRef={videoRef}
-              isCameraActive={isCameraActive}
-              showMesh={showMesh}
-              setShowMesh={setShowMesh}
-              telemetry={telemetry}
-              faceWorker={faceWorker}
-              statusClassName={statusClassName}
-              lastQuality={lastQuality}
-              calibrationProfile={calibrationProfile}
-              calStatusLabel={calStatusLabel}
-              insightItems={insightItems}
-              auEntries={auEntries}
-              activeAUCount={activeAUCount}
-              edgeAIResult={edgeAIResult}
-              edgeChannels={edgeChannels}
-              edgeConfidence={edgeConfidence}
-              edgeComposite={edgeComposite}
-              latestLandmarks={latestLandmarks}
-              latestGaze={latestGaze}
-              auRegionSummary={auRegionSummary}
-              gameSummary={gameSummary}
-              gameCorrelation={gameCorrelation}
-              latestPose={latestPose}
-              moveNetPose={moveNetPose}
-              moveNet={moveNet}
-              onCalibrateGazeCenter={handleCalibrateGazeCenter}
-              onCalibratePostureUpright={handleCalibratePostureUpright}
-              manualCalStatus={manualCalStatus}
-            />
           </>
         )}
 
