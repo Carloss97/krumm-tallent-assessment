@@ -93,3 +93,32 @@ services:
     # Restart policy
     restartPolicyType: on_failure
     restartPolicyMaxRetries: 3
+
+  - type: web
+    name: krumm-frontend
+    runtime: static
+    plan: free
+    
+    # Build & Deployment
+    buildCommand: npm ci && npm run build
+    staticPublishPath: ./dist
+    
+    # GitHub integration
+    autoDeploy: true
+    
+    # Environment
+    envVars:
+      - key: NODE_ENV
+        value: production
+    
+    # Headers para MediaPipe WASM (requerido para WebAssembly con threads)
+    headers:
+      - path: "/*"
+        headers:
+          - name: "Cross-Origin-Opener-Policy"
+            value: "same-origin"
+          - name: "Cross-Origin-Embedder-Policy"
+            value: "require-corp"
+    
+    # Health check
+    healthCheckPath: /
