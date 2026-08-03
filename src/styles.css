@@ -1091,25 +1091,278 @@ h2 {
   }
 
     .rt-display {
-      font-size: 1rem;
-      color: #9fb0c2;
-      font-weight: 700;
-  }
+          font-size: 1rem;
+          color: #9fb0c2;
+          font-weight: 700;
+      }
 
-    .task-results {
-      position: absolute;
-      transform: translate(-50%, -50%);
-      text-align: center;
-      color: #dff8ff;
-  }
+      .task-results {
+          position: absolute;
+          transform: translate(-50%, -50%);
+          text-align: center;
+          color: #dff8ff;
+      }
 
-    .task-results h3 {
-      color: #4dd4ac;
-      margin-bottom: 8px;
-  }
+      .task-results h3 {
+          color: #4dd4ac;
+          margin-bottom: 8px;
+      }
 
-    .task-results p {
-      margin: 4px 0;
-      font-size: 0.9rem;
-      color: #c8d7e8;
-  }
+      .task-results p {
+          margin: 4px 0;
+          font-size: 0.9rem;
+          color: #c8d7e8;
+      }
+
+      /* Camera Demo Styles */
+      .camera-demo-page {
+        min-height: 100vh;
+        background: 
+          radial-gradient(circle at 10% 20%, rgba(31, 111, 235, 0.35), transparent 26rem),
+          radial-gradient(circle at 80% 5%, rgba(84, 217, 165, 0.18), transparent 22rem),
+          #07111f;
+      }
+
+      .camera-demo-header {
+        text-align: center;
+        padding: clamp(24px, 4vw, 40px) clamp(16px, 3vw, 32px) 16px;
+        max-width: 900px;
+        margin: 0 auto;
+      }
+
+      .camera-demo-header h1 {
+        font-size: clamp(2rem, 5vw, 3rem);
+        margin-bottom: 1rem;
+        background: linear-gradient(135deg, #4dd4ac, #74a7ff);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+      }
+
+      .camera-demo-header p {
+        color: #c8d7e8;
+        font-size: clamp(1rem, 2vw, 1.15rem);
+        line-height: 1.6;
+        margin-bottom: 0.75rem;
+      }
+
+      .camera-demo-privacy {
+        color: #9fb0c2 !important;
+        font-size: 0.9rem !important;
+        border-top: 1px solid rgba(255,255,255,0.1);
+        padding-top: 1rem;
+        margin-top: 0.5rem !important;
+      }
+
+      .camera-demo-main {
+        max-width: 1180px;
+        margin: 0 auto;
+        padding: 0 clamp(16px, 3vw, 32px) clamp(32px, 5vw, 56px);
+      }
+
+      .camera-demo-controls {
+        margin-bottom: 2rem;
+      }
+
+      .camera-controls-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+        gap: 16px;
+        align-items: end;
+        max-width: 800px;
+        margin: 0 auto;
+      }
+
+      .control-group {
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+      }
+
+      .control-group label {
+        color: #dff8ff;
+        font-weight: 900;
+        font-size: 0.85rem;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+      }
+
+      .camera-error {
+        grid-column: 1 / -1;
+        background: rgba(255, 96, 96, 0.15);
+        border: 1px solid rgba(255, 96, 96, 0.3);
+        border-radius: 12px;
+        padding: 12px 16px;
+        color: #ffb4b4;
+        font-weight: 600;
+      }
+
+      .btn-primary, .btn-secondary {
+        border: 0;
+        border-radius: 999px;
+        padding: 0.8rem 1.4rem;
+        font-weight: 800;
+        cursor: pointer;
+        transition: all 200ms ease;
+        white-space: nowrap;
+      }
+
+      .btn-primary {
+        background: linear-gradient(135deg, #4dd4ac, #74a7ff);
+        color: #06121f;
+        box-shadow: 0 12px 30px rgba(77, 212, 172, 0.25);
+      }
+
+      .btn-primary:hover:not(:disabled) {
+        transform: translateY(-2px);
+        box-shadow: 0 16px 40px rgba(77, 212, 172, 0.35);
+      }
+
+      .btn-secondary {
+        background: rgba(255, 255, 255, 0.09);
+        color: #eef6ff;
+        border: 1px solid rgba(255, 255, 255, 0.14);
+      }
+
+      .btn-secondary:hover:not(:disabled) {
+        background: rgba(255, 255, 255, 0.14);
+        border-color: rgba(255, 255, 255, 0.22);
+      }
+
+      .btn-primary:disabled, .btn-secondary:disabled {
+        cursor: not-allowed;
+        opacity: 0.45;
+        transform: none;
+        box-shadow: none;
+      }
+
+      /* Calibration Section */
+      .camera-demo-calibration {
+        margin-bottom: 2rem;
+      }
+
+      .calibration-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+        gap: 12px;
+        max-width: 900px;
+        margin: 0 auto;
+      }
+
+      .cal-item {
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+        padding: 16px;
+        background: rgba(8, 20, 36, 0.78);
+        border: 1px solid rgba(255, 255, 255, 0.12);
+        border-radius: 16px;
+        backdrop-filter: blur(18px);
+      }
+
+      .cal-item strong {
+        color: #dff8ff;
+        font-size: 0.85rem;
+      }
+
+      .cal-ok { color: #4dd4ac; font-weight: 700; }
+      .cal-fail { color: #ff6b6b; font-weight: 700; }
+      .cal-pending { color: #ffd166; font-weight: 700; }
+
+      .cal-status {
+        grid-column: 1 / -1;
+        color: #9fb0c2;
+        font-size: 0.85rem;
+        text-align: center;
+        padding: 8px;
+      }
+
+      /* Features Grid */
+      .camera-demo-features {
+        margin-top: 3rem;
+        padding-top: 2rem;
+        border-top: 1px solid rgba(255,255,255,0.1);
+      }
+
+      .camera-demo-features h2 {
+        text-align: center;
+        margin-bottom: 1.5rem;
+        color: #dff8ff;
+      }
+
+      .features-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+        gap: 16px;
+        max-width: 1100px;
+        margin: 0 auto;
+      }
+
+      .feature-card {
+        padding: 24px;
+        background: rgba(8, 20, 36, 0.78);
+        border: 1px solid rgba(255, 255, 255, 0.12);
+        border-radius: 18px;
+        backdrop-filter: blur(18px);
+        transition: all 300ms ease;
+      }
+
+      .feature-card:hover {
+        border-color: rgba(77, 212, 172, 0.4);
+        transform: translateY(-4px);
+        box-shadow: 0 20px 50px rgba(0, 0, 0, 0.3);
+      }
+
+      .feature-card h3 {
+        color: #dff8ff;
+        margin-bottom: 8px;
+        font-size: 1.05rem;
+      }
+
+      .feature-card p {
+        color: #9fb0c2;
+        font-size: 0.9rem;
+        line-height: 1.5;
+        margin: 0;
+      }
+
+      /* Links Section */
+      .camera-demo-links {
+        display: flex;
+        gap: 16px;
+        justify-content: center;
+        margin-top: 3rem;
+        padding-top: 2rem;
+        border-top: 1px solid rgba(255,255,255,0.1);
+        flex-wrap: wrap;
+      }
+
+      .camera-demo-links .btn-secondary {
+        padding: 1rem 1.8rem;
+        font-size: 0.95rem;
+      }
+
+      /* Mobile adjustments */
+      @media (max-width: 640px) {
+        .camera-controls-grid {
+          grid-template-columns: 1fr;
+        }
+    
+        .calibration-grid {
+          grid-template-columns: 1fr;
+        }
+    
+        .features-grid {
+          grid-template-columns: 1fr;
+        }
+    
+        .camera-demo-links {
+          flex-direction: column;
+          align-items: stretch;
+        }
+    
+        .camera-demo-links .btn-secondary {
+          width: 100%;
+          text-align: center;
+        }
+      }
