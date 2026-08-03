@@ -2,13 +2,42 @@
 import { defineConfig, loadEnv } from 'vite'
 import react from '@vitejs/plugin-react'
 import { mediaPipeWasmDevServerPlugin } from './mediapipeWasmPlugin.js'
+import { copyFileSync, mkdirSync, existsSync } from 'fs'
+import { resolve } from 'path'
+
+// Plugin para copiar archivos WASM de MediaPipe a dist/assets/mediapipe/wasm/ en producción
+function copyMediaPipeWasmPlugin() {
+  return {
+    name: 'copy-mediapipe-wasm',
+    closeBundle() {
+      const srcDir = resolve('node_modules/@mediapipe/tasks-vision/wasm')
+      const destDir = resolve('dist/assets/mediapipe/wasm')
+      if (existsSync(srcDir)) {
+        mkdirSync(destDir, { recursive: true })
+        const files = ['vision_wasm_internal.js', 'vision_wasm_internal.wasm']
+        files.forEach(f => {
+          const src = resolve(srcDir, f)
+          const dest = resolve(destDir, f)
+          if (existsSync(src)) {
+            copyFileSync(src, dest)
+            console.log(`[mediapipe] Copied ${f} to dist/assets/mediapipe/wasm/`)
+          }
+        })
+      }
+    }
+  }
+}
 
 // https://vite.dev/config/
 export default ({ mode }) => {
   const env = loadEnv(mode, process.cwd());
   const base = env.VITE_BASE_PATH || '/';
   return defineConfig({
-    plugins: [mediaPipeWasmDevServerPlugin(), react()],
+    plugins: [
+      mediaPipeWasmDevServerPlugin(),
+      copyMediaPipeWasmPlugin(),
+      react()
+    ],
     base,
   server: {
     host: '127.0.0.1',
