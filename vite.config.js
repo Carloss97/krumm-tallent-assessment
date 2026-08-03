@@ -14,7 +14,15 @@ function copyMediaPipeWasmPlugin() {
       const destDir = resolve('dist/assets/mediapipe/wasm')
       if (existsSync(srcDir)) {
         mkdirSync(destDir, { recursive: true })
-        const files = ['vision_wasm_internal.js', 'vision_wasm_internal.wasm']
+        // Copiar todos los archivos WASM necesarios para MediaPipe
+        const files = [
+          'vision_wasm_internal.js',
+          'vision_wasm_internal.wasm',
+          'vision_wasm_module_internal.js',
+          'vision_wasm_module_internal.wasm',
+          'vision_wasm_nosimd_internal.js',
+          'vision_wasm_nosimd_internal.wasm',
+        ]
         files.forEach(f => {
           const src = resolve(srcDir, f)
           const dest = resolve(destDir, f)

@@ -1,7 +1,7 @@
 export const MEDIAPIPE_ASSETS = Object.freeze({
   // En dev: servido por mediaPipeWasmDevServerPlugin en /mediapipe/wasm
   // En prod: copiado a dist/assets/mediapipe/wasm/ por copyMediaPipeWasmPlugin
-  wasmBaseUrl: import.meta.env.PROD ? '/assets/mediapipe/wasm/' : '/mediapipe/wasm/',
+  wasmBaseUrl: import.meta.env.PROD ? '/assets/mediapipe/wasm' : '/mediapipe/wasm',
   modelAssetPath: 'https://storage.googleapis.com/mediapipe-models/face_landmarker/face_landmarker/float16/latest/face_landmarker.task',
 });
 
