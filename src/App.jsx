@@ -17,6 +17,11 @@ import Footer from './components/Footer';
 import PortalButton from './components/PortalButton';
 import PostulantesLogin from './components/PostulantesLogin';
 
+// Postulation demo routes
+import PostulationDemoApp from './postulation-demo/PostulationDemoApp.jsx';
+import PostulationHrDashboard from './postulation-demo/hr-dashboard/PostulationHrDashboard.jsx';
+import { isPostulationDemoPath, isPostulationHrDashboardPath } from './postulation-demo/postulationDemoRoute.js';
+
 // Lazy load components for code splitting
 const Report = lazy(() => import('./Report'));
 const Intro = lazy(() => import('./components/Intro'));
@@ -85,6 +90,9 @@ function AppContent() {
             <Route path="/dev" element={<Navigate to="/dev/camera" replace />} />
             <Route path="/dev/camera" element={<DevCameraLab />} />
             <Route path="/dev/report" element={<DevCameraReport />} />
+            {/* Postulation demo routes */}
+            <Route path="/postulaciones-demo" element={<PostulationDemoApp />} />
+            <Route path="/postulaciones-demo/hr" element={<PostulationHrDashboard />} />
           </Routes>
         </Suspense>
       </div>
