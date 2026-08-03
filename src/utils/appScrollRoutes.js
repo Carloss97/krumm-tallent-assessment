@@ -3,6 +3,7 @@ const SCROLLABLE_EXACT_ROUTES = new Set([
   '/intro',
   '/complementary/intro',
   '/report',
+  '/camera-demo',
 ]);
 
 export const shouldEnableAppScroll = (pathname = '') => {
@@ -10,5 +11,6 @@ export const shouldEnableAppScroll = (pathname = '') => {
   return SCROLLABLE_EXACT_ROUTES.has(pathname)
     || pathname.startsWith('/dev/')
     || pathname === '/camera'
-    || pathname.startsWith('/camera/');
+    || pathname.startsWith('/camera/')
+    || pathname.startsWith('/camera-demo');
 };
