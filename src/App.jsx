@@ -32,6 +32,7 @@ const DemoShell = lazy(() => import('./components/DemoShell'));
 const PitchDeckPage = lazy(() => import('./components/PitchDeckPage'));
 const DevCameraLab = lazy(() => import('./components/DevCameraLab'));
 const DevCameraReport = lazy(() => import('./components/DevCameraReport'));
+const CameraDemo = lazy(() => import('./components/CameraDemo.jsx'));
 
 // Main App Router and State
 function AppContent() {
@@ -93,6 +94,8 @@ function AppContent() {
             {/* Postulation demo routes */}
             <Route path="/postulaciones-demo" element={<PostulationDemoApp />} />
             <Route path="/postulaciones-demo/hr" element={<PostulationHrDashboard />} />
+            {/* Camera demo route */}
+            <Route path="/camera-demo" element={<CameraDemo />} />
           </Routes>
         </Suspense>
       </div>

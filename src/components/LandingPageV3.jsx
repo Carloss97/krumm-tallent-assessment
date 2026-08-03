@@ -18,6 +18,7 @@ import {
   TrendingUp,
   UserRoundCog,
   Users,
+  Video,
   Zap
 } from 'lucide-react';
 import { useTelemetry } from '../TelemetryContext';
@@ -878,6 +879,24 @@ const LandingPageV3 = () => {
           <DevQuickAccess t={t} language={language} />
         </Suspense>
       )}
+      <section className="lv3-section lv3-camera-demo section--white">
+        <div className="lv3-container">
+          <div className="lv3-panel">
+            <div className="lv3-section-head">
+              <h2 className="lv3-section-title"><Video size={20} aria-hidden="true" /> <span>{language === 'es' ? 'Demo Cámara y Mesh Facial' : 'Camera & Face Mesh Demo'}</span></h2>
+              <p>{language === 'es' ? 'Prueba la detección facial en tiempo real con MediaPipe, mesh 468 puntos, mirada, postura y MoveNet.' : 'Try real-time face detection with MediaPipe, 468-point mesh, gaze, posture, and MoveNet.'}</p>
+            </div>
+            <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap', justifyContent: 'center' }}>
+              <a href="/camera-demo" className="lv3-team-cta">
+                <Video size={16} /> {language === 'es' ? 'Abrir Demo Cámara' : 'Open Camera Demo'}
+              </a>
+              <a href="/postulaciones-demo" className="lv3-team-cta" style={{ background: 'rgba(20,184,166,0.1)', borderColor: 'rgba(20,184,166,0.3)' }}>
+                <Users size={16} /> {language === 'es' ? 'Demo Postulaciones' : 'Postulaciones Demo'}
+              </a>
+            </div>
+          </div>
+        </div>
+      </section>
       </main>
     </div>
   );
