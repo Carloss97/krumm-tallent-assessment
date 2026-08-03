@@ -122,6 +122,11 @@ export default function CameraDemo() {
     return normalized;
   }, [selectedDeviceId]);
 
+  // Refresh camera devices on mount
+  useEffect(() => {
+    refreshCameraDevices();
+  }, [refreshCameraDevices]);
+
   const attachCameraStream = useCallback(async (stream) => {
     if (streamRef.current) stopStream(streamRef.current);
     streamRef.current = stream;
