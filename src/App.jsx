@@ -40,7 +40,7 @@ function AppContent() {
   const shouldScroll = shouldEnableAppScroll(location.pathname);
 
   return (
-    <div className="app-layout" style={{ height: '100vh', overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
+    <div className="app-layout" style={{ height: '100vh', display: 'flex', flexDirection: 'column', overflow: shouldScroll ? 'auto' : 'hidden' }}>
       {/* Background effects */}
       <div style={{
         position: 'absolute', top: '-10%', left: '-10%', width: '40%', height: '40%',
